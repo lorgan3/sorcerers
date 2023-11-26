@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { connect } from "./data/network";
+import { AssetsContainer } from "./util/assets/assetsContainer";
 
 const canvas = ref<HTMLDivElement | null>(null);
 
 onMounted(() => {
-  connect(canvas.value!);
+  const container = new AssetsContainer();
+  container.onComplete(() => {
+    connect(canvas.value!);
+  });
 });
 </script>
 

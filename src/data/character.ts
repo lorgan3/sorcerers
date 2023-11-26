@@ -1,7 +1,8 @@
-import { AnimatedSprite, Assets, Container, Sprite, Texture } from "pixi.js";
+import { AnimatedSprite, Container, Sprite, Texture } from "pixi.js";
 import { Level } from "./level";
 import { Body } from "./collision/body";
 import { Controller, Key } from "./controller/controller";
+import { AssetsContainer } from "../util/assets/assetsContainer";
 
 export class Character extends Container {
   public readonly body: Body;
@@ -14,29 +15,28 @@ export class Character extends Container {
     this.body.x = x;
     this.body.y = y;
 
-    const asset = Assets.load(`${import.meta.env.BASE_URL}atlas.json`);
-    asset.then((asset) => {
-      this.sprite = new AnimatedSprite(asset.animations["wizard_walk"]);
-      this.sprite.animationSpeed = 0.08;
-      this.sprite.play();
-      this.sprite.anchor.set(0.5, 0.6);
-      this.sprite.x = 25;
-      this.sprite.scale.set(0.4);
+    const atlas = AssetsContainer.instance.assets!["atlas"];
 
-      const canvas = document.createElement("canvas");
-      canvas.width = 8;
-      canvas.height = 8;
+    this.sprite = new AnimatedSprite(atlas.animations["wizard_walk"]);
+    this.sprite.animationSpeed = 0.08;
+    this.sprite.play();
+    this.sprite.anchor.set(0.5, 0.6);
+    this.sprite.x = 25;
+    this.sprite.scale.set(0.4);
 
-      const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, 8, 8);
+    const canvas = document.createElement("canvas");
+    canvas.width = 8;
+    canvas.height = 8;
 
-      const sprite2 = new Sprite(Texture.from(canvas));
-      sprite2.anchor.set(0);
-      sprite2.scale.set(6);
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, 8, 8);
 
-      this.addChild(this.sprite, sprite2);
-    });
+    const sprite2 = new Sprite(Texture.from(canvas));
+    sprite2.anchor.set(0);
+    sprite2.scale.set(6);
+
+    this.addChild(this.sprite, sprite2);
   }
 
   tick(dt: number) {
