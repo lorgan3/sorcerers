@@ -7,7 +7,7 @@ const GROUND_FRICTION = 0.88;
 const AIR_FRICTION = 0.9;
 const MIN_MOVEMENT = 0.01;
 
-const SPEED = 0.15;
+const SPEED = 0.3;
 const JUMP_STRENGTH = 4;
 
 export class Body {
@@ -40,8 +40,9 @@ export class Body {
     this.yVelocity = data[4];
   }
 
-  walk(direction: 1 | -1) {
-    this.xVelocity += SPEED * direction * (this._grounded ? 1 : AIR_CONTROL);
+  walk(dt: number, direction: 1 | -1) {
+    this.xVelocity +=
+      SPEED * direction * (this._grounded ? 1 : AIR_CONTROL) * dt;
     this.active = 1;
   }
 
