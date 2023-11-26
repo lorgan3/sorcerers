@@ -95,6 +95,7 @@ export class Server {
 
       connection.on("close", () => {
         console.log("closed");
+        player.destroy();
         this.players.splice(this.players.indexOf(player));
 
         // Temp
