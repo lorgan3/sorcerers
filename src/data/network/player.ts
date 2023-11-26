@@ -17,13 +17,6 @@ export class Player {
     Level.instance.remove(...this.characters);
   }
 
-  tick(dt: number) {
-    for (let i = 0; i < this.characters.length; i++) {
-      const character = this.characters[i];
-      character.tick(dt);
-    }
-  }
-
   addCharacter(character: Character) {
     this.characters.push(character);
     Level.instance.add(character);

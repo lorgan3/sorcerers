@@ -5,6 +5,7 @@ import { Controller } from "../controller/controller";
 import { Player } from "./player";
 import { Character } from "../character";
 import { KeyboardController } from "../controller/keyboardController";
+import { Level } from "../level";
 
 export class Server {
   public readonly peer: Peer;
@@ -32,9 +33,7 @@ export class Server {
       this.activePlayer.controller
     );
 
-    for (let player of this.players) {
-      player.tick(dt);
-    }
+    Level.instance.tick(dt);
 
     this.time += dt;
     const frames = this.time | 0;

@@ -25,9 +25,7 @@ export class Client {
       this.activePlayer.controller
     );
 
-    for (let player of this.players) {
-      player.tick(dt);
-    }
+    Level.instance.tick(dt);
 
     this.time += dt;
     const frames = this.time | 0;

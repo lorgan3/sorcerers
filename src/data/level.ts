@@ -13,13 +13,17 @@ import { AssetsContainer } from "../util/assets/assetsContainer";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
+interface TickingEntity extends DisplayObject {
+  tick(dt: number): void;
+}
+
 export class Level {
   private app: Application<HTMLCanvasElement>;
   private viewport: Viewport;
   private terrain: Terrain;
 
   public activePlayer = 0;
-  public host = false;
+  private entities = new Set<TickingEntity>();
 
   private static _instance: Level;
   static get instance() {
@@ -97,11 +101,29 @@ export class Level {
     return this.terrain.collisionMask.collidesWith(other, dx, dy);
   }
 
-  add(...objects: DisplayObject[]) {
-    this.viewport.addChild(...objects);
+  tick(dt: number) {
+    for (let entity of this.entities) {
+      entity.tick(dt);
+    }
   }
 
-  remove(...objects: DisplayObject[]) {
+  add(...objects: Array<TickingEntity | DisplayObject>) {
+    this.viewport.addChild(...objects);
+
+    for (let object of objects) {
+      if ("tick" in object) {
+        this.entities.add(object);
+      }
+    }
+  }
+
+  remove(...objects: Array<TickingEntity | DisplayObject>) {
     this.viewport!.removeChild(...objects);
+
+    for (let object of objects) {
+      if ("tick" in object) {
+        this.entities.delete(object);
+      }
+    }
   }
 }
