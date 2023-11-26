@@ -24,7 +24,6 @@ const folders = contents.filter((file) => !file.includes("."));
 
 for (let folder of folders) {
   const files = fs.readdirSync(DIRECTORY + folder);
-  console.log(files);
 
   for (let file of files) {
     const jimp = await Jimp.read(`${DIRECTORY}${folder}/${file}`);
