@@ -1,11 +1,10 @@
-import { AnimatedSprite, Container, Sprite, Texture } from "pixi.js";
+import { AnimatedSprite, Container } from "pixi.js";
 import { Level } from "../level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import {
   circle32x32,
   circle3x3,
-  circle3x3Canvas,
   circle9x9,
 } from "../collision/precomputed/circles";
 
@@ -35,11 +34,11 @@ export class Fireball extends Container {
     this.sprite.play();
     this.sprite.anchor.set(0.25, 0.25);
 
-    const sprite2 = new Sprite(Texture.fromBuffer(circle3x3Canvas.data, 3, 3));
-    sprite2.anchor.set(0);
-    sprite2.scale.set(6);
+    // const sprite2 = new Sprite(Texture.fromBuffer(circle3x3Canvas.data, 3, 3));
+    // sprite2.anchor.set(0);
+    // sprite2.scale.set(6);
 
-    this.addChild(this.sprite, sprite2);
+    this.addChild(this.sprite);
   }
 
   private onCollide = (x: number, y: number) => {

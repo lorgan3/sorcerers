@@ -1,10 +1,10 @@
-import { AnimatedSprite, Container, Sprite, Text, Texture } from "pixi.js";
+import { AnimatedSprite, Container, Text } from "pixi.js";
 import { Level } from "./level";
 import { Body } from "./collision/body";
 import { Controller, Key } from "./controller/controller";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import { Fireball } from "./spells/fireball";
-import { circle9x9, circle9x9Canvas } from "./collision/precomputed/circles";
+import { ellipse9x16 } from "./collision/precomputed/circles";
 import { Range } from "./range";
 
 export class Character extends Container {
@@ -19,7 +19,7 @@ export class Character extends Container {
     super();
 
     this.body = new Body(Level.instance.terrain.characterMask, {
-      mask: circle9x9,
+      mask: ellipse9x16,
     });
     this.body.move(x, y);
 
@@ -29,14 +29,16 @@ export class Character extends Container {
     this.sprite.animationSpeed = 0.08;
     this.sprite.play();
     this.sprite.anchor.set(0.5, 0.5);
-    this.sprite.x = 25;
+    this.sprite.position.set(26, 32);
     this.sprite.scale.set(0.4);
 
-    const sprite2 = new Sprite(Texture.fromBuffer(circle9x9Canvas.data, 9, 9));
-    sprite2.anchor.set(0);
-    sprite2.scale.set(6);
+    // const sprite2 = new Sprite(
+    //   Texture.fromBuffer(ellipse9x16Canvas.data, 9, 16)
+    // );
+    // sprite2.anchor.set(0);
+    // sprite2.scale.set(6);
 
-    this.range = new Range(27, 27, 14);
+    this.range = new Range(27, 50, 14);
 
     this.namePlate = new Text(`${name} ${this._hp}`, {
       fontFamily: "Eternal",
@@ -49,7 +51,7 @@ export class Character extends Container {
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(25, -70);
 
-    this.addChild(this.sprite, sprite2, this.range, this.namePlate);
+    this.addChild(this.sprite, this.range, this.namePlate);
   }
 
   tick(dt: number) {
@@ -79,10 +81,10 @@ export class Character extends Container {
     if (controller.isKeyDown(Key.M1)) {
       this.range.update(...controller.getMouse());
     } else if (this.range.stop() && this.range.power > 0) {
-      const [x, y] = this.body.position;
+      const [x, y] = this.body.precisePosition;
       const fireball = new Fireball(
-        x + 3 + Math.cos(this.range.rotation) * 6,
-        y + 3 + Math.sin(this.range.rotation) * 6
+        x + 3 + Math.cos(this.range.rotation) * 7,
+        y + 6.5 + Math.sin(this.range.rotation) * 10.5
       );
       fireball.body.addAngularVelocity(
         this.range.power * 5,

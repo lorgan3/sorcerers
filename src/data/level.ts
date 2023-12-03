@@ -4,7 +4,6 @@ import {
   DisplayObject,
   SCALE_MODES,
   Sprite,
-  Texture,
 } from "pixi.js";
 import { Terrain } from "./collision/terrain";
 import { CollisionMask } from "./collision/collisionMask";
@@ -74,22 +73,22 @@ export class Level {
     const ctx = canvas.getContext("2d")!;
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 150, 600, 50);
-    ctx.fillRect(50, 140, 50, 50);
-    ctx.moveTo(100, 120);
-    ctx.lineTo(50, 120);
-    ctx.stroke();
+    // ctx.fillRect(50, 140, 50, 50);
+    // ctx.moveTo(100, 120);
+    // ctx.lineTo(50, 120);
+    // ctx.stroke();
 
-    ctx.moveTo(100, 140);
-    ctx.lineTo(130, 120);
-    ctx.stroke();
+    // ctx.moveTo(100, 140);
+    // ctx.lineTo(130, 120);
+    // ctx.stroke();
 
-    ctx.moveTo(180, 140);
-    ctx.lineTo(100, 70);
-    ctx.stroke();
+    // ctx.moveTo(180, 140);
+    // ctx.lineTo(100, 70);
+    // ctx.stroke();
 
-    ctx.moveTo(50, 80);
-    ctx.lineTo(50, 120);
-    ctx.stroke();
+    // ctx.moveTo(50, 80);
+    // ctx.lineTo(50, 120);
+    // ctx.stroke();
 
     this.terrain = new Terrain(
       CollisionMask.fromAlpha(ctx.getImageData(0, 0, 600, 200)),
@@ -97,10 +96,10 @@ export class Level {
     );
     this.viewport.addChild(this.terrain);
 
-    const texture = Texture.from(canvas);
-    const sprite2 = new Sprite(texture);
-    sprite2.scale.set(6);
-    this.viewport.addChild(sprite2);
+    // const texture = Texture.from(canvas);
+    // const sprite2 = new Sprite(texture);
+    // sprite2.scale.set(6);
+    // this.viewport.addChild(sprite2);
   }
 
   collidesWith(other: CollisionMask, dx: number, dy: number) {
