@@ -19,8 +19,8 @@ interface TickingEntity extends DisplayObject {
 
 export class Level {
   private app: Application<HTMLCanvasElement>;
-  private viewport: Viewport;
-  private terrain: Terrain;
+  public readonly viewport: Viewport;
+  public readonly terrain: Terrain;
 
   public activePlayer = 0;
   private entities = new Set<TickingEntity>();
@@ -56,6 +56,11 @@ export class Level {
       .pinch();
 
     this.app.stage.addChild(this.viewport);
+
+    const sky = AssetsContainer.instance.assets!["sky"];
+    const sprite = new Sprite(sky);
+    sprite.scale.set(6);
+    this.viewport.addChild(sprite);
 
     const canvas = document.createElement("canvas");
     canvas.width = 600;
