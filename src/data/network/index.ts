@@ -24,7 +24,7 @@ export type Message =
     }
   | {
       type: MessageType.InputState;
-      data: number;
+      data: [number, number, number];
     }
   | {
       type: MessageType.EntityUpdate;
