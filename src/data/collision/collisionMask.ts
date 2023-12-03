@@ -31,7 +31,7 @@ export class CollisionMask {
         for (var bit = 0; bit < 32; ++bit) {
           bits = bits << 1;
           if (x + bit < w) {
-            if (data.data[(y * data.width + x + bit) * 4 + 3] > 5) {
+            if (data.data[(y * data.width + x + bit) * 4 + 3] > 128) {
               bits += 1;
             }
           }
@@ -134,5 +134,55 @@ export class CollisionMask {
     }
 
     return false;
+  }
+
+  add(other: CollisionMask, dx: number, dy: number) {
+    const x1 = Math.max(dx, 0);
+    const y1 = Math.max(dy, 0);
+    const y2 = Math.min(other.h + y1, this.h);
+    const rshift = x1 % 32;
+    const lshift = 32 - rshift;
+    const x1scaled = Math.floor(x1 / 32);
+    const x2scaled = Math.ceil(Math.min(this.w, other.w + x1) / 32);
+
+    for (let y = y1; y < y2; ++y) {
+      const trow = this.mask[y];
+      const orow = other.mask[y - y1];
+      for (let x = x1scaled; x < x2scaled; ++x) {
+        let bits = orow[x - x1scaled - 1] << lshift;
+        if (rshift < 32) {
+          bits |= orow[x - x1scaled] >>> rshift;
+        }
+
+        trow[x] |= bits;
+      }
+    }
+  }
+
+  subtract(other: CollisionMask, dx: number, dy: number) {
+    const x1 = Math.max(dx, 0);
+    const y1 = Math.max(dy, 0);
+    const y2 = Math.min(other.h + y1, this.h);
+    const rshift = x1 % 32;
+    const lshift = 32 - rshift;
+    const x1scaled = Math.floor(x1 / 32);
+    const x2scaled = Math.ceil(Math.min(this.w, other.w + x1) / 32);
+
+    for (let y = y1; y < y2; ++y) {
+      const trow = this.mask[y];
+      const orow = other.mask[y - y1];
+      for (let x = x1scaled; x < x2scaled; ++x) {
+        let bits = orow[x - x1scaled - 1] << lshift;
+        if (rshift < 32) {
+          bits |= orow[x - x1scaled] >>> rshift;
+        }
+
+        trow[x] &= ~bits;
+      }
+    }
+  }
+
+  clone() {
+    return new CollisionMask(this.w, this.h, structuredClone(this.mask));
   }
 }
