@@ -103,6 +103,11 @@ export class Body {
   move(x: number, y: number) {
     this.x = x;
     this.y = y;
+
+    const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
+    const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
+    this.rX = alignX(this.x);
+    this.rY = alignY(this.y);
   }
 
   tick(dt: number) {

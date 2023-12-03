@@ -22,6 +22,10 @@ export class Character extends Container {
       mask: ellipse9x16,
     });
     this.body.move(x, y);
+    Level.instance.terrain.characterMask.add(
+      this.body.mask,
+      ...this.body.position
+    );
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
