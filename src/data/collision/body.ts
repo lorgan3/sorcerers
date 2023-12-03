@@ -252,6 +252,7 @@ export class Body {
 
     this.jumped = false;
     this.x += this.xVelocity * dt;
+    this.rX = alignX(this.x);
 
     // If we're on the ground and barely moving, go to sleep.
     if (this._grounded && Math.abs(this.xVelocity) < MIN_MOVEMENT) {
