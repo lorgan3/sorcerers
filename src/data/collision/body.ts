@@ -1,5 +1,7 @@
-import { Level } from "../level";
 import { CollisionMask } from "./collisionMask";
+
+// Random value that determines how much gravity a body must receive before something is considered a collision with the ground/ceiling
+const COLLISION_TRIGGER = 7;
 
 const GRAVITY = 0.3;
 const AIR_CONTROL = 0.6;
@@ -7,8 +9,18 @@ const GROUND_FRICTION = 0.88;
 const AIR_FRICTION = 0.9;
 const MIN_MOVEMENT = 0.01;
 
-const SPEED = 0.3;
+const SPEED = 0.15;
 const JUMP_STRENGTH = 4;
+
+interface Config {
+  mask: CollisionMask;
+  gravity?: number;
+  airFriction?: number;
+  groundFriction?: number;
+  airControl?: number;
+  onCollide?: (x: number, y: number) => void;
+  roundness?: number;
+}
 
 export class Body {
   private active = 1;
@@ -22,10 +34,36 @@ export class Body {
   private _grounded = false;
   private jumped = false;
 
-  private mask: CollisionMask;
+  private _oldLocation: [number, number] = [0, 0];
 
-  constructor(private level: Level, width: number, height: number) {
-    this.mask = CollisionMask.forRect(width, height);
+  public readonly mask: CollisionMask;
+  private gravity: number;
+  private airFriction: number;
+  private groundFriction: number;
+  private airControl: number;
+  private onCollide?: (x: number, y: number) => void;
+  private roundness: number;
+  private lastRollDirection = 0;
+
+  constructor(
+    private surface: CollisionMask,
+    {
+      mask,
+      gravity = GRAVITY,
+      airFriction = AIR_FRICTION,
+      groundFriction = GROUND_FRICTION,
+      airControl = AIR_CONTROL,
+      onCollide,
+      roundness = 0,
+    }: Config
+  ) {
+    this.mask = mask;
+    this.gravity = gravity;
+    this.airFriction = airFriction;
+    this.groundFriction = groundFriction;
+    this.airControl = airControl;
+    this.onCollide = onCollide;
+    this.roundness = roundness;
   }
 
   serialize() {
@@ -42,7 +80,7 @@ export class Body {
 
   walk(dt: number, direction: 1 | -1) {
     this.xVelocity +=
-      SPEED * direction * (this._grounded ? 1 : AIR_CONTROL) * dt;
+      SPEED * direction * (this._grounded ? 1 : this.airControl) * dt;
     this.active = 1;
   }
 
@@ -67,74 +105,166 @@ export class Body {
   }
 
   tick(dt: number) {
-    if (!this.active) {
-      return;
+    if (this.active === 0) {
+      return false;
     }
 
-    this._grounded = false;
-    this.jumped = false;
-    this.yVelocity += GRAVITY * dt;
+    this.yVelocity += this.gravity * dt;
+    const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
+    const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
 
+    let x = alignX(this.x);
+    let y = alignY(this.y);
+
+    this._oldLocation = this.location;
+    this._grounded = false;
+
+    // We're stuck. Just push up and try again.
+    if (this.surface.collidesWith(this.mask, x, y)) {
+      this.y -= 1;
+      return true;
+    }
+
+    // We're falling. Check if we've reached the ground yet.
     if (this.yVelocity > 0) {
-      this._grounded = this.level.collidesWith(
+      this._grounded = this.surface.collidesWith(
         this.mask,
-        this.x | 0,
-        Math.ceil(this.y + this.yVelocity)
+        x,
+        alignY(this.y + this.yVelocity * dt)
       );
 
       if (this._grounded) {
-        this.yVelocity = 0;
-        this.y = Math.ceil(this.y); // This isn't accurate but good enough™️
+        if (
+          this.onCollide &&
+          this.yVelocity > this.gravity * COLLISION_TRIGGER
+        ) {
+          this.onCollide(x, y);
+        }
 
-        this.xVelocity *= GROUND_FRICTION;
+        // We hit the ground, align with it.
+        while (this.yVelocity * dt > 1) {
+          this.yVelocity /= 2;
+          let v = this.yVelocity * dt;
+
+          if (!this.surface.collidesWith(this.mask, x, alignY(this.y + v))) {
+            this.y += v;
+          }
+        }
+
+        this.yVelocity = 0;
+        this.y = alignY(this.y);
+        y = this.y;
+
+        // Roll off slopes.
+        if (this.roundness) {
+          if (!this.lastRollDirection) {
+            if (!this.surface.collidesWith(this.mask, x + 1, y + 1)) {
+              this.lastRollDirection = 1;
+              this.xVelocity += this.roundness * dt;
+            } else if (!this.surface.collidesWith(this.mask, x - 1, y + 1)) {
+              this.lastRollDirection = -1;
+              this.xVelocity -= this.roundness * dt;
+            }
+          } else if (
+            !this.surface.collidesWith(
+              this.mask,
+              x + this.lastRollDirection,
+              y + 1
+            )
+          ) {
+            this.xVelocity += this.roundness * this.lastRollDirection * dt;
+          }
+        }
+
+        this.xVelocity *= Math.pow(this.groundFriction, dt);
       } else {
-        this.xVelocity *= AIR_FRICTION;
+        this.xVelocity *= Math.pow(this.airFriction, dt);
       }
     } else {
-      const ceiled = this.level.collidesWith(
+      // We're going up. Check if we hit a ceiling.
+      this.lastRollDirection = 0;
+      const ceiled = this.surface.collidesWith(
         this.mask,
-        this.x | 0,
-        (this.y | 0) - 1
+        x,
+        alignY(this.y + this.yVelocity * dt)
       );
 
       if (ceiled) {
+        if (
+          this.onCollide &&
+          this.yVelocity < -this.gravity * COLLISION_TRIGGER
+        ) {
+          this.onCollide(x, y);
+        }
+
         this.yVelocity = 0;
-        this.y = Math.ceil(this.y); // This isn't accurate but good enough™️
+        this.y = alignY(this.y); // This isn't accurate but good enough™️
+        y = this.y;
       }
 
-      this.xVelocity *= AIR_FRICTION;
+      this.xVelocity *= Math.pow(this.airFriction, dt);
     }
 
-    this.x += this.xVelocity * dt;
     this.y += this.yVelocity * dt;
+    y = alignY(this.y);
+    x = alignX(this.x + this.xVelocity * dt);
 
-    if (
-      this.xVelocity !== 0 &&
-      this.level.collidesWith(this.mask, Math.floor(this.x), Math.floor(this.y))
-    ) {
-      if (
-        !this.level.collidesWith(
-          this.mask,
-          Math.floor(this.x),
-          Math.floor(this.y) - 1
-        )
-      ) {
-        this.y = Math.floor(this.y - 1); // Move up 1px slopes automatically.
+    // Check if we're going to hit a wall
+    if (this.xVelocity !== 0 && this.surface.collidesWith(this.mask, x, y)) {
+      const amount = Math.ceil(Math.abs(this.xVelocity));
+
+      // Check if we can walk up steps <= 45 degrees.
+      if (!this.surface.collidesWith(this.mask, x, y - amount)) {
+        this.y = y - amount;
+
+        y = this.y;
+        this.yVelocity = 0;
         this._grounded = true;
       } else {
-        this.x = Math.round(this.x) - this.xVelocity;
+        if (this.onCollide) {
+          this.onCollide(x, y);
+        }
+
+        // We hit a wall, align with it.
+        while (Math.abs(this.xVelocity * dt) > 1) {
+          this.xVelocity /= 2;
+          let v = this.xVelocity * dt;
+
+          if (!this.surface.collidesWith(this.mask, alignX(this.x + v), y)) {
+            this.x += v;
+          }
+        }
+
+        this.x = alignX(this.x);
         this.xVelocity = 0;
       }
     }
 
-    if (
-      this._grounded &&
-      Math.abs(this.xVelocity) < MIN_MOVEMENT &&
-      Math.abs(this.yVelocity) < MIN_MOVEMENT
-    ) {
+    this.jumped = false;
+    this.x += this.xVelocity * dt;
+
+    // If we're on the ground and barely moving, go to sleep.
+    if (this._grounded && Math.abs(this.xVelocity) < MIN_MOVEMENT) {
       this.xVelocity = 0;
       this.yVelocity = 0;
-      this.active -= 0.2;
+      this.active = 0;
     }
+
+    return true;
+  }
+
+  get location(): [number, number] {
+    return [Math.round(this.x), Math.round(this.y)];
+  }
+
+  get oldLocation() {
+    return this._oldLocation;
+  }
+
+  get moved() {
+    return (
+      this._oldLocation[0] !== Math.round(this.x) ||
+      this._oldLocation[1] !== Math.round(this.y)
+    );
   }
 }
