@@ -146,12 +146,15 @@ export class Server {
         players: this.players.map((p) => ({
           name: p.name,
           you: p === player,
-          characters: p.characters.map((character) => ({
-            name: character.name,
-            hp: character.hp,
-            x: character.body.x,
-            y: character.body.y,
-          })),
+          characters: p.characters.map((character) => {
+            const [x, y] = character.body.precisePosition;
+            return {
+              name: character.name,
+              hp: character.hp,
+              x,
+              y,
+            };
+          }),
         })),
         activeCharacter: this.activePlayer!.active,
         activePlayer,

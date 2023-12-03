@@ -67,15 +67,14 @@ export class Body {
   }
 
   serialize() {
-    return [this.active, this.x, this.y, this.xVelocity, this.yVelocity];
+    return [this.active, this.xVelocity, this.yVelocity, this.x, this.y];
   }
 
   deserialize(data: any[]) {
     this.active = data[0];
-    this.x = data[1];
-    this.y = data[2];
-    this.xVelocity = data[3];
-    this.yVelocity = data[4];
+    this.xVelocity = data[1];
+    this.yVelocity = data[2];
+    this.move(data[3], data[4]);
   }
 
   walk(dt: number, direction: 1 | -1) {
