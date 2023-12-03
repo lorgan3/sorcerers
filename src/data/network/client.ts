@@ -75,8 +75,9 @@ export class Client {
           );
           player.name = data.name;
 
-          data.characters.forEach(({ x, y }) => {
-            const character = new Character(x, y);
+          data.characters.forEach(({ name, hp, x, y }) => {
+            const character = new Character(x, y, name);
+            character.hp = hp;
             player.addCharacter(character);
           });
 

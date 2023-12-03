@@ -41,5 +41,6 @@ export const getWord = () => {
     syllables.push(syllable());
   }
 
-  return syllables.join("");
+  const word = syllables.join("");
+  return word[0].toUpperCase() + word.slice(1);
 };

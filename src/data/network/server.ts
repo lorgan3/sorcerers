@@ -6,6 +6,7 @@ import { Player } from "./player";
 import { Character } from "../character";
 import { KeyboardController } from "../controller/keyboardController";
 import { Level } from "../level";
+import { getWord } from "../../util/word";
 
 export class Server {
   public readonly peer: Peer;
@@ -23,7 +24,7 @@ export class Server {
     player.name = "Host";
     this.players.push(player);
 
-    player.addCharacter(new Character(0, 0));
+    player.addCharacter(new Character(0, 0, getWord()));
     this.activePlayer = player;
   }
 
@@ -116,7 +117,7 @@ export class Server {
       case MessageType.Join:
         player.name = message.name;
 
-        const character = new Character(50, 0);
+        const character = new Character(50, 0, getWord());
         player.addCharacter(character);
         this.activePlayer = player;
 
@@ -146,6 +147,8 @@ export class Server {
           name: p.name,
           you: p === player,
           characters: p.characters.map((character) => ({
+            name: character.name,
+            hp: character.hp,
             x: character.body.x,
             y: character.body.y,
           })),

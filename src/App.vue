@@ -18,6 +18,12 @@ onMounted(() => {
 </template>
 
 <style>
+@font-face {
+  /* https://www.1001freefonts.com/eternal.font */
+  font-family: Eternal;
+  src: url(./assets/Eternal.ttf);
+}
+
 .wrapper {
   position: relative;
 }

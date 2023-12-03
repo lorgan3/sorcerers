@@ -44,6 +44,8 @@ export type Message =
   | {
       type: MessageType.SpawnCharacter;
       player: number;
+      name: string;
+      hp: number;
       x: number;
       y: number;
     }
@@ -53,6 +55,8 @@ export type Message =
         name: string;
         you: boolean;
         characters: Array<{
+          name: string;
+          hp: number;
           x: number;
           y: number;
         }>;

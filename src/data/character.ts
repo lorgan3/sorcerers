@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container, Sprite, Texture } from "pixi.js";
+import { AnimatedSprite, Container, Sprite, Text, Texture } from "pixi.js";
 import { Level } from "./level";
 import { Body } from "./collision/body";
 import { Controller, Key } from "./controller/controller";
@@ -10,10 +10,12 @@ import { Range } from "./range";
 export class Character extends Container {
   public readonly body: Body;
   private sprite!: AnimatedSprite;
+  private namePlate: Text;
 
   private range: Range;
+  private _hp = 100;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, public readonly name: string) {
     super();
 
     this.body = new Body(Level.instance.terrain.collisionMask, {
@@ -36,7 +38,19 @@ export class Character extends Container {
     sprite2.scale.set(6);
 
     this.range = new Range(27, 27, 14);
-    this.addChild(this.sprite, sprite2, this.range);
+
+    this.namePlate = new Text(`${name} ${this._hp}`, {
+      fontFamily: "Eternal",
+      fontSize: 32,
+      fill: 0xffffff,
+      dropShadow: true,
+      dropShadowDistance: 4,
+      dropShadowAngle: 45,
+    });
+    this.namePlate.anchor.set(0.5);
+    this.namePlate.position.set(25, -70);
+
+    this.addChild(this.sprite, sprite2, this.range, this.namePlate);
   }
 
   tick(dt: number) {
@@ -94,5 +108,14 @@ export class Character extends Container {
 
   deserialize(data: any[]) {
     this.body.deserialize(data);
+  }
+
+  get hp() {
+    return this._hp;
+  }
+
+  set hp(hp: number) {
+    this._hp = hp;
+    this.namePlate.text = `${this.name} ${this._hp}`;
   }
 }
