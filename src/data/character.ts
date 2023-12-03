@@ -131,5 +131,6 @@ export class Character extends Container {
   set hp(hp: number) {
     this._hp = hp;
     this.namePlate.text = `${this.name} ${this._hp}`;
+    this.body.active = 1;
   }
 }

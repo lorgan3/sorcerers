@@ -17,6 +17,10 @@ interface TickingEntity extends DisplayObject {
   tick(dt: number): void;
 }
 
+interface HurtableEntity extends DisplayObject {
+  hp: number;
+}
+
 export class Level {
   private app: Application<HTMLCanvasElement>;
   public readonly viewport: Viewport;
@@ -24,6 +28,7 @@ export class Level {
 
   public activePlayer = 0;
   private entities = new Set<TickingEntity>();
+  private hurtables = new Set<HurtableEntity>();
 
   private static _instance: Level;
   static get instance() {
@@ -93,9 +98,9 @@ export class Level {
     this.viewport.addChild(this.terrain);
 
     const texture = Texture.from(canvas);
-    const sprite = new Sprite(texture);
-    sprite.scale.set(6);
-    this.viewport.addChild(sprite);
+    const sprite2 = new Sprite(texture);
+    sprite2.scale.set(6);
+    this.viewport.addChild(sprite2);
   }
 
   collidesWith(other: CollisionMask, dx: number, dy: number) {
@@ -112,22 +117,39 @@ export class Level {
     }
   }
 
-  add(...objects: Array<TickingEntity | DisplayObject>) {
+  add(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
     this.viewport.addChild(...objects);
 
     for (let object of objects) {
       if ("tick" in object) {
         this.entities.add(object);
       }
+
+      if ("hp" in object) {
+        this.hurtables.add(object);
+      }
     }
   }
 
-  remove(...objects: Array<TickingEntity | DisplayObject>) {
+  remove(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
     this.viewport!.removeChild(...objects);
 
     for (let object of objects) {
       if ("tick" in object) {
         this.entities.delete(object);
+      }
+
+      if ("hp" in object) {
+        this.hurtables.delete(object);
+      }
+    }
+  }
+
+  hurt(x: number, y: number, range: number, damage: number) {
+    const rangeSquared = range ** 2;
+    for (let object of this.hurtables) {
+      if ((object.x - x) ** 2 + (object.y - y) ** 2 < rangeSquared) {
+        object.hp -= damage;
       }
     }
   }

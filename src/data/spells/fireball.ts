@@ -54,6 +54,8 @@ export class Fireball extends Container {
     if (this.bounces === 0 || playerCollision) {
       Level.instance.remove(this);
       Level.instance.terrain.subtract(x, y, 16, circle32x32);
+
+      Level.instance.hurt(x * 6, y * 6, 16 * 6, 50);
     } else {
       Level.instance.terrain.subtract(x, y, 4, circle9x9);
     }
