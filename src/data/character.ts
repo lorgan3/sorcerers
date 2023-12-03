@@ -3,11 +3,15 @@ import { Level } from "./level";
 import { Body } from "./collision/body";
 import { Controller, Key } from "./controller/controller";
 import { AssetsContainer } from "../util/assets/assetsContainer";
+import { Fireball } from "./spells/fireball";
 import { circle9x9, circle9x9Canvas } from "./collision/precomputed/circles";
+import { Range } from "./range";
 
 export class Character extends Container {
   public readonly body: Body;
   private sprite!: AnimatedSprite;
+
+  private range: Range;
 
   constructor(x: number, y: number) {
     super();
@@ -31,17 +35,42 @@ export class Character extends Container {
     sprite2.anchor.set(0);
     sprite2.scale.set(6);
 
-    this.addChild(this.sprite, sprite2);
+    this.range = new Range(27, 27, 14);
+    this.addChild(this.sprite, sprite2, this.range);
   }
 
   tick(dt: number) {
-    this.body.tick(dt);
-    this.position.set(this.body.x * 6, this.body.y * 6);
+    if (this.body.tick(dt)) {
+      this.position.set(this.body.x * 6, this.body.y * 6);
+
+      Level.instance.terrain.characterMask.subtract(
+        this.body.mask,
+        ...this.body.oldLocation
+      );
+      Level.instance.terrain.characterMask.add(
+        this.body.mask,
+        ...this.body.location
+      );
+    }
   }
 
   control(controller: Controller) {
     if (this.body.grounded && controller.isKeyDown(Key.Up)) {
       this.body.jump();
+    }
+
+    if (controller.isKeyDown(Key.M1)) {
+      this.range.update(...controller.getMouse());
+    } else if (this.range.stop() && this.range.power > 0) {
+      const fireball = new Fireball(
+        this.body.x + 3 + Math.cos(this.range.rotation) * 6,
+        this.body.y + 3 + Math.sin(this.range.rotation) * 6
+      );
+      fireball.body.addAngularVelocity(
+        this.range.power * 5,
+        this.range.rotation
+      );
+      Level.instance.add(fireball);
     }
   }
 
