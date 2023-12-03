@@ -79,12 +79,7 @@ export class SimpleBody {
 
     if (
       this.xVelocity !== 0 &&
-      this.surface.collidesWith(
-        this.mask,
-        alignX(this.x + this.xVelocity),
-
-        y
-      )
+      this.surface.collidesWith(this.mask, alignX(this.x + this.xVelocity), y)
     ) {
       xCollision = alignX(this.x + this.xVelocity);
       this.x = x;

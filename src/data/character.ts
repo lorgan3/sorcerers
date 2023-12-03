@@ -18,11 +18,10 @@ export class Character extends Container {
   constructor(x: number, y: number, public readonly name: string) {
     super();
 
-    this.body = new Body(Level.instance.terrain.collisionMask, {
+    this.body = new Body(Level.instance.terrain.characterMask, {
       mask: circle9x9,
     });
-    this.body.x = x;
-    this.body.y = y;
+    this.body.move(x, y);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -54,18 +53,22 @@ export class Character extends Container {
   }
 
   tick(dt: number) {
-    if (this.body.tick(dt)) {
-      this.position.set(this.body.x * 6, this.body.y * 6);
-
+    if (this.body.active) {
       Level.instance.terrain.characterMask.subtract(
         this.body.mask,
-        ...this.body.oldLocation
+        ...this.body.position
       );
+
+      this.body.tick(dt);
+
       Level.instance.terrain.characterMask.add(
         this.body.mask,
-        ...this.body.location
+        ...this.body.position
       );
     }
+
+    const [x, y] = this.body.precisePosition;
+    this.position.set(x * 6, y * 6);
   }
 
   control(controller: Controller) {
@@ -76,9 +79,10 @@ export class Character extends Container {
     if (controller.isKeyDown(Key.M1)) {
       this.range.update(...controller.getMouse());
     } else if (this.range.stop() && this.range.power > 0) {
+      const [x, y] = this.body.position;
       const fireball = new Fireball(
-        this.body.x + 3 + Math.cos(this.range.rotation) * 6,
-        this.body.y + 3 + Math.sin(this.range.rotation) * 6
+        x + 3 + Math.cos(this.range.rotation) * 6,
+        y + 3 + Math.sin(this.range.rotation) * 6
       );
       fireball.body.addAngularVelocity(
         this.range.power * 5,
@@ -107,7 +111,17 @@ export class Character extends Container {
   }
 
   deserialize(data: any[]) {
+    Level.instance.terrain.characterMask.subtract(
+      this.body.mask,
+      ...this.body.position
+    );
+
     this.body.deserialize(data);
+
+    Level.instance.terrain.characterMask.add(
+      this.body.mask,
+      ...this.body.position
+    );
   }
 
   get hp() {

@@ -23,18 +23,18 @@ interface Config {
 }
 
 export class Body {
-  private active = 1;
+  public active = 1;
 
   private xVelocity = 0;
   private yVelocity = 0;
 
-  public x = 0;
-  public y = 0;
+  private x = 0;
+  private y = 0;
+  private rX = 0;
+  private rY = 0;
 
   private _grounded = false;
   private jumped = false;
-
-  private _oldLocation: [number, number] = [0, 0];
 
   public readonly mask: CollisionMask;
   private gravity: number;
@@ -79,9 +79,9 @@ export class Body {
   }
 
   walk(dt: number, direction: 1 | -1) {
-    this.xVelocity +=
+    const amount =
       SPEED * direction * (this._grounded ? 1 : this.airControl) * dt;
-    this.active = 1;
+    this.addVelocity(amount, 0);
   }
 
   jump() {
@@ -100,8 +100,9 @@ export class Body {
     this.active = 1;
   }
 
-  get grounded() {
-    return this._grounded;
+  move(x: number, y: number) {
+    this.x = x;
+    this.y = y;
   }
 
   tick(dt: number) {
@@ -113,23 +114,21 @@ export class Body {
     const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
     const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
 
-    let x = alignX(this.x);
-    let y = alignY(this.y);
+    this.rX = alignX(this.x);
+    this.rY = alignY(this.y);
 
-    this._oldLocation = this.location;
     this._grounded = false;
 
     // We're stuck. Just push up and try again.
-    if (this.surface.collidesWith(this.mask, x, y)) {
-      this.y -= 1;
-      return true;
+    if (this.surface.collidesWith(this.mask, this.rX, this.rY)) {
+      this.x = alignX(this.x) - Math.sign(this.xVelocity);
     }
 
     // We're falling. Check if we've reached the ground yet.
     if (this.yVelocity > 0) {
       this._grounded = this.surface.collidesWith(
         this.mask,
-        x,
+        this.rX,
         alignY(this.y + this.yVelocity * dt)
       );
 
@@ -138,7 +137,7 @@ export class Body {
           this.onCollide &&
           this.yVelocity > this.gravity * COLLISION_TRIGGER
         ) {
-          this.onCollide(x, y);
+          this.onCollide(this.rX, this.rY);
         }
 
         // We hit the ground, align with it.
@@ -146,30 +145,36 @@ export class Body {
           this.yVelocity /= 2;
           let v = this.yVelocity * dt;
 
-          if (!this.surface.collidesWith(this.mask, x, alignY(this.y + v))) {
+          if (
+            !this.surface.collidesWith(this.mask, this.rX, alignY(this.y + v))
+          ) {
             this.y += v;
           }
         }
 
         this.yVelocity = 0;
         this.y = alignY(this.y);
-        y = this.y;
+        this.rY = this.y;
 
         // Roll off slopes.
         if (this.roundness) {
           if (!this.lastRollDirection) {
-            if (!this.surface.collidesWith(this.mask, x + 1, y + 1)) {
+            if (
+              !this.surface.collidesWith(this.mask, this.rX + 1, this.rY + 1)
+            ) {
               this.lastRollDirection = 1;
               this.xVelocity += this.roundness * dt;
-            } else if (!this.surface.collidesWith(this.mask, x - 1, y + 1)) {
+            } else if (
+              !this.surface.collidesWith(this.mask, this.rX - 1, this.rY + 1)
+            ) {
               this.lastRollDirection = -1;
               this.xVelocity -= this.roundness * dt;
             }
           } else if (
             !this.surface.collidesWith(
               this.mask,
-              x + this.lastRollDirection,
-              y + 1
+              this.rX + this.lastRollDirection,
+              this.rY + 1
             )
           ) {
             this.xVelocity += this.roundness * this.lastRollDirection * dt;
@@ -185,7 +190,7 @@ export class Body {
       this.lastRollDirection = 0;
       const ceiled = this.surface.collidesWith(
         this.mask,
-        x,
+        this.rX,
         alignY(this.y + this.yVelocity * dt)
       );
 
@@ -194,35 +199,38 @@ export class Body {
           this.onCollide &&
           this.yVelocity < -this.gravity * COLLISION_TRIGGER
         ) {
-          this.onCollide(x, y);
+          this.onCollide(this.rX, this.rY);
         }
 
         this.yVelocity = 0;
         this.y = alignY(this.y); // This isn't accurate but good enough™️
-        y = this.y;
+        this.rY = this.y;
       }
 
       this.xVelocity *= Math.pow(this.airFriction, dt);
     }
 
     this.y += this.yVelocity * dt;
-    y = alignY(this.y);
-    x = alignX(this.x + this.xVelocity * dt);
+    this.rY = alignY(this.y);
+    this.rX = alignX(this.x + this.xVelocity * dt);
 
     // Check if we're going to hit a wall
-    if (this.xVelocity !== 0 && this.surface.collidesWith(this.mask, x, y)) {
+    if (
+      this.xVelocity !== 0 &&
+      this.surface.collidesWith(this.mask, this.rX, this.rY)
+    ) {
       const amount = Math.ceil(Math.abs(this.xVelocity));
 
       // Check if we can walk up steps <= 45 degrees.
-      if (!this.surface.collidesWith(this.mask, x, y - amount)) {
-        this.y = y - amount;
+      if (!this.surface.collidesWith(this.mask, this.rX, this.rY - amount)) {
+        this.y = this.rY - amount;
 
-        y = this.y;
+        this.rY = this.y;
         this.yVelocity = 0;
         this._grounded = true;
       } else {
         if (this.onCollide) {
-          this.onCollide(x, y);
+          this.onCollide(this.rX, this.rY);
         }
 
         // We hit a wall, align with it.
@@ -230,7 +238,9 @@ export class Body {
           this.xVelocity /= 2;
           let v = this.xVelocity * dt;
 
-          if (!this.surface.collidesWith(this.mask, alignX(this.x + v), y)) {
+          if (
+            !this.surface.collidesWith(this.mask, alignX(this.x + v), this.rY)
+          ) {
             this.x += v;
           }
         }
@@ -253,18 +263,15 @@ export class Body {
     return true;
   }
 
-  get location(): [number, number] {
-    return [Math.round(this.x), Math.round(this.y)];
+  get position(): [number, number] {
+    return [this.rX, this.rY];
   }
 
-  get oldLocation() {
-    return this._oldLocation;
+  get precisePosition(): [number, number] {
+    return [this.x, this.y];
   }
 
-  get moved() {
-    return (
-      this._oldLocation[0] !== Math.round(this.x) ||
-      this._oldLocation[1] !== Math.round(this.y)
-    );
+  get grounded() {
+    return this._grounded;
   }
 }
