@@ -1,4 +1,6 @@
-import { Controller, Key, isKey, keyMap, keys } from "./controller";
+import { FederatedPointerEvent } from "pixi.js";
+import { Controller, Key, isKey, keyMap } from "./controller";
+import { Viewport } from "pixi-viewport";
 
 export class KeyboardController implements Controller {
   private mouseX = 0;
@@ -9,9 +11,12 @@ export class KeyboardController implements Controller {
 
   private eventHandlers = new Map<Key, Set<() => void>>();
 
-  constructor(private target: HTMLElement) {
+  constructor(private target: Viewport) {
     window.addEventListener("keydown", this.handleKeyDown);
     window.addEventListener("keyup", this.handleKeyUp);
+    this.target.addListener("pointermove", this.handleMouseMove);
+    this.target.addListener("pointerdown", this.handleMouseDown);
+    this.target.addListener("pointerup", this.handleMouseUp);
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
@@ -24,15 +29,31 @@ export class KeyboardController implements Controller {
     event.preventDefault();
   };
 
+  private handleMouseMove = (event: FederatedPointerEvent) => {
+    this.mouseMove(event.global.x, event.global.y);
+  };
+
+  private handleMouseDown = (event: FederatedPointerEvent) => {
+    this.mouseDown(event.global.x, event.global.y);
+  };
+
+  private handleMouseUp = (event: FederatedPointerEvent) => {
+    this.mouseUp(event.global.x, event.global.y);
+  };
+
   destroy() {
     window.removeEventListener("keydown", this.handleKeyDown);
     window.removeEventListener("keyup", this.handleKeyUp);
+    this.target.removeEventListener("pointermove", this.handleMouseMove);
+    this.target.removeEventListener("pointerdown", this.handleMouseDown);
+    this.target.removeEventListener("pointerup", this.handleMouseUp);
   }
 
   mouseDown(x: number, y: number) {
     this.mouseX = x;
     this.mouseY = y;
-    this.touches++;
+    this.pressedKeys |= keyMap[Key.M1];
+    this.eventHandlers.get(Key.M1)?.forEach((fn) => fn());
   }
 
   mouseMove(x: number, y: number) {
@@ -41,7 +62,7 @@ export class KeyboardController implements Controller {
   }
 
   mouseUp(x: number, y: number) {
-    this.touches--;
+    this.pressedKeys &= ~keyMap[Key.M1];
   }
 
   keyDown(key: string) {
@@ -88,10 +109,10 @@ export class KeyboardController implements Controller {
 
   serialize() {
     this.sentKeys = this.pressedKeys;
-    return this.pressedKeys;
+    return [this.pressedKeys, this.mouseX, this.mouseY];
   }
 
-  deserialize(buffer: number): void {
+  deserialize(buffer: [number, number, number]): void {
     // Nothing
   }
 }

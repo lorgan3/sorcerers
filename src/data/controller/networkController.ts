@@ -2,6 +2,8 @@ import { Controller, Key, keyMap } from "./controller";
 
 export class NetworkController implements Controller {
   public pressedKeys = 0;
+  private mouseX = 0;
+  private mouseY = 0;
 
   destroy() {}
 
@@ -9,7 +11,13 @@ export class NetworkController implements Controller {
     return !!(this.pressedKeys & keyMap[key]);
   }
 
-  deserialize(buffer: number) {
-    this.pressedKeys = buffer;
+  getMouse(): [number, number] {
+    return [this.mouseX, this.mouseY];
+  }
+
+  deserialize(buffer: [number, number, number]) {
+    this.pressedKeys = buffer[0];
+    this.mouseX = buffer[1];
+    this.mouseY = buffer[2];
   }
 }

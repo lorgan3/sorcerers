@@ -1,7 +1,8 @@
 export interface Controller {
   isKeyDown(key: Key): boolean;
+  getMouse(): [number, number];
   pressedKeys: number;
-  deserialize(buffer: number): void;
+  deserialize(buffer: [number, number, number]): void;
   destroy(): void;
   // addKeyListener(key: Key, fn: () => void): () => void;
 }
@@ -27,6 +28,8 @@ export enum Key {
   B = "b",
   E = "e",
   F = "f",
+  M1 = "M1",
+  M2 = "M2",
 }
 
 export const keys = Object.values(Key);

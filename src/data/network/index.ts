@@ -66,9 +66,9 @@ export type Message =
     };
 
 export const connect = (target: HTMLElement) => {
-  new Level(target);
+  const level = new Level(target);
 
-  const controller = new KeyboardController(target);
+  const controller = new KeyboardController(level.viewport);
   const server = new Server(DEFAULT_SERVER_ID);
 
   const promise = new Promise((resolve, reject) => {
