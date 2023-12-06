@@ -73,6 +73,13 @@ export type Message =
   | {
       type: MessageType.SyncDamage;
       data: any[];
+    }
+  | {
+      type: MessageType.SyncMap;
+      width: number;
+      height: number;
+      background: Uint8ClampedArray;
+      mask: Uint32Array;
     };
 
 export const connect = (target: HTMLElement) => {

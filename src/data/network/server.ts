@@ -133,6 +133,12 @@ export class Server {
         player.addCharacter(character);
         this.activePlayer = player;
 
+        // Do this before syncing the entities because they contain a reference to the mask!
+        player.connection!.send({
+          type: MessageType.SyncMap,
+          ...Level.instance.terrain.serialize(),
+        });
+
         this.syncPlayers();
         break;
 
@@ -144,7 +150,6 @@ export class Server {
             player.connection?.send(message);
           }
         }
-
         break;
     }
   }

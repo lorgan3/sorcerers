@@ -113,6 +113,10 @@ export class Client {
         const damageSource = ExplosiveDamage.deserialize(message.data);
         damageSource.damage();
         break;
+
+      case MessageType.SyncMap:
+        Level.instance.terrain.deserialize(message);
+        break;
     }
   }
 }

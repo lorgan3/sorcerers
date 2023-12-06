@@ -9,10 +9,10 @@ export class Terrain extends Container {
 
   private background: Texture;
 
-  public readonly characterMask: CollisionMask;
+  public characterMask: CollisionMask;
 
   constructor(
-    public readonly collisionMask: CollisionMask,
+    public collisionMask: CollisionMask,
     background: Texture<ImageBitmapResource>,
     foreground?: Texture
   ) {
@@ -56,5 +56,38 @@ export class Terrain extends Container {
 
     this.collisionMask.subtract(mask, x - r, y - r);
     this.characterMask.subtract(mask, x - r, y - r);
+  }
+
+  serialize() {
+    return {
+      ...this.collisionMask.serialize(),
+      background: this.backgroundCtx.getImageData(
+        0,
+        0,
+        this.backgroundCanvas.width,
+        this.backgroundCanvas.height
+      ).data.buffer,
+    };
+  }
+
+  deserialize(data: any) {
+    this.collisionMask = CollisionMask.deserialize(data);
+    this.characterMask = this.collisionMask.clone();
+
+    this.backgroundCtx.globalCompositeOperation = "multiply";
+    this.backgroundCanvas.width = data.width;
+    this.backgroundCanvas.height = data.height;
+    this.backgroundCtx.putImageData(
+      new ImageData(
+        new Uint8ClampedArray(data.background),
+        data.width,
+        data.height
+      ),
+      0,
+      0
+    );
+    this.backgroundCtx.globalCompositeOperation = "destination-out";
+
+    this.background.update();
   }
 }

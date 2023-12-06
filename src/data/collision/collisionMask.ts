@@ -86,6 +86,15 @@ export class CollisionMask {
     return new CollisionMask(w, h, mask);
   }
 
+  static deserialize(data: {
+    width: number;
+    height: number;
+    mask: Uint8Array[];
+  }) {
+    const mask = data.mask.map((arr) => new Uint32Array(arr.buffer));
+    return new CollisionMask(data.width, data.height, mask);
+  }
+
   /** Test if this CollisionMask-objects collides with the given other collision mask object. dx and dy specify the
   screen coordinates of the other object, relative to this one. Note that this function performs rectangle intersection
   check before going into the more expensive pixel-based collision detection, so there is no need to do this, yourself. */
@@ -184,5 +193,13 @@ export class CollisionMask {
 
   clone() {
     return new CollisionMask(this.w, this.h, structuredClone(this.mask));
+  }
+
+  serialize() {
+    return {
+      width: this.w,
+      height: this.h,
+      mask: this.mask.map((arr) => arr.buffer),
+    };
   }
 }
