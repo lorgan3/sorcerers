@@ -2,11 +2,8 @@ import { AnimatedSprite, Container } from "pixi.js";
 import { Level } from "../level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
-import {
-  circle32x32,
-  circle3x3,
-  circle9x9,
-} from "../collision/precomputed/circles";
+import { circle3x3 } from "../collision/precomputed/circles";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
 
 export class Fireball extends Container {
   public readonly body: SimpleBody;
@@ -52,11 +49,9 @@ export class Fireball extends Container {
 
     if (this.bounces === 0 || playerCollision) {
       Level.instance.remove(this);
-      Level.instance.terrain.subtract(x, y, 16, circle32x32);
-
-      Level.instance.hurt(x * 6, y * 6, 16 * 6, 50);
+      Level.instance.damage(new ExplosiveDamage(x, y, 16));
     } else {
-      Level.instance.terrain.subtract(x, y, 4, circle9x9);
+      Level.instance.damage(new ExplosiveDamage(x, y, 4));
     }
   };
 

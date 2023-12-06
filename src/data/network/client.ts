@@ -5,6 +5,7 @@ import { Player } from "./player";
 import { NetworkController } from "../controller/networkController";
 import { Level } from "../level";
 import { Character } from "../character";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
 
 export class Client {
   private peer: Peer;
@@ -106,6 +107,11 @@ export class Client {
         this.activePlayer!.characters[this.activePlayer!.active].deserialize(
           message.data
         );
+        break;
+
+      case MessageType.SyncDamage:
+        const damageSource = ExplosiveDamage.deserialize(message.data);
+        damageSource.damage();
         break;
     }
   }

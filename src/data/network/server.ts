@@ -7,6 +7,7 @@ import { Character } from "../character";
 import { KeyboardController } from "../controller/keyboardController";
 import { Level } from "../level";
 import { getWord } from "../../util/word";
+import { DamageSource } from "../damage";
 
 export class Server {
   public readonly peer: Peer;
@@ -106,6 +107,17 @@ export class Server {
         this.syncPlayers();
       });
     });
+  }
+
+  syncDamage(damageSource: DamageSource) {
+    const message = {
+      type: MessageType.SyncDamage,
+      data: damageSource.serialize(),
+    };
+
+    for (let player of this.players) {
+      player.connection?.send(message);
+    }
   }
 
   private handleMessage(

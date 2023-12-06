@@ -9,6 +9,8 @@ import { Terrain } from "./collision/terrain";
 import { CollisionMask } from "./collision/collisionMask";
 import { Viewport } from "pixi-viewport";
 import { AssetsContainer } from "../util/assets/assetsContainer";
+import { Server } from "./network/server";
+import { DamageSource } from "./damage";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -28,6 +30,7 @@ export class Level {
   public activePlayer = 0;
   private entities = new Set<TickingEntity>();
   private hurtables = new Set<HurtableEntity>();
+  private _server?: Server;
 
   private static _instance: Level;
   static get instance() {
@@ -102,6 +105,10 @@ export class Level {
     // this.viewport.addChild(sprite2);
   }
 
+  set server(value: Server) {
+    this._server = value;
+  }
+
   collidesWith(other: CollisionMask, dx: number, dy: number) {
     if (!this.terrain) {
       return false;
@@ -144,11 +151,26 @@ export class Level {
     }
   }
 
-  hurt(x: number, y: number, range: number, damage: number) {
+  damage(damageSource: DamageSource) {
+    if (!this._server) {
+      return;
+    }
+
+    this._server.syncDamage(damageSource);
+    damageSource.damage();
+  }
+
+  withNearbyEntities(
+    x: number,
+    y: number,
+    range: number,
+    fn: (entity: HurtableEntity, distance: number) => void
+  ) {
     const rangeSquared = range ** 2;
-    for (let object of this.hurtables) {
-      if ((object.x - x) ** 2 + (object.y - y) ** 2 < rangeSquared) {
-        object.hp -= damage;
+    for (let entity of this.hurtables) {
+      const distance = (entity.x - x) ** 2 + (entity.y - y) ** 2;
+      if (distance < rangeSquared) {
+        fn(entity, Math.sqrt(distance));
       }
     }
   }

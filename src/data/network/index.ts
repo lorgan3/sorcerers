@@ -15,6 +15,8 @@ export enum MessageType {
   SpawnCharacter,
   SyncPlayers,
   Join,
+  SyncDamage,
+  SyncMap,
 }
 
 export type Message =
@@ -67,6 +69,10 @@ export type Message =
   | {
       type: MessageType.Join;
       name: string;
+    }
+  | {
+      type: MessageType.SyncDamage;
+      data: any[];
     };
 
 export const connect = (target: HTMLElement) => {
@@ -87,6 +93,7 @@ export const connect = (target: HTMLElement) => {
     .then(() => {
       server.listen();
       server.join(controller);
+      level.server = server;
 
       Ticker.shared.add((dt) => {
         server.tick(dt);
