@@ -27,7 +27,7 @@ export class Range extends Container {
   }
 
   update(x: number, y: number) {
-    const point = this.getGlobalPosition();
+    const point = this.parent.position;
 
     if (!this.visible) {
       this.visible = true;
