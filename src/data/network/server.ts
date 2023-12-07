@@ -197,6 +197,7 @@ export class Server extends Manager {
     }
 
     this.activePlayer = this.players[activePlayerIndex];
+    this.activePlayer.activeCharacter.attacked = false;
     this.windSpeed = Math.round(Math.random() * 16 - 8);
     this.turnStartTime = this.time;
 

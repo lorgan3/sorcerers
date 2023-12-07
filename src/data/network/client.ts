@@ -91,6 +91,7 @@ export class Client extends Manager {
       case MessageType.ActiveCharacter:
         this.activePlayer = this.players[message.activePlayer];
         this.players[message.activePlayer].active = message.activeCharacter;
+        this.activePlayer.activeCharacter.attacked = false;
         this.windSpeed = message.windSpeed;
         this.turnStartTime = message.turnStartTime;
         break;

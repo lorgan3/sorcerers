@@ -6,6 +6,7 @@ import { AssetsContainer } from "../util/assets/assetsContainer";
 import { Fireball } from "./spells/fireball";
 import { ellipse9x16 } from "./collision/precomputed/circles";
 import { Range } from "./range";
+import { Manager } from "./network/manager";
 
 export class Character extends Container {
   public readonly body: Body;
@@ -14,6 +15,7 @@ export class Character extends Container {
 
   private range: Range;
   private _hp = 100;
+  public attacked = false;
 
   constructor(x: number, y: number, public readonly name: string) {
     super();
@@ -82,9 +84,14 @@ export class Character extends Container {
       this.body.jump();
     }
 
+    if (this.attacked) {
+      return;
+    }
+
     if (controller.isKeyDown(Key.M1)) {
       this.range.update(...controller.getMouse());
     } else if (this.range.stop() && this.range.power > 0) {
+      this.attacked = true;
       const [x, y] = this.body.precisePosition;
       const fireball = new Fireball(
         x + 3 + Math.cos(this.range.rotation) * 7,
@@ -95,6 +102,8 @@ export class Character extends Container {
         this.range.rotation
       );
       Level.instance.add(fireball);
+
+      Manager.instance.endTurn();
     }
   }
 

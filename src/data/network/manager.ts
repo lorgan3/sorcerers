@@ -13,7 +13,7 @@ export abstract class Manager {
   protected windSpeed = 7;
 
   protected turnStartTime = 0;
-  protected turnLength = 10 * 1000;
+  protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
 
   constructor(public readonly peer: Peer) {
@@ -22,7 +22,18 @@ export abstract class Manager {
 
   abstract tick(dt: number, dtMs: number): void;
 
+  endTurn() {
+    this.turnStartTime = Math.min(
+      this.time - this.turnLength + 5000,
+      this.turnStartTime
+    );
+  }
+
   getHudData() {
+    console.log(
+      Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
+      this.turnStartTime
+    );
     return {
       turnTime: Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
       gameTime: Math.max(0, this.gameLength - this.time),
