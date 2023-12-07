@@ -11,6 +11,8 @@ import { DamageSource } from "../damage";
 import { Manager } from "./manager";
 
 export class Server extends Manager {
+  private frames = 0;
+
   constructor(key: string) {
     super(new Peer(key));
   }
@@ -38,9 +40,9 @@ export class Server extends Manager {
       this.cycleActivePlayer();
     }
 
-    const frames = this.time | 0;
+    this.frames++;
 
-    if (frames % 30 === 0) {
+    if (this.frames % 30 === 0) {
       const data: Message = {
         type: MessageType.EntityUpdate,
         players: this.players.map((player) => player.serialize()),
@@ -49,7 +51,7 @@ export class Server extends Manager {
       for (let player of this.players) {
         player.connection?.send(data);
       }
-    } else if (frames % 10 === 0) {
+    } else if (this.frames % 10 === 0) {
       const data: Message = {
         type: MessageType.ActiveUpdate,
         data: this.activePlayer!.activeCharacter.serialize(),
@@ -60,7 +62,10 @@ export class Server extends Manager {
       }
     }
 
-    if (frames % 3 === 0 && this.players.indexOf(this.activePlayer!) === 0) {
+    if (
+      this.frames % 3 === 0 &&
+      this.players.indexOf(this.activePlayer!) === 0
+    ) {
       const pressedKeys = (
         this.activePlayer!.controller as KeyboardController
       ).serialize();
