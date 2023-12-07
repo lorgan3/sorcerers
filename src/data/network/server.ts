@@ -8,16 +8,11 @@ import { KeyboardController } from "../controller/keyboardController";
 import { Level } from "../level";
 import { getWord } from "../../util/word";
 import { DamageSource } from "../damage";
+import { Manager } from "./manager";
 
-export class Server {
-  public readonly peer: Peer;
-
-  private players: Player[] = [];
-  private activePlayer: Player | null = null;
-  private time = 0;
-
+export class Server extends Manager {
   constructor(key: string) {
-    this.peer = new Peer(key);
+    super(new Peer(key));
   }
 
   join(controller: Controller) {
@@ -26,10 +21,10 @@ export class Server {
     this.players.push(player);
 
     player.addCharacter(new Character(0, 0, getWord()));
-    this.activePlayer = player;
+    this.cycleActivePlayer();
   }
 
-  tick(dt: number) {
+  tick(dt: number, dtMs: number) {
     this.activePlayer?.activeCharacter.controlContinuous(
       dt,
       this.activePlayer.controller
@@ -37,7 +32,12 @@ export class Server {
 
     Level.instance.tick(dt);
 
-    this.time += dt;
+    this.time += dtMs;
+
+    if (this.time - this.turnStartTime > this.turnLength) {
+      this.cycleActivePlayer();
+    }
+
     const frames = this.time | 0;
 
     if (frames % 30 === 0) {
@@ -131,7 +131,6 @@ export class Server {
 
         const character = new Character(50, 0, getWord());
         player.addCharacter(character);
-        this.activePlayer = player;
 
         // Do this before syncing the entities because they contain a reference to the mask!
         player.connection!.send({
@@ -140,6 +139,7 @@ export class Server {
         });
 
         this.syncPlayers();
+        this.cycleActivePlayer();
         break;
 
       case MessageType.InputState:
@@ -160,6 +160,7 @@ export class Server {
     for (let player of this.players) {
       const response: Message = {
         type: MessageType.SyncPlayers,
+        time: this.time,
         players: this.players.map((p) => ({
           name: p.name,
           you: p === player,
@@ -178,6 +179,31 @@ export class Server {
       };
 
       player.connection?.send(response);
+    }
+  }
+
+  private cycleActivePlayer() {
+    let activePlayerIndex = 0;
+    if (this.activePlayer) {
+      this.activePlayer.active =
+        (this.activePlayer.active + 1) % this.activePlayer.characters.length;
+      activePlayerIndex =
+        (this.players.indexOf(this.activePlayer) + 1) % this.players.length;
+    }
+
+    this.activePlayer = this.players[activePlayerIndex];
+    this.windSpeed = Math.round(Math.random() * 16 - 8);
+    this.turnStartTime = this.time;
+
+    const message = {
+      type: MessageType.ActiveCharacter,
+      activePlayer: activePlayerIndex,
+      activeCharacter: this.activePlayer.active,
+      windSpeed: this.windSpeed,
+      turnStartTime: this.turnStartTime,
+    };
+    for (let player of this.players) {
+      player.connection?.send(message);
     }
   }
 }

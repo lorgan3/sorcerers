@@ -42,6 +42,8 @@ export type Message =
       type: MessageType.ActiveCharacter;
       activePlayer: number;
       activeCharacter: number;
+      windSpeed: number;
+      turnStartTime: number;
     }
   | {
       type: MessageType.SpawnCharacter;
@@ -53,6 +55,7 @@ export type Message =
     }
   | {
       type: MessageType.SyncPlayers;
+      time: number;
       players: Array<{
         name: string;
         you: boolean;
@@ -103,7 +106,7 @@ export const connect = (target: HTMLElement) => {
       level.server = server;
 
       Ticker.shared.add((dt) => {
-        server.tick(dt);
+        server.tick(dt, Ticker.shared.deltaMS);
       });
     })
     .catch(() => {
@@ -113,7 +116,7 @@ export const connect = (target: HTMLElement) => {
         client.connect(DEFAULT_SERVER_ID, controller);
 
         Ticker.shared.add((dt) => {
-          client.tick(dt);
+          client.tick(dt, Ticker.shared.deltaMS);
         });
       }, 300);
     });

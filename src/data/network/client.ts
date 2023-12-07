@@ -6,21 +6,17 @@ import { NetworkController } from "../controller/networkController";
 import { Level } from "../level";
 import { Character } from "../character";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { Manager } from "./manager";
 
-export class Client {
-  private peer: Peer;
+export class Client extends Manager {
   private connection?: DataConnection;
   private controller?: KeyboardController;
 
-  private players: Player[] = [];
-  private activePlayer: Player | null = null;
-  private time = 0;
-
   constructor(key?: string) {
-    this.peer = new Peer(key!);
+    super(new Peer(key!));
   }
 
-  tick(dt: number) {
+  tick(dt: number, dtMs: number) {
     this.activePlayer?.activeCharacter?.controlContinuous(
       dt,
       this.activePlayer.controller
@@ -28,7 +24,7 @@ export class Client {
 
     Level.instance.tick(dt);
 
-    this.time += dt;
+    this.time += dtMs;
     const frames = this.time | 0;
     if (frames % 3) {
       this.connection!.send({
@@ -65,6 +61,8 @@ export class Client {
   private handleMessage(message: Message) {
     switch (message.type) {
       case MessageType.SyncPlayers:
+        this.time = message.time;
+
         for (let i = 0; i < message.players.length; i++) {
           const data = message.players[i];
           if (this.players[i]?.name === data.name) {
@@ -86,14 +84,15 @@ export class Client {
         }
 
         this.players = this.players.slice(0, message.players.length);
-        Level.instance.activePlayer = message.activePlayer;
         this.activePlayer = this.players[message.activePlayer];
         this.activePlayer.active = message.activeCharacter;
         break;
 
       case MessageType.ActiveCharacter:
-        Level.instance.activePlayer = message.activePlayer;
+        this.activePlayer = this.players[message.activePlayer];
         this.players[message.activePlayer].active = message.activeCharacter;
+        this.windSpeed = message.windSpeed;
+        this.turnStartTime = message.turnStartTime;
         break;
 
       case MessageType.InputState:

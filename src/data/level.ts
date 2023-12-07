@@ -27,7 +27,6 @@ export class Level {
   public readonly viewport: Viewport;
   public readonly terrain: Terrain;
 
-  public activePlayer = 0;
   private entities = new Set<TickingEntity>();
   private hurtables = new Set<HurtableEntity>();
   private _server?: Server;
