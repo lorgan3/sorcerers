@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 import { connect } from "./data/network";
 import { AssetsContainer } from "./util/assets/assetsContainer";
+import Hud from "./components/Hud.vue";
 
 const canvas = ref<HTMLDivElement | null>(null);
 
@@ -14,7 +15,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="render-target" ref="canvas"></div>
+  <div class="wrapper">
+    <div class="render-target" ref="canvas"></div>
+    <Hud />
+  </div>
 </template>
 
 <style>
@@ -24,22 +28,17 @@ onMounted(() => {
   src: url(./assets/Eternal.ttf);
 }
 
-.wrapper {
-  position: relative;
-}
-
-.wrapper > canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
 #app {
   width: 100vw;
   height: 100vh;
 
   font-size: 24px;
   overflow: hidden;
+  font-family: Eternal;
+}
+
+.wrapper {
+  position: relative;
 }
 
 button {
