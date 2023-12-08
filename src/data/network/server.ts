@@ -1,5 +1,5 @@
 import Peer from "peerjs";
-import { MessageType, Message } from ".";
+import { MessageType, Message, Popup } from "./types";
 import { NetworkController } from "../controller/networkController";
 import { Controller } from "../controller/controller";
 import { Player } from "./player";
@@ -9,6 +9,7 @@ import { Level } from "../level";
 import { getWord } from "../../util/word";
 import { DamageSource } from "../damage";
 import { Manager } from "./manager";
+import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 
 export class Server extends Manager {
   private frames = 0;
@@ -208,6 +209,27 @@ export class Server extends Manager {
       windSpeed: this.windSpeed,
       turnStartTime: this.turnStartTime,
     };
+    for (let player of this.players) {
+      player.connection?.send(message);
+    }
+
+    this.addPopup({
+      title: `${this.activePlayer.name}'s turn`,
+      meta: MESSAGES[Math.floor(Math.random() * MESSAGES.length)].replace(
+        PLACEHOLDER,
+        this.activePlayer.activeCharacter.name
+      ),
+    });
+  }
+
+  protected addPopup(popup: Popup): void {
+    super.addPopup(popup);
+
+    const message = {
+      type: MessageType.Popup,
+      ...popup,
+    };
+
     for (let player of this.players) {
       player.connection?.send(message);
     }

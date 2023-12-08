@@ -1,5 +1,6 @@
 import Peer from "peerjs";
 import { Player } from "./player";
+import { Popup } from "./types";
 
 export abstract class Manager {
   private static _instance: Manager;
@@ -16,6 +17,8 @@ export abstract class Manager {
   protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
 
+  private popups: Popup[] = [];
+
   constructor(public readonly peer: Peer) {
     Manager._instance = this;
   }
@@ -30,10 +33,6 @@ export abstract class Manager {
   }
 
   getHudData() {
-    console.log(
-      Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
-      this.turnStartTime
-    );
     return {
       turnTime: Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
       gameTime: Math.max(0, this.gameLength - this.time),
@@ -41,5 +40,13 @@ export abstract class Manager {
       players: this.players,
       activePlayer: this.activePlayer,
     };
+  }
+
+  protected addPopup(popup: Popup) {
+    this.popups.push(popup);
+  }
+
+  popupPop() {
+    return this.popups.pop();
   }
 }

@@ -2,6 +2,11 @@
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { Manager } from "./../data/network/manager";
 import { Player } from "./../data/network/player";
+import { Popup } from "../data/network/types";
+
+interface ActivePopup extends Popup {
+  out: boolean;
+}
 
 const numberFormatter = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
@@ -13,6 +18,7 @@ const turnTime = ref(0);
 const gameTime = ref(0);
 const players = ref<Player[]>([]);
 const activePlayer = ref<Player | null>(null);
+const popup = ref<ActivePopup | null>(null);
 
 const poll = () => {
   if (!Manager.instance) {
@@ -25,6 +31,20 @@ const poll = () => {
   gameTime.value = data.gameTime;
   players.value = data.players;
   activePlayer.value = data.activePlayer;
+
+  if (!popup.value) {
+    const popped = Manager.instance.popupPop();
+    if (popped) {
+      popup.value = { ...popped, out: false };
+      window.setTimeout(() => {
+        popup.value!.out = true;
+
+        window.setTimeout(() => {
+          popup.value = null;
+        }, 600);
+      }, popup.value.duration || 5000);
+    }
+  }
 };
 
 let id = -1;
@@ -33,6 +53,11 @@ onBeforeUnmount(() => window.clearInterval(id));
 </script>
 
 <template>
+  <div v-if="!!popup" :class="{ popup: true, 'popup--out': popup.out }">
+    <p class="title">{{ popup!.title }}</p>
+    <p class="meta">{{ popup!.meta }}</p>
+  </div>
+
   <div class="hud">
     <div class="players">
       <ul>
@@ -63,7 +88,7 @@ onBeforeUnmount(() => window.clearInterval(id));
         numberFormatter.format(gameTime)
       }}</span>
     </div>
-    <div class="wind socket">
+    <div class="wind socket" :key="windSpeed">
       <span
         v-for="i in Math.abs(windSpeed)"
         :class="{ arrow: true, left: windSpeed < 0 }"
@@ -76,6 +101,50 @@ onBeforeUnmount(() => window.clearInterval(id));
 </template>
 
 <style lang="scss" scoped>
+.popup {
+  position: absolute;
+  top: 20vh;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 48px;
+  background: #b5a78a;
+  border: 4px solid #433e34;
+  padding: 10px;
+  width: 50%;
+  border-radius: 8px;
+  pointer-events: none;
+  animation: slide-in 0.5s 1;
+
+  &--out {
+    animation: slide-out 0.5s 1 forwards;
+  }
+
+  .meta {
+    font-size: 28px;
+  }
+}
+
+@keyframes slide-in {
+  0% {
+    translate: 0 -30vh;
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+
+@keyframes slide-out {
+  0% {
+    translate: 0 0;
+  }
+  100% {
+    translate: 0 -30vh;
+  }
+}
+
 .hud {
   position: absolute;
   bottom: 0;
