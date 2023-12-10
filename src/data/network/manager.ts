@@ -1,6 +1,7 @@
 import Peer from "peerjs";
 import { Player } from "./player";
 import { Popup } from "./types";
+import { Level } from "../level";
 
 export abstract class Manager {
   private static _instance: Manager;
@@ -8,9 +9,11 @@ export abstract class Manager {
     return Manager._instance;
   }
 
+  protected _self: Player | null = null;
   protected players: Player[] = [];
   protected activePlayer: Player | null = null;
   protected time = 0;
+  protected frames = 0;
   protected windSpeed = 7;
 
   protected turnStartTime = 0;
@@ -23,13 +26,35 @@ export abstract class Manager {
     Manager._instance = this;
   }
 
-  abstract tick(dt: number, dtMs: number): void;
+  tick(dt: number, dtMs: number) {
+    if (
+      this._self === this.activePlayer &&
+      this._self?.activeCharacter &&
+      this._self.controller.isKeyDown()
+    ) {
+      Level.instance.follow(this._self.activeCharacter);
+    }
+
+    this.activePlayer?.activeCharacter?.controlContinuous(
+      dt,
+      this.activePlayer.controller
+    );
+
+    Level.instance.tick(dt);
+
+    this.time += dtMs;
+    this.frames++;
+  }
 
   endTurn() {
     this.turnStartTime = Math.min(
       this.time - this.turnLength + 5000,
       this.turnStartTime
     );
+  }
+
+  get self() {
+    return this._self!;
   }
 
   getHudData() {

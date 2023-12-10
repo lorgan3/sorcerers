@@ -87,10 +87,15 @@ export class KeyboardController implements Controller {
     }
   }
 
-  isKeyDown(key: Key) {
+  isKeyDown(key?: Key) {
     // Only check keys that were already sent to the server.
     // This introduces some artificial lag but make movement
     // a lot smoother.
+
+    if (!key) {
+      return !!this.sentKeys;
+    }
+
     return !!(this.sentKeys & keyMap[key]);
   }
 

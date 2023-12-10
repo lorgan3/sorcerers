@@ -7,7 +7,11 @@ export class NetworkController implements Controller {
 
   destroy() {}
 
-  isKeyDown(key: Key) {
+  isKeyDown(key?: Key) {
+    if (!key) {
+      return !!this.pressedKeys;
+    }
+
     return !!(this.pressedKeys & keyMap[key]);
   }
 

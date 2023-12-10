@@ -12,36 +12,25 @@ import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 
 export class Server extends Manager {
-  private frames = 0;
-
   constructor(key: string) {
     super(new Peer(key));
   }
 
   join(controller: Controller) {
-    const player = new Player(controller);
-    player.name = "Host";
-    this.players.push(player);
+    this._self = new Player(controller);
+    this._self.name = "Host";
+    this.players.push(this._self);
 
-    player.addCharacter(new Character(0, 0, getWord()));
+    this._self.addCharacter(new Character(50, 0, getWord()));
     this.cycleActivePlayer();
   }
 
   tick(dt: number, dtMs: number) {
-    this.activePlayer?.activeCharacter.controlContinuous(
-      dt,
-      this.activePlayer.controller
-    );
-
-    Level.instance.tick(dt);
-
-    this.time += dtMs;
+    super.tick(dt, dtMs);
 
     if (this.time - this.turnStartTime > this.turnLength) {
       this.cycleActivePlayer();
     }
-
-    this.frames++;
 
     if (this.frames % 30 === 0) {
       const data: Message = {

@@ -25,6 +25,9 @@ interface HurtableEntity extends DisplayObject {
 export class Level {
   private app: Application<HTMLCanvasElement>;
   public readonly viewport: Viewport;
+  private followedEntity: DisplayObject | null = null;
+  private followTime = 0;
+
   public readonly terrain: Terrain;
 
   private entities = new Set<TickingEntity>();
@@ -58,8 +61,10 @@ export class Level {
         direction: "all",
         underflow: "center",
       })
-      .drag({ wheel: true, clampWheel: true, pressDrag: false })
-      .pinch();
+      .pinch()
+      .wheel({});
+
+    this.mouseEdges();
 
     this.app.stage.addChild(this.viewport);
 
@@ -120,6 +125,14 @@ export class Level {
     for (let entity of this.entities) {
       entity.tick(dt);
     }
+
+    if (this.followedEntity) {
+      this.followTime -= dt;
+
+      if (this.followTime <= 0) {
+        this.unfollow();
+      }
+    }
   }
 
   add(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
@@ -172,5 +185,33 @@ export class Level {
         fn(entity, Math.sqrt(distance));
       }
     }
+  }
+
+  follow(target: DisplayObject) {
+    this.followTime = 30;
+
+    if (this.followedEntity === target) {
+      return;
+    }
+
+    this.followedEntity = target;
+    this.viewport.plugins.remove("mouse-edges");
+    this.viewport.follow(target, {
+      speed: 24,
+      radius: 100,
+    });
+  }
+
+  private unfollow() {
+    this.followedEntity = null;
+    this.viewport.plugins.remove("follow");
+    this.mouseEdges();
+  }
+
+  private mouseEdges() {
+    this.viewport.mouseEdges({
+      distance: 100,
+      speed: 12,
+    });
   }
 }

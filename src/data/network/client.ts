@@ -17,16 +17,9 @@ export class Client extends Manager {
   }
 
   tick(dt: number, dtMs: number) {
-    this.activePlayer?.activeCharacter?.controlContinuous(
-      dt,
-      this.activePlayer.controller
-    );
+    super.tick(dt, dtMs);
 
-    Level.instance.tick(dt);
-
-    this.time += dtMs;
-    const frames = this.time | 0;
-    if (frames % 3) {
+    if (this.frames % 3 === 0) {
       this.connection!.send({
         type: MessageType.InputState,
         data: this.controller!.serialize(),
@@ -69,9 +62,14 @@ export class Client extends Manager {
             continue;
           }
 
-          const player = new Player(
-            data.you ? this.controller! : new NetworkController()
-          );
+          let player: Player;
+          if (data.you) {
+            player = new Player(this.controller!);
+            this._self = player;
+          } else {
+            player = new Player(new NetworkController());
+          }
+
           player.name = data.name;
 
           data.characters.forEach(({ name, hp, x, y }) => {
