@@ -1,24 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { connect } from "./data/network";
-import { AssetsContainer } from "./util/assets/assetsContainer";
-import Hud from "./components/Hud.vue";
-
-const canvas = ref<HTMLDivElement | null>(null);
-
-onMounted(() => {
-  const container = new AssetsContainer();
-  container.onComplete(() => {
-    connect(canvas.value!);
-  });
-});
+import MainMenu from "./components/MainMenu.vue";
 </script>
 
 <template>
-  <div class="wrapper">
-    <div class="render-target" ref="canvas"></div>
-    <Hud />
-  </div>
+  <MainMenu />
 </template>
 
 <style>
@@ -37,12 +22,9 @@ onMounted(() => {
   font-family: Eternal;
 }
 
-.wrapper {
-  position: relative;
-}
-
 button {
   font-size: 24px;
+  font-family: Eternal;
 }
 
 /* http://meyerweb.com/eric/tools/css/reset/ 
