@@ -1,7 +1,7 @@
 import Peer from "peerjs";
 import { Player } from "./player";
 import { Popup } from "./types";
-import { Level } from "../level";
+import { Level } from "../map/level";
 
 export abstract class Manager {
   private static _instance: Manager;

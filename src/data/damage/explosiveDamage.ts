@@ -1,6 +1,6 @@
 import { DamageSource } from ".";
 import { circle32x32, circle9x9 } from "../collision/precomputed/circles";
-import { Level } from "../level";
+import { Level } from "../map/level";
 
 export class ExplosiveDamage implements DamageSource {
   static RangeToMaskMap = {

@@ -3,7 +3,7 @@ import { Message, MessageType } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
 import { NetworkController } from "../controller/networkController";
-import { Level } from "../level";
+import { Level } from "../map/level";
 import { Character } from "../character";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Manager } from "./manager";

@@ -1,7 +1,7 @@
 import { Ticker } from "pixi.js";
 import { Client } from "./client";
 import { Server } from "./server";
-import { Level } from "../level";
+import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 
 export const DEFAULT_SERVER_ID = "lorgan3";

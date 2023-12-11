@@ -5,12 +5,13 @@ import {
   SCALE_MODES,
   Sprite,
 } from "pixi.js";
-import { Terrain } from "./collision/terrain";
-import { CollisionMask } from "./collision/collisionMask";
+import { Terrain } from "./terrain";
+import { CollisionMask } from "../collision/collisionMask";
 import { Viewport } from "pixi-viewport";
-import { AssetsContainer } from "../util/assets/assetsContainer";
-import { Server } from "./network/server";
-import { DamageSource } from "./damage";
+import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { Server } from "../network/server";
+import { DamageSource } from "../damage";
+import { Map } from ".";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -48,13 +49,12 @@ export class Level {
 
     target.appendChild(this.app.view);
 
-    const map = AssetsContainer.instance.assets!["map"];
-
+    const map = AssetsContainer.instance.assets!["playground"];
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
-      worldWidth: map.width * 6,
-      worldHeight: map.height * 6,
+      worldWidth: map.terrain.width * 6,
+      worldHeight: map.terrain.height * 6,
       events: this.app.renderer.events,
     })
       .clamp({
@@ -68,45 +68,8 @@ export class Level {
 
     this.app.stage.addChild(this.viewport);
 
-    const sky = AssetsContainer.instance.assets!["sky"];
-    const sprite = new Sprite(sky);
-    sprite.scale.set(6);
-    this.viewport.addChild(sprite);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = 600;
-    canvas.height = 200;
-
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 150, 600, 50);
-    // ctx.fillRect(50, 140, 50, 50);
-    // ctx.moveTo(100, 120);
-    // ctx.lineTo(50, 120);
-    // ctx.stroke();
-
-    // ctx.moveTo(100, 140);
-    // ctx.lineTo(130, 120);
-    // ctx.stroke();
-
-    // ctx.moveTo(180, 140);
-    // ctx.lineTo(100, 70);
-    // ctx.stroke();
-
-    // ctx.moveTo(50, 80);
-    // ctx.lineTo(50, 120);
-    // ctx.stroke();
-
-    this.terrain = new Terrain(
-      CollisionMask.fromAlpha(ctx.getImageData(0, 0, 600, 200)),
-      map
-    );
+    this.terrain = new Terrain(map);
     this.viewport.addChild(this.terrain);
-
-    // const texture = Texture.from(canvas);
-    // const sprite2 = new Sprite(texture);
-    // sprite2.scale.set(6);
-    // this.viewport.addChild(sprite2);
   }
 
   set server(value: Server) {

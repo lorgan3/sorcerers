@@ -1,5 +1,5 @@
 import { AnimatedSprite, Container, Text } from "pixi.js";
-import { Level } from "./level";
+import { Level } from "./map/level";
 import { Body } from "./collision/body";
 import { Controller, Key } from "./controller/controller";
 import { AssetsContainer } from "../util/assets/assetsContainer";

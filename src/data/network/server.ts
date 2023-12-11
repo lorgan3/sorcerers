@@ -5,7 +5,7 @@ import { Controller } from "../controller/controller";
 import { Player } from "./player";
 import { Character } from "../character";
 import { KeyboardController } from "../controller/keyboardController";
-import { Level } from "../level";
+import { Level } from "../map/level";
 import { getWord } from "../../util/word";
 import { DamageSource } from "../damage";
 import { Manager } from "./manager";

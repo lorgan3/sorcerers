@@ -1,7 +1,7 @@
 import { DataConnection } from "peerjs";
 import { Character } from "../character";
 import { Controller } from "../controller/controller";
-import { Level } from "../level";
+import { Level } from "../map/level";
 
 export class Player {
   public readonly characters: Character[] = [];
