@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps } from "vue";
+import { ref } from "vue";
 import { Map } from "../data/map";
 
 const { onBack } = defineProps<{
@@ -92,7 +92,7 @@ const handleBuild = async () => {
           </label>
         </div>
 
-        <button class="build" @click="handleBuild">Build</button>
+        <button class="primary" @click="handleBuild">Build</button>
         <button class="secondary" @click="onBack">Back</button>
       </section>
       <section class="preview">
@@ -172,28 +172,6 @@ const handleBuild = async () => {
         object-fit: cover;
         border: 1px solid black;
       }
-    }
-
-    .build {
-      font-size: 32px;
-      background: #686051;
-      color: #cdcac2;
-      border: 4px solid #433e34;
-      border-radius: 10px;
-      letter-spacing: 1.5px;
-      cursor: pointer;
-
-      &:hover {
-        background: #776d5c;
-      }
-    }
-
-    .secondary {
-      background: none;
-      border: none;
-      text-decoration: underline;
-      cursor: pointer;
-      text-align: left;
     }
   }
 

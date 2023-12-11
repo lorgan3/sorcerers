@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import Team from "./Team.vue";
 import Builder from "./Builder.vue";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import { connect } from "../data/network";
@@ -41,13 +42,16 @@ const handleBack = () => {
     <div v-if="menu === Menu.MainMenu" class="mainMenu">
       <h1 class="title">Sorcerers</h1>
       <ul class="list">
-        <li><button @click="menu = Menu.Team">Team</button></li>
-        <li><button @click="handlePlay">Host game</button></li>
-        <li><button @click="handlePlay">Join game</button></li>
-        <li><button @click="menu = Menu.Builder">Builder</button></li>
+        <li><button class="primary" @click="menu = Menu.Team">Team</button></li>
+        <li><button class="primary" @click="handlePlay">Host game</button></li>
+        <li><button class="primary" @click="handlePlay">Join game</button></li>
+        <li>
+          <button class="primary" @click="menu = Menu.Builder">Builder</button>
+        </li>
       </ul>
     </div>
 
+    <Team v-if="menu === Menu.Team" :onBack="handleBack" />
     <Builder v-if="menu === Menu.Builder" :onBack="handleBack" />
 
     <div v-if="menu === Menu.Game" class="render-target" ref="canvas">
@@ -78,7 +82,7 @@ const handleBack = () => {
       flex-direction: column;
       gap: 15px;
       background: #9c917b;
-      box-shadow: 0px 0px 10px inset #433e34;
+      box-shadow: 0 0 10px inset #433e34;
       padding: 30px;
       border-radius: 10px;
 
@@ -86,17 +90,8 @@ const handleBack = () => {
         min-width: 400px;
         max-width: 100%;
         font-size: 32px;
-        background: #686051;
-        color: #cdcac2;
-        border: 4px solid #433e34;
-        border-radius: 10px;
         padding: 10px;
         letter-spacing: 1.5px;
-        cursor: pointer;
-
-        &:hover {
-          background: #776d5c;
-        }
       }
     }
   }

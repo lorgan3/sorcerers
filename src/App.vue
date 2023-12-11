@@ -27,6 +27,28 @@ button {
   font-family: Eternal;
 }
 
+.primary {
+  background: #686051;
+  color: #cdcac2;
+  border: 4px solid #433e34;
+  border-radius: 10px;
+  letter-spacing: 1.2px;
+  cursor: pointer;
+  padding: 3px;
+}
+
+.primary:hover {
+  background: #776d5c;
+}
+
+.secondary {
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+}
+
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
    License: none (public domain)

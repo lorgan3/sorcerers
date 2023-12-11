@@ -1,8 +1,13 @@
+import { settingsReplacer, settingsReviver } from "./settings";
 import { Items, Replacer, Reviver } from "./types";
 
-const REVIVERS_MAP: Record<keyof Items, Reviver> = {};
+const REVIVERS_MAP: Record<keyof Items, Reviver> = {
+  Settings: settingsReviver,
+};
 
-const REPLACER_MAP: Record<keyof Items, Replacer> = {};
+const REPLACER_MAP: Record<keyof Items, Replacer> = {
+  Settings: settingsReplacer,
+};
 
 export const get = <K extends keyof Items>(key: K): Items[K] | null => {
   let json: string | null;
