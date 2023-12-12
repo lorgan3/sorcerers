@@ -21,6 +21,8 @@ export class Map {
   private _terrain?: OffscreenCanvas;
   private _background?: OffscreenCanvas;
   private _collisionMask?: OffscreenCanvas;
+  private _width = 0;
+  private _height = 0;
 
   public readonly load: Promise<void>;
 
@@ -32,6 +34,8 @@ export class Map {
       this._terrain = terrain;
       this._background = background;
       this._collisionMask = terrain;
+      this._width = terrain.width;
+      this._height = terrain.height;
     });
   }
 
@@ -103,6 +107,14 @@ export class Map {
         this._collisionMask!.height
       )
     );
+  }
+
+  get width() {
+    return this._width;
+  }
+
+  get height() {
+    return this._height;
   }
 
   private static loadImage(src: string) {

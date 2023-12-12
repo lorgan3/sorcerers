@@ -191,6 +191,14 @@ export class CollisionMask {
     }
   }
 
+  get width() {
+    return this.w;
+  }
+
+  get height() {
+    return this.h;
+  }
+
   clone() {
     return new CollisionMask(this.w, this.h, structuredClone(this.mask));
   }

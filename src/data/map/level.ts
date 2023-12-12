@@ -1,17 +1,10 @@
-import {
-  Application,
-  BaseTexture,
-  DisplayObject,
-  SCALE_MODES,
-  Sprite,
-} from "pixi.js";
+import { Application, BaseTexture, DisplayObject, SCALE_MODES } from "pixi.js";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Viewport } from "pixi-viewport";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Server } from "../network/server";
 import { DamageSource } from "../damage";
-import { Map } from ".";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -30,10 +23,10 @@ export class Level {
   private followTime = 0;
 
   public readonly terrain: Terrain;
+  private spawnLocations: Array<[number, number]> = [];
 
   private entities = new Set<TickingEntity>();
   private hurtables = new Set<HurtableEntity>();
-  private _server?: Server;
 
   private static _instance: Level;
   static get instance() {
@@ -72,8 +65,13 @@ export class Level {
     this.viewport.addChild(this.terrain);
   }
 
-  set server(value: Server) {
-    this._server = value;
+  getRandomSpawnLocation() {
+    if (!this.spawnLocations.length) {
+      this.spawnLocations = this.terrain.getSpawnLocations();
+    }
+
+    const index = Math.floor(Math.random() * this.spawnLocations.length);
+    return this.spawnLocations.splice(index, 1)[0];
   }
 
   collidesWith(other: CollisionMask, dx: number, dy: number) {
@@ -127,11 +125,11 @@ export class Level {
   }
 
   damage(damageSource: DamageSource) {
-    if (!this._server) {
+    if (!Server.instance) {
       return;
     }
 
-    this._server.syncDamage(damageSource);
+    Server.instance.syncDamage(damageSource);
     damageSource.damage();
   }
 
