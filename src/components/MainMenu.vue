@@ -41,10 +41,14 @@ const handleBack = () => {
   <div class="background">
     <div v-if="menu === Menu.MainMenu" class="mainMenu">
       <h1 class="title">Sorcerers</h1>
-      <ul class="list">
+      <ul class="list flex-list">
         <li><button class="primary" @click="menu = Menu.Team">Team</button></li>
-        <li><button class="primary" @click="handlePlay">Host game</button></li>
-        <li><button class="primary" @click="handlePlay">Join game</button></li>
+        <li>
+          <button class="primary" @click="menu = Menu.Host">Host game</button>
+        </li>
+        <li>
+          <button class="primary" @click="menu = Menu.Join">Join game</button>
+        </li>
         <li>
           <button class="primary" @click="menu = Menu.Builder">Builder</button>
         </li>
@@ -78,9 +82,6 @@ const handleBack = () => {
     }
 
     .list {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
       background: #9c917b;
       box-shadow: 0 0 10px inset #433e34;
       padding: 30px;

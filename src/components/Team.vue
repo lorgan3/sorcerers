@@ -41,7 +41,7 @@ const handleSave = () => {
     <div class="teams">
       <div
         v-for="(team, index) in teams"
-        :class="{ team: true, invalid: !team.isValid() }"
+        :class="{ team: true, 'flex-list': true, invalid: !team.isValid() }"
       >
         <button
           v-if="teams.length > 1"
@@ -82,10 +82,6 @@ const handleSave = () => {
   flex-direction: column;
   gap: 20px;
   padding: 30px;
-
-  h1 {
-    font-size: 32px;
-  }
 }
 
 .teams {
@@ -94,9 +90,6 @@ const handleSave = () => {
   gap: 10px;
 
   .team {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
     background: #9c917b;
     padding: 25px;
     border-radius: 5px;

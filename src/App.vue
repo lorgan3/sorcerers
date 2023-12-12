@@ -49,6 +49,19 @@ button {
   text-align: left;
 }
 
+.truncate {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+}
+
+.flex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
    License: none (public domain)
@@ -154,5 +167,9 @@ table {
 h3 {
   font-size: 18px;
   font-weight: bold;
+}
+
+h1 {
+  font-size: 48px;
 }
 </style>

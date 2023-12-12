@@ -56,7 +56,7 @@ const handleBuild = async () => {
 <template>
   <div class="background">
     <div class="builder">
-      <section class="controls">
+      <section class="controls flex-list">
         <div class="section">
           <h3>Terrain</h3>
           <label class="inputButton">
@@ -123,9 +123,6 @@ const handleBuild = async () => {
     border: 4px solid #433e34;
     border-radius: 10px;
     padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 
     .section {
       h3 {
