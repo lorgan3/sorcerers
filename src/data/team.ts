@@ -5,7 +5,7 @@ const CHARACTERS_PER_TEAM = 4;
 export class Team {
   private constructor(public name: string, public characters: string[]) {}
 
-  serialize() {
+  serialize(): any[] {
     return [this.name, [...this.characters]];
   }
 

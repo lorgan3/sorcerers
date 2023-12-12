@@ -1,7 +1,10 @@
 import { Team } from "../../data/team";
+import { assertNumber } from "../number";
 
 export interface Settings {
+  name: string;
   teams: Team[];
+  defaultTeam: number;
 }
 
 // In an ideal world this returns `Settings[K]` but typescript doesn't understand
@@ -21,7 +24,11 @@ export const settingsReplacer = <K extends keyof Settings>(
   value: Settings[K]
 ): any => {
   if (key === "teams") {
-    return value.map((team) => team.serialize());
+    return (value as Team[]).map((team) => team.serialize());
+  }
+
+  if (key === "defaultTeam") {
+    return assertNumber(value, -1);
   }
 
   return value;
@@ -29,6 +36,8 @@ export const settingsReplacer = <K extends keyof Settings>(
 
 export const defaults = (): Settings => {
   return {
+    name: "Player",
     teams: [Team.random()],
+    defaultTeam: -1,
   };
 };
