@@ -83,7 +83,7 @@ const handleBack = () => {
 
     .title {
       margin-bottom: 30px;
-      font-size: 64px;
+      font-size: 72px;
       letter-spacing: 2px;
       color: #433e34;
     }

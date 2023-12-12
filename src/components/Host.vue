@@ -237,16 +237,14 @@ const handleStart = async () => {
 
   select,
   input {
-    font-size: 24px;
-    font-family: "Eternal";
     width: 300px;
-    padding: 3px;
+    padding: 6px;
     box-sizing: border-box;
   }
 
   .meta {
     color: #433e34;
-    font-size: 20px;
+    font-size: 14px;
   }
 }
 

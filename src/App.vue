@@ -17,9 +17,9 @@ import MainMenu from "./components/MainMenu.vue";
   width: 100vw;
   height: 100vh;
 
-  font-size: 24px;
+  font-size: 18px;
   overflow: hidden;
-  font-family: Eternal;
+  font-family: system-ui;
 }
 
 button {
@@ -167,9 +167,15 @@ table {
 h3 {
   font-size: 18px;
   font-weight: bold;
+  font-family: Eternal;
+}
+
+h2 {
+  font-family: Eternal;
 }
 
 h1 {
   font-size: 48px;
+  font-family: Eternal;
 }
 </style>
