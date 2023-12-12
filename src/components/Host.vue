@@ -32,7 +32,7 @@ const key = ref("");
 const players = ref<string[]>();
 
 const createServer = () => {
-  key.value = Math.floor(Math.random() * 1000)
+  key.value = Math.floor(Math.random() * 10000)
     .toString()
     .padStart(4, "0");
 
