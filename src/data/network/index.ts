@@ -3,14 +3,29 @@ import { Client } from "./client";
 import { Server } from "./server";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
+import Peer from "peerjs";
+import { Manager } from "./manager";
+import { Team } from "../team";
 
 export const DEFAULT_SERVER_ID = "lorgan3";
+export const PEER_ID_PREFIX = "sorcerers-";
 
 export const connect = (target: HTMLElement) => {
   const level = new Level(target);
-
   const controller = new KeyboardController(level.viewport);
-  const server = new Server(DEFAULT_SERVER_ID);
+
+  if (Manager.instance) {
+    Manager.instance.connect(controller);
+    Server.instance?.start();
+
+    Ticker.shared.add((dt) => {
+      Manager.instance.tick(dt, Ticker.shared.deltaMS);
+    });
+
+    return;
+  }
+
+  const server = new Server(new Peer(DEFAULT_SERVER_ID));
 
   const promise = new Promise((resolve, reject) => {
     const id = window.setTimeout(resolve, 500);
@@ -23,18 +38,19 @@ export const connect = (target: HTMLElement) => {
   promise
     .then(() => {
       server.listen();
-      server.join(controller);
-      level.server = server;
+      server.connect(controller);
+      server.start();
 
       Ticker.shared.add((dt) => {
         server.tick(dt, Ticker.shared.deltaMS);
       });
     })
     .catch(() => {
-      const client = new Client();
+      const client = new Client(new Peer());
 
       window.setTimeout(() => {
-        client.connect(DEFAULT_SERVER_ID, controller);
+        client.join(DEFAULT_SERVER_ID, "Client", Team.random());
+        client.connect(controller);
 
         Ticker.shared.add((dt) => {
           client.tick(dt, Ticker.shared.deltaMS);

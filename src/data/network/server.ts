@@ -1,27 +1,58 @@
 import Peer from "peerjs";
 import { MessageType, Message, Popup } from "./types";
-import { NetworkController } from "../controller/networkController";
-import { Controller } from "../controller/controller";
 import { Player } from "./player";
 import { Character } from "../character";
 import { KeyboardController } from "../controller/keyboardController";
 import { Level } from "../map/level";
-import { getWord } from "../../util/word";
 import { DamageSource } from "../damage";
 import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
+import { Team } from "../team";
 
 export class Server extends Manager {
-  constructor(key: string) {
-    super(new Peer(key));
+  private started = false;
+  private controller?: KeyboardController;
+
+  private static _serverInstance: Server;
+  static get instance() {
+    return Server._serverInstance;
   }
 
-  join(controller: Controller) {
-    this._self = new Player(controller);
-    this._self.name = "Host";
-    this.players.push(this._self);
+  constructor(peer: Peer) {
+    super(peer);
+    Server._serverInstance = this;
 
-    this._self.addCharacter(new Character(50, 0, getWord()));
+    this._self = new Player();
+    this.players.push(this._self);
+  }
+
+  connect(controller: KeyboardController) {
+    this.controller = controller;
+
+    this._self!.connect(this._self!.name, this._self!.team, this.controller);
+  }
+
+  join(name: string, team: Team) {
+    this._self!.connect(name, team, this.controller);
+  }
+
+  start() {
+    this.started = true;
+    this.time = 0;
+
+    Server.instance.broadcast({
+      type: MessageType.StartGame,
+    });
+
+    for (let player of this.players) {
+      for (let character of player.team.characters) {
+        player.addCharacter(
+          new Character(...Level.instance.getRandomSpawnLocation(), character)
+        );
+      }
+    }
+
+    this.syncPlayers();
     this.cycleActivePlayer();
   }
 
@@ -60,12 +91,10 @@ export class Server extends Manager {
         this.activePlayer!.controller as KeyboardController
       ).serialize();
 
-      for (let player of this.players) {
-        player.connection?.send({
-          type: MessageType.InputState,
-          data: pressedKeys,
-        });
-      }
+      this.broadcast({
+        type: MessageType.InputState,
+        data: pressedKeys,
+      });
     }
   }
 
@@ -73,8 +102,7 @@ export class Server extends Manager {
     console.log("server start ", this.peer);
 
     this.peer.on("connection", (connection) => {
-      const controller = new NetworkController();
-      const player = new Player(controller, connection);
+      const player = new Player(connection);
 
       connection.on("open", () => {
         console.log("open");
@@ -86,7 +114,7 @@ export class Server extends Manager {
       });
 
       connection.on("data", (data) => {
-        this.handleMessage(data as Message, player, controller);
+        this.handleMessage(data as Message, player);
       });
 
       connection.on("close", () => {
@@ -105,45 +133,37 @@ export class Server extends Manager {
   }
 
   syncDamage(damageSource: DamageSource) {
-    const message = {
+    this.broadcast({
       type: MessageType.SyncDamage,
       data: damageSource.serialize(),
-    };
-
-    for (let player of this.players) {
-      player.connection?.send(message);
-    }
+    });
   }
 
-  private handleMessage(
-    message: Message,
-    player: Player,
-    controller: NetworkController
-  ) {
+  private handleMessage(message: Message, player: Player) {
     switch (message.type) {
       case MessageType.Join:
-        player.name = message.name;
+        const team = Team.fromJson(message.team);
+        player.connect(message.name, team.isValid() ? team : Team.random());
 
-        const character = new Character(50, 0, getWord());
-        player.addCharacter(character);
+        // if (this.started) {
+        //   // Do this before syncing the entities because they contain a reference to the mask!
+        //   player.connection!.send({
+        //     type: MessageType.SyncMap,
+        //     ...Level.instance.terrain.serialize(),
+        //   });
 
-        // Do this before syncing the entities because they contain a reference to the mask!
-        player.connection!.send({
-          type: MessageType.SyncMap,
-          ...Level.instance.terrain.serialize(),
-        });
+        //   const character = new Character(50, 0, getWord());
+        //   player.addCharacter(character);
+        // }
 
         this.syncPlayers();
-        this.cycleActivePlayer();
         break;
 
       case MessageType.InputState:
-        controller.deserialize(message.data);
+        player.controller.deserialize(message.data);
 
         if (player === this.activePlayer) {
-          for (let player of this.players) {
-            player.connection?.send(message);
-          }
+          this.broadcast(message);
         }
         break;
     }
@@ -158,6 +178,7 @@ export class Server extends Manager {
         time: this.time,
         players: this.players.map((p) => ({
           name: p.name,
+          team: p.team.serialize(),
           you: p === player,
           characters: p.characters.map((character) => {
             const [x, y] = character.body.precisePosition;
@@ -169,8 +190,6 @@ export class Server extends Manager {
             };
           }),
         })),
-        activeCharacter: this.activePlayer!.active,
-        activePlayer,
       };
 
       player.connection?.send(response);
@@ -191,16 +210,13 @@ export class Server extends Manager {
     this.windSpeed = Math.round(Math.random() * 16 - 8);
     this.turnStartTime = this.time;
 
-    const message = {
+    this.broadcast({
       type: MessageType.ActiveCharacter,
       activePlayer: activePlayerIndex,
       activeCharacter: this.activePlayer.active,
       windSpeed: this.windSpeed,
       turnStartTime: this.turnStartTime,
-    };
-    for (let player of this.players) {
-      player.connection?.send(message);
-    }
+    });
 
     this.addPopup({
       title: `${this.activePlayer.name}'s turn`,
@@ -214,11 +230,13 @@ export class Server extends Manager {
   protected addPopup(popup: Popup): void {
     super.addPopup(popup);
 
-    const message = {
+    this.broadcast({
       type: MessageType.Popup,
       ...popup,
-    };
+    });
+  }
 
+  broadcast(message: Message) {
     for (let player of this.players) {
       player.connection?.send(message);
     }

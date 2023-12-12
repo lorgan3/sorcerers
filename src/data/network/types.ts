@@ -10,6 +10,8 @@ export enum MessageType {
   SyncDamage,
   SyncMap,
   Popup,
+  LobbyUpdate,
+  StartGame,
 }
 
 export type Message =
@@ -52,6 +54,7 @@ export type Message =
       players: Array<{
         name: string;
         you: boolean;
+        team: any[];
         characters: Array<{
           name: string;
           hp: number;
@@ -59,12 +62,11 @@ export type Message =
           y: number;
         }>;
       }>;
-      activePlayer: number;
-      activeCharacter: number;
     }
   | {
       type: MessageType.Join;
       name: string;
+      team: any[];
     }
   | {
       type: MessageType.SyncDamage;
@@ -82,6 +84,14 @@ export type Message =
       title: string;
       meta?: string;
       duration?: number;
+    }
+  | {
+      type: MessageType.LobbyUpdate;
+      map: string;
+      players: string[];
+    }
+  | {
+      type: MessageType.StartGame;
     };
 
 export interface Popup {

@@ -2,6 +2,7 @@ import Peer from "peerjs";
 import { Player } from "./player";
 import { Popup } from "./types";
 import { Level } from "../map/level";
+import { KeyboardController } from "../controller/keyboardController";
 
 export abstract class Manager {
   private static _instance: Manager;
@@ -10,7 +11,7 @@ export abstract class Manager {
   }
 
   protected _self: Player | null = null;
-  protected players: Player[] = [];
+  public players: Player[] = [];
   protected activePlayer: Player | null = null;
   protected time = 0;
   protected frames = 0;
@@ -25,6 +26,8 @@ export abstract class Manager {
   constructor(public readonly peer: Peer) {
     Manager._instance = this;
   }
+
+  abstract connect(controller: KeyboardController): void;
 
   tick(dt: number, dtMs: number) {
     if (

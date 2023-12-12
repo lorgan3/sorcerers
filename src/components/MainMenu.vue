@@ -5,6 +5,8 @@ import Builder from "./Builder.vue";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import { connect } from "../data/network";
 import Hud from "./Hud.vue";
+import Host from "./Host.vue";
+import Join from "./Join.vue";
 
 enum Menu {
   MainMenu,
@@ -56,6 +58,8 @@ const handleBack = () => {
     </div>
 
     <Team v-if="menu === Menu.Team" :onBack="handleBack" />
+    <Host v-if="menu === Menu.Host" :onBack="handleBack" :onPlay="handlePlay" />
+    <Join v-if="menu === Menu.Join" :onBack="handleBack" :onPlay="handlePlay" />
     <Builder v-if="menu === Menu.Builder" :onBack="handleBack" />
 
     <div v-if="menu === Menu.Game" class="render-target" ref="canvas">

@@ -2,18 +2,28 @@ import Peer, { DataConnection } from "peerjs";
 import { Message, MessageType } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
-import { NetworkController } from "../controller/networkController";
 import { Level } from "../map/level";
 import { Character } from "../character";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Manager } from "./manager";
+import { Team } from "../team";
 
 export class Client extends Manager {
   private connection?: DataConnection;
   private controller?: KeyboardController;
 
-  constructor(key?: string) {
-    super(new Peer(key!));
+  private static _clientInstance: Client;
+  static get instance() {
+    return Client._clientInstance;
+  }
+
+  constructor(peer: Peer) {
+    super(peer);
+    Client._clientInstance = this;
+  }
+
+  get isConnected() {
+    return !!this.connection;
   }
 
   tick(dt: number, dtMs: number) {
@@ -27,14 +37,14 @@ export class Client extends Manager {
     }
   }
 
-  connect(key: string, controller: KeyboardController) {
-    this.controller = controller;
+  join(key: string, name: string, team: Team) {
     this.connection = this.peer.connect(key);
 
     this.connection.on("open", () => {
       this.connection!.send({
         type: MessageType.Join,
-        name: "Client",
+        name,
+        team: team.serialize(),
       });
     });
 
@@ -42,12 +52,21 @@ export class Client extends Manager {
       console.log("error", err);
     });
 
-    this.connection.on("data", (data) => {
-      this.handleMessage(data as Message);
-    });
-
     this.connection.on("close", () => {
       console.log("closed");
+    });
+  }
+
+  onLobbyUpdate(fn: (message: Message) => void) {
+    this.connection!.on("data", (data) => fn(data as Message));
+  }
+
+  connect(controller: KeyboardController) {
+    this.controller = controller;
+
+    this.connection!.off("data");
+    this.connection!.on("data", (data) => {
+      this.handleMessage(data as Message);
     });
   }
 
@@ -62,15 +81,15 @@ export class Client extends Manager {
             continue;
           }
 
-          let player: Player;
+          const player = new Player();
           if (data.you) {
-            player = new Player(this.controller!);
             this._self = player;
-          } else {
-            player = new Player(new NetworkController());
+            player.connect(
+              data.name,
+              Team.fromJson(data.team),
+              this.controller!
+            );
           }
-
-          player.name = data.name;
 
           data.characters.forEach(({ name, hp, x, y }) => {
             const character = new Character(x, y, name);
@@ -82,13 +101,11 @@ export class Client extends Manager {
         }
 
         this.players = this.players.slice(0, message.players.length);
-        this.activePlayer = this.players[message.activePlayer];
-        this.activePlayer.active = message.activeCharacter;
         break;
 
       case MessageType.ActiveCharacter:
         this.activePlayer = this.players[message.activePlayer];
-        this.players[message.activePlayer].active = message.activeCharacter;
+        this.activePlayer.active = message.activeCharacter;
         this.activePlayer.activeCharacter.attacked = false;
         this.windSpeed = message.windSpeed;
         this.turnStartTime = message.turnStartTime;
