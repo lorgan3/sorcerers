@@ -31,22 +31,22 @@ export class KeyboardController implements Controller {
 
   private handleMouseMove = (event: FederatedPointerEvent) => {
     this.mouseMove(
-      event.global.x + this.target.scale.x + this.target.left,
-      event.global.y + this.target.scale.y + this.target.top
+      event.global.x / this.target.scale.x + this.target.left,
+      event.global.y / this.target.scale.y + this.target.top
     );
   };
 
   private handleMouseDown = (event: FederatedPointerEvent) => {
     this.mouseDown(
-      event.global.x + this.target.scale.x + this.target.left,
-      event.global.y + this.target.scale.y + this.target.top
+      event.global.x / this.target.scale.x + this.target.left,
+      event.global.y / this.target.scale.y + this.target.top
     );
   };
 
   private handleMouseUp = (event: FederatedPointerEvent) => {
     this.mouseUp(
-      event.global.x + this.target.scale.x + this.target.left,
-      event.global.y + this.target.scale.y + this.target.top
+      event.global.x / this.target.scale.x + this.target.left,
+      event.global.y / this.target.scale.y + this.target.top
     );
   };
 
@@ -121,7 +121,7 @@ export class KeyboardController implements Controller {
     return [this.mouseX, this.mouseY];
   }
 
-  serialize() {
+  serialize(): [number, number, number] {
     this.sentKeys = this.pressedKeys;
     return [this.pressedKeys, this.mouseX, this.mouseY];
   }
