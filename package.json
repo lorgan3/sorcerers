@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "check-types": "vue-tsc --noEmit",
-    "atlas-packer": "ts-node-esm -T ./scripts/atlasPacker.ts",
+    "atlas-packer": "node --no-warnings --loader ts-node/esm ./scripts/atlasPacker.ts",
     "install": "yarn atlas-packer"
   },
   "dependencies": {

@@ -17,5 +17,8 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "scripts/**/*.ts"
-  ]
+  ],
+  "ts-node": {
+    "files": true
+  }
 }
