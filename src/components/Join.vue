@@ -7,10 +7,11 @@ import { Client } from "../data/network/client";
 import { PEER_ID_PREFIX } from "../data/network";
 import { MessageType } from "../data/network/types";
 import { Team } from "../data/team";
+import { Map } from "../data/map";
 
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
-  onPlay: () => void;
+  onPlay: (map: Map) => void;
 }>();
 
 const settings = get("Settings") || defaults();
@@ -55,7 +56,7 @@ const handleConnect = () => {
     teams.value[selectedTeam.value] || Team.random()
   );
 
-  Client.instance.onLobbyUpdate((message) => {
+  Client.instance.onLobbyUpdate(async (message) => {
     switch (message.type) {
       case MessageType.LobbyUpdate:
         players.value = message.players;
@@ -63,7 +64,16 @@ const handleConnect = () => {
         break;
 
       case MessageType.StartGame:
-        onPlay();
+        onPlay(
+          await Map.fromConfig({
+            terrain: {
+              data: new Blob([message.map.terrain.data]),
+            },
+            background: {
+              data: new Blob([message.map.background.data]),
+            },
+          })
+        );
         break;
     }
   });

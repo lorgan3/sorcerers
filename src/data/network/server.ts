@@ -36,12 +36,10 @@ export class Server extends Manager {
     this._self!.connect(name, team, this.controller);
   }
 
-  start() {
-    this.started = true;
-    this.time = 0;
-
-    Server.instance.broadcast({
+  async start() {
+    await Server.instance.broadcast({
       type: MessageType.StartGame,
+      map: await Level.instance.terrain.serialize(),
     });
 
     for (let player of this.players) {
@@ -54,6 +52,9 @@ export class Server extends Manager {
 
     this.syncPlayers();
     this.cycleActivePlayer();
+
+    this.started = true;
+    this.time = 0;
   }
 
   tick(dt: number, dtMs: number) {
@@ -236,9 +237,9 @@ export class Server extends Manager {
     });
   }
 
-  broadcast(message: Message) {
-    for (let player of this.players) {
-      player.connection?.send(message);
-    }
+  async broadcast(message: Message) {
+    await Promise.all(
+      this.players.map((player) => player.connection?.send(message))
+    );
   }
 }

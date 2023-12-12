@@ -86,36 +86,40 @@ export class Terrain extends Container {
     this.characterMask.subtract(mask, x - r, y - r);
   }
 
+  // @TODO: a system for sending an in progress map
+
   serialize() {
-    return {
-      ...this.collisionMask.serialize(),
-      background: this.terrainCtx.getImageData(
-        0,
-        0,
-        this.map.background.width,
-        this.map.background.height
-      ).data.buffer,
-    };
+    return this.map.toConfig();
+
+    // return {
+    //   ...this.collisionMask.serialize(),
+    //   background: this.terrainCtx.getImageData(
+    //     0,
+    //     0,
+    //     this.map.background.width,
+    //     this.map.background.height
+    //   ).data.buffer,
+    // };
   }
 
-  deserialize(data: any) {
-    this.collisionMask = CollisionMask.deserialize(data);
-    this.characterMask = this.collisionMask.clone();
+  // deserialize(data: any) {
+  //   this.collisionMask = CollisionMask.deserialize(data);
+  //   this.characterMask = this.collisionMask.clone();
 
-    this.terrainCtx.globalCompositeOperation = "multiply";
-    this.map.background.width = data.width;
-    this.map.background.height = data.height;
-    this.terrainCtx.putImageData(
-      new ImageData(
-        new Uint8ClampedArray(data.background),
-        data.width,
-        data.height
-      ),
-      0,
-      0
-    );
-    this.terrainCtx.globalCompositeOperation = "destination-out";
+  //   this.terrainCtx.globalCompositeOperation = "multiply";
+  //   this.map.background.width = data.width;
+  //   this.map.background.height = data.height;
+  //   this.terrainCtx.putImageData(
+  //     new ImageData(
+  //       new Uint8ClampedArray(data.background),
+  //       data.width,
+  //       data.height
+  //     ),
+  //     0,
+  //     0
+  //   );
+  //   this.terrainCtx.globalCompositeOperation = "destination-out";
 
-    this.terrain.update();
-  }
+  //   this.terrain.update();
+  // }
 }

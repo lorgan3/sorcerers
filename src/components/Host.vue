@@ -8,10 +8,12 @@ import { MessageType } from "../data/network/types";
 import Peer from "peerjs";
 import { defaultMaps } from "../util/assets/index";
 import { Team } from "../data/team";
+import { Map } from "../data/map";
+import { AssetsContainer } from "../util/assets/assetsContainer";
 
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
-  onPlay: () => void;
+  onPlay: (map: Map) => void;
 }>();
 
 const settings = get("Settings") || defaults();
@@ -22,7 +24,8 @@ const name = ref(settings.name);
 
 const CUSTOM = "custom";
 const selectedMap = ref(Object.keys(defaultMaps)[0]);
-const customMap = ref("");
+const customMap = ref<Blob | null>(null);
+const customMapString = ref("");
 const customUpload = ref();
 
 const key = ref("");
@@ -87,10 +90,11 @@ const handleUploadMap = (event: Event) => {
     return;
   }
 
-  var reader = new FileReader();
+  const reader = new FileReader();
   reader.readAsDataURL(file);
   reader.onload = () => {
-    customMap.value = reader.result as string;
+    customMapString.value = reader.result as string;
+    customMap.value = file;
     selectedMap.value = CUSTOM;
   };
 };
@@ -103,7 +107,7 @@ const handleBack = () => {
   onBack();
 };
 
-const handleStart = () => {
+const handleStart = async () => {
   set("Settings", {
     ...settings,
     name: name.value,
@@ -112,7 +116,11 @@ const handleStart = () => {
 
   window.clearInterval(timer);
 
-  onPlay();
+  if (selectedMap.value === CUSTOM) {
+    onPlay(await Map.fromBlob(customMap.value!));
+  } else {
+    onPlay(AssetsContainer.instance.assets![selectedMap.value]);
+  }
 };
 </script>
 
@@ -168,7 +176,7 @@ const handleStart = () => {
               @click="customUpload.click"
             >
               <span class="truncate mapName">Custom</span>
-              <img v-if="customMap" :src="customMap" />
+              <img v-if="customMapString" :src="customMapString" />
               <div v-else class="placeholder">➕ upload</div>
             </li>
           </ul>

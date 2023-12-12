@@ -2,9 +2,9 @@ import { Application, BaseTexture, DisplayObject, SCALE_MODES } from "pixi.js";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Viewport } from "pixi-viewport";
-import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Server } from "../network/server";
 import { DamageSource } from "../damage";
+import { Map } from ".";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -33,7 +33,7 @@ export class Level {
     return Level._instance;
   }
 
-  constructor(target: HTMLElement) {
+  constructor(target: HTMLElement, map: Map) {
     Level._instance = this;
 
     this.app = new Application({
@@ -42,7 +42,6 @@ export class Level {
 
     target.appendChild(this.app.view);
 
-    const map = AssetsContainer.instance.assets!["playground"];
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,

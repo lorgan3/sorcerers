@@ -1,12 +1,12 @@
 import { addMetadata, getMetadata } from "meta-png";
 import { CollisionMask } from "../collision/collisionMask";
 
-interface Config {
+export interface Config {
   terrain: {
-    data: string;
+    data: string | Blob;
   };
   background: {
-    data: string;
+    data: string | Blob;
   };
 }
 
@@ -28,8 +28,8 @@ export class Map {
 
   private constructor(private config: Config) {
     this.load = Promise.all([
-      Map.createCanvasFromString(this.config.terrain.data),
-      Map.createCanvasFromString(this.config.background.data),
+      Map.createCanvasFromData(this.config.terrain.data),
+      Map.createCanvasFromData(this.config.background.data),
     ]).then(([terrain, background]) => {
       this._terrain = terrain;
       this._background = background;
@@ -53,10 +53,36 @@ export class Map {
   }
 
   static async fromConfig(config: Config) {
-    return new Map(config);
+    const map = new Map(config);
+    await map.load;
+
+    return map;
+  }
+
+  async toConfig(): Promise<Config> {
+    const [terrain, background] = await Promise.all([
+      this.terrain!.convertToBlob({ type: "image/png" }),
+      this._background!.convertToBlob({ type: "image/png" }),
+    ]);
+
+    return {
+      terrain: {
+        data: terrain,
+      },
+      background: {
+        data: background,
+      },
+    };
   }
 
   async toBlob() {
+    if (
+      typeof this.config.terrain.data !== "string" ||
+      typeof this.config.background.data !== "string"
+    ) {
+      throw new Error("Only string configs can be converted to blobs for now");
+    }
+
     const [terrain, background] = await Promise.all([
       Map.loadImage(this.config.terrain.data),
       Map.loadImage(this.config.background.data),
@@ -117,14 +143,18 @@ export class Map {
     return this._height;
   }
 
-  private static loadImage(src: string) {
-    return new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
+  private static loadImage(value: string | Blob) {
+    if (typeof value === "string") {
+      return new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
 
-      image.src = src;
-    });
+        image.src = value;
+      });
+    }
+
+    return createImageBitmap(value);
   }
 
   private static getMetadata(data: Uint8Array, key: string) {
@@ -137,7 +167,7 @@ export class Map {
     return value;
   }
 
-  private static async createCanvasFromString(value: string) {
+  private static async createCanvasFromData(value: string | Blob) {
     const image = await Map.loadImage(value);
 
     const canvas = new OffscreenCanvas(image.width, image.height);

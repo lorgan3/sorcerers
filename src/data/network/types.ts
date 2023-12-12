@@ -1,3 +1,5 @@
+import { Config } from "../map";
+
 export enum MessageType {
   Initialize,
   InputState,
@@ -92,6 +94,7 @@ export type Message =
     }
   | {
       type: MessageType.StartGame;
+      map: Config;
     };
 
 export interface Popup {

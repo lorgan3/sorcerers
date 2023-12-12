@@ -6,17 +6,18 @@ import { KeyboardController } from "../controller/keyboardController";
 import Peer from "peerjs";
 import { Manager } from "./manager";
 import { Team } from "../team";
+import { Map } from "../map";
 
 export const DEFAULT_SERVER_ID = "lorgan3";
 export const PEER_ID_PREFIX = "sorcerers-";
 
-export const connect = (target: HTMLElement) => {
-  const level = new Level(target);
+export const connect = async (target: HTMLElement, map: Map) => {
+  const level = new Level(target, map);
   const controller = new KeyboardController(level.viewport);
 
   if (Manager.instance) {
     Manager.instance.connect(controller);
-    Server.instance?.start();
+    await Server.instance?.start();
 
     Ticker.shared.add((dt) => {
       Manager.instance.tick(dt, Ticker.shared.deltaMS);

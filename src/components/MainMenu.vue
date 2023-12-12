@@ -7,6 +7,7 @@ import { connect } from "../data/network";
 import Hud from "./Hud.vue";
 import Host from "./Host.vue";
 import Join from "./Join.vue";
+import { Map } from "../data/map";
 
 enum Menu {
   MainMenu,
@@ -21,17 +22,19 @@ const canvas = ref<HTMLDivElement | null>(null);
 const menu = ref(Menu.MainMenu);
 
 const container = new AssetsContainer();
+let selectedMap: Map;
 
 watch(canvas, (canvas) => {
   if (canvas) {
     container.onComplete(() => {
-      connect(canvas);
+      connect(canvas, selectedMap);
     });
   }
 });
 
-const handlePlay = () => {
+const handlePlay = (map: Map) => {
   menu.value = Menu.Game;
+  selectedMap = map;
 };
 
 const handleBack = () => {

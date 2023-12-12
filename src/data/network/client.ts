@@ -2,7 +2,6 @@ import Peer, { DataConnection } from "peerjs";
 import { Message, MessageType } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
-import { Level } from "../map/level";
 import { Character } from "../character";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Manager } from "./manager";
@@ -130,7 +129,7 @@ export class Client extends Manager {
         break;
 
       case MessageType.SyncMap:
-        Level.instance.terrain.deserialize(message);
+        // Level.instance.terrain.deserialize(message);
         break;
 
       case MessageType.Popup:
