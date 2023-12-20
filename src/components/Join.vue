@@ -25,6 +25,8 @@ const key = ref("");
 const players = ref<string[]>([]);
 const map = ref("");
 
+const nameValidator = (name: string) => !!name.trim();
+
 const createClient = () => {
   const peer = new Peer();
 
@@ -46,10 +48,6 @@ const handleConnect = () => {
     name: name.value,
     defaultTeam: selectedTeam.value,
   });
-
-  if (!Client.instance) {
-    return;
-  }
 
   Client.instance.join(
     PEER_ID_PREFIX + key.value,
@@ -118,7 +116,7 @@ const handleBack = () => {
     <div v-else class="options flex-list">
       <h2>Settings</h2>
       <Input label="Room key" v-model="key" autofocus />
-      <Input label="Name" v-model="name" />
+      <Input label="Name" v-model="name" :validator="nameValidator" />
 
       <label class="label">
         Team
@@ -135,7 +133,12 @@ const handleBack = () => {
   </div>
 
   <div class="buttons">
-    <button v-if="!players.length" @click="handleConnect" class="primary">
+    <button
+      v-if="!players.length"
+      @click="handleConnect"
+      class="primary"
+      :disabled="!key || !nameValidator(name) || !Client.instance"
+    >
       Connect
     </button>
     <button @click="handleBack" class="secondary">

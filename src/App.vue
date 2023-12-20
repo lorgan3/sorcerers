@@ -48,7 +48,7 @@ button {
   transition: 0.5s color;
 }
 
-.primary:hover {
+.primary:not([disabled]):hover {
   box-shadow: 0 0 5px inset var(--highlight);
   position: relative;
   top: 2px;
@@ -67,7 +67,7 @@ button {
   transition: 0.5s color, 0.25s background-color;
 }
 
-.secondary:hover {
+.secondary:not([disabled]):hover {
   background: var(--background);
   color: var(--highlight);
 }
