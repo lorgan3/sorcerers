@@ -10,6 +10,7 @@ import { defaultMaps } from "../util/assets/index";
 import { Team } from "../data/team";
 import { Map } from "../data/map";
 import { AssetsContainer } from "../util/assets/assetsContainer";
+import Input from "./Input.vue";
 
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
@@ -125,107 +126,81 @@ const handleStart = async () => {
 </script>
 
 <template>
-  <div class="background">
-    <h1>Host</h1>
-    <div class="host">
-      <div class="code flex-list">
-        <h3>
-          Room code: <span class="key">{{ key }}</span>
-        </h3>
+  <div class="host">
+    <div class="code flex-list">
+      <h2>
+        Room code: <span class="key">{{ key }}</span>
+      </h2>
+    </div>
 
-        <div class="flex-list">
-          <h3>Players</h3>
-          <ul class="players">
-            <li v-for="player in players">{{ player }}</li>
-          </ul>
-        </div>
-      </div>
+    <div class="flex-list flex-list--wide">
+      <h2>Players</h2>
+      <ul class="players">
+        <li v-for="player in players">{{ player }}</li>
+      </ul>
+    </div>
 
-      <div class="options flex-list">
-        <h3>Settings</h3>
-        <label>
-          Name
-          <input v-model="name" />
-        </label>
+    <div class="options flex-list">
+      <h2>Settings</h2>
 
-        <label>
-          Team
-          <select v-model="selectedTeam">
-            <option v-for="(team, index) in teams" :value="index">
-              {{ team.name }}
-            </option>
-          </select>
-          <span class="meta"
-            >({{ teams[selectedTeam]?.characters.join(", ") }})</span
+      <Input label="name" v-model="name" />
+
+      <label class="label">
+        Team
+        <select v-model="selectedTeam">
+          <option v-for="(team, index) in teams" :value="index">
+            {{ team.name }}
+          </option>
+        </select>
+        <span class="meta"
+          >({{ teams[selectedTeam]?.characters.join(", ") }})</span
+        >
+      </label>
+
+      <label class="label">
+        Map
+        <ul class="maps">
+          <li
+            v-for="(url, name) of defaultMaps"
+            :class="{ map: true, selected: selectedMap === name }"
+            @click="handleSelectMap(name)"
           >
-        </label>
-
-        <label>
-          Map
-          <ul class="maps">
-            <li
-              v-for="(url, name) of defaultMaps"
-              :class="{ map: true, selected: selectedMap === name }"
-              @click="handleSelectMap(name)"
-            >
-              <span class="truncate mapName">{{ name }}</span>
-              <img :src="url" />
-            </li>
-            <li
-              :class="{ map: true, selected: selectedMap === CUSTOM }"
-              @click="customUpload.click"
-            >
-              <span class="truncate mapName">Custom</span>
-              <img v-if="customMapString" :src="customMapString" />
-              <div v-else class="placeholder">➕ upload</div>
-            </li>
-          </ul>
-        </label>
-        <input
-          type="file"
-          hidden
-          @change="handleUploadMap"
-          ref="customUpload"
-        />
-      </div>
+            <span class="truncate mapName">{{ name }}</span>
+            <img :src="url" />
+          </li>
+          <li
+            :class="{ map: true, selected: selectedMap === CUSTOM }"
+            @click="customUpload.click"
+          >
+            <span class="truncate mapName">Custom</span>
+            <img v-if="customMapString" :src="customMapString" />
+            <div v-else class="placeholder">➕ upload</div>
+          </li>
+        </ul>
+      </label>
+      <input type="file" hidden @change="handleUploadMap" ref="customUpload" />
     </div>
+  </div>
 
-    <div class="buttons">
-      <button @click="handleStart" class="primary">Start</button>
-      <button @click="handleBack" class="secondary">Back</button>
-    </div>
+  <div class="buttons">
+    <button @click="handleStart" class="primary">Start</button>
+    <button @click="handleBack" class="secondary">Back</button>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.background {
-  height: 100%;
-  background: #b5a78a;
-
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 30px;
-}
-
 .host {
   display: flex;
   flex-direction: column;
   gap: 20px;
-
-  h3 {
-    font-size: 28px;
-    letter-spacing: 1.2px;
-  }
 }
 
-.code {
-  .players {
-    padding: 25px;
-    background: #9c917b;
-    box-shadow: 0 0 10px inset #433e34;
-    border-radius: 5px;
-  }
+.players {
+  padding: 25px;
+  background: var(--background);
+  box-shadow: 0 0 10px inset var(--primary);
+  border-radius: var(--small-radius);
+  box-sizing: border-box;
 }
 
 .options {
@@ -235,16 +210,24 @@ const handleStart = async () => {
     gap: 6px;
   }
 
-  select,
-  input {
-    width: 300px;
-    padding: 6px;
-    box-sizing: border-box;
+  select {
+    background: var(--background);
+    box-shadow: 0 0 10px inset var(--primary);
+    height: 35px;
+    border-radius: var(--small-radius);
+    outline: none;
+  }
+
+  .label {
+    font-family: Eternal;
+    font-size: 24px;
+    color: var(--primary);
   }
 
   .meta {
-    color: #433e34;
+    color: var(--primary);
     font-size: 14px;
+    font-family: system-ui;
   }
 }
 
@@ -259,11 +242,13 @@ const handleStart = async () => {
     width: 200px;
     height: 150px;
     align-items: center;
-    border: 2px solid #433e34;
+    border: 2px solid var(--primary);
     border-radius: 5px;
     overflow: hidden;
-    background: #9c917b;
+    background: var(--background);
     cursor: pointer;
+    font-family: system-ui;
+    font-size: 14px;
 
     .mapName {
       text-align: center;
@@ -276,21 +261,20 @@ const handleStart = async () => {
       width: 100%;
       object-fit: cover;
       image-rendering: pixelated;
-      border-top: 2px solid #433e34;
+      border-top: 2px solid var(--primary);
     }
 
     &.selected {
-      box-shadow: 0 0 5px #433e34;
+      box-shadow: 0 0 5px var(--primary);
     }
 
     .placeholder {
-      border-top: 2px solid #433e34;
+      border-top: 2px solid var(--primary);
       display: flex;
       flex: 1;
       width: 100%;
       align-items: center;
       justify-content: center;
-      opacity: 0.6;
       font-variant-caps: unicase;
     }
   }

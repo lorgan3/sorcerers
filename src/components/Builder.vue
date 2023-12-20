@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Map } from "../data/map";
+import Input from "./Input.vue";
 
 const { onBack } = defineProps<{
   onBack: () => void;
@@ -54,81 +55,59 @@ const handleBuild = async () => {
 </script>
 
 <template>
-  <div class="background">
-    <div class="builder">
-      <section class="controls flex-list">
-        <div class="section">
-          <h3>Terrain</h3>
-          <label class="inputButton">
-            <input type="file" @change="handleAddTerrain" />
-            <img v-if="terrain" :src="terrain" ref="terrainImg" />
-            <div v-else class="placeholder">Add image</div>
-          </label>
-          <label>
-            <span>Scale</span>
-            <input value="6" disabled />
-          </label>
-        </div>
+  <div class="builder">
+    <section class="controls flex-list">
+      <div class="section">
+        <h2>Terrain</h2>
+        <label class="inputButton">
+          <input type="file" @change="handleAddTerrain" />
+          <img v-if="terrain" :src="terrain" ref="terrainImg" />
+          <div v-else class="placeholder">➕ Add image</div>
+        </label>
+        <Input label="Scale" value="6" disabled />
+      </div>
 
-        <div class="section">
-          <h3>Background</h3>
-          <label class="inputButton">
-            <input type="file" @change="handleAddBackground" />
-            <img v-if="background" :src="background" ref="backgroundImg" />
-            <div v-else class="placeholder">Add image</div>
-          </label>
-          <label>
-            <span>Scale</span>
-            <input value="6" disabled />
-          </label>
-        </div>
+      <div class="section">
+        <h2>Background</h2>
+        <label class="inputButton">
+          <input type="file" @change="handleAddBackground" />
+          <img v-if="background" :src="background" ref="backgroundImg" />
+          <div v-else class="placeholder">➕ Add image</div>
+        </label>
+        <Input label="Scale" value="6" disabled />
+      </div>
 
-        <div class="section">
-          <h3>Details</h3>
+      <div class="section">
+        <h2>Details</h2>
+        <Input label="Name" autofocus v-model="name" />
+      </div>
 
-          <label>
-            <span>Name</span>
-            <input autofocus v-model="name" />
-          </label>
-        </div>
-
-        <button class="primary" @click="handleBuild">Build</button>
-        <button class="secondary" @click="onBack">Back</button>
-      </section>
-      <section class="preview">
-        <p class="description">
-          Build your own map by drawing a terrain and background image. All
-          opaque pixels on the terrain will be used as collision map for the
-          level.
-        </p>
-        <img v-if="background" :src="background" />
-        <img v-if="terrain" :src="terrain" />
-      </section>
-    </div>
+      <button class="primary" @click="handleBuild">Build</button>
+      <button class="secondary" @click="onBack">Back</button>
+    </section>
+    <section class="preview">
+      <p class="description">
+        Build your own map by drawing a terrain and background image. All opaque
+        pixels on the terrain will be used as collision map for the level.
+      </p>
+      <img v-if="background" :src="background" />
+      <img v-if="terrain" :src="terrain" />
+    </section>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.background {
-  height: 100%;
-  background: #b5a78a;
-}
-
 .builder {
-  height: 100%;
+  height: 100vh;
   display: flex;
 
   .controls {
     width: 200px;
-    border: 4px solid #433e34;
-    border-radius: 10px;
+    border: 4px solid var(--primary);
+    border-radius: var(--big-radius);
     padding: 10px;
 
     .section {
-      h3 {
-        font-size: 32px;
-      }
-
       display: flex;
       flex-direction: column;
       gap: 3px;
@@ -155,19 +134,21 @@ const handleBuild = async () => {
       .placeholder {
         width: 100%;
         height: 100px;
-        border: 1px solid black;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #9c917b;
+        background: var(--background);
         cursor: pointer;
+        box-shadow: 0 0 10px inset var(--primary);
+        border-radius: var(--small-radius);
       }
 
       img {
         width: 100%;
         height: 100px;
         object-fit: cover;
-        border: 1px solid black;
+        box-shadow: 0 0 10px inset var(--primary);
+        border-radius: var(--small-radius);
       }
     }
   }

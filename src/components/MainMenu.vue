@@ -10,12 +10,12 @@ import Join from "./Join.vue";
 import { Map } from "../data/map";
 
 enum Menu {
-  MainMenu,
-  Team,
-  Host,
-  Join,
-  Builder,
-  Game,
+  MainMenu = "Main menu",
+  Team = "Team",
+  Host = "Host game",
+  Join = "Join game",
+  Builder = "Builder",
+  Game = "Game",
 }
 
 const canvas = ref<HTMLDivElement | null>(null);
@@ -43,9 +43,28 @@ const handleBack = () => {
 </script>
 
 <template>
-  <div class="background">
+  <div v-if="menu === Menu.Game" class="render-target" ref="canvas">
+    <Hud />
+  </div>
+  <div v-else-if="menu === Menu.Builder" class="background">
+    <Builder :onBack="handleBack" />
+  </div>
+  <div v-else class="background background--padded">
+    <div class="title-wrapper">
+      <h1 :class="{ title: true, 'title--big': menu === Menu.MainMenu }">
+        <span>S</span>
+        <span>o</span>
+        <span>r</span>
+        <span>c</span>
+        <span>e</span>
+        <span>r</span>
+        <span>e</span>
+        <span>r</span>
+        <span>s</span>
+      </h1>
+      <h2 v-if="menu !== Menu.MainMenu">/ {{ menu }}</h2>
+    </div>
     <div v-if="menu === Menu.MainMenu" class="mainMenu">
-      <h1 class="title">Sorcerers</h1>
       <ul class="list flex-list">
         <li><button class="primary" @click="menu = Menu.Team">Team</button></li>
         <li>
@@ -63,34 +82,61 @@ const handleBack = () => {
     <Team v-if="menu === Menu.Team" :onBack="handleBack" />
     <Host v-if="menu === Menu.Host" :onBack="handleBack" :onPlay="handlePlay" />
     <Join v-if="menu === Menu.Join" :onBack="handleBack" :onPlay="handlePlay" />
-    <Builder v-if="menu === Menu.Builder" :onBack="handleBack" />
-
-    <div v-if="menu === Menu.Game" class="render-target" ref="canvas">
-      <Hud />
-    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.background {
-  height: 100%;
-  background: #b5a78a;
+.render-target {
+  display: flex;
+}
 
-  .mainMenu {
-    position: absolute;
-    top: 40vh;
-    left: 5vw;
+.background {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: url(parchment.png);
+  image-rendering: pixelated;
+  background-size: 256px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &--padded {
+    box-shadow: 0 0 10vmin inset var(--primary);
+    padding: 10vmin 15vmin;
+  }
+
+  .title-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
 
     .title {
-      margin-bottom: 30px;
-      font-size: 72px;
-      letter-spacing: 2px;
-      color: #433e34;
-    }
+      font-size: 48px;
+      color: var(--primary);
+      user-select: none;
+      text-shadow: 0 0 0 var(--highlight);
+      transition: all 0.3s linear;
 
+      > * {
+        transition: 1s color;
+
+        &:hover {
+          color: var(--highlight);
+        }
+      }
+
+      &--big {
+        font-size: 20vw;
+        text-shadow: 0 0.5vw 0.5vw var(--highlight);
+        letter-spacing: 0.5vw;
+      }
+    }
+  }
+
+  .mainMenu {
     .list {
-      background: #9c917b;
-      box-shadow: 0 0 10px inset #433e34;
+      background: var(--background);
+      box-shadow: 0 0 10px inset var(--primary);
       padding: 30px;
       border-radius: 10px;
 

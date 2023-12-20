@@ -8,6 +8,7 @@ import { PEER_ID_PREFIX } from "../data/network";
 import { MessageType } from "../data/network/types";
 import { Team } from "../data/team";
 import { Map } from "../data/map";
+import Input from "./Input.vue";
 
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
@@ -17,7 +18,7 @@ const { onBack, onPlay } = defineProps<{
 const settings = get("Settings") || defaults();
 
 const teams = ref(settings.teams);
-const selectedTeam = ref(settings.defaultTeam);
+const selectedTeam = ref(settings.defaultTeam ?? 0);
 const name = ref(settings.name);
 
 const key = ref("");
@@ -93,91 +94,68 @@ const handleBack = () => {
 </script>
 
 <template>
-  <div class="background">
-    <h1>Join</h1>
-    <div class="client">
-      <div v-if="players.length" class="code flex-list">
-        <h3>
+  <div class="client">
+    <template v-if="players.length">
+      <div class="code flex-list">
+        <h2>
           Room code: <span class="key">{{ key }}</span>
-        </h3>
-
-        <div class="flex-list">
-          <h3>Players</h3>
-          <ul class="players">
-            <li v-for="player in players">{{ player }}</li>
-          </ul>
-        </div>
-
-        <div>
-          <h3>Map</h3>
-          {{ map }}
-        </div>
+        </h2>
       </div>
 
-      <div v-else class="options flex-list">
-        <h3>Settings</h3>
-        <label>
-          Room key
-          <input v-model="key" autofocus />
-        </label>
-
-        <label>
-          Name
-          <input v-model="name" />
-        </label>
-
-        <label>
-          Team
-          <select v-model="selectedTeam">
-            <option v-for="(team, index) in teams" :value="index">
-              {{ team.name }}
-            </option>
-          </select>
-          <span class="meta"
-            >({{ teams[selectedTeam]?.characters.join(", ") }})</span
-          >
-        </label>
+      <div class="flex-list flex-list--wide">
+        <h2>Players</h2>
+        <ul class="players">
+          <li v-for="player in players">{{ player }}</li>
+        </ul>
       </div>
-    </div>
 
-    <div class="buttons">
-      <button v-if="!players.length" @click="handleConnect" class="primary">
-        Connect
-      </button>
-      <button @click="handleBack" class="secondary">Back</button>
+      <div>
+        <h2>Map</h2>
+        {{ map }}
+      </div>
+    </template>
+
+    <div v-else class="options flex-list">
+      <h2>Settings</h2>
+      <Input label="Room key" v-model="key" autofocus />
+      <Input label="Name" v-model="name" />
+
+      <label class="label">
+        Team
+        <select v-model="selectedTeam">
+          <option v-for="(team, index) in teams" :value="index">
+            {{ team.name }}
+          </option>
+        </select>
+        <span class="meta"
+          >({{ teams[selectedTeam]?.characters.join(", ") }})</span
+        >
+      </label>
     </div>
+  </div>
+
+  <div class="buttons">
+    <button v-if="!players.length" @click="handleConnect" class="primary">
+      Connect
+    </button>
+    <button @click="handleBack" class="secondary">
+      {{ players.length ? "Disconnect" : "Back" }}
+    </button>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.background {
-  height: 100%;
-  background: #b5a78a;
-
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 30px;
-}
-
 .client {
   display: flex;
   flex-direction: column;
   gap: 20px;
-
-  h3 {
-    font-size: 28px;
-    letter-spacing: 1.2px;
-  }
 }
 
-.code {
-  .players {
-    padding: 25px;
-    background: #9c917b;
-    box-shadow: 0 0 10px inset #433e34;
-    border-radius: 5px;
-  }
+.players {
+  padding: 25px;
+  background: var(--background);
+  box-shadow: 0 0 10px inset var(--primary);
+  border-radius: var(--small-radius);
 }
 
 .options {
@@ -187,16 +165,24 @@ const handleBack = () => {
     gap: 6px;
   }
 
-  select,
-  input {
-    width: 300px;
-    padding: 6px;
-    box-sizing: border-box;
+  select {
+    background: var(--background);
+    box-shadow: 0 0 10px inset var(--primary);
+    height: 35px;
+    border-radius: var(--small-radius);
+    outline: none;
+  }
+
+  .label {
+    font-family: Eternal;
+    font-size: 24px;
+    color: var(--primary);
   }
 
   .meta {
     color: #433e34;
     font-size: 14px;
+    font-family: system-ui;
   }
 }
 

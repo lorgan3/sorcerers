@@ -7,6 +7,16 @@ import MainMenu from "./components/MainMenu.vue";
 </template>
 
 <style>
+:root {
+  --primary: #402020;
+  --background: #bca88c;
+  --highlight: #80331e;
+  --highlight-background: #9d8877;
+
+  --small-radius: 3px;
+  --big-radius: 6px;
+}
+
 @font-face {
   /* https://www.1001freefonts.com/eternal.font */
   font-family: Eternal;
@@ -14,8 +24,7 @@ import MainMenu from "./components/MainMenu.vue";
 }
 
 #app {
-  width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
 
   font-size: 18px;
   overflow: hidden;
@@ -23,30 +32,44 @@ import MainMenu from "./components/MainMenu.vue";
 }
 
 button {
-  font-size: 24px;
+  font-size: 28px;
   font-family: Eternal;
 }
 
 .primary {
-  background: #686051;
-  color: #cdcac2;
-  border: 4px solid #433e34;
-  border-radius: 10px;
+  background: var(--background);
+  color: var(--primary);
+  border: 4px solid var(--highlight);
+  box-shadow: 2px 2px 2px var(--highlight), 0 0 5px inset var(--highlight);
+  border-radius: var(--big-radius);
   letter-spacing: 1.2px;
   cursor: pointer;
-  padding: 3px;
+  padding: 5px 15px;
+  transition: 0.5s color;
 }
 
 .primary:hover {
-  background: #776d5c;
+  box-shadow: 0 0 5px inset var(--highlight);
+  position: relative;
+  top: 2px;
+  left: 2px;
+  color: var(--highlight);
 }
 
 .secondary {
-  background: none;
+  background: transparent;
   border: none;
   text-decoration: underline;
+  border-radius: var(--big-radius);
+  letter-spacing: 1.2px;
   cursor: pointer;
-  text-align: left;
+  padding: 5px 15px;
+  transition: 0.5s color, 0.25s background-color;
+}
+
+.secondary:hover {
+  background: var(--background);
+  color: var(--highlight);
 }
 
 .truncate {
@@ -60,9 +83,14 @@ button {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: fit-content;
 }
 
-/* http://meyerweb.com/eric/tools/css/reset/ 
+.flex-list--wide {
+  width: 100%;
+}
+
+/* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126
    License: none (public domain)
 */
@@ -164,18 +192,21 @@ table {
 }
 
 /* */
+h1,
+h2,
 h3 {
-  font-size: 18px;
-  font-weight: bold;
   font-family: Eternal;
+  color: var(--primary);
+}
+h3 {
+  font-size: 24px;
 }
 
 h2 {
-  font-family: Eternal;
+  font-size: 32px;
 }
 
 h1 {
   font-size: 48px;
-  font-family: Eternal;
 }
 </style>

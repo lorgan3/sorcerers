@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import { Team } from "../data/team";
+import Input from "./Input.vue";
 
 const { onBack } = defineProps<{
   onBack: () => void;
@@ -36,80 +37,81 @@ const handleSave = () => {
 </script>
 
 <template>
-  <div class="background">
-    <h1>Teams</h1>
-    <div class="teams">
-      <div
-        v-for="(team, index) in teams"
-        :class="{ team: true, 'flex-list': true, invalid: !team.isValid() }"
+  <div class="teams">
+    <div
+      v-for="(team, index) in teams"
+      :class="{ team: true, 'flex-list': true, invalid: !team.isValid() }"
+    >
+      <button
+        v-if="teams.length > 1"
+        class="close-button"
+        @click="handleRemoveTeam(index)"
       >
-        <button
-          v-if="teams.length > 1"
-          class="close-button"
-          @click="handleRemoveTeam(index)"
-        >
-          ✖️
-        </button>
-        <label name="name">
-          Name
-          <input v-model="teams[index].name" />
-        </label>
-        <label>
-          Characters
-          <ul>
-            <li v-for="(_, i) in team.characters">
-              <input v-model="team.characters[i]" />
-            </li>
-          </ul>
-        </label>
-      </div>
-    </div>
+        ✖️
+      </button>
 
-    <div class="buttons">
-      <button @click="handleAddTeam" class="primary">Add team</button>
-      <button @click="handleSave" class="primary">Save</button>
-      <button @click="onBack" class="secondary">Back</button>
+      <Input
+        label="Name"
+        v-model="teams[index].name"
+        :validator="(text: string) => !!text.trim()"
+      />
+
+      <label class="character-input">
+        Characters
+        <ul class="character-list">
+          <li v-for="(_, i) in team.characters">
+            <Input
+              v-model="team.characters[i]"
+              :validator="(text: string) => !!text.trim()"
+            />
+          </li>
+        </ul>
+      </label>
     </div>
+  </div>
+
+  <div class="buttons">
+    <button @click="handleAddTeam" class="primary">Add team</button>
+    <button @click="handleSave" class="primary">Save</button>
+    <button @click="onBack" class="secondary">Back</button>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.background {
-  height: 100%;
-  background: #b5a78a;
-
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 30px;
-}
-
 .teams {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 
   .team {
-    background: #9c917b;
+    background: var(--background);
     padding: 25px;
     border-radius: 5px;
     position: relative;
-    box-shadow: 0 0 10px inset #433e34;
+    box-shadow: 0 0 10px inset var(--primary);
+    width: 300px;
+    transition: box-shadow 0.25s;
 
     &.invalid {
-      box-shadow: 0 0 10px inset #ff0000;
+      box-shadow: 0 0 10px inset var(--highlight);
     }
 
-    label {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
+    .character-input {
+      font-family: Eternal;
+      font-size: 24px;
+      color: var(--primary);
+
+      .character-list {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
     }
 
     .close-button {
       position: absolute;
-      right: 0;
-      top: 0;
+      right: 5px;
+      top: 5px;
       background: none;
       border: none;
       margin: 0;
