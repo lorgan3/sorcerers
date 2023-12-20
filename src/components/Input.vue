@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-const { label, modelValue, validator, value, autofocus, disabled } =
+const { label, modelValue, validator, value, autofocus, disabled, change } =
   defineProps<{
     label?: string;
     modelValue?: string;
@@ -9,6 +9,7 @@ const { label, modelValue, validator, value, autofocus, disabled } =
     validator?: (value: string) => boolean;
     autofocus?: boolean;
     disabled?: boolean;
+    change?: (event: Event) => void;
   }>();
 
 const emit = defineEmits<{
@@ -36,6 +37,7 @@ const handleInput = (event: Event) => {
       :value="modelValue || value"
       :autofocus="autofocus"
       :disabled="disabled"
+      @change="change"
     />
   </label>
 </template>

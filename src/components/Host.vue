@@ -76,6 +76,16 @@ onUnmounted(() => {
   window.clearInterval(timer);
 });
 
+const nameValidator = (name: string) => !!name.trim();
+
+const handleChangeName = (event: Event) => {
+  const name = (event.target as HTMLInputElement).value;
+
+  if (nameValidator(name)) {
+    Server.instance.rename(name);
+  }
+};
+
 const handleSelectMap = (map: string) => {
   selectedMap.value = map;
 };
@@ -142,9 +152,12 @@ const handleStart = async () => {
 
     <div class="options flex-list">
       <h2>Settings</h2>
-
-      <Input label="name" v-model="name" />
-
+      <Input
+        label="name"
+        v-model="name"
+        :change="handleChangeName"
+        :validator="nameValidator"
+      />
       <label class="label">
         Team
         <select v-model="selectedTeam">

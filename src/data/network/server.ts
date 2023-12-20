@@ -242,4 +242,8 @@ export class Server extends Manager {
       this.players.map((player) => player.connection?.send(message))
     );
   }
+
+  rename(newName: string) {
+    this._self!.rename(newName);
+  }
 }

@@ -72,4 +72,8 @@ export class Player {
       this.characters[index].deserialize(data.characters[index]);
     }
   }
+
+  rename(newName: string) {
+    this._name = newName;
+  }
 }
