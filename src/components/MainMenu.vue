@@ -93,7 +93,7 @@ const handleBack = () => {
 .background {
   min-height: 100vh;
   box-sizing: border-box;
-  background: url(parchment.png);
+  background: url("../assets/parchment.png");
   image-rendering: pixelated;
   background-size: 256px;
   display: flex;
