@@ -83,12 +83,12 @@ export class Client extends Manager {
           const player = new Player();
           if (data.you) {
             this._self = player;
-            player.connect(
-              data.name,
-              Team.fromJson(data.team),
-              this.controller!
-            );
           }
+          player.connect(
+            data.name,
+            Team.fromJson(data.team),
+            data.you ? this.controller : undefined
+          );
 
           data.characters.forEach(({ name, hp, x, y }) => {
             const character = new Character(x, y, name);
