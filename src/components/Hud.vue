@@ -117,6 +117,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   border-radius: 8px;
   pointer-events: none;
   animation: slide-in 0.5s 1;
+  font-family: Eternal;
 
   &--out {
     animation: slide-out 0.5s 1 forwards;
@@ -188,6 +189,8 @@ onBeforeUnmount(() => window.clearInterval(id));
     }
 
     .player {
+      font-family: Eternal;
+
       .name.active {
         font-weight: bold;
       }
@@ -215,6 +218,8 @@ onBeforeUnmount(() => window.clearInterval(id));
     padding: 6px;
     text-align: center;
     min-height: 22px;
+    font-family: Eternal;
+    font-size: 22px;
   }
 
   .timer {
