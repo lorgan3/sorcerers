@@ -2,7 +2,7 @@ export const PLACEHOLDER = "<PlayerName>";
 
 export const MESSAGES = [
   "You can do it <PlayerName>!",
-  "Embrace the challenge, <PlayerName]>!",
+  "Embrace the challenge, <PlayerName>!",
   "Every move counts, <PlayerName>!",
   "It's your time to shine, <PlayerName>!",
   "Ready your mind, <PlayerName>!",
