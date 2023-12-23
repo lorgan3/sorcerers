@@ -80,7 +80,10 @@ export class Character extends Container {
   }
 
   control(controller: Controller) {
-    if (this.body.grounded && controller.isKeyDown(Key.Up)) {
+    if (
+      this.body.grounded &&
+      (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
+    ) {
       this.body.jump();
     }
 
@@ -110,12 +113,12 @@ export class Character extends Container {
   controlContinuous(dt: number, controller: Controller) {
     this.control(controller);
 
-    if (controller.isKeyDown(Key.Left)) {
+    if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
       this.body.walk(dt, -1);
       this.sprite.scale.x = -0.4;
     }
 
-    if (controller.isKeyDown(Key.Right)) {
+    if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
       this.body.walk(dt, 1);
       this.sprite.scale.x = 0.4;
     }
