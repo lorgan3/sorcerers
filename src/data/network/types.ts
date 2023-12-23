@@ -57,6 +57,7 @@ export type Message =
         name: string;
         you: boolean;
         team: any[];
+        color: string;
         characters: Array<{
           name: string;
           hp: number;

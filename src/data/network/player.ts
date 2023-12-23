@@ -11,13 +11,15 @@ export class Player {
 
   private _name = "";
   private _team = Team.empty();
+  private _color = "";
   private _controller: Controller = new NetworkController();
 
   constructor(public readonly connection?: DataConnection) {}
 
-  connect(name: string, team: Team, controller?: Controller) {
+  connect(name: string, team: Team, color: string, controller?: Controller) {
     this._name = name;
     this._team = team;
+    this._color = color;
 
     if (controller) {
       this._controller = controller;
@@ -59,6 +61,10 @@ export class Player {
 
   get controller() {
     return this._controller;
+  }
+
+  get color() {
+    return this._color;
   }
 
   serialize() {

@@ -7,6 +7,7 @@ import { Fireball } from "./spells/fireball";
 import { ellipse9x16 } from "./collision/precomputed/circles";
 import { Range } from "./range";
 import { Manager } from "./network/manager";
+import { Player } from "./network/player";
 
 export class Character extends Container {
   public readonly body: Body;
@@ -17,7 +18,12 @@ export class Character extends Container {
   private _hp = 100;
   public attacked = false;
 
-  constructor(x: number, y: number, public readonly name: string) {
+  constructor(
+    private player: Player,
+    x: number,
+    y: number,
+    public readonly name: string
+  ) {
     super();
 
     this.body = new Body(Level.instance.terrain.characterMask, {
@@ -49,7 +55,7 @@ export class Character extends Container {
     this.namePlate = new Text(`${name} ${this._hp}`, {
       fontFamily: "Eternal",
       fontSize: 32,
-      fill: 0xffffff,
+      fill: this.player.color,
       dropShadow: true,
       dropShadowDistance: 4,
       dropShadowAngle: 45,

@@ -71,6 +71,7 @@ onBeforeUnmount(() => window.clearInterval(id));
                 class="hp"
                 :style="{
                   width: `${Math.max(0, Math.ceil(character.hp / 3))}px`,
+                  background: player.color,
                 }"
               ></div>
             </li>
@@ -206,6 +207,7 @@ onBeforeUnmount(() => window.clearInterval(id));
         .hp {
           height: 5px;
           background: rgb(42, 60, 255);
+          box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
           border-radius: 4px;
         }
       }

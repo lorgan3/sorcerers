@@ -8,10 +8,12 @@ import { DamageSource } from "../damage";
 import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 import { Team } from "../team";
+import { COLORS } from "./constants";
 
 export class Server extends Manager {
   private started = false;
   private controller?: KeyboardController;
+  private availableColors = [...COLORS];
 
   private static _serverInstance: Server;
   static get instance() {
@@ -29,11 +31,21 @@ export class Server extends Manager {
   connect(controller: KeyboardController) {
     this.controller = controller;
 
-    this._self!.connect(this._self!.name, this._self!.team, this.controller);
+    this._self!.connect(
+      this._self!.name,
+      this._self!.team,
+      this._self!.color,
+      this.controller
+    );
   }
 
   join(name: string, team: Team) {
-    this._self!.connect(name, team, this.controller);
+    this._self!.connect(
+      name,
+      team,
+      this.availableColors.pop()!,
+      this.controller
+    );
   }
 
   async start() {
@@ -45,7 +57,11 @@ export class Server extends Manager {
     for (let player of this.players) {
       for (let character of player.team.characters) {
         player.addCharacter(
-          new Character(...Level.instance.getRandomSpawnLocation(), character)
+          new Character(
+            player,
+            ...Level.instance.getRandomSpawnLocation(),
+            character
+          )
         );
       }
     }
@@ -122,6 +138,7 @@ export class Server extends Manager {
         console.log("closed");
         player.destroy();
         this.players.splice(this.players.indexOf(player));
+        this.availableColors.push(player.color);
 
         // Temp
         if (this.activePlayer === player) {
@@ -143,8 +160,20 @@ export class Server extends Manager {
   private handleMessage(message: Message, player: Player) {
     switch (message.type) {
       case MessageType.Join:
+        const color = this.availableColors.pop();
+
+        if (!color) {
+          console.warn("Did not accept player because out of colors!");
+          player.connection!.close();
+          return;
+        }
+
         const team = Team.fromJson(message.team);
-        player.connect(message.name, team.isValid() ? team : Team.random());
+        player.connect(
+          message.name,
+          team.isValid() ? team : Team.random(),
+          color
+        );
 
         // if (this.started) {
         //   // Do this before syncing the entities because they contain a reference to the mask!
@@ -180,6 +209,7 @@ export class Server extends Manager {
         players: this.players.map((p) => ({
           name: p.name,
           team: p.team.serialize(),
+          color: p.color,
           you: p === player,
           characters: p.characters.map((character) => {
             const [x, y] = character.body.precisePosition;
@@ -208,6 +238,7 @@ export class Server extends Manager {
 
     this.activePlayer = this.players[activePlayerIndex];
     this.activePlayer.activeCharacter.attacked = false;
+    this.followTarget = this.activePlayer.activeCharacter;
     this.windSpeed = Math.round(Math.random() * 16 - 8);
     this.turnStartTime = this.time;
 
