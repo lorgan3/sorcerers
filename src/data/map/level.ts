@@ -5,6 +5,7 @@ import { Viewport } from "pixi-viewport";
 import { Server } from "../network/server";
 import { DamageSource } from "../damage";
 import { Map } from ".";
+import { Manager } from "../network/manager";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -56,12 +57,22 @@ export class Level {
       .pinch()
       .wheel({});
 
-    this.mouseEdges();
-
     this.app.stage.addChild(this.viewport);
 
     this.terrain = new Terrain(map);
     this.viewport.addChild(this.terrain);
+
+    window.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (!event.repeat && event.key === "c") {
+        Manager.instance.clearFollowTarget();
+        this.mouseEdges();
+      }
+    });
+    window.addEventListener("keyup", (event: KeyboardEvent) => {
+      if (event.key === "c") {
+        this.viewport.plugins.remove("mouse-edges");
+      }
+    });
   }
 
   getRandomSpawnLocation() {
@@ -165,13 +176,14 @@ export class Level {
   private unfollow() {
     this.followedEntity = null;
     this.viewport.plugins.remove("follow");
-    this.mouseEdges();
   }
 
   private mouseEdges() {
+    this.unfollow();
     this.viewport.mouseEdges({
-      distance: 100,
+      radius: 100,
       speed: 12,
+      allowButtons: true,
     });
   }
 }

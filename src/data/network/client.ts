@@ -108,6 +108,8 @@ export class Client extends Manager {
         this.activePlayer.activeCharacter.attacked = false;
         this.windSpeed = message.windSpeed;
         this.turnStartTime = message.turnStartTime;
+
+        this.followTarget = this.activePlayer.activeCharacter;
         break;
 
       case MessageType.InputState:

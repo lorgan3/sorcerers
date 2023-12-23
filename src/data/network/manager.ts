@@ -3,6 +3,7 @@ import { Player } from "./player";
 import { Popup } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
+import { DisplayObject } from "pixi.js";
 
 export abstract class Manager {
   private static _instance: Manager;
@@ -11,6 +12,7 @@ export abstract class Manager {
   }
 
   protected _self: Player | null = null;
+  protected followTarget: DisplayObject | null = null;
   public players: Player[] = [];
   protected activePlayer: Player | null = null;
   protected time = 0;
@@ -36,6 +38,9 @@ export abstract class Manager {
       this._self.controller.isKeyDown()
     ) {
       Level.instance.follow(this._self.activeCharacter);
+      this.followTarget = null;
+    } else if (this.followTarget) {
+      Level.instance.follow(this.followTarget);
     }
 
     this.activePlayer?.activeCharacter?.controlContinuous(
@@ -76,5 +81,9 @@ export abstract class Manager {
 
   popupPop() {
     return this.popups.pop();
+  }
+
+  clearFollowTarget() {
+    this.followTarget = null;
   }
 }
