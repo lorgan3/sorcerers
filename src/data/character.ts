@@ -9,8 +9,9 @@ import { Range } from "./range";
 import { Manager } from "./network/manager";
 import { Player } from "./network/player";
 import { Force } from "./damage/targetList";
+import { HurtableEntity } from "./map/types";
 
-export class Character extends Container {
+export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
   private sprite!: AnimatedSprite;
   private namePlate: Text;
@@ -65,6 +66,10 @@ export class Character extends Container {
     this.namePlate.position.set(25, -70);
 
     this.addChild(this.sprite, this.range, this.namePlate);
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x + 27, this.position.y + 48];
   }
 
   tick(dt: number) {

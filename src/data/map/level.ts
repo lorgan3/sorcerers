@@ -6,16 +6,9 @@ import { Server } from "../network/server";
 import { DamageSource } from "../damage";
 import { Map } from ".";
 import { Manager } from "../network/manager";
+import { HurtableEntity, TickingEntity } from "./types";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
-
-interface TickingEntity extends DisplayObject {
-  tick(dt: number): void;
-}
-
-interface HurtableEntity extends DisplayObject {
-  hp: number;
-}
 
 export class Level {
   private app: Application<HTMLCanvasElement>;
@@ -151,7 +144,8 @@ export class Level {
   ) {
     const rangeSquared = range ** 2;
     for (let entity of this.hurtables) {
-      const distance = (entity.x - x) ** 2 + (entity.y - y) ** 2;
+      const [ex, ey] = entity.getCenter();
+      const distance = (ex - x) ** 2 + (ey - y) ** 2;
       if (distance < rangeSquared) {
         fn(entity, Math.sqrt(distance));
       }

@@ -34,15 +34,13 @@ export class ExplosiveDamage implements DamageSource {
       Level.instance.withNearbyEntities(
         this.x * 6,
         this.y * 6,
-        this.range * 6,
+        range,
         (entity, distance) => {
           if (entity instanceof Character) {
+            const [x, y] = entity.getCenter();
             this.targets!.add(entity, 10 + 40 * ((range - distance) / range), {
               power: 5,
-              direction: Math.atan2(
-                this.y * 6 - entity.y,
-                this.x * 6 - entity.x
-              ),
+              direction: Math.atan2(y - this.y * 6, x - this.x * 6),
             });
           }
 
