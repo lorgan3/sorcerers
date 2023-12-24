@@ -99,6 +99,12 @@ export class Body {
     this.active = 1;
   }
 
+  addAngularVelocity(power: number, direction: number) {
+    this.xVelocity += Math.cos(direction) * power;
+    this.yVelocity += Math.sin(direction) * power;
+    this.active = 1;
+  }
+
   move(x: number, y: number) {
     this.x = x;
     this.y = y;

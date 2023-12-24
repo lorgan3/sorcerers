@@ -139,8 +139,8 @@ export class Level {
       return;
     }
 
-    Server.instance.syncDamage(damageSource);
     damageSource.damage();
+    Server.instance.syncDamage(damageSource);
   }
 
   withNearbyEntities(

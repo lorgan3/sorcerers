@@ -8,6 +8,7 @@ import { ellipse9x16 } from "./collision/precomputed/circles";
 import { Range } from "./range";
 import { Manager } from "./network/manager";
 import { Player } from "./network/player";
+import { Force } from "./damage/targetList";
 
 export class Character extends Container {
   public readonly body: Body;
@@ -19,7 +20,7 @@ export class Character extends Container {
   public attacked = false;
 
   constructor(
-    private player: Player,
+    public readonly player: Player,
     x: number,
     y: number,
     public readonly name: string
@@ -127,6 +128,14 @@ export class Character extends Container {
     if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
       this.body.walk(dt, 1);
       this.sprite.scale.x = 0.4;
+    }
+  }
+
+  damage(damage: number, force?: Force) {
+    this.hp -= damage;
+
+    if (force) {
+      this.body.addAngularVelocity(force.power, force.direction);
     }
   }
 
