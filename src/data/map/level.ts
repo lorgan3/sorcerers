@@ -1,4 +1,10 @@
-import { Application, BaseTexture, DisplayObject, SCALE_MODES } from "pixi.js";
+import {
+  Application,
+  BaseTexture,
+  Container,
+  DisplayObject,
+  SCALE_MODES,
+} from "pixi.js";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Viewport } from "pixi-viewport";
@@ -7,6 +13,7 @@ import { DamageSource } from "../damage";
 import { Map } from ".";
 import { Manager } from "../network/manager";
 import { HurtableEntity, TickingEntity } from "./types";
+import { DamageNumberContainer } from "../../grapics/DamageNumber";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -15,6 +22,9 @@ export class Level {
   public readonly viewport: Viewport;
   private followedEntity: DisplayObject | null = null;
   private followTime = 0;
+
+  private defaultLayer = new Container();
+  public readonly damageNumberContainer = new DamageNumberContainer();
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -50,10 +60,14 @@ export class Level {
       .pinch()
       .wheel({});
 
-    this.app.stage.addChild(this.viewport);
+    this.app.stage.addChild(this.viewport, this.damageNumberContainer);
 
     this.terrain = new Terrain(map);
-    this.viewport.addChild(this.terrain);
+    this.viewport.addChild(
+      this.terrain,
+      this.defaultLayer,
+      this.damageNumberContainer
+    );
 
     window.addEventListener("keydown", (event: KeyboardEvent) => {
       if (!event.repeat && event.key === "c") {
@@ -86,6 +100,8 @@ export class Level {
   }
 
   tick(dt: number) {
+    this.damageNumberContainer.tick(dt);
+
     for (let entity of this.entities) {
       entity.tick(dt);
     }
@@ -100,7 +116,7 @@ export class Level {
   }
 
   add(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
-    this.viewport.addChild(...objects);
+    this.defaultLayer.addChild(...objects);
 
     for (let object of objects) {
       if ("tick" in object) {
@@ -114,7 +130,7 @@ export class Level {
   }
 
   remove(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
-    this.viewport!.removeChild(...objects);
+    this.defaultLayer.removeChild(...objects);
 
     for (let object of objects) {
       if ("tick" in object) {

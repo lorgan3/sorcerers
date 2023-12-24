@@ -139,6 +139,8 @@ export class Character extends Container implements HurtableEntity {
   damage(damage: number, force?: Force) {
     this.hp -= damage;
 
+    Level.instance.damageNumberContainer.add(damage, ...this.getCenter());
+
     if (force) {
       this.body.addAngularVelocity(force.power, force.direction);
     }
