@@ -23,6 +23,7 @@ export abstract class Manager {
   protected turnStartTime = 0;
   protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
+  protected turnEnding = false;
 
   private cursor: Cursor | null = null;
   private popups: Popup[] = [];
@@ -61,10 +62,16 @@ export abstract class Manager {
   }
 
   endTurn() {
+    this.turnEnding = true;
     this.turnStartTime = Math.min(
       this.time - this.turnLength + 5000,
       this.turnStartTime
     );
+
+    if (this.cursor) {
+      this.cursor.remove();
+      this.cursor = null;
+    }
   }
 
   get self() {
@@ -91,5 +98,44 @@ export abstract class Manager {
 
   clearFollowTarget() {
     this.followTarget = null;
+  }
+
+  selectSpell(spell: Spell, player: Player = this._self!) {
+    player.selectedSpell = spell;
+
+    if (player === this.activePlayer) {
+      if (this.cursor) {
+        this.cursor.remove();
+        this.cursor = null;
+      }
+
+      if (!this.turnEnding) {
+        this.cursor = new spell.cursor(player.activeCharacter, spell);
+      }
+    }
+  }
+
+  get selectedSpell() {
+    return this._self?.selectedSpell || null;
+  }
+
+  setActiveCharacter(player: number, character: number) {
+    this.activePlayer = this.players[player];
+    this.activePlayer.active = character;
+
+    this.activePlayer.activeCharacter.attacked = false;
+    this.followTarget = this.activePlayer.activeCharacter;
+
+    if (this.cursor) {
+      this.cursor.remove();
+      this.cursor = null;
+    }
+
+    if (this.activePlayer.selectedSpell) {
+      this.cursor = new this.activePlayer.selectedSpell.cursor(
+        this.activePlayer.activeCharacter,
+        this.activePlayer.selectedSpell
+      );
+    }
   }
 }

@@ -6,6 +6,7 @@ import { Character } from "../character";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Manager } from "./manager";
 import { Team } from "../team";
+import { SPELLS } from "../spells";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -90,6 +91,7 @@ export class Client extends Manager {
             data.color,
             data.you ? this.controller : undefined
           );
+          player.selectedSpell = data.spell ? SPELLS[data.spell] : null;
 
           data.characters.forEach(({ name, hp, x, y }) => {
             const character = new Character(player, x, y, name);
@@ -104,13 +106,11 @@ export class Client extends Manager {
         break;
 
       case MessageType.ActiveCharacter:
-        this.activePlayer = this.players[message.activePlayer];
-        this.activePlayer.active = message.activeCharacter;
-        this.activePlayer.activeCharacter.attacked = false;
         this.windSpeed = message.windSpeed;
         this.turnStartTime = message.turnStartTime;
+        this.turnEnding = false;
 
-        this.followTarget = this.activePlayer.activeCharacter;
+        this.setActiveCharacter(message.activePlayer, message.activeCharacter);
         break;
 
       case MessageType.InputState:
@@ -138,6 +138,17 @@ export class Client extends Manager {
       case MessageType.Popup:
         this.addPopup(message);
         break;
+
+      case MessageType.SelectSpell:
+        this.selectSpell(
+          SPELLS[message.spell] || null,
+          this.players[message.player!]
+        );
+        break;
     }
+  }
+
+  async broadcast(message: Message) {
+    await this.connection!.send(message);
   }
 }

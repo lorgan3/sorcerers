@@ -14,6 +14,7 @@ export enum MessageType {
   Popup,
   LobbyUpdate,
   StartGame,
+  SelectSpell,
 }
 
 export type Message =
@@ -58,6 +59,7 @@ export type Message =
         you: boolean;
         team: any[];
         color: string;
+        spell: number | null;
         characters: Array<{
           name: string;
           hp: number;
@@ -73,7 +75,7 @@ export type Message =
     }
   | {
       type: MessageType.SyncDamage;
-      data: any[];
+      data: any;
     }
   | {
       type: MessageType.SyncMap;
@@ -96,6 +98,11 @@ export type Message =
   | {
       type: MessageType.StartGame;
       map: Config;
+    }
+  | {
+      type: MessageType.SelectSpell;
+      spell: number;
+      player?: number;
     };
 
 export interface Popup {

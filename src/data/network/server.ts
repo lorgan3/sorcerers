@@ -9,6 +9,7 @@ import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 import { Team } from "../team";
 import { COLORS } from "./constants";
+import { SPELLS } from "../spells";
 
 export class Server extends Manager {
   private started = false;
@@ -196,6 +197,21 @@ export class Server extends Manager {
           this.broadcast(message);
         }
         break;
+
+      case MessageType.SelectSpell:
+        const spell = SPELLS[message.spell] || null;
+
+        if (player.selectedSpell !== spell) {
+          this.selectSpell(spell, player);
+
+          const newMessage: Message = {
+            type: MessageType.SelectSpell,
+            spell: message.spell,
+            player: this.players.indexOf(player),
+          };
+          this.broadcast(newMessage);
+        }
+        break;
     }
   }
 
@@ -211,6 +227,8 @@ export class Server extends Manager {
           team: p.team.serialize(),
           color: p.color,
           you: p === player,
+          spell:
+            p.selectedSpell === null ? null : SPELLS.indexOf(p.selectedSpell),
           characters: p.characters.map((character) => {
             const [x, y] = character.body.precisePosition;
             return {
@@ -230,31 +248,33 @@ export class Server extends Manager {
   private cycleActivePlayer() {
     let activePlayerIndex = 0;
     if (this.activePlayer) {
-      this.activePlayer.active =
-        (this.activePlayer.active + 1) % this.activePlayer.characters.length;
       activePlayerIndex =
         (this.players.indexOf(this.activePlayer) + 1) % this.players.length;
     }
 
-    this.activePlayer = this.players[activePlayerIndex];
-    this.activePlayer.activeCharacter.attacked = false;
-    this.followTarget = this.activePlayer.activeCharacter;
+    const player = this.players[activePlayerIndex];
+    this.setActiveCharacter(
+      activePlayerIndex,
+      (player.active + 1) % player.characters.length
+    );
+
     this.windSpeed = Math.round(Math.random() * 16 - 8);
     this.turnStartTime = this.time;
+    this.turnEnding = false;
 
     this.broadcast({
       type: MessageType.ActiveCharacter,
       activePlayer: activePlayerIndex,
-      activeCharacter: this.activePlayer.active,
+      activeCharacter: this.activePlayer!.active,
       windSpeed: this.windSpeed,
       turnStartTime: this.turnStartTime,
     });
 
     this.addPopup({
-      title: `${this.activePlayer.name}'s turn`,
+      title: `${this.activePlayer!.name}'s turn`,
       meta: MESSAGES[Math.floor(Math.random() * MESSAGES.length)].replace(
         PLACEHOLDER,
-        this.activePlayer.activeCharacter.name
+        this.activePlayer!.activeCharacter.name
       ),
     });
   }
