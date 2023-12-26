@@ -1,3 +1,4 @@
+import { PhysicsBody } from ".";
 import { CollisionMask } from "./collisionMask";
 
 // Random value that determines how much gravity a body must receive before something is considered a collision with the ground/ceiling
@@ -22,7 +23,7 @@ interface Config {
   roundness?: number;
 }
 
-export class Body {
+export class Body implements PhysicsBody {
   public active = 1;
 
   private xVelocity = 0;

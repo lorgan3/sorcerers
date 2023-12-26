@@ -1,3 +1,4 @@
+import { PhysicsBody } from ".";
 import { CollisionMask } from "./collisionMask";
 
 const GRAVITY = 0.3;
@@ -12,7 +13,7 @@ interface Config {
   onCollide?: (x: number, y: number) => void;
 }
 
-export class SimpleBody {
+export class SimpleBody implements PhysicsBody {
   private xVelocity = 0;
   private yVelocity = 0;
 
@@ -105,6 +106,8 @@ export class SimpleBody {
     ) {
       this.onCollide(xCollision || x, yCollision || y);
     }
+
+    return true;
   }
 
   get velocity() {
