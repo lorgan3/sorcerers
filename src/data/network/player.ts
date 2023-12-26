@@ -4,6 +4,7 @@ import { Controller } from "../controller/controller";
 import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";
 import { Team } from "../team";
+import { Spell } from "../spells";
 
 export class Player {
   public readonly characters: Character[] = [];
@@ -13,6 +14,8 @@ export class Player {
   private _team = Team.empty();
   private _color = "";
   private _controller: Controller = new NetworkController();
+
+  public selectedSpell: Spell | null = null;
 
   constructor(public readonly connection?: DataConnection) {}
 

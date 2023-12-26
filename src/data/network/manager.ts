@@ -4,6 +4,7 @@ import { Popup } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
+import { Cursor, Spell } from "../spells";
 
 export abstract class Manager {
   private static _instance: Manager;
@@ -23,6 +24,7 @@ export abstract class Manager {
   protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
 
+  private cursor: Cursor | null = null;
   private popups: Popup[] = [];
 
   constructor(public readonly peer: Peer) {
@@ -41,6 +43,10 @@ export abstract class Manager {
       this.followTarget = null;
     } else if (this.followTarget) {
       Level.instance.follow(this.followTarget);
+    }
+
+    if (this.cursor) {
+      this.cursor.update(this.activePlayer!.controller);
     }
 
     this.activePlayer?.activeCharacter?.controlContinuous(

@@ -3,10 +3,7 @@ import { Level } from "./map/level";
 import { Body } from "./collision/body";
 import { Controller, Key } from "./controller/controller";
 import { AssetsContainer } from "../util/assets/assetsContainer";
-import { Fireball } from "./spells/fireball";
 import { ellipse9x16 } from "./collision/precomputed/circles";
-import { Range } from "./range";
-import { Manager } from "./network/manager";
 import { Player } from "./network/player";
 import { Force } from "./damage/targetList";
 import { HurtableEntity } from "./map/types";
@@ -16,7 +13,6 @@ export class Character extends Container implements HurtableEntity {
   private sprite!: AnimatedSprite;
   private namePlate: Text;
 
-  private range: Range;
   private _hp = 100;
   public attacked = false;
 
@@ -52,8 +48,6 @@ export class Character extends Container implements HurtableEntity {
     // sprite2.anchor.set(0);
     // sprite2.scale.set(6);
 
-    this.range = new Range(27, 50, 14);
-
     this.namePlate = new Text(`${name} ${this._hp}`, {
       fontFamily: "Eternal",
       fontSize: 32,
@@ -65,7 +59,7 @@ export class Character extends Container implements HurtableEntity {
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(25, -70);
 
-    this.addChild(this.sprite, this.range, this.namePlate);
+    this.addChild(this.sprite, this.namePlate);
   }
 
   getCenter(): [number, number] {
@@ -101,24 +95,6 @@ export class Character extends Container implements HurtableEntity {
 
     if (this.attacked) {
       return;
-    }
-
-    if (controller.isKeyDown(Key.M1)) {
-      this.range.update(...controller.getMouse());
-    } else if (this.range.stop() && this.range.power > 0) {
-      this.attacked = true;
-      const [x, y] = this.body.precisePosition;
-      const fireball = new Fireball(
-        x + 3 + Math.cos(this.range.rotation) * 7,
-        y + 6.5 + Math.sin(this.range.rotation) * 10.5
-      );
-      fireball.body.addAngularVelocity(
-        this.range.power * 5,
-        this.range.rotation
-      );
-      Level.instance.add(fireball);
-
-      Manager.instance.endTurn();
     }
   }
 
