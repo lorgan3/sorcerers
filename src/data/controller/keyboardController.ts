@@ -17,6 +17,7 @@ export class KeyboardController implements Controller {
     this.target.addListener("pointermove", this.handleMouseMove);
     this.target.addListener("pointerdown", this.handleMouseDown);
     this.target.addListener("pointerup", this.handleMouseUp);
+    window.addEventListener("contextmenu", this.handleContextMenu);
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
@@ -39,30 +40,33 @@ export class KeyboardController implements Controller {
   private handleMouseDown = (event: FederatedPointerEvent) => {
     this.mouseDown(
       event.global.x / this.target.scale.x + this.target.left,
-      event.global.y / this.target.scale.y + this.target.top
+      event.global.y / this.target.scale.y + this.target.top,
+      event.button === 0 ? Key.M1 : Key.M2
     );
   };
 
   private handleMouseUp = (event: FederatedPointerEvent) => {
     this.mouseUp(
       event.global.x / this.target.scale.x + this.target.left,
-      event.global.y / this.target.scale.y + this.target.top
+      event.global.y / this.target.scale.y + this.target.top,
+      event.button === 0 ? Key.M1 : Key.M2
     );
   };
 
   destroy() {
     window.removeEventListener("keydown", this.handleKeyDown);
     window.removeEventListener("keyup", this.handleKeyUp);
-    this.target.removeEventListener("pointermove", this.handleMouseMove);
-    this.target.removeEventListener("pointerdown", this.handleMouseDown);
-    this.target.removeEventListener("pointerup", this.handleMouseUp);
+    this.target.removeListener("pointermove", this.handleMouseMove);
+    this.target.removeListener("pointerdown", this.handleMouseDown);
+    this.target.removeListener("pointerup", this.handleMouseUp);
+    window.removeEventListener("contextmenu", this.handleContextMenu);
   }
 
-  mouseDown(x: number, y: number) {
+  mouseDown(x: number, y: number, key: Key.M1 | Key.M2) {
     this.mouseX = x;
     this.mouseY = y;
-    this.pressedKeys |= keyMap[Key.M1];
-    this.eventHandlers.get(Key.M1)?.forEach((fn) => fn());
+    this.pressedKeys |= keyMap[key];
+    this.eventHandlers.get(key)?.forEach((fn) => fn());
   }
 
   mouseMove(x: number, y: number) {
@@ -70,8 +74,8 @@ export class KeyboardController implements Controller {
     this.mouseY = y;
   }
 
-  mouseUp(x: number, y: number) {
-    this.pressedKeys &= ~keyMap[Key.M1];
+  mouseUp(x: number, y: number, key: Key.M1 | Key.M2) {
+    this.pressedKeys &= ~keyMap[key];
   }
 
   keyDown(key: string) {
@@ -128,5 +132,10 @@ export class KeyboardController implements Controller {
 
   deserialize(buffer: [number, number, number]): void {
     // Nothing
+  }
+
+  handleContextMenu(event: Event) {
+    event.preventDefault();
+    return false;
   }
 }

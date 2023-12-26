@@ -23,7 +23,7 @@ export const connect = async (target: HTMLElement, map: Map) => {
       Manager.instance.tick(dt, Ticker.shared.deltaMS);
     });
 
-    return;
+    return controller;
   }
 
   const server = new Server(new Peer(DEFAULT_SERVER_ID));
@@ -58,4 +58,6 @@ export const connect = async (target: HTMLElement, map: Map) => {
         });
       }, 300);
     });
+
+  return controller;
 };

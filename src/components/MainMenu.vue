@@ -8,6 +8,8 @@ import Hud from "./Hud.vue";
 import Host from "./Host.vue";
 import Join from "./Join.vue";
 import { Map } from "../data/map";
+import Inventory from "./Inventory.vue";
+import { Key } from "../data/controller/controller";
 
 enum Menu {
   MainMenu = "Main menu",
@@ -19,6 +21,7 @@ enum Menu {
 }
 
 const canvas = ref<HTMLDivElement | null>(null);
+const inventoryOpen = ref(false);
 const menu = ref(Menu.MainMenu);
 
 const container = new AssetsContainer();
@@ -26,8 +29,11 @@ let selectedMap: Map;
 
 watch(canvas, (canvas) => {
   if (canvas) {
-    container.onComplete(() => {
-      connect(canvas, selectedMap);
+    container.onComplete(async () => {
+      const controller = await connect(canvas, selectedMap);
+      controller.addKeyListener(Key.M2, () => {
+        inventoryOpen.value = !inventoryOpen.value;
+      });
     });
   }
 });
@@ -40,11 +46,16 @@ const handlePlay = (map: Map) => {
 const handleBack = () => {
   menu.value = Menu.MainMenu;
 };
+
+const handleCloseInventory = () => {
+  inventoryOpen.value = false;
+};
 </script>
 
 <template>
   <div v-if="menu === Menu.Game" class="render-target" ref="canvas">
     <Hud />
+    <Inventory :isOpen="inventoryOpen" :onClose="handleCloseInventory" />
   </div>
   <div v-else-if="menu === Menu.Builder" class="background">
     <Builder :onBack="handleBack" />

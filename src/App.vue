@@ -10,6 +10,7 @@ import MainMenu from "./components/MainMenu.vue";
 :root {
   --primary: #402020;
   --background: #bca88c;
+  --background-dark: #9f8e76;
   --highlight: #80331e;
   --highlight-background: #9d8877;
 
