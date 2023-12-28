@@ -4,8 +4,9 @@ import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { Projectile } from ".";
 
-export class Fireball extends Container {
+export class Fireball extends Container implements Projectile {
   public readonly body: SimpleBody;
   private sprite!: AnimatedSprite;
   private bounces = 5;
@@ -64,7 +65,7 @@ export class Fireball extends Container {
     return this.body.serialize();
   }
 
-  deserialize(data: any[]) {
+  deserialize(data: any) {
     this.body.deserialize(data);
   }
 }
