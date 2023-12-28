@@ -9,4 +9,5 @@ export interface DamageSource {
 
 export enum DamageSourceType {
   Explosive,
+  Falling,
 }
