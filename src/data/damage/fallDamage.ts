@@ -63,7 +63,7 @@ export class FallDamage implements DamageSource {
       Level.instance.withNearbyEntities(sx, sy, data.range, (entity) => {
         if (entity instanceof Character) {
           const [x] = entity.getCenter();
-          const direction = sx < x ? Math.PI / 3 : Math.PI - Math.PI / 3;
+          const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
           this.targets!.add(entity, data.damage, {
             power: 1,
             direction,
