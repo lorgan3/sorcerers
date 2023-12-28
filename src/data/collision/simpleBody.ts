@@ -83,22 +83,26 @@ export class SimpleBody implements PhysicsBody {
       this.surface.collidesWith(this.mask, alignX(this.x + this.xVelocity), y)
     ) {
       xCollision = alignX(this.x + this.xVelocity);
-      this.x = x;
       this.xVelocity *= this.bounciness;
-    } else {
-      this.x += this.xVelocity * dt;
+
+      if (this.bounciness <= 0) {
+        this.x = x;
+      }
     }
+    this.x += this.xVelocity * dt;
 
     if (
       this.yVelocity !== 0 &&
       this.surface.collidesWith(this.mask, x, alignY(this.y + this.yVelocity))
     ) {
       yCollision = alignY(this.y + this.yVelocity);
-      this.y = y;
       this.yVelocity *= this.bounciness;
-    } else {
-      this.y += this.yVelocity * dt;
+
+      if (this.bounciness <= 0) {
+        this.y = y;
+      }
     }
+    this.y += this.yVelocity * dt;
 
     if (
       (xCollision !== undefined || yCollision !== undefined) &&
