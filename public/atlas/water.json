@@ -1,0 +1,48 @@
+{
+  "frames": {
+    "water1.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "water2.png": {
+      "frame": {
+        "x": 64,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "water3.png": {
+      "frame": {
+        "x": 0,
+        "y": 32,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "water4.png": {
+      "frame": {
+        "x": 64,
+        "y": 32,
+        "w": 64,
+        "h": 32
+      }
+    }
+  },
+  "animations": {
+    "wave": ["water1.png", "water2.png", "water3.png", "water4.png"]
+  },
+  "meta": {
+    "app": "https://github.com/lorgan3/sorcerers",
+    "version": "1.0",
+    "image": "water.png",
+    "size": {
+      "w": 128,
+      "h": 64
+    }
+  }
+}

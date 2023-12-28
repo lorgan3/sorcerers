@@ -103,6 +103,7 @@ export class Level {
 
   tick(dt: number) {
     this.damageNumberContainer.tick(dt);
+    this.terrain.killbox.tick(dt);
 
     for (let entity of this.entities) {
       entity.tick(dt);

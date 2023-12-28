@@ -2,6 +2,7 @@ import { Container, Sprite, Texture } from "pixi.js";
 import { CollisionMask } from "../collision/collisionMask";
 import { Map } from ".";
 import { ellipse9x16 } from "../collision/precomputed/circles";
+import { Killbox } from "./killbox";
 
 export class Terrain extends Container {
   private background: Texture;
@@ -10,6 +11,8 @@ export class Terrain extends Container {
 
   public collisionMask: CollisionMask;
   public characterMask: CollisionMask;
+
+  public readonly killbox: Killbox;
 
   constructor(private map: Map) {
     super();
@@ -24,7 +27,13 @@ export class Terrain extends Container {
 
     this.background = Texture.from(map.background);
 
-    this.addChild(new Sprite(this.background), new Sprite(this.terrain));
+    this.killbox = new Killbox(this.background.width, this.background.height);
+
+    this.addChild(
+      new Sprite(this.background),
+      new Sprite(this.terrain),
+      this.killbox
+    );
   }
 
   getSpawnLocations(
