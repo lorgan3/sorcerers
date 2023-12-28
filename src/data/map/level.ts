@@ -9,11 +9,11 @@ import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Viewport } from "pixi-viewport";
 import { Server } from "../network/server";
-import { DamageSource } from "../damage";
 import { Map } from ".";
 import { Manager } from "../network/manager";
 import { HurtableEntity, TickingEntity } from "./types";
 import { DamageNumberContainer } from "../../grapics/DamageNumber";
+import { DamageSource } from "../damage/types";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 

@@ -3,10 +3,10 @@ import { Message, MessageType } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
 import { Character } from "../character";
-import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Manager } from "./manager";
 import { Team } from "../team";
 import { SPELLS } from "../spells";
+import { DAMAGE_SOURCES } from "../damage";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -127,7 +127,9 @@ export class Client extends Manager {
         break;
 
       case MessageType.SyncDamage:
-        const damageSource = ExplosiveDamage.deserialize(message.data);
+        const damageSource = DAMAGE_SOURCES[message.kind].deserialize(
+          message.data
+        );
         damageSource.damage();
         break;
 

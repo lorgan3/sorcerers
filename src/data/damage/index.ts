@@ -1,11 +1,9 @@
-export interface DamageSource {
-  readonly x: number;
-  readonly y: number;
+import { ExplosiveDamage } from "./explosiveDamage";
+import { DamageSource, DamageSourceType } from "./types";
 
-  damage(): void;
-  serialize(): any;
-}
-
-export enum DamageSourceType {
-  Explosive,
-}
+export const DAMAGE_SOURCES: Record<
+  DamageSourceType,
+  { deserialize: (data: any) => DamageSource }
+> = {
+  [DamageSourceType.Explosive]: ExplosiveDamage,
+};

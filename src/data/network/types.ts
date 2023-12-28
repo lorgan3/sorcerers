@@ -1,3 +1,4 @@
+import { DamageSourceType } from "../damage/types";
 import { Config } from "../map";
 
 export enum MessageType {
@@ -75,6 +76,7 @@ export type Message =
     }
   | {
       type: MessageType.SyncDamage;
+      kind: DamageSourceType;
       data: any;
     }
   | {

@@ -1,14 +1,21 @@
-import { DamageSource } from ".";
 import { Character } from "../character";
-import { circle32x32, circle9x9 } from "../collision/precomputed/circles";
+import {
+  circle16x16,
+  circle32x32,
+  circle9x9,
+} from "../collision/precomputed/circles";
 import { Level } from "../map/level";
 import { TargetList } from "./targetList";
+import { DamageSource, DamageSourceType } from "./types";
 
 export class ExplosiveDamage implements DamageSource {
   static RangeToMaskMap = {
     16: circle32x32,
+    8: circle16x16,
     4: circle9x9,
   };
+
+  public readonly type = DamageSourceType.Explosive;
 
   constructor(
     public readonly x: number,
@@ -18,7 +25,7 @@ export class ExplosiveDamage implements DamageSource {
   ) {}
 
   damage() {
-    Level.instance.terrain.subtract(
+    Level.instance.terrain.subtractCircle(
       this.x,
       this.y,
       this.range,

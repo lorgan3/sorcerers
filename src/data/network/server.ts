@@ -4,12 +4,12 @@ import { Player } from "./player";
 import { Character } from "../character";
 import { KeyboardController } from "../controller/keyboardController";
 import { Level } from "../map/level";
-import { DamageSource } from "../damage";
 import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 import { Team } from "../team";
 import { COLORS } from "./constants";
 import { SPELLS } from "../spells";
+import { DamageSource } from "../damage/types";
 
 export class Server extends Manager {
   private started = false;
@@ -154,6 +154,7 @@ export class Server extends Manager {
   syncDamage(damageSource: DamageSource) {
     this.broadcast({
       type: MessageType.SyncDamage,
+      kind: damageSource.type,
       data: damageSource.serialize(),
     });
   }

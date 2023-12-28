@@ -76,14 +76,30 @@ export class Terrain extends Container {
     return locations;
   }
 
-  subtract(x: number, y: number, r: number, mask: CollisionMask) {
-    this.terrainCtx.moveTo(x, y);
-    this.terrainCtx.ellipse(x, y, r, r, 0, 0, Math.PI * 2);
+  subtract(
+    x: number,
+    y: number,
+    fn: (ctx: OffscreenCanvasRenderingContext2D) => void,
+    mask: CollisionMask
+  ) {
+    fn(this.terrainCtx);
     this.terrainCtx.fill();
     this.terrain.update();
 
-    this.collisionMask.subtract(mask, x - r, y - r);
-    this.characterMask.subtract(mask, x - r, y - r);
+    this.collisionMask.subtract(mask, x, y);
+    this.characterMask.subtract(mask, x, y);
+  }
+
+  subtractCircle(x: number, y: number, r: number, mask: CollisionMask) {
+    this.subtract(
+      x - r,
+      y - r,
+      (ctx) => {
+        ctx.moveTo(x, y);
+        ctx.ellipse(x, y, r, r, 0, 0, Math.PI * 2);
+      },
+      mask
+    );
   }
 
   // @TODO: a system for sending an in progress map
