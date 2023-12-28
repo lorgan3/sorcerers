@@ -6,6 +6,8 @@ import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
 import { Cursor, Spell } from "../spells";
 
+const TURN_GRACE_PERIOD = 3000;
+
 export abstract class Manager {
   private static _instance: Manager;
   static get instance() {
@@ -64,7 +66,7 @@ export abstract class Manager {
   endTurn() {
     this.turnEnding = true;
     this.turnStartTime = Math.min(
-      this.time - this.turnLength + 5000,
+      this.time - this.turnLength + TURN_GRACE_PERIOD,
       this.turnStartTime
     );
 
