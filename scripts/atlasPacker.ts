@@ -22,6 +22,9 @@ const contents = fs.readdirSync(DIRECTORY);
 const files = contents.filter((file) => file.endsWith(".json"));
 const folders = contents.filter((file) => !file.includes("."));
 
+const frames: Record<string, Frame> = {};
+const animations: Record<string, string[]> = {};
+
 for (let folder of folders) {
   const files = fs.readdirSync(DIRECTORY + folder);
 
@@ -59,6 +62,12 @@ for (let file of files) {
     process.exit(1);
   }
 
+  if (atlas.animations) {
+    for (let animation in atlas.animations) {
+      animations[animation] = atlas.animations[animation];
+    }
+  }
+
   Object.entries(atlas.frames).forEach(([name, { frame }]) => {
     const jimp = new Jimp(frame.w, frame.h).blit(
       image,
@@ -84,8 +93,6 @@ blocks.sort((a, b) => b.h - a.h);
 const packer = new GrowingPacker();
 packer.fit(blocks);
 
-const frames: Record<string, Frame> = {};
-const animations: Record<string, string[]> = {};
 const atlas = new Jimp(packer.root.w, packer.root.h);
 for (let block of blocks) {
   if (block.fit!.used) {
@@ -161,7 +168,7 @@ const json: Atlas = {
   frames,
   animations,
   meta: {
-    app: "https://github.com/lorgan3/open-td",
+    app: "https://github.com/lorgan3/sorcerers",
     version: "1.0",
     image: `atlas.png`,
     size: { w: packer.root.w, h: packer.root.h },
