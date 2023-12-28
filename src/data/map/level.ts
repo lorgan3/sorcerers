@@ -25,6 +25,7 @@ export class Level {
 
   private defaultLayer = new Container();
   public readonly damageNumberContainer = new DamageNumberContainer();
+  public readonly uiContainer = new Container();
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -66,7 +67,8 @@ export class Level {
     this.viewport.addChild(
       this.terrain,
       this.defaultLayer,
-      this.damageNumberContainer
+      this.damageNumberContainer,
+      this.uiContainer
     );
 
     window.addEventListener("keydown", (event: KeyboardEvent) => {
