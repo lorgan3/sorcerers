@@ -17,11 +17,17 @@ import { DamageSource } from "../damage/types";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
+const SINK_AMOUNT = 20;
+const SHAKE_AMOUNT = 10;
+const SHAKE_INTENSITY = 12;
+const SHAKE_INTERVAL = 25;
+
 export class Level {
   private app: Application<HTMLCanvasElement>;
   public readonly viewport: Viewport;
   private followedEntity: DisplayObject | null = null;
   private followTime = 0;
+  private intervalId = -1;
 
   private defaultLayer = new Container();
   public readonly damageNumberContainer = new DamageNumberContainer();
@@ -31,7 +37,7 @@ export class Level {
   private spawnLocations: Array<[number, number]> = [];
 
   private entities = new Set<TickingEntity>();
-  private hurtables = new Set<HurtableEntity>();
+  public readonly hurtables = new Set<HurtableEntity>();
 
   private static _instance: Level;
   static get instance() {
@@ -174,7 +180,7 @@ export class Level {
   follow(target: DisplayObject) {
     this.followTime = 30;
 
-    if (this.followedEntity === target) {
+    if (this.followedEntity === target || this.intervalId !== -1) {
       return;
     }
 
@@ -184,6 +190,37 @@ export class Level {
       speed: 24,
       radius: 100,
     });
+  }
+
+  sink() {
+    this.shake();
+
+    this.terrain.killbox.rise(SINK_AMOUNT);
+    // this.viewport.worldHeight -= SINK_AMOUNT * 6;
+  }
+
+  shake() {
+    this.unfollow();
+    window.clearInterval(this.intervalId);
+
+    const center = this.viewport.center;
+
+    let shakes = SHAKE_AMOUNT;
+    this.intervalId = window.setInterval(() => {
+      this.viewport!.animate({
+        time: SHAKE_INTERVAL,
+        position: {
+          x: center.x + Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2,
+          y: center.y + Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2,
+        },
+      });
+
+      shakes--;
+      if (shakes <= 0) {
+        window.clearInterval(this.intervalId);
+        this.intervalId = -1;
+      }
+    }, SHAKE_INTERVAL);
   }
 
   private unfollow() {

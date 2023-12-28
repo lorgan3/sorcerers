@@ -79,6 +79,10 @@ export class Server extends Manager {
 
     if (this.time - this.turnStartTime > this.turnLength) {
       this.cycleActivePlayer();
+
+      if (this.time > this.gameLength) {
+        Level.instance.sink();
+      }
     }
 
     if (this.frames % 30 === 0) {
