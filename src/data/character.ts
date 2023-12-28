@@ -5,8 +5,9 @@ import { Controller, Key } from "./controller/controller";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import { ellipse9x16 } from "./collision/precomputed/circles";
 import { Player } from "./network/player";
-import { Force } from "./damage/targetList";
+import { Force, TargetList } from "./damage/targetList";
 import { HurtableEntity } from "./map/types";
+import { GenericDamage } from "./damage/genericDamage";
 
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
@@ -67,22 +68,34 @@ export class Character extends Container implements HurtableEntity {
   }
 
   tick(dt: number) {
-    if (this.body.active) {
+    if (this.body.active && this._hp > 0) {
       Level.instance.terrain.characterMask.subtract(
         this.body.mask,
         ...this.body.position
       );
 
-      this.body.tick(dt);
+      if (this.body.tick(dt)) {
+        const [x, y] = this.body.precisePosition;
+        this.position.set(x * 6, y * 6);
+
+        if (
+          Level.instance.terrain.killbox.collidesWith(
+            this.body.mask,
+            this.position.x,
+            this.position.y
+          )
+        ) {
+          Level.instance.damage(
+            new GenericDamage(new TargetList().add(this, 999))
+          );
+        }
+      }
 
       Level.instance.terrain.characterMask.add(
         this.body.mask,
         ...this.body.position
       );
     }
-
-    const [x, y] = this.body.precisePosition;
-    this.position.set(x * 6, y * 6);
   }
 
   control(controller: Controller) {
