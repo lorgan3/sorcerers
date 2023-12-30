@@ -1,5 +1,6 @@
 import { ExplosiveDamage } from "./explosiveDamage";
 import { FallDamage } from "./fallDamage";
+import { GenericDamage } from "./genericDamage";
 import { DamageSource, DamageSourceType } from "./types";
 
 export const DAMAGE_SOURCES: Record<
@@ -8,4 +9,5 @@ export const DAMAGE_SOURCES: Record<
 > = {
   [DamageSourceType.Explosive]: ExplosiveDamage,
   [DamageSourceType.Falling]: FallDamage,
+  [DamageSourceType.Generic]: GenericDamage,
 };
