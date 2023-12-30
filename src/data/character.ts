@@ -161,5 +161,9 @@ export class Character extends Container implements HurtableEntity {
     this._hp = hp;
     this.namePlate.text = `${this.name} ${Math.ceil(this._hp)}`;
     this.body.active = 1;
+
+    if (this._hp <= 0) {
+      this.player.removeCharacter(this);
+    }
   }
 }

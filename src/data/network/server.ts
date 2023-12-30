@@ -12,9 +12,9 @@ import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
 
 export class Server extends Manager {
-  private started = false;
   private controller?: KeyboardController;
   private availableColors = [...COLORS];
+  private singlePlayer = false;
 
   private static _serverInstance: Server;
   static get instance() {
@@ -73,8 +73,8 @@ export class Server extends Manager {
     this.syncPlayers();
     this.cycleActivePlayer();
 
-    this.started = true;
     this.time = 0;
+    this.singlePlayer = this.players.length === 1;
   }
 
   tick(dt: number, dtMs: number) {
@@ -97,7 +97,7 @@ export class Server extends Manager {
       for (let player of this.players) {
         player.connection?.send(data);
       }
-    } else if (this.frames % 10 === 0) {
+    } else if (this.frames % 10 === 0 && this.activePlayer!.activeCharacter) {
       const data: Message = {
         type: MessageType.ActiveUpdate,
         data: this.activePlayer!.activeCharacter.serialize(),
@@ -164,6 +164,20 @@ export class Server extends Manager {
       kind: damageSource.type,
       data: damageSource.serialize(),
     });
+  }
+
+  endGame() {
+    if (this.activePlayer!.characters.length) {
+      this.addPopup({
+        title: `${this.activePlayer!.name} wins!`,
+        duration: 60000,
+      });
+    } else {
+      this.addPopup({
+        title: `Everybody loses!`,
+        duration: 60000,
+      });
+    }
   }
 
   private handleMessage(message: Message, player: Player) {
@@ -254,11 +268,32 @@ export class Server extends Manager {
     }
   }
 
+  private getNextPlayerIndex() {
+    const activePlayerIndex = this.activePlayer
+      ? this.players.indexOf(this.activePlayer)
+      : -1;
+
+    for (let i = 0; i < this.players.length; i++) {
+      const index = (activePlayerIndex + i + 1) % this.players.length;
+
+      if (index === activePlayerIndex && !this.singlePlayer) {
+        continue;
+      }
+
+      if (this.players[index].characters.length) {
+        return index;
+      }
+    }
+
+    return null;
+  }
+
   private cycleActivePlayer() {
-    let activePlayerIndex = 0;
-    if (this.activePlayer) {
-      activePlayerIndex =
-        (this.players.indexOf(this.activePlayer) + 1) % this.players.length;
+    const activePlayerIndex = this.getNextPlayerIndex();
+
+    if (activePlayerIndex === null) {
+      this.endGame();
+      return;
     }
 
     const player = this.players[activePlayerIndex];
