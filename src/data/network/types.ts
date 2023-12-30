@@ -16,6 +16,7 @@ export enum MessageType {
   LobbyUpdate,
   StartGame,
   SelectSpell,
+  ClientReady,
 }
 
 export type Message =
@@ -105,6 +106,9 @@ export type Message =
       type: MessageType.SelectSpell;
       spell: number;
       player?: number;
+    }
+  | {
+      type: MessageType.ClientReady;
     };
 
 export interface Popup {

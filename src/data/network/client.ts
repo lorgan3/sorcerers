@@ -68,6 +68,10 @@ export class Client extends Manager {
     this.connection!.on("data", (data) => {
       this.handleMessage(data as Message);
     });
+
+    this.broadcast({
+      type: MessageType.ClientReady,
+    });
   }
 
   private handleMessage(message: Message) {
@@ -150,7 +154,7 @@ export class Client extends Manager {
     }
   }
 
-  async broadcast(message: Message) {
-    await this.connection!.send(message);
+  broadcast(message: Message) {
+    this.connection!.send(message);
   }
 }

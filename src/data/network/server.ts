@@ -50,10 +50,13 @@ export class Server extends Manager {
   }
 
   async start() {
-    await Server.instance.broadcast({
+    Server.instance.broadcast({
       type: MessageType.StartGame,
       map: await Level.instance.terrain.serialize(),
     });
+
+    this._self?.resolveReady();
+    await Promise.all(this.players.map((player) => player.ready));
 
     for (let player of this.players) {
       for (let character of player.team.characters) {
@@ -217,12 +220,13 @@ export class Server extends Manager {
           this.broadcast(newMessage);
         }
         break;
+
+      case MessageType.ClientReady:
+        player.resolveReady();
     }
   }
 
   private syncPlayers() {
-    const activePlayer = this.players.indexOf(this.activePlayer!);
-
     for (let player of this.players) {
       const response: Message = {
         type: MessageType.SyncPlayers,
@@ -294,9 +298,9 @@ export class Server extends Manager {
   }
 
   async broadcast(message: Message) {
-    await Promise.all(
-      this.players.map((player) => player.connection?.send(message))
-    );
+    for (let player of this.players) {
+      player.connection?.send(message);
+    }
   }
 
   rename(newName: string) {

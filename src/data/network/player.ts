@@ -17,6 +17,11 @@ export class Player {
 
   public selectedSpell: Spell | null = null;
 
+  public resolveReady!: () => void;
+  public readonly ready = new Promise<void>(
+    (resolve) => (this.resolveReady = resolve)
+  );
+
   constructor(public readonly connection?: DataConnection) {}
 
   connect(name: string, team: Team, color: string, controller?: Controller) {
