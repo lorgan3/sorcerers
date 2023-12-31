@@ -145,6 +145,24 @@ export class CollisionMask {
     return false;
   }
 
+  collidesWithPoint(x: number, y: number) {
+    if (x < 0 || x >= this.w) {
+      return false;
+    }
+
+    if (y < 0 || y >= this.h) {
+      return false;
+    }
+
+    const trow = this.mask[y];
+    const xScaled = Math.floor(x / 32);
+
+    const lshift = 32 - (x % 32);
+    let bits = 1 << lshift;
+
+    return !!(trow[xScaled] & bits);
+  }
+
   add(other: CollisionMask, dx: number, dy: number) {
     const x1 = Math.max(dx, 0);
     const y1 = Math.max(dy, 0);
