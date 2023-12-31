@@ -6,6 +6,8 @@ import { Character } from "../character";
 import { Sword } from "./sword";
 import { ArrowDown } from "./downArrow";
 import { PhysicsBody } from "../collision";
+import { Lock, Target } from "./lock";
+import { Telekinesis } from "./Telekinesis";
 
 export interface Cursor extends DisplayObject {
   update(controller: Controller): void;
@@ -46,6 +48,15 @@ export const SPELLS: Spell[] = [
       projectile: Sword,
       xOffset: -5.5,
       yOffset: 0,
+    },
+  },
+  {
+    name: "Telekinesis",
+    description: "Move from a distance",
+    cursor: Lock,
+    data: {
+      target: Target.Character,
+      projectile: Telekinesis,
     },
   },
 ];
