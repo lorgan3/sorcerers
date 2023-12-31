@@ -165,14 +165,16 @@ export class Level {
     x: number,
     y: number,
     range: number,
-    fn: (entity: HurtableEntity, distance: number) => void
+    fn: (entity: HurtableEntity, distance: number) => void | boolean
   ) {
     const rangeSquared = range ** 2;
     for (let entity of this.hurtables) {
       const [ex, ey] = entity.getCenter();
       const distance = (ex - x) ** 2 + (ey - y) ** 2;
       if (distance < rangeSquared) {
-        fn(entity, Math.sqrt(distance));
+        if (fn(entity, Math.sqrt(distance))) {
+          return;
+        }
       }
     }
   }
