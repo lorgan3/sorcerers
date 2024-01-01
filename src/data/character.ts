@@ -20,6 +20,7 @@ export class Character extends Container implements HurtableEntity {
 
   private _hp = 100;
   private time = 0;
+  public hurt = false;
 
   constructor(
     public readonly player: Player,
@@ -76,7 +77,7 @@ export class Character extends Container implements HurtableEntity {
         new ExplosiveDamage(
           x / 6 + this.body.xVelocity / 2,
           y / 6 + this.body.yVelocity / 2,
-          12,
+          8,
           this.body.velocity,
           1
         )
@@ -185,6 +186,7 @@ export class Character extends Container implements HurtableEntity {
     this._hp = hp;
     this.namePlate.text = `${this.name} ${Math.ceil(this._hp)}`;
     this.body.active = 1;
+    this.hurt = true;
 
     if (this._hp <= 0) {
       this.player.removeCharacter(this);

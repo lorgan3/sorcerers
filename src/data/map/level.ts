@@ -111,6 +111,10 @@ export class Level {
     this.damageNumberContainer.tick(dt);
     this.terrain.killbox.tick(dt);
 
+    for (let entity of this.hurtables) {
+      entity.hurt = false;
+    }
+
     for (let entity of this.entities) {
       entity.tick(dt);
     }
@@ -169,6 +173,10 @@ export class Level {
   ) {
     const rangeSquared = range ** 2;
     for (let entity of this.hurtables) {
+      if (entity.hurt) {
+        continue;
+      }
+
       const [ex, ey] = entity.getCenter();
       const distance = (ex - x) ** 2 + (ey - y) ** 2;
       if (distance < rangeSquared) {
