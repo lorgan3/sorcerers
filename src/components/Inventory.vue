@@ -13,8 +13,8 @@ const { isOpen, onClose } = defineProps<{
 
 const SLOTS = 30;
 
-const previewName = ref(Manager.instance.selectedSpell?.name);
-const previewDescription = ref(Manager.instance.selectedSpell?.description);
+const previewName = ref(Manager.instance?.selectedSpell?.name);
+const previewDescription = ref(Manager.instance?.selectedSpell?.description);
 
 const handleClick = (spell?: Spell) => {
   if (spell) {
@@ -63,7 +63,7 @@ const onMouseEnter = (spell?: Spell) => {
             v-for="i in SLOTS"
             :class="{
               slot: true,
-              selected: SPELLS[i - 1] === Manager.instance.selectedSpell,
+              selected: SPELLS[i - 1] === Manager.instance?.selectedSpell,
             }"
             @click="handleClick(SPELLS[i - 1])"
             @mouseenter="onMouseEnter(SPELLS[i - 1])"
