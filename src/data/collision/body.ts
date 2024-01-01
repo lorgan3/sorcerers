@@ -10,7 +10,7 @@ const GROUND_FRICTION = 0.88;
 const AIR_FRICTION = 0.94;
 const MIN_MOVEMENT = 0.01;
 
-const SPEED = 0.15;
+const SPEED = 0.1;
 const JUMP_STRENGTH = 4;
 
 interface Config {
