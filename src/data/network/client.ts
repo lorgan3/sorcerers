@@ -160,6 +160,12 @@ export class Client extends Manager {
       case MessageType.Die:
         (Level.instance.entityMap.get(message.id) as HurtableEntity).die();
         break;
+
+      case MessageType.EntityUpdate:
+        this.players.forEach((player, i) =>
+          player.deserialize(message.players[i])
+        );
+        break;
     }
   }
 
