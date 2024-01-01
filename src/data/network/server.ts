@@ -255,6 +255,7 @@ export class Server extends Manager {
           characters: p.characters.map((character) => {
             const [x, y] = character.body.precisePosition;
             return {
+              id: character.id,
               name: character.name,
               hp: character.hp,
               x,

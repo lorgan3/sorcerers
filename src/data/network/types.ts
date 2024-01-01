@@ -17,6 +17,7 @@ export enum MessageType {
   StartGame,
   SelectSpell,
   ClientReady,
+  Die,
 }
 
 export type Message =
@@ -63,6 +64,7 @@ export type Message =
         color: string;
         spell: number | null;
         characters: Array<{
+          id: number;
           name: string;
           hp: number;
           x: number;
@@ -109,6 +111,10 @@ export type Message =
     }
   | {
       type: MessageType.ClientReady;
+    }
+  | {
+      type: MessageType.Die;
+      id: number;
     };
 
 export interface Popup {

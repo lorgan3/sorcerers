@@ -7,6 +7,9 @@ import { Manager } from "./manager";
 import { Team } from "../team";
 import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
+import { setId } from "../entity";
+import { Level } from "../map/level";
+import { HurtableEntity } from "../entity/types";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -97,7 +100,9 @@ export class Client extends Manager {
           );
           player.selectedSpell = data.spell ? SPELLS[data.spell] : null;
 
-          data.characters.forEach(({ name, hp, x, y }) => {
+          data.characters.forEach(({ id, name, hp, x, y }) => {
+            setId(id);
+
             const character = new Character(player, x, y, name);
             character.hp = hp;
             player.addCharacter(character);
@@ -150,6 +155,10 @@ export class Client extends Manager {
           SPELLS[message.spell] || null,
           this.players[message.player!]
         );
+        break;
+
+      case MessageType.Die:
+        (Level.instance.entityMap.get(message.id) as HurtableEntity).die();
         break;
     }
   }

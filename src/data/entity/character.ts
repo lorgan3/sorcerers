@@ -16,6 +16,7 @@ const BOUNCE_TRIGGER = 6;
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
   public hurt = false;
+  public id = -1;
 
   private sprite!: AnimatedSprite;
   private namePlate: Text;
@@ -177,6 +178,10 @@ export class Character extends Container implements HurtableEntity {
       this.body.mask,
       ...this.body.position
     );
+  }
+
+  die() {
+    this.player.removeCharacter(this);
   }
 
   get hp() {
