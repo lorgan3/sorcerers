@@ -1,26 +1,27 @@
 import { AnimatedSprite, Container, Text } from "pixi.js";
-import { Level } from "./map/level";
-import { Body } from "./collision/body";
-import { Controller, Key } from "./controller/controller";
-import { AssetsContainer } from "../util/assets/assetsContainer";
-import { ellipse9x16 } from "./collision/precomputed/circles";
-import { Player } from "./network/player";
-import { Force, TargetList } from "./damage/targetList";
-import { HurtableEntity } from "./map/types";
-import { GenericDamage } from "./damage/genericDamage";
-import { ExplosiveDamage } from "./damage/explosiveDamage";
+import { Level } from "../map/level";
+import { Body } from "../collision/body";
+import { Controller, Key } from "../controller/controller";
+import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { ellipse9x16 } from "../collision/precomputed/circles";
+import { Player } from "../network/player";
+import { Force, TargetList } from "../damage/targetList";
+import { HurtableEntity } from "./types";
+import { GenericDamage } from "../damage/genericDamage";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 6;
 
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
+  public hurt = false;
+
   private sprite!: AnimatedSprite;
   private namePlate: Text;
 
   private _hp = 100;
   private time = 0;
-  public hurt = false;
 
   constructor(
     public readonly player: Player,

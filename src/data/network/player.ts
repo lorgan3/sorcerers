@@ -1,5 +1,5 @@
 import { DataConnection } from "peerjs";
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { Controller } from "../controller/controller";
 import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";

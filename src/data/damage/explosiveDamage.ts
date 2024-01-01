@@ -1,4 +1,4 @@
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import {
   circle16x16,
   circle24x24,
@@ -51,6 +51,10 @@ export class ExplosiveDamage implements DamageSource {
         range,
         (entity, distance) => {
           if (entity instanceof Character) {
+            if (entity.hurt) {
+              return;
+            }
+
             const [x, y] = entity.getCenter();
             this.targets!.add(
               entity,

@@ -1,4 +1,4 @@
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { Manager } from "../network/manager";
 
 export interface Force {

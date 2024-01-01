@@ -2,7 +2,7 @@ import { DisplayObject } from "pixi.js";
 import { Range } from "./range";
 import { Fireball } from "./fireball";
 import { Controller } from "../controller/controller";
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { Sword } from "./sword";
 import { ArrowDown } from "./downArrow";
 import { PhysicsBody } from "../collision";

@@ -1,12 +1,11 @@
 import { AnimatedSprite, Container, DisplayObject } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Cursor, Projectile, Spell } from ".";
-import { Character } from "../character";
+import { Cursor, Spell } from ".";
+import { Character } from "../entity/character";
 import { Controller, Key } from "../controller/controller";
 import { Level } from "../map/level";
-import { Manager } from "../network/manager";
-import { HurtableEntity } from "../map/types";
+import { HurtableEntity } from "../entity/types";
 
 export enum Target {
   Any,

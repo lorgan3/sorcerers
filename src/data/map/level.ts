@@ -11,7 +11,7 @@ import { Viewport } from "pixi-viewport";
 import { Server } from "../network/server";
 import { Map } from ".";
 import { Manager } from "../network/manager";
-import { HurtableEntity, TickingEntity } from "./types";
+import { HurtableEntity, TickingEntity } from "../entity/types";
 import { DamageNumberContainer } from "../../grapics/DamageNumber";
 import { DamageSource } from "../damage/types";
 

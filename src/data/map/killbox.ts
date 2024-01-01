@@ -3,7 +3,7 @@ import { Container, Texture, TilingSprite } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { CollisionMask } from "../collision/collisionMask";
 import { Level } from "./level";
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { GenericDamage } from "../damage/genericDamage";
 import { TargetList } from "../damage/targetList";
 

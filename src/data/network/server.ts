@@ -1,7 +1,7 @@
 import Peer from "peerjs";
 import { MessageType, Message, Popup } from "./types";
 import { Player } from "./player";
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { KeyboardController } from "../controller/keyboardController";
 import { Level } from "../map/level";
 import { Manager } from "./manager";

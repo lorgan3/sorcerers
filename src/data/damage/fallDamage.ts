@@ -1,4 +1,4 @@
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { CollisionMask } from "../collision/collisionMask";
 import { swordTip, swordTipCanvas } from "../collision/precomputed/triangles";
 import { Level } from "../map/level";

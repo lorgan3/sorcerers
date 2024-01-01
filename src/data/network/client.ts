@@ -2,7 +2,7 @@ import Peer, { DataConnection } from "peerjs";
 import { Message, MessageType } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
-import { Character } from "../character";
+import { Character } from "../entity/character";
 import { Manager } from "./manager";
 import { Team } from "../team";
 import { SPELLS } from "../spells";
