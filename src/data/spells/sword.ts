@@ -27,8 +27,7 @@ export class Sword extends Container implements Projectile {
       bounciness: 0.7,
       friction: 0.95,
     });
-    this.body.x = Math.round(x);
-    this.body.y = y;
+    this.body.move(Math.round(x), y);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -62,10 +61,9 @@ export class Sword extends Container implements Projectile {
 
   tick(dt: number) {
     this.body.tick(dt);
-    this.position.set(
-      this.body.x * 6 + this.shakeXOffset,
-      this.body.y * 6 + this.shakeYOffset
-    );
+
+    const [x, y] = this.body.precisePosition;
+    this.position.set(x * 6 + this.shakeXOffset, y * 6 + this.shakeYOffset);
   }
 
   serialize() {

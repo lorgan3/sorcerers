@@ -21,8 +21,7 @@ export class Fireball extends Container implements Projectile {
       friction: 0.96,
       gravity: 0.25,
     });
-    this.body.x = x;
-    this.body.y = y;
+    this.body.move(x, y);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -58,7 +57,8 @@ export class Fireball extends Container implements Projectile {
 
   tick(dt: number) {
     this.body.tick(dt);
-    this.position.set(this.body.x * 6, this.body.y * 6);
+    const [x, y] = this.body.precisePosition;
+    this.position.set(x * 6, y * 6);
   }
 
   serialize() {

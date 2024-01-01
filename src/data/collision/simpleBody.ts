@@ -17,9 +17,8 @@ export class SimpleBody implements PhysicsBody {
   private xVelocity = 0;
   private yVelocity = 0;
 
-  public x = 0;
-  public y = 0;
-
+  private x = 0;
+  private y = 0;
   private gravity: number;
   private friction: number;
   private bounciness: number;
@@ -63,6 +62,11 @@ export class SimpleBody implements PhysicsBody {
   addAngularVelocity(power: number, direction: number) {
     this.xVelocity += Math.cos(direction) * power;
     this.yVelocity += Math.sin(direction) * power;
+  }
+
+  move(x: number, y: number) {
+    this.x = x;
+    this.y = y;
   }
 
   tick(dt: number) {
@@ -116,5 +120,9 @@ export class SimpleBody implements PhysicsBody {
 
   get velocity() {
     return Math.sqrt(this.xVelocity ** 2 + this.yVelocity ** 2);
+  }
+
+  get precisePosition(): [number, number] {
+    return [this.x, this.y];
   }
 }
