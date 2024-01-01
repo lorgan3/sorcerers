@@ -125,7 +125,6 @@ export abstract class Manager {
     this.activePlayer = this.players[player];
     this.activePlayer.active = character;
 
-    this.activePlayer.activeCharacter.attacked = false;
     this.followTarget = this.activePlayer.activeCharacter;
 
     if (this.cursor) {

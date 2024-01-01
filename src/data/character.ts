@@ -19,7 +19,7 @@ export class Character extends Container implements HurtableEntity {
   private namePlate: Text;
 
   private _hp = 100;
-  public attacked = false;
+  private time = 0;
 
   constructor(
     public readonly player: Player,
@@ -89,7 +89,14 @@ export class Character extends Container implements HurtableEntity {
   }
 
   tick(dt: number) {
-    if (this.body.active && this._hp > 0) {
+    this.time += dt;
+    if (this.time > 3) {
+      this.body.active = 1;
+    }
+
+    if (this.body.active) {
+      this.time = 0;
+
       Level.instance.terrain.characterMask.subtract(
         this.body.mask,
         ...this.body.position
@@ -125,10 +132,6 @@ export class Character extends Container implements HurtableEntity {
       (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
     ) {
       this.body.jump();
-    }
-
-    if (this.attacked) {
-      return;
     }
   }
 
