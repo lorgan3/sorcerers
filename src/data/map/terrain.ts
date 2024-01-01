@@ -95,8 +95,8 @@ export class Terrain extends Container {
     this.terrainCtx.fill();
     this.terrain.update();
 
-    this.collisionMask.subtract(mask, x, y);
-    this.characterMask.subtract(mask, x, y);
+    this.collisionMask.subtract(mask, x | 0, y | 0);
+    this.characterMask.subtract(mask, x | 0, y | 0);
   }
 
   subtractCircle(x: number, y: number, r: number, mask: CollisionMask) {

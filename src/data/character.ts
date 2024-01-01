@@ -8,6 +8,10 @@ import { Player } from "./network/player";
 import { Force, TargetList } from "./damage/targetList";
 import { HurtableEntity } from "./map/types";
 import { GenericDamage } from "./damage/genericDamage";
+import { ExplosiveDamage } from "./damage/explosiveDamage";
+
+// Start bouncing when impact is greater than this value
+const BOUNCE_TRIGGER = 6;
 
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
@@ -27,6 +31,7 @@ export class Character extends Container implements HurtableEntity {
 
     this.body = new Body(Level.instance.terrain.characterMask, {
       mask: ellipse9x16,
+      onCollide: this.onCollide,
     });
     this.body.move(x, y);
     Level.instance.terrain.characterMask.add(
@@ -62,6 +67,22 @@ export class Character extends Container implements HurtableEntity {
 
     this.addChild(this.sprite, this.namePlate);
   }
+
+  private onCollide = (x: number, y: number) => {
+    if (this.body.velocity > BOUNCE_TRIGGER) {
+      const [x, y] = this.getCenter();
+
+      Level.instance.damage(
+        new ExplosiveDamage(
+          x / 6 + this.body.xVelocity / 2,
+          y / 6 + this.body.yVelocity / 2,
+          12,
+          this.body.velocity,
+          1
+        )
+      );
+    }
+  };
 
   getCenter(): [number, number] {
     return [this.position.x + 27, this.position.y + 48];

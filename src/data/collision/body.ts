@@ -5,9 +5,9 @@ import { CollisionMask } from "./collisionMask";
 const COLLISION_TRIGGER = 7;
 
 const GRAVITY = 0.3;
-const AIR_CONTROL = 0.6;
+const AIR_CONTROL = 0.5;
 const GROUND_FRICTION = 0.88;
-const AIR_FRICTION = 0.9;
+const AIR_FRICTION = 0.94;
 const MIN_MOVEMENT = 0.01;
 
 const SPEED = 0.15;
@@ -26,8 +26,8 @@ interface Config {
 export class Body implements PhysicsBody {
   public active = 1;
 
-  private xVelocity = 0;
-  private yVelocity = 0;
+  public xVelocity = 0;
+  public yVelocity = 0;
 
   private x = 0;
   private y = 0;
@@ -230,7 +230,7 @@ export class Body implements PhysicsBody {
       this.xVelocity !== 0 &&
       this.surface.collidesWith(this.mask, this.rX, this.rY)
     ) {
-      const amount = Math.ceil(Math.abs(this.xVelocity));
+      const amount = Math.min(3, Math.ceil(Math.abs(this.xVelocity)));
 
       // Check if we can walk up steps <= 45 degrees.
       if (!this.surface.collidesWith(this.mask, this.rX, this.rY - amount)) {
@@ -285,5 +285,9 @@ export class Body implements PhysicsBody {
 
   get grounded() {
     return this._grounded;
+  }
+
+  get velocity() {
+    return Math.sqrt(this.xVelocity ** 2 + this.yVelocity ** 2);
   }
 }

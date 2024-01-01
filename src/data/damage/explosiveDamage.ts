@@ -1,6 +1,7 @@
 import { Character } from "../character";
 import {
   circle16x16,
+  circle24x24,
   circle32x32,
   circle9x9,
 } from "../collision/precomputed/circles";
@@ -8,9 +9,13 @@ import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 
+const DEFAULT_POWER = 5;
+const DEFAULT_DAMAGE_MULTIPLIER = 5;
+
 export class ExplosiveDamage implements DamageSource {
   static RangeToMaskMap = {
     16: circle32x32,
+    12: circle24x24,
     8: circle16x16,
     4: circle9x9,
   };
@@ -21,6 +26,8 @@ export class ExplosiveDamage implements DamageSource {
     public readonly x: number,
     public readonly y: number,
     private range: number,
+    private power = DEFAULT_POWER,
+    private damageMultiplier = DEFAULT_DAMAGE_MULTIPLIER,
     private targets?: TargetList
   ) {}
 
@@ -37,7 +44,7 @@ export class ExplosiveDamage implements DamageSource {
     if (!this.targets) {
       this.targets = new TargetList();
 
-      const range = this.range * 6;
+      const range = this.range * 12;
       Level.instance.withNearbyEntities(
         this.x * 6,
         this.y * 6,
@@ -45,10 +52,14 @@ export class ExplosiveDamage implements DamageSource {
         (entity, distance) => {
           if (entity instanceof Character) {
             const [x, y] = entity.getCenter();
-            this.targets!.add(entity, 10 + 40 * ((range - distance) / range), {
-              power: 5,
-              direction: Math.atan2(y - this.y * 6, x - this.x * 6),
-            });
+            this.targets!.add(
+              entity,
+              (2 + 8 * ((range - distance) / range)) * this.damageMultiplier,
+              {
+                power: this.power,
+                direction: Math.atan2(y - this.y * 6, x - this.x * 6),
+              }
+            );
           }
 
           // @TODO Damage to things that aren't characters?
@@ -68,6 +79,8 @@ export class ExplosiveDamage implements DamageSource {
       data[0],
       data[1],
       data[2],
+      DEFAULT_POWER,
+      DEFAULT_DAMAGE_MULTIPLIER,
       TargetList.deserialize(data[3])
     );
   }

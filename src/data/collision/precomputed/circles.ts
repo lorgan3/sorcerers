@@ -23,5 +23,8 @@ export const ellipse9x16 = CollisionMask.fromAlpha(ellipse9x16Canvas);
 export const circle16x16Canvas = createEllipseCanvas(16);
 export const circle16x16 = CollisionMask.fromAlpha(circle16x16Canvas);
 
+export const circle24x24Canvas = createEllipseCanvas(24);
+export const circle24x24 = CollisionMask.fromAlpha(circle24x24Canvas);
+
 export const circle32x32Canvas = createEllipseCanvas(32);
 export const circle32x32 = CollisionMask.fromAlpha(circle32x32Canvas);
