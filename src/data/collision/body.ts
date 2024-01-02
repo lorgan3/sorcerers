@@ -7,10 +7,10 @@ const COLLISION_TRIGGER = 7;
 const GRAVITY = 0.3;
 const AIR_CONTROL = 0.5;
 const GROUND_FRICTION = 0.88;
-const AIR_FRICTION = 0.94;
+const AIR_FRICTION = 0.97;
 const MIN_MOVEMENT = 0.01;
 
-const SPEED = 0.1;
+const SPEED = 0.08;
 const JUMP_STRENGTH = 4;
 
 interface Config {
@@ -230,7 +230,7 @@ export class Body implements PhysicsBody {
       this.xVelocity !== 0 &&
       this.surface.collidesWith(this.mask, this.rX, this.rY)
     ) {
-      const amount = Math.min(3, Math.ceil(Math.abs(this.xVelocity)));
+      const amount = Math.min(2, Math.ceil(Math.abs(this.xVelocity)));
 
       // Check if we can walk up steps <= 45 degrees.
       if (!this.surface.collidesWith(this.mask, this.rX, this.rY - amount)) {
@@ -239,6 +239,7 @@ export class Body implements PhysicsBody {
         this.rY = this.y;
         this.yVelocity = 0;
         this._grounded = true;
+        this.xVelocity *= Math.pow(this.groundFriction, dt);
       } else {
         if (this.onCollide) {
           this.onCollide(this.rX, this.rY);

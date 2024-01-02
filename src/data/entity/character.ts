@@ -12,7 +12,7 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
 
 // Start bouncing when impact is greater than this value
-const BOUNCE_TRIGGER = 6;
+const BOUNCE_TRIGGER = 5;
 
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
@@ -73,8 +73,11 @@ export class Character extends Container implements HurtableEntity {
   }
 
   private onCollide = (x: number, y: number) => {
-    const velocity = this.body.velocity;
-    if (velocity > BOUNCE_TRIGGER) {
+    if (
+      Math.abs(this.body.xVelocity) > BOUNCE_TRIGGER ||
+      Math.abs(this.body.yVelocity) > BOUNCE_TRIGGER
+    ) {
+      const velocity = this.body.velocity;
       const [x, y] = this.getCenter();
 
       this.damageSource = new ExplosiveDamage(
@@ -82,7 +85,7 @@ export class Character extends Container implements HurtableEntity {
         y / 6 + this.body.yVelocity / 2,
         velocity > 8 ? 12 : 8,
         velocity * 0.6,
-        1
+        2
       );
     }
   };
