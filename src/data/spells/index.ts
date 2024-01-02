@@ -7,7 +7,7 @@ import { Sword } from "./sword";
 import { ArrowDown } from "./downArrow";
 import { PhysicsBody } from "../collision";
 import { Lock, Target } from "./lock";
-import { Telekinesis } from "./Telekinesis";
+import { Telekinesis } from "./telekinesis";
 
 export interface Cursor extends DisplayObject {
   update(controller: Controller): void;

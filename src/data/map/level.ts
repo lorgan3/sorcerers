@@ -12,7 +12,7 @@ import { Server } from "../network/server";
 import { Map as GameMap } from ".";
 import { Manager } from "../network/manager";
 import { HurtableEntity, TickingEntity } from "../entity/types";
-import { DamageNumberContainer } from "../../grapics/DamageNumber";
+import { DamageNumberContainer } from "../../grapics/damageNumber";
 import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
 import { MessageType } from "../network/types";
