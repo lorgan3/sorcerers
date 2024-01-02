@@ -51,10 +51,6 @@ export class ExplosiveDamage implements DamageSource {
         range,
         (entity, distance) => {
           if (entity instanceof Character) {
-            if (entity.hurt) {
-              return;
-            }
-
             const [x, y] = entity.getCenter();
             this.targets!.add(
               entity,

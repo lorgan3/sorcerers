@@ -116,8 +116,6 @@ export class Level {
 
     if (Server.instance) {
       for (let entity of this.hurtables) {
-        entity.hurt = false;
-
         if (entity.hp <= 0) {
           entity.die();
 

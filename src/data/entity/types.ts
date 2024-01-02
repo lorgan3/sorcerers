@@ -10,7 +10,6 @@ export interface TickingEntity extends DisplayObject {
 export interface HurtableEntity extends TickingEntity {
   body: PhysicsBody;
   hp: number;
-  hurt: boolean;
 
   die(): void;
   getCenter(): [number, number];

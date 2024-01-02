@@ -121,7 +121,6 @@ export class Body implements PhysicsBody {
       return false;
     }
 
-    this.active = 0.5;
     this.yVelocity += this.gravity * dt;
     const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
     const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
@@ -267,11 +266,7 @@ export class Body implements PhysicsBody {
     this.rX = alignX(this.x);
 
     // If we're on the ground and barely moving, go to sleep.
-    if (
-      this._grounded &&
-      Math.abs(this.xVelocity) < MIN_MOVEMENT &&
-      this.active === 0.5
-    ) {
+    if (this._grounded && Math.abs(this.xVelocity) < MIN_MOVEMENT) {
       this.xVelocity = 0;
       this.yVelocity = 0;
       this.active = 0;

@@ -9,13 +9,13 @@ import { Force, TargetList } from "../damage/targetList";
 import { HurtableEntity } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { DamageSource } from "../damage/types";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 6;
 
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
-  public hurt = false;
   public id = -1;
 
   private sprite!: AnimatedSprite;
@@ -23,6 +23,7 @@ export class Character extends Container implements HurtableEntity {
 
   private _hp = 100;
   private time = 0;
+  private damageSource: DamageSource | null = null;
 
   constructor(
     public readonly player: Player,
@@ -72,17 +73,16 @@ export class Character extends Container implements HurtableEntity {
   }
 
   private onCollide = (x: number, y: number) => {
-    if (this.body.velocity > BOUNCE_TRIGGER) {
+    const velocity = this.body.velocity;
+    if (velocity > BOUNCE_TRIGGER) {
       const [x, y] = this.getCenter();
 
-      Level.instance.damage(
-        new ExplosiveDamage(
-          x / 6 + this.body.xVelocity / 2,
-          y / 6 + this.body.yVelocity / 2,
-          8,
-          this.body.velocity,
-          1
-        )
+      this.damageSource = new ExplosiveDamage(
+        x / 6 + this.body.xVelocity / 2,
+        y / 6 + this.body.yVelocity / 2,
+        velocity > 8 ? 12 : 8,
+        velocity * 0.6,
+        1
       );
     }
   };
@@ -108,6 +108,11 @@ export class Character extends Container implements HurtableEntity {
       if (this.body.tick(dt)) {
         const [x, y] = this.body.precisePosition;
         this.position.set(x * 6, y * 6);
+
+        if (this.damageSource) {
+          Level.instance.damage(this.damageSource);
+          this.damageSource = null;
+        }
 
         if (
           Level.instance.terrain.killbox.collidesWith(
@@ -192,7 +197,6 @@ export class Character extends Container implements HurtableEntity {
     this._hp = hp;
     this.namePlate.text = `${this.name} ${Math.ceil(this._hp)}`;
     this.body.active = 1;
-    this.hurt = true;
 
     if (this._hp <= 0) {
       this.player.removeCharacter(this);
