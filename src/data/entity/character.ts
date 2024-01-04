@@ -189,6 +189,11 @@ export class Character extends Container implements HurtableEntity {
   }
 
   die() {
+    Level.instance.terrain.characterMask.subtract(
+      this.body.mask,
+      ...this.body.position
+    );
+
     this.player.removeCharacter(this);
   }
 
@@ -200,9 +205,5 @@ export class Character extends Container implements HurtableEntity {
     this._hp = hp;
     this.namePlate.text = `${this.name} ${Math.ceil(this._hp)}`;
     this.body.active = 1;
-
-    if (this._hp <= 0) {
-      this.player.removeCharacter(this);
-    }
   }
 }
