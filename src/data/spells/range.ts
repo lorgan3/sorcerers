@@ -44,10 +44,18 @@ export class Range extends Container implements Cursor {
       if (this._power > 0) {
         const [x, y] = this.character.body.precisePosition;
         const projectile = new this.spell.data.projectile(
-          x + 3 + Math.cos(this.rotation) * this.spell.data.xOffset,
-          y + 6.5 + Math.sin(this.rotation) * this.spell.data.yOffset
+          x +
+            this.spell.data.x +
+            Math.cos(this.rotation) * this.spell.data.xOffset,
+          y +
+            this.spell.data.y +
+            Math.sin(this.rotation) * this.spell.data.yOffset,
+          this.character
         );
-        projectile.body.addAngularVelocity(this.power * 5, this.rotation);
+
+        if (projectile.body) {
+          projectile.body.addAngularVelocity(this.power * 5, this.rotation);
+        }
         Level.instance.add(projectile);
 
         Manager.instance.endTurn();

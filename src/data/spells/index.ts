@@ -8,6 +8,7 @@ import { ArrowDown } from "./downArrow";
 import { PhysicsBody } from "../collision";
 import { Lock, Target } from "./lock";
 import { Telekinesis } from "./telekinesis";
+import { Melee } from "./melee";
 
 export interface Cursor extends DisplayObject {
   update(controller: Controller): void;
@@ -15,7 +16,7 @@ export interface Cursor extends DisplayObject {
 }
 
 export interface Projectile extends DisplayObject {
-  body: PhysicsBody;
+  body?: PhysicsBody;
 
   tick(dt: number): void;
   serialize(): any;
@@ -31,6 +32,18 @@ export interface Spell {
 
 export const SPELLS: Spell[] = [
   {
+    name: "Melee",
+    description: "For less gifted sorcerers",
+    cursor: Range,
+    data: {
+      projectile: Melee,
+      xOffset: 18,
+      yOffset: 20,
+      x: 0,
+      y: 1,
+    },
+  },
+  {
     name: "Fireball",
     description: "Generic fireball",
     cursor: Range,
@@ -38,6 +51,8 @@ export const SPELLS: Spell[] = [
       projectile: Fireball,
       xOffset: 7,
       yOffset: 10.5,
+      x: 3,
+      y: 6.5,
     },
   },
   {

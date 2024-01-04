@@ -5,13 +5,14 @@ import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Projectile } from ".";
+import { Character } from "../entity/character";
 
 export class Fireball extends Container implements Projectile {
   public readonly body: SimpleBody;
   private sprite!: AnimatedSprite;
   private bounces = 5;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, character: Character) {
     super();
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
