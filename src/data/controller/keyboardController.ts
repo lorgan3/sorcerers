@@ -6,8 +6,13 @@ export class KeyboardController implements Controller {
   private mouseX = 0;
   private mouseY = 0;
   public pressedKeys = 0;
-  private sentKeys = 0;
   private touches = 0;
+
+  private serverKeys = 0;
+  private serverMouseX = 0;
+  private serverMouseY = 0;
+
+  public isHost = false;
 
   private eventHandlers = new Map<Key, Set<() => void>>();
 
@@ -97,10 +102,10 @@ export class KeyboardController implements Controller {
     // a lot smoother.
 
     if (!key) {
-      return !!this.sentKeys;
+      return !!this.serverKeys;
     }
 
-    return !!(this.sentKeys & keyMap[key]);
+    return !!(this.serverKeys & keyMap[key]);
   }
 
   addKeyListener(key: Key, fn: () => void) {
@@ -122,16 +127,23 @@ export class KeyboardController implements Controller {
   }
 
   getMouse(): [number, number] {
-    return [this.mouseX, this.mouseY];
+    return [this.serverMouseX, this.serverMouseY];
   }
 
   serialize(): [number, number, number] {
-    this.sentKeys = this.pressedKeys;
+    if (this.isHost) {
+      this.serverKeys = this.pressedKeys;
+      this.serverMouseX = this.mouseX;
+      this.serverMouseY = this.mouseY;
+    }
+
     return [this.pressedKeys, this.mouseX, this.mouseY];
   }
 
   deserialize(buffer: [number, number, number]): void {
-    // Nothing
+    this.serverKeys = buffer[0];
+    this.serverMouseX = buffer[1];
+    this.serverMouseY = buffer[2];
   }
 
   handleContextMenu(event: Event) {

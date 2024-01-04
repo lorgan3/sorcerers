@@ -31,6 +31,7 @@ export class Server extends Manager {
 
   connect(controller: KeyboardController) {
     this.controller = controller;
+    controller.isHost = true;
 
     this._self!.connect(
       this._self!.name,
