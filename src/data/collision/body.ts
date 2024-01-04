@@ -5,9 +5,9 @@ import { CollisionMask } from "./collisionMask";
 const COLLISION_TRIGGER = 7;
 
 const GRAVITY = 0.3;
-const AIR_CONTROL = 0.5;
+const AIR_CONTROL = 0.3;
 const GROUND_FRICTION = 0.88;
-const AIR_FRICTION = 0.97;
+const AIR_FRICTION = 0.98;
 const MIN_MOVEMENT = 0.01;
 
 const SPEED = 0.08;
