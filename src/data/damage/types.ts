@@ -11,4 +11,5 @@ export enum DamageSourceType {
   Generic,
   Explosive,
   Falling,
+  Impact,
 }
