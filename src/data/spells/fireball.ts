@@ -12,7 +12,7 @@ export class Fireball extends Container implements Projectile {
   private sprite!: AnimatedSprite;
   private bounces = 5;
 
-  constructor(x: number, y: number, character: Character) {
+  constructor(x: number, y: number) {
     super();
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
@@ -68,5 +68,12 @@ export class Fireball extends Container implements Projectile {
 
   deserialize(data: any) {
     this.body.deserialize(data);
+  }
+
+  static cast(x: number, y: number, character: Character) {
+    const entity = new Fireball(x, y);
+
+    Level.instance.add(entity);
+    return entity;
   }
 }

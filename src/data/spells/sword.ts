@@ -6,6 +6,7 @@ import { SimpleBody } from "../collision/simpleBody";
 import { swordTip } from "../collision/precomputed/triangles";
 import { FallDamage, Shape } from "../damage/fallDamage";
 import { Projectile } from ".";
+import { Character } from "../entity/character";
 
 const SHAKE_INTENSITY = 8;
 
@@ -72,5 +73,12 @@ export class Sword extends Container implements Projectile {
 
   deserialize(data: any) {
     this.body.deserialize(data);
+  }
+
+  static cast(x: number, y: number, character: Character) {
+    const entity = new Sword(x, y);
+
+    Level.instance.add(entity);
+    return entity;
   }
 }

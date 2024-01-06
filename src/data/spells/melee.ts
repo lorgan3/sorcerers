@@ -23,8 +23,8 @@ export class Melee extends Container implements Projectile {
 
     this.addChild(this.sprite);
 
+    const [cx, cy] = character.body.precisePosition;
     this.sprite.onComplete = () => {
-      const [cx, cy] = character.body.precisePosition;
       Level.instance.damage(
         new ImpactDamage(x, y, Math.atan2(y - cy - 20, x - cx))
       );
@@ -40,4 +40,11 @@ export class Melee extends Container implements Projectile {
   }
 
   deserialize(data: any) {}
+
+  static cast(x: number, y: number, character: Character) {
+    const entity = new Melee(x, y, character);
+
+    Level.instance.add(entity);
+    return entity;
+  }
 }

@@ -9,6 +9,7 @@ import { getIndexFromAngle } from "../collision/util";
 import { Level } from "../map/level";
 import { EntityType, HurtableEntity } from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
+import { Server } from "../network/server";
 
 const ANIMATION_SPEED = 0.1;
 const FLICKER_SPEED = 0.5;
@@ -24,7 +25,7 @@ export class Shield extends Container implements Projectile, HurtableEntity {
   private shieldArea: CollisionMask;
   private flickerTime = 0;
 
-  constructor(x: number, y: number, character: Character) {
+  constructor(x: number, y: number, angle: number) {
     super();
     this.position.set(x * 6, y * 6);
 
@@ -36,9 +37,7 @@ export class Shield extends Container implements Projectile, HurtableEntity {
     this.sprite.scale.set(3);
     this.sprite.anchor.set(0.5);
     this.sprite.position.set(70, 70);
-
-    const [cx, cy] = character.body.precisePosition;
-    this.sprite.rotation = Math.PI / 2 + Math.atan2(cy - y - 3, cx - x - 8);
+    this.sprite.rotation = angle;
 
     const index = getIndexFromAngle(this.sprite.rotation - Math.PI / 2);
     this.body = new StaticBody(Level.instance.terrain.characterMask, {
@@ -126,4 +125,16 @@ export class Shield extends Container implements Projectile, HurtableEntity {
     return new Shield(...data);
   }
 
+  static cast(x: number, y: number, character: Character) {
+    if (!Server.instance) {
+      return;
+    }
+
+    const [cx, cy] = character.body.precisePosition;
+    const angle = Math.PI / 2 + Math.atan2(cy - y - 3, cx - x - 8);
+    const entity = new Shield(x, y, angle);
+
+    Server.instance.create(entity);
+    return entity;
+  }
 }

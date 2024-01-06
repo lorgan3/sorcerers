@@ -37,11 +37,10 @@ export class ArrowDown extends Container implements Cursor {
     this.position.set(...position);
 
     if (controller.isKeyDown(Key.M1)) {
-      const projectile = new this.spell.data.projectile(
+      this.spell.data.projectile.cast(
         position[0] / 6 + this.spell.data.xOffset,
         this.spell.data.yOffset
       );
-      Level.instance.add(projectile);
 
       Manager.instance.endTurn();
     }
