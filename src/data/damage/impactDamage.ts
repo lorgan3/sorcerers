@@ -1,8 +1,8 @@
-import { Character } from "../entity/character";
 import { circle16x16 } from "../collision/precomputed/circles";
 import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
+import { isHurtableEntity } from "../entity/types";
 
 export class ImpactDamage implements DamageSource {
   public readonly type = DamageSourceType.Impact;
@@ -26,15 +26,13 @@ export class ImpactDamage implements DamageSource {
         (this.y + 8) * 6,
         range,
         (entity) => {
-          if (entity instanceof Character) {
+          if (isHurtableEntity(entity)) {
             const [x, y] = entity.getCenter();
             this.targets!.add(entity, 20, {
               power: 5,
               direction: this.direction,
             });
           }
-
-          // @TODO Damage to things that aren't characters?
         }
       );
     }

@@ -1,9 +1,9 @@
-import { Character } from "../entity/character";
 import { CollisionMask } from "../collision/collisionMask";
 import { swordTip, swordTipCanvas } from "../collision/precomputed/triangles";
 import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
+import { isHurtableEntity } from "../entity/types";
 
 export enum Shape {
   SwordTip,
@@ -61,7 +61,7 @@ export class FallDamage implements DamageSource {
       const sx = (this.x + data.xOffset) * 6;
       const sy = (this.y + data.yOffset) * 6;
       Level.instance.withNearbyEntities(sx, sy, data.range, (entity) => {
-        if (entity instanceof Character) {
+        if (isHurtableEntity(entity)) {
           const [x] = entity.getCenter();
           const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
           this.targets!.add(entity, data.damage, {
@@ -69,8 +69,6 @@ export class FallDamage implements DamageSource {
             direction,
           });
         }
-
-        // @TODO Damage to things that aren't characters?
       });
     }
 

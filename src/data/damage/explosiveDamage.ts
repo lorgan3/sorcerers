@@ -1,4 +1,3 @@
-import { Character } from "../entity/character";
 import {
   circle16x16,
   circle24x24,
@@ -8,6 +7,7 @@ import {
 import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
+import { isHurtableEntity } from "../entity/types";
 
 const DEFAULT_POWER = 5;
 const DEFAULT_DAMAGE_MULTIPLIER = 5;
@@ -50,7 +50,7 @@ export class ExplosiveDamage implements DamageSource {
         this.y * 6,
         range,
         (entity, distance) => {
-          if (entity instanceof Character) {
+          if (isHurtableEntity(entity)) {
             const [x, y] = entity.getCenter();
             this.targets!.add(
               entity,
@@ -61,8 +61,6 @@ export class ExplosiveDamage implements DamageSource {
               }
             );
           }
-
-          // @TODO Damage to things that aren't characters?
         }
       );
     }

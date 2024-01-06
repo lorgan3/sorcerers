@@ -1,5 +1,5 @@
-import { Character } from "../entity/character";
-import { Manager } from "../network/manager";
+import { HurtableEntity } from "../entity/types";
+import { Level } from "../map/level";
 
 export interface Force {
   direction: number;
@@ -7,8 +7,7 @@ export interface Force {
 }
 
 export interface Target {
-  player: number;
-  character: number;
+  entityId: number;
   damage: number;
   force?: Force;
 }
@@ -16,10 +15,9 @@ export interface Target {
 export class TargetList {
   constructor(private targets: Target[] = []) {}
 
-  add(character: Character, damage: number, force?: Force) {
+  add(entity: HurtableEntity, damage: number, force?: Force) {
     this.targets.push({
-      player: Manager.instance.players.indexOf(character.player),
-      character: character.player.characters.indexOf(character),
+      entityId: entity.id,
       damage,
       force,
     });
@@ -29,9 +27,10 @@ export class TargetList {
 
   damage() {
     for (let target of this.targets) {
-      Manager.instance.players[target.player].characters[
-        target.character
-      ].damage(target.damage, target.force);
+      (Level.instance.entityMap.get(target.entityId) as HurtableEntity).damage(
+        target.damage,
+        target.force
+      );
     }
   }
 
@@ -39,13 +38,12 @@ export class TargetList {
     return this.targets.map((target) =>
       target.force && target.force.power !== 0
         ? [
-            target.player,
-            target.character,
+            target.entityId,
             target.damage,
             target.force.power,
             target.force.direction,
           ]
-        : [target.player, target.character, target.damage, 0]
+        : [target.entityId, target.damage]
     );
   }
 
@@ -56,14 +54,13 @@ export class TargetList {
 
     return new TargetList(
       data.map((target) =>
-        target[3]
+        target[2]
           ? {
-              player: target[0],
-              character: target[1],
-              damage: target[2],
-              force: { power: target[3], direction: target[4] },
+              entityId: target[0],
+              damage: target[1],
+              force: { power: target[2], direction: target[3] },
             }
-          : { player: target[0], character: target[1], damage: target[2] }
+          : { entityId: target[0], damage: target[1] }
       )
     );
   }
