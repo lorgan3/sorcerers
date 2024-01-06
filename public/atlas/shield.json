@@ -1,0 +1,89 @@
+{
+  "frames": {
+    "shield1.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield2.png": {
+      "frame": {
+        "x": 64,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield3.png": {
+      "frame": {
+        "x": 128,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield4.png": {
+      "frame": {
+        "x": 192,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield5.png": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield6.png": {
+      "frame": {
+        "x": 320,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield7.png": {
+      "frame": {
+        "x": 384,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    },
+    "shield8.png": {
+      "frame": {
+        "x": 448,
+        "y": 0,
+        "w": 64,
+        "h": 32
+      }
+    }
+  },
+  "animations": {
+    "shield": [
+      "shield1.png",
+      "shield2.png",
+      "shield3.png",
+      "shield4.png",
+      "shield5.png",
+      "shield6.png",
+      "shield7.png",
+      "shield8.png"
+    ]
+  },
+  "meta": {
+    "app": "https://github.com/lorgan3/sorcerers",
+    "version": "1.0",
+    "image": "shield.png",
+    "size": {
+      "w": 512,
+      "h": 32
+    }
+  }
+}

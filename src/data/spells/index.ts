@@ -9,6 +9,7 @@ import { PhysicsBody } from "../collision";
 import { Lock, Target } from "./lock";
 import { Telekinesis } from "./telekinesis";
 import { Melee } from "./melee";
+import { Shield } from "./shield";
 
 export interface Cursor extends DisplayObject {
   update(controller: Controller): void;
@@ -72,6 +73,18 @@ export const SPELLS: Spell[] = [
     data: {
       target: Target.Character,
       projectile: Telekinesis,
+    },
+  },
+  {
+    name: "Shield",
+    description: "Contingency plan",
+    cursor: Range,
+    data: {
+      projectile: Shield,
+      xOffset: 16,
+      yOffset: 16,
+      x: -8,
+      y: -3,
     },
   },
 ];
