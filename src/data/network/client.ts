@@ -7,7 +7,7 @@ import { Manager } from "./manager";
 import { Team } from "../team";
 import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
-import { setId } from "../entity";
+import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
 import { HurtableEntity } from "../entity/types";
 
@@ -158,6 +158,12 @@ export class Client extends Manager {
         break;
 
       case MessageType.Die:
+        console.log(
+          Level.instance.entityMap.get(message.id),
+          Level.instance.entityMap,
+          message
+        );
+
         (Level.instance.entityMap.get(message.id) as HurtableEntity).die();
         break;
 
@@ -165,6 +171,18 @@ export class Client extends Manager {
         this.players.forEach((player, i) =>
           player.deserialize(message.players[i])
         );
+        break;
+
+      case MessageType.Spawn:
+        if (!ENTITIES[message.kind]) {
+          throw new Error(
+            `Can't instantiate entity of type ${message.kind} and id ${message.id}`
+          );
+        }
+
+        setId(message.id);
+        const entity = ENTITIES[message.kind]!.create(message.data);
+        Level.instance.add(entity);
         break;
     }
   }

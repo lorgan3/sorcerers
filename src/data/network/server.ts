@@ -10,6 +10,7 @@ import { Team } from "../team";
 import { COLORS } from "./constants";
 import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
+import { HurtableEntity } from "../entity/types";
 
 export class Server extends Manager {
   private controller?: KeyboardController;
@@ -334,10 +335,21 @@ export class Server extends Manager {
     });
   }
 
-  async broadcast(message: Message) {
+  broadcast(message: Message) {
     for (let player of this.players) {
       player.connection?.send(message);
     }
+  }
+
+  create(entity: HurtableEntity) {
+    Level.instance.add(entity);
+
+    this.broadcast({
+      type: MessageType.Spawn,
+      id: entity.id,
+      kind: entity.type,
+      data: entity.serializeCreate(),
+    });
   }
 
   rename(newName: string) {

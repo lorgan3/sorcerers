@@ -162,6 +162,7 @@ export class Level {
     for (let object of objects) {
       if ("tick" in object) {
         this.entities.delete(object);
+        this.entityMap.delete(object.id);
       }
 
       if ("hp" in object) {

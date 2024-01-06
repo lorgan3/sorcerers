@@ -1,4 +1,5 @@
 import { DamageSourceType } from "../damage/types";
+import { EntityType } from "../entity/types";
 import { Config } from "../map";
 
 export enum MessageType {
@@ -18,6 +19,7 @@ export enum MessageType {
   SelectSpell,
   ClientReady,
   Die,
+  Spawn,
 }
 
 export type Message =
@@ -115,6 +117,12 @@ export type Message =
   | {
       type: MessageType.Die;
       id: number;
+    }
+  | {
+      type: MessageType.Spawn;
+      kind: EntityType;
+      id: number;
+      data: any;
     };
 
 export interface Popup {
