@@ -158,12 +158,6 @@ export class Client extends Manager {
         break;
 
       case MessageType.Die:
-        console.log(
-          Level.instance.entityMap.get(message.id),
-          Level.instance.entityMap,
-          message
-        );
-
         (Level.instance.entityMap.get(message.id) as HurtableEntity).die();
         break;
 
