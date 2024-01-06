@@ -209,6 +209,35 @@ export class CollisionMask {
     }
   }
 
+  difference(other: CollisionMask, dx: number, dy: number) {
+    const mask: Uint32Array[] = [];
+
+    const x1 = Math.max(dx, 0);
+    const y1 = Math.max(dy, 0);
+    const y2 = Math.min(other.h + y1, this.h);
+    const lshift = x1 % 32;
+    const rshift = 32 - lshift;
+    const x1scaled = Math.floor(x1 / 32);
+    const x2scaled = Math.ceil(Math.min(this.w, other.w + x1) / 32);
+
+    for (let y = y1; y < y2; ++y) {
+      mask[y - y1] = new Uint32Array(Math.ceil(other.w / 32));
+
+      const trow = this.mask[y];
+      const orow = other.mask[y - y1];
+      for (let x = x1scaled; x < x2scaled; ++x) {
+        let bits = trow[x] << lshift;
+        if (rshift < 32) {
+          bits |= trow[x + 1] >>> rshift;
+        }
+
+        mask[y - y1][x - x1scaled] = orow[x - x1scaled] & ~bits;
+      }
+    }
+
+    return new CollisionMask(other.w, other.h, mask);
+  }
+
   get width() {
     return this.w;
   }
