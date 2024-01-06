@@ -7,7 +7,7 @@ import { CollisionMask } from "../collision/collisionMask";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
 import { getIndexFromAngle } from "../collision/util";
 import { Level } from "../map/level";
-import { HurtableEntity } from "../entity/types";
+import { EntityType, HurtableEntity } from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
 
 const ANIMATION_SPEED = 0.1;
@@ -16,8 +16,9 @@ const FLICKER_DURATION = 30;
 
 export class Shield extends Container implements Projectile, HurtableEntity {
   private sprite: AnimatedSprite;
-  public body: StaticBody;
+  public readonly body: StaticBody;
   public id = -1;
+  public readonly type = EntityType.Shield;
 
   private _hp = 100;
   private shieldArea: CollisionMask;
@@ -88,6 +89,10 @@ export class Shield extends Container implements Projectile, HurtableEntity {
     this.add();
   }
 
+  damage(damage: number) {
+    this.hp -= damage;
+  }
+
   tick(dt: number) {
     if (this.flickerTime > 0) {
       this.flickerTime -= dt;
@@ -112,4 +117,13 @@ export class Shield extends Container implements Projectile, HurtableEntity {
       ...this.body.position
     );
   }
+
+  serializeCreate() {
+    return [...this.body.position, this.sprite.rotation] as const;
+  }
+
+  static create(data: ReturnType<Shield["serializeCreate"]>) {
+    return new Shield(...data);
+  }
+
 }
