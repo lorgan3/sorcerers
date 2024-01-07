@@ -61,7 +61,7 @@ export class Shield extends Container implements Projectile, HurtableEntity {
   }
 
   getCenter(): [number, number] {
-    return [this.position.x + 96, this.position.y + 96];
+    return [this.position.x + 72, this.position.y + 72];
   }
 
   die() {

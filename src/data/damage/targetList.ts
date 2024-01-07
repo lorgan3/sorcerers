@@ -47,6 +47,13 @@ export class TargetList {
     );
   }
 
+  getEntities() {
+    return this.targets.map(
+      (target) =>
+        Level.instance.entityMap.get(target.entityId) as HurtableEntity
+    );
+  }
+
   static deserialize(data?: ReturnType<TargetList["serialize"]>) {
     if (!data) {
       return new TargetList();

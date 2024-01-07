@@ -30,7 +30,7 @@ const SHAPES: Record<
     mask: swordTip,
     xOffset: 6.5,
     yOffset: 10,
-    range: 64,
+    range: 80,
     damage: 10,
   },
 };
@@ -55,24 +55,31 @@ export class FallDamage implements DamageSource {
       data.mask
     );
 
-    if (!this.targets) {
-      this.targets = new TargetList();
+    this.getTargets().damage();
+  }
 
-      const sx = (this.x + data.xOffset) * 6;
-      const sy = (this.y + data.yOffset) * 6;
-      Level.instance.withNearbyEntities(sx, sy, data.range, (entity) => {
-        if (isHurtableEntity(entity)) {
-          const [x] = entity.getCenter();
-          const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
-          this.targets!.add(entity, data.damage, {
-            power: 1,
-            direction,
-          });
-        }
-      });
+  getTargets() {
+    if (this.targets) {
+      return this.targets;
     }
 
-    this.targets!.damage();
+    this.targets = new TargetList();
+
+    const data = SHAPES[this.shape];
+    const sx = (this.x + data.xOffset) * 6;
+    const sy = (this.y + data.yOffset) * 6;
+    Level.instance.withNearbyEntities(sx, sy, data.range, (entity) => {
+      if (isHurtableEntity(entity)) {
+        const [x] = entity.getCenter();
+        const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
+        this.targets!.add(entity, data.damage, {
+          power: 1,
+          direction,
+        });
+      }
+    });
+
+    return this.targets;
   }
 
   serialize() {

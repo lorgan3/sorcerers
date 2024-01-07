@@ -7,6 +7,7 @@ import { swordTip } from "../collision/precomputed/triangles";
 import { FallDamage, Shape } from "../damage/fallDamage";
 import { Projectile } from ".";
 import { Character } from "../entity/character";
+import { StaticBody } from "../collision/staticBody";
 
 const SHAKE_INTENSITY = 8;
 
@@ -15,6 +16,7 @@ export class Sword extends Container implements Projectile {
   private sprite!: Sprite;
   private bounces = 40;
   private lastY?: number;
+  private move = 0;
 
   private shakeXOffset = 0;
   private shakeYOffset = 0;
@@ -32,7 +34,7 @@ export class Sword extends Container implements Projectile {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.sprite = new Sprite(atlas.textures["spells_sword.png"]);
+    this.sprite = new Sprite(atlas.textures["spells_sword"]);
     this.sprite.position.set(-55, 105);
     this.sprite.scale.y = -1;
 
@@ -53,7 +55,21 @@ export class Sword extends Container implements Projectile {
     this.shakeXOffset = Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
     this.shakeYOffset = Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
 
-    Level.instance.damage(new FallDamage(x, y - 4, Shape.SwordTip));
+    const damage = new FallDamage(x, y - 4, Shape.SwordTip);
+    Level.instance.damage(damage);
+
+    const staticEntity = damage
+      .getTargets()
+      .getEntities()
+      .find((entity) => entity.body instanceof StaticBody);
+    if (staticEntity) {
+      console.log("collide", this.position.x + 32, staticEntity.getCenter()[0]);
+      if (this.position.x + 32 > staticEntity.getCenter()[0]) {
+        this.body.addVelocity(1, -3);
+      } else {
+        this.body.addVelocity(-1, -3);
+      }
+    }
 
     if (this.bounces <= 0) {
       Level.instance.remove(this);
