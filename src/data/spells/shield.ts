@@ -84,8 +84,10 @@ export class Shield extends Container implements Projectile, HurtableEntity {
     this._hp = hp;
     this.flickerTime = FLICKER_DURATION;
 
-    // Terrain might be damaged so re-add the shield.
-    this.add();
+    if (this._hp > 0) {
+      // Terrain might be damaged so re-add the shield.
+      this.add();
+    }
   }
 
   damage(damage: number) {
