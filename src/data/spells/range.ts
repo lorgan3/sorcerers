@@ -22,7 +22,7 @@ export class Range extends Container implements Cursor {
     this.visible = false;
 
     const frame =
-      AssetsContainer.instance.assets!["atlas"].textures["spells_range.png"];
+      AssetsContainer.instance.assets!["atlas"].textures["spells_range"];
 
     const background = new Sprite(frame);
     background.alpha = 0.5;

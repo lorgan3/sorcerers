@@ -1,4 +1,5 @@
 import Jimp from "jimp";
+import { GifUtil } from "gifwrap";
 import { Block, GrowingPacker, Resolution } from "binpacking";
 import fs from "fs";
 import { Atlas, Frame } from "./util";
@@ -29,17 +30,34 @@ for (let folder of folders) {
   const files = fs.readdirSync(DIRECTORY + folder);
 
   for (let file of files) {
-    const jimp = await Jimp.read(`${DIRECTORY}${folder}/${file}`);
+    const frames: Jimp[] = [];
+    if (file.toLowerCase().endsWith("gif")) {
+      const gif = await GifUtil.read(`${DIRECTORY}${folder}/${file}`);
+      frames.push(
+        ...gif.frames.map((frame) => GifUtil.shareAsJimp(Jimp, frame))
+      );
+    } else {
+      frames.push(await Jimp.read(`${DIRECTORY}${folder}/${file}`));
+    }
 
-    const parts = file.split(".")[0].split("_");
+    const name = file.split(".")[0];
+    const parts = name.split("_");
 
-    blocks.push({
-      name: `${folder}_${file}`,
-      w: jimp.getWidth() + MARGIN * 2,
-      h: jimp.getHeight() + MARGIN * 2,
-      jimp,
-      ...(!isNaN(Number(parts[1])) && { animation: `${folder}_${parts[0]}` }),
-    });
+    for (let i = 0; i < frames.length; i++) {
+      const frame = frames[i];
+
+      blocks.push({
+        name:
+          frames.length > 1
+            ? `${folder}_${name}_${i + 1}`
+            : `${folder}_${name}`,
+        w: frame.getWidth() + MARGIN * 2,
+        h: frame.getHeight() + MARGIN * 2,
+        jimp: frame,
+        ...(!isNaN(Number(parts[1])) && { animation: `${folder}_${parts[0]}` }),
+        ...(frames.length > 1 && { animation: `${folder}_${name}` }),
+      });
+    }
   }
 }
 

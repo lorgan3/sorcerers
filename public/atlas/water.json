@@ -1,6 +1,6 @@
 {
   "frames": {
-    "water1.png": {
+    "water1": {
       "frame": {
         "x": 0,
         "y": 0,
@@ -8,7 +8,7 @@
         "h": 32
       }
     },
-    "water2.png": {
+    "water2": {
       "frame": {
         "x": 64,
         "y": 0,
@@ -16,7 +16,7 @@
         "h": 32
       }
     },
-    "water3.png": {
+    "water3": {
       "frame": {
         "x": 0,
         "y": 32,
@@ -24,7 +24,7 @@
         "h": 32
       }
     },
-    "water4.png": {
+    "water4": {
       "frame": {
         "x": 64,
         "y": 32,
@@ -34,7 +34,7 @@
     }
   },
   "animations": {
-    "wave": ["water1.png", "water2.png", "water3.png", "water4.png"]
+    "wave": ["water1", "water2", "water3", "water4"]
   },
   "meta": {
     "app": "https://github.com/lorgan3/sorcerers",

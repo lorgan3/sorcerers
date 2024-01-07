@@ -25,11 +25,11 @@ export class Telekinesis extends Container {
     this.pivot.set(16, 0);
     const atlas = AssetsContainer.instance.assets!["atlas"].textures;
 
-    this.arrowBody = new Sprite(atlas["spells_arrowBody.png"]);
+    this.arrowBody = new Sprite(atlas["spells_arrowBody"]);
     this.arrowBody.scale.y = -1;
     this.arrowBody.position.x = SPRITE_SIZE / 2;
     this.arrowBody.anchor.set(0.5, 0);
-    this.arrowTip = new Sprite(atlas["spells_arrowTip.png"]);
+    this.arrowTip = new Sprite(atlas["spells_arrowTip"]);
     this.arrowTip.scale.y = -1;
     this.addChild(this.arrowBody, this.arrowTip);
   }

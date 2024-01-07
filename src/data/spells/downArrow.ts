@@ -16,9 +16,7 @@ export class ArrowDown extends Container implements Cursor {
     this.scale.set(2);
 
     const frame =
-      AssetsContainer.instance.assets!["atlas"].textures[
-        "spells_arrowDown.png"
-      ];
+      AssetsContainer.instance.assets!["atlas"].textures["spells_arrowDown"];
 
     const indicator = new Sprite(frame);
     indicator.anchor.set(0.5);

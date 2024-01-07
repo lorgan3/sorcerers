@@ -25,6 +25,7 @@
     "@babel/types": "^7.23.5",
     "@vitejs/plugin-vue": "^4.5.2",
     "binpacking": "^0.0.1",
+    "gifwrap": "^0.10.1",
     "jimp": "^0.22.10",
     "jsdom": "^23.0.1",
     "sass": "^1.69.5",
