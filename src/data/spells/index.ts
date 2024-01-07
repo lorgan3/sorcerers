@@ -10,6 +10,7 @@ import { Lock, Target } from "./lock";
 import { Telekinesis } from "./telekinesis";
 import { Melee } from "./melee";
 import { Shield } from "./shield";
+import { Bakuretsu } from "./bakuretsu";
 
 export interface Cursor extends DisplayObject {
   update(controller: Controller): void;
@@ -85,6 +86,16 @@ export const SPELLS: Spell[] = [
       yOffset: 16,
       x: -8,
       y: -3,
+    },
+  },
+  {
+    name: "Bakuretsu",
+    description: "Ekusuuu ploooooooosion",
+    cursor: ArrowDown,
+    data: {
+      projectile: Bakuretsu,
+      xOffset: 0,
+      yOffset: 0,
     },
   },
 ];

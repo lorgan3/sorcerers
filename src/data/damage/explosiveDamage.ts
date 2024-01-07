@@ -2,6 +2,8 @@ import {
   circle16x16,
   circle24x24,
   circle32x32,
+  circle64x64,
+  circle96x96,
   circle9x9,
 } from "../collision/precomputed/circles";
 import { Level } from "../map/level";
@@ -14,6 +16,8 @@ const DEFAULT_DAMAGE_MULTIPLIER = 5;
 
 export class ExplosiveDamage implements DamageSource {
   static RangeToMaskMap = {
+    48: circle96x96,
+    32: circle64x64,
     16: circle32x32,
     12: circle24x24,
     8: circle16x16,
