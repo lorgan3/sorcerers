@@ -1,5 +1,6 @@
 import { Shield } from "../spells/shield";
-import { EntityType, HurtableEntity } from "./types";
+import { Zoltraak } from "../spells/zoltraak";
+import { EntityType, Spawnable } from "./types";
 
 let id = 0;
 
@@ -7,8 +8,10 @@ export const setId = (value: number) => (id = value);
 
 export const getId = () => id++;
 
-export const ENTITIES: Partial<
-  Record<EntityType, { create: (data: any) => HurtableEntity }>
+export const ENTITIES: Record<
+  EntityType,
+  { create: (data: any) => Spawnable }
 > = {
   [EntityType.Shield]: Shield,
+  [EntityType.Zoltraak]: Zoltraak,
 };

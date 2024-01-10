@@ -11,11 +11,15 @@ export interface TickingEntity extends DisplayObject {
 export interface HurtableEntity extends TickingEntity {
   body: PhysicsBody;
   hp: number;
-  readonly type: EntityType;
 
   damage(damage: number, force?: Force): void;
   die(): void;
   getCenter(): [number, number];
+}
+
+export interface Spawnable extends TickingEntity {
+  readonly type: EntityType;
+
   serializeCreate(): any;
 }
 
@@ -26,6 +30,6 @@ export function isHurtableEntity(
 }
 
 export enum EntityType {
-  Character,
   Shield,
+  Zoltraak,
 }

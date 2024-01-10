@@ -10,7 +10,7 @@ import { Team } from "../team";
 import { COLORS } from "./constants";
 import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
-import { HurtableEntity } from "../entity/types";
+import { Spawnable } from "../entity/types";
 
 export class Server extends Manager {
   private controller?: KeyboardController;
@@ -341,7 +341,7 @@ export class Server extends Manager {
     }
   }
 
-  create(entity: HurtableEntity) {
+  create(entity: Spawnable) {
     Level.instance.add(entity);
 
     this.broadcast({

@@ -6,7 +6,7 @@ import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { ellipse9x16 } from "../collision/precomputed/circles";
 import { Player } from "../network/player";
 import { Force, TargetList } from "../damage/targetList";
-import { EntityType, HurtableEntity } from "./types";
+import { HurtableEntity } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
@@ -17,7 +17,6 @@ const BOUNCE_TRIGGER = 5;
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
   public id = -1;
-  public readonly type = EntityType.Character;
 
   private sprite!: AnimatedSprite;
   private namePlate: Text;
