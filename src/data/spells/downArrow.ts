@@ -30,7 +30,7 @@ export class ArrowDown extends Container implements Cursor {
     Level.instance.uiContainer.removeChild(this);
   }
 
-  update(controller: Controller) {
+  tick(dt: number, controller: Controller) {
     const position = controller.getMouse();
     this.position.set(...position);
 

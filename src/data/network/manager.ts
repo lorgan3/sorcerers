@@ -49,7 +49,7 @@ export abstract class Manager {
     }
 
     if (this.cursor) {
-      this.cursor.update(this.activePlayer!.controller);
+      this.cursor.tick(dt, this.activePlayer!.controller);
     }
 
     this.activePlayer?.activeCharacter?.controlContinuous(

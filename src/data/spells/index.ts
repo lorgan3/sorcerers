@@ -13,7 +13,7 @@ import { Shield } from "./shield";
 import { Bakuretsu } from "./bakuretsu";
 
 export interface Cursor extends DisplayObject {
-  update(controller: Controller): void;
+  tick(dt: number, controller: Controller): void;
   remove(): void;
 }
 

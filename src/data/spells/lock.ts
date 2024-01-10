@@ -64,7 +64,7 @@ export class Lock extends Container implements Cursor {
     this.indicator.play();
   }
 
-  update(controller: Controller) {
+  tick(dt: number, controller: Controller) {
     if (!this.visible) {
       return;
     }

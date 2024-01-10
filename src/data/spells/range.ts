@@ -37,7 +37,7 @@ export class Range extends Container implements Cursor {
     this.character.removeChild(this);
   }
 
-  update(controller: Controller) {
+  tick(dt: number, controller: Controller) {
     if (!controller.isKeyDown(Key.M1)) {
       this.visible = false;
 
