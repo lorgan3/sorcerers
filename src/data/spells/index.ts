@@ -11,6 +11,8 @@ import { Telekinesis } from "./telekinesis";
 import { Melee } from "./melee";
 import { Shield } from "./shield";
 import { Bakuretsu } from "./bakuretsu";
+import { ArcaneCircle } from "./magicCircle";
+import { Zoltraak } from "./zoltraak";
 
 export interface Cursor extends DisplayObject {
   tick(dt: number, controller: Controller): void;
@@ -96,6 +98,18 @@ export const SPELLS: Spell[] = [
       projectile: Bakuretsu,
       xOffset: 0,
       yOffset: 0,
+    },
+  },
+  {
+    name: "Zoltraak",
+    description: "Magical death laser",
+    cursor: ArcaneCircle,
+    data: {
+      projectile: Zoltraak,
+      xOffset: 2,
+      yOffset: 2,
+      x: 27 / 6,
+      y: 8,
     },
   },
 ];
