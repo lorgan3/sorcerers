@@ -13,7 +13,7 @@ const createRotatedRectangleCanvas = (angle: number, dX: number, dY = dX) => {
   ctx.fillRect(-dX / 2, -dY / 2, dX, dY);
   ctx.fill();
 
-  return ctx.getImageData(0, 0, max, max);
+  return canvas;
 };
 
 const createRectangleCanvas = (dX: number, dY = dX) => {
@@ -28,11 +28,25 @@ const createRectangleCanvas = (dX: number, dY = dX) => {
   return ctx.getImageData(0, 0, dX, dY);
 };
 
+export const rotatedRectangle2x24Canvas = angles.map((angle) =>
+  createRotatedRectangleCanvas(angle, 2, 24)
+);
+export const rotatedRectangle2x24 = rotatedRectangle2x24Canvas.map((canvas) =>
+  CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 24, 24))
+);
+
+export const rotatedRectangle4x24Canvas = angles.map((angle) =>
+  createRotatedRectangleCanvas(angle, 4, 24)
+);
+export const rotatedRectangle4x24 = rotatedRectangle4x24Canvas.map((canvas) =>
+  CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 24, 24))
+);
+
 export const rotatedRectangle6x24Canvas = angles.map((angle) =>
   createRotatedRectangleCanvas(angle, 6, 24)
 );
 export const rotatedRectangle6x24 = rotatedRectangle6x24Canvas.map((canvas) =>
-  CollisionMask.fromAlpha(canvas)
+  CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 24, 24))
 );
 
 export const rectangle1x200Canvas = createRectangleCanvas(1, 200);

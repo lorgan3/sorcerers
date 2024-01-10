@@ -54,6 +54,10 @@ export class TargetList {
     );
   }
 
+  hasEntities() {
+    return !!this.targets.length;
+  }
+
   static deserialize(data?: ReturnType<TargetList["serialize"]>) {
     if (!data) {
       return new TargetList();
