@@ -22,6 +22,7 @@ const settings = get("Settings") || defaults();
 const teams = ref(settings.teams);
 const selectedTeam = ref(settings.defaultTeam);
 const name = ref(settings.name);
+const serverStarting = ref(false);
 
 const CUSTOM = "custom";
 const selectedMap = ref(Object.keys(defaultMaps)[0]);
@@ -111,6 +112,10 @@ const handleUploadMap = (event: Event) => {
 };
 
 const handleBack = () => {
+  if (serverStarting.value) {
+    return;
+  }
+
   if (Server.instance) {
     Server.instance.peer.destroy();
   }
@@ -119,6 +124,11 @@ const handleBack = () => {
 };
 
 const handleStart = async () => {
+  if (serverStarting.value) {
+    return;
+  }
+
+  serverStarting.value = true;
   set("Settings", {
     ...settings,
     name: name.value,

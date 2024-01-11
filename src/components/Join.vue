@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import Peer from "peerjs";
@@ -20,10 +20,14 @@ const settings = get("Settings") || defaults();
 const teams = ref(settings.teams);
 const selectedTeam = ref(settings.defaultTeam ?? 0);
 const name = ref(settings.name);
+const connecting = ref(false);
 
 const key = ref("");
 const players = ref<string[]>([]);
 const map = ref("");
+
+let peer: Peer | null = null;
+let timer = -1;
 
 const nameValidator = (name: string) => !!name.trim();
 
@@ -32,17 +36,31 @@ const createClient = () => {
 
   peer.on("error", () => {
     peer.destroy();
+    connecting.value = false;
 
     createClient();
   });
 
   peer.once("open", () => {
     peer.off("error");
+    window.clearInterval(timer);
     new Client(peer);
   });
 };
 
 const handleConnect = () => {
+  if (connecting.value) {
+    return;
+  }
+
+  timer = window.setTimeout(() => {
+    peer?.destroy();
+    connecting.value = false;
+
+    createClient();
+  }, 5000);
+
+  connecting.value = true;
   set("Settings", {
     ...settings,
     name: name.value,
@@ -82,6 +100,10 @@ onMounted(() => {
   createClient();
 });
 
+onUnmounted(() => {
+  window.clearInterval(timer);
+});
+
 const handleBack = () => {
   if (Client.instance) {
     Client.instance.peer.destroy();
@@ -93,7 +115,7 @@ const handleBack = () => {
 
 <template>
   <div class="client">
-    <template v-if="players.length">
+    <template v-if="connecting">
       <div class="code flex-list">
         <h2>
           Room code: <span class="key">{{ key }}</span>
@@ -104,6 +126,7 @@ const handleBack = () => {
         <h2>Players</h2>
         <ul class="players">
           <li v-for="player in players">{{ player }}</li>
+          <li v-if="!players.length">Connecting...</li>
         </ul>
       </div>
 
