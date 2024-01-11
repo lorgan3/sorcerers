@@ -64,6 +64,10 @@ export abstract class Manager {
   }
 
   endTurn() {
+    if (this.activePlayer?.activeCharacter) {
+      this.activePlayer.activeCharacter.removeWings();
+    }
+
     this.turnEnding = true;
     this.turnStartTime = Math.min(
       this.time - this.turnLength + TURN_GRACE_PERIOD,

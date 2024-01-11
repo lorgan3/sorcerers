@@ -18,12 +18,14 @@ export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
   public id = -1;
 
-  private sprite!: AnimatedSprite;
+  private sprite: AnimatedSprite;
+  private wings: AnimatedSprite;
   private namePlate: Text;
 
   private _hp = 100;
   private time = 0;
   private damageSource: DamageSource | null = null;
+  private hasWings = false;
 
   constructor(
     public readonly player: Player,
@@ -69,7 +71,14 @@ export class Character extends Container implements HurtableEntity {
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(25, -70);
 
-    this.addChild(this.sprite, this.namePlate);
+    this.wings = new AnimatedSprite(atlas.animations["wings"]);
+    this.wings.scale.set(4);
+    this.wings.position.set(26, 32);
+    this.wings.anchor.set(0.5);
+    this.wings.animationSpeed = 0.2;
+    this.wings.visible = false;
+
+    this.addChild(this.wings, this.sprite, this.namePlate);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -140,6 +149,7 @@ export class Character extends Container implements HurtableEntity {
   control(controller: Controller) {
     if (
       this.body.grounded &&
+      !this.hasWings &&
       (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
     ) {
       this.body.jump();
@@ -157,6 +167,17 @@ export class Character extends Container implements HurtableEntity {
     if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
       this.body.walk(dt, 1);
       this.sprite.scale.x = 0.4;
+    }
+
+    if (this.hasWings) {
+      if (
+        (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W)) &&
+        this.body.yVelocity > -1.5
+      ) {
+        this.body.addVelocity(0, -0.6 * dt);
+      } else {
+        this.body.addVelocity(0, -0.2 * dt);
+      }
     }
   }
 
@@ -199,6 +220,18 @@ export class Character extends Container implements HurtableEntity {
     );
 
     this.player.removeCharacter(this);
+  }
+
+  giveWings() {
+    this.hasWings = true;
+    this.wings.visible = true;
+    this.wings.play();
+  }
+
+  removeWings() {
+    this.hasWings = false;
+    this.wings.visible = false;
+    this.wings.stop();
   }
 
   get hp() {

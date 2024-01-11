@@ -1,7 +1,7 @@
 import { DisplayObject } from "pixi.js";
 import { Range } from "./range";
 import { Fireball } from "./fireball";
-import { Controller } from "../controller/controller";
+import { Controller, Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { Sword } from "./sword";
 import { ArrowDown } from "./downArrow";
@@ -13,8 +13,9 @@ import { Shield } from "./shield";
 import { Bakuretsu } from "./bakuretsu";
 import { ArcaneCircle } from "./magicCircle";
 import { Zoltraak } from "./zoltraak";
+import { ApplyCursor } from "./applyCursor";
 
-export interface Cursor extends DisplayObject {
+export interface Cursor {
   tick(dt: number, controller: Controller): void;
   remove(): void;
 }
@@ -110,6 +111,14 @@ export const SPELLS: Spell[] = [
       yOffset: 2,
       x: 27 / 6,
       y: 8,
+    },
+  },
+  {
+    name: "Wings",
+    cursor: ApplyCursor,
+    data: {
+      applyKeys: [Key.Up, Key.W],
+      apply: (character: Character) => character.giveWings(),
     },
   },
 ];
