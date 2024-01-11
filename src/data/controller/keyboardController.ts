@@ -130,6 +130,10 @@ export class KeyboardController implements Controller {
     return [this.serverMouseX, this.serverMouseY];
   }
 
+  getLocalMouse(): [number, number] {
+    return [this.mouseX, this.mouseY];
+  }
+
   serialize(): [number, number, number] {
     if (this.isHost) {
       this.serverKeys = this.pressedKeys;

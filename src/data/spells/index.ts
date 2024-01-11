@@ -4,7 +4,7 @@ import { Fireball } from "./fireball";
 import { Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { Sword } from "./sword";
-import { ArrowDown } from "./downArrow";
+import { ArrowDown } from "../../grapics/cursor/downArrow";
 import { PhysicsBody } from "../collision";
 import { Lock, Target } from "../../grapics/cursor/lock";
 import { Telekinesis } from "../../grapics/cursor/telekinesis";

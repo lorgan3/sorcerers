@@ -70,8 +70,8 @@ export class Lock extends Container implements Cursor {
       return;
     }
 
+    this.position.set(...controller.getLocalMouse());
     const position = controller.getMouse();
-    this.position.set(...position);
 
     switch (this.spell.data.target) {
       case Target.Any:

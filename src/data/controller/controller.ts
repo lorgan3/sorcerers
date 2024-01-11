@@ -1,6 +1,8 @@
 export interface Controller {
   isKeyDown(key?: Key): boolean;
   getMouse(): [number, number];
+  getLocalMouse(): [number, number];
+
   pressedKeys: number;
   deserialize(buffer: [number, number, number]): void;
   destroy(): void;

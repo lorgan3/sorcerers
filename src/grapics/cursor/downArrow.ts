@@ -1,12 +1,12 @@
 import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell } from ".";
-import { Character } from "../entity/character";
-import { Controller, Key } from "../controller/controller";
-import { Level } from "../map/level";
-import { Manager } from "../network/manager";
-import { Cursor } from "../../grapics/cursor/types";
+import { Spell } from "../../data/spells";
+import { Character } from "../../data/entity/character";
+import { Controller, Key } from "../../data/controller/controller";
+import { Level } from "../../data/map/level";
+import { Manager } from "../../data/network/manager";
+import { Cursor } from "./types";
 
 export class ArrowDown extends Container implements Cursor {
   constructor(private character: Character, private spell: Spell) {
@@ -32,9 +32,9 @@ export class ArrowDown extends Container implements Cursor {
   }
 
   tick(dt: number, controller: Controller) {
-    const position = controller.getMouse();
-    this.position.set(...position);
+    this.position.set(...controller.getLocalMouse());
 
+    const position = controller.getMouse();
     if (controller.isKeyDown(Key.M1)) {
       this.spell.data.projectile.cast(
         position[0] / 6 + this.spell.data.xOffset,

@@ -19,6 +19,10 @@ export class NetworkController implements Controller {
     return [this.mouseX, this.mouseY];
   }
 
+  getLocalMouse() {
+    return this.getMouse();
+  }
+
   deserialize(buffer: [number, number, number]) {
     this.pressedKeys = buffer[0];
     this.mouseX = buffer[1];
