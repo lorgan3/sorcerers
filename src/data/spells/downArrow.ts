@@ -1,11 +1,12 @@
 import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Cursor, Spell } from ".";
+import { Spell } from ".";
 import { Character } from "../entity/character";
 import { Controller, Key } from "../controller/controller";
 import { Level } from "../map/level";
 import { Manager } from "../network/manager";
+import { Cursor } from "../../grapics/cursor/types";
 
 export class ArrowDown extends Container implements Cursor {
   constructor(private character: Character, private spell: Spell) {

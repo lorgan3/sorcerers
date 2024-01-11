@@ -1,11 +1,11 @@
 import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Cursor, Spell } from ".";
-import { Character } from "../entity/character";
-import { Controller, Key } from "../controller/controller";
-import { Level } from "../map/level";
-import { Manager } from "../network/manager";
+import { Spell } from "../../data/spells";
+import { Character } from "../../data/entity/character";
+import { Controller, Key } from "../../data/controller/controller";
+import { Manager } from "../../data/network/manager";
+import { Cursor } from "./types";
 
 export class Range extends Container implements Cursor {
   indicator: Sprite;

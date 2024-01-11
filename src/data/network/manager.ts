@@ -4,7 +4,8 @@ import { Popup } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
-import { Cursor, Spell } from "../spells";
+import { Spell } from "../spells";
+import { Cursor } from "../../grapics/cursor/types";
 
 const TURN_GRACE_PERIOD = 3000;
 

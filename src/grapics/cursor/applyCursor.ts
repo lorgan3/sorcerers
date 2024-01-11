@@ -1,6 +1,7 @@
-import { Cursor, Spell } from ".";
-import { Character } from "../entity/character";
-import { Controller } from "../controller/controller";
+import { Spell } from "../../data/spells";
+import { Character } from "../../data/entity/character";
+import { Controller } from "../../data/controller/controller";
+import { Cursor } from "./types";
 
 export class ApplyCursor implements Cursor {
   constructor(private character: Character, private spell: Spell) {}

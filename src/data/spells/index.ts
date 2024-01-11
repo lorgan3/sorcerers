@@ -1,24 +1,20 @@
 import { DisplayObject } from "pixi.js";
-import { Range } from "./range";
+import { Range } from "../../grapics/cursor/range";
 import { Fireball } from "./fireball";
-import { Controller, Key } from "../controller/controller";
+import { Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { Sword } from "./sword";
 import { ArrowDown } from "./downArrow";
 import { PhysicsBody } from "../collision";
-import { Lock, Target } from "./lock";
-import { Telekinesis } from "./telekinesis";
+import { Lock, Target } from "../../grapics/cursor/lock";
+import { Telekinesis } from "../../grapics/cursor/telekinesis";
 import { Melee } from "./melee";
 import { Shield } from "./shield";
 import { Bakuretsu } from "./bakuretsu";
-import { ArcaneCircle } from "./magicCircle";
+import { ArcaneCircle } from "../../grapics/cursor/magicCircle";
 import { Zoltraak } from "./zoltraak";
-import { ApplyCursor } from "./applyCursor";
-
-export interface Cursor {
-  tick(dt: number, controller: Controller): void;
-  remove(): void;
-}
+import { ApplyCursor } from "../../grapics/cursor/applyCursor";
+import { Cursor } from "../../grapics/cursor/types";
 
 export interface Projectile extends DisplayObject {
   body?: PhysicsBody;
