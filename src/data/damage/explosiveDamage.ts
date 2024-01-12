@@ -48,7 +48,7 @@ export class ExplosiveDamage implements DamageSource {
     if (!this.targets) {
       this.targets = new TargetList();
 
-      const range = this.range * 12;
+      const range = (this.range + 5) * 6;
       Level.instance.withNearbyEntities(
         this.x * 6,
         this.y * 6,
