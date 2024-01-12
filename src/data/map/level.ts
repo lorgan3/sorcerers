@@ -16,6 +16,7 @@ import { DamageNumberContainer } from "../../grapics/damageNumber";
 import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
 import { MessageType } from "../network/types";
+import { ParticleManager } from "../../grapics/particles";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -34,6 +35,7 @@ export class Level {
   private defaultLayer = new Container();
   public readonly damageNumberContainer = new DamageNumberContainer();
   public readonly uiContainer = new Container();
+  public readonly particleContainer = new ParticleManager();
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -76,6 +78,7 @@ export class Level {
     this.viewport.addChild(
       this.terrain,
       this.defaultLayer,
+      this.particleContainer,
       this.damageNumberContainer,
       this.uiContainer
     );
@@ -113,6 +116,7 @@ export class Level {
   tick(dt: number) {
     this.damageNumberContainer.tick(dt);
     this.terrain.killbox.tick(dt);
+    this.particleContainer.tick(dt);
 
     if (Server.instance) {
       for (let entity of this.hurtables) {
