@@ -127,6 +127,10 @@ export abstract class Manager {
   }
 
   setActiveCharacter(player: number, character: number) {
+    if (this.activePlayer) {
+      this.activePlayer.activeCharacter.removeWings();
+    }
+
     this.activePlayer = this.players[player];
     this.activePlayer.active = character;
 

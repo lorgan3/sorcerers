@@ -229,6 +229,10 @@ export class Character extends Container implements HurtableEntity {
   }
 
   removeWings() {
+    if (!this.hasWings) {
+      return;
+    }
+
     this.hasWings = false;
     this.wings.visible = false;
     this.wings.stop();
