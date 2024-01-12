@@ -9,11 +9,12 @@ import { Character } from "../entity/character";
 
 import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
 import { Explosion } from "../../grapics/explosion";
+import { ParticleEmitter } from "../../grapics/particles/types";
 
 export class Fireball extends Container implements Projectile {
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
-  private particles: SimpleParticleEmitter;
+  private particles: ParticleEmitter;
   private bounces = 5;
 
   constructor(x: number, y: number) {
@@ -37,7 +38,14 @@ export class Fireball extends Container implements Projectile {
 
     this.particles = new SimpleParticleEmitter(
       atlas.animations["spells_puff"],
-      { ...SimpleParticleEmitter.defaultConfig, yVelocity: -3 }
+      {
+        ...SimpleParticleEmitter.defaultConfig,
+        initialize: () => ({
+          x: this.position.x,
+          y: this.position.y,
+          yVelocity: -3,
+        }),
+      }
     );
 
     // const sprite2 = new Sprite(Texture.fromBuffer(circle3x3Canvas.data, 3, 3));
@@ -71,7 +79,6 @@ export class Fireball extends Container implements Projectile {
     this.body.tick(dt);
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6, y * 6);
-    this.particles.setSpawnPosition(this.position.x, this.position.y);
   }
 
   serialize() {

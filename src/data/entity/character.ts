@@ -10,6 +10,8 @@ import { HurtableEntity } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
+import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
+import { ParticleEmitter } from "../../grapics/particles/types";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 5;
@@ -21,6 +23,7 @@ export class Character extends Container implements HurtableEntity {
   private sprite: AnimatedSprite;
   private wings: AnimatedSprite;
   private namePlate: Text;
+  private particles?: ParticleEmitter;
 
   private _hp = 100;
   private time = 0;
@@ -226,6 +229,34 @@ export class Character extends Container implements HurtableEntity {
     this.hasWings = true;
     this.wings.visible = true;
     this.wings.play();
+
+    if (this.particles) {
+      Level.instance.particleContainer.destroyEmitter(this.particles, true);
+    }
+
+    this.particles = new SimpleParticleEmitter(
+      AssetsContainer.instance.assets!["atlas"].animations["spells_sparkle"],
+      {
+        ...SimpleParticleEmitter.defaultConfig,
+        spawnRange: 64,
+        spawnFrequency: 0.2,
+        initialize: () =>
+          Math.random() > 0.5
+            ? {
+                x: this.position.x - 32,
+                y: this.position.y + 60,
+                xVelocity: -2,
+                yVelocity: 2,
+              }
+            : {
+                x: this.position.x + 86,
+                y: this.position.y + 60,
+                xVelocity: 2,
+                yVelocity: 2,
+              },
+      }
+    );
+    Level.instance.particleContainer.addEmitter(this.particles);
   }
 
   removeWings() {
@@ -236,6 +267,9 @@ export class Character extends Container implements HurtableEntity {
     this.hasWings = false;
     this.wings.visible = false;
     this.wings.stop();
+
+    Level.instance.particleContainer.destroyEmitter(this.particles!);
+    this.particles = undefined;
   }
 
   get hp() {

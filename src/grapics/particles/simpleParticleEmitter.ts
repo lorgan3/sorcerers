@@ -7,8 +7,12 @@ interface Config {
   lifeTimeVariance: number;
   spawnFrequency: number;
   spawnRange: number;
-  xVelocity: number;
-  yVelocity: number;
+  initialize: () => {
+    x: number;
+    y: number;
+    xVelocity?: number;
+    yVelocity?: number;
+  };
   pool: number;
 }
 
@@ -16,19 +20,15 @@ export class SimpleParticleEmitter
   extends Container<Particle>
   implements ParticleEmitter
 {
-  static defaultConfig: Config = {
+  static defaultConfig = {
     lifeTime: 30,
     lifeTimeVariance: 0.2,
     spawnFrequency: 0.5,
     spawnRange: 32,
-    xVelocity: 0,
-    yVelocity: 0,
     pool: 40,
-  };
+  } satisfies Partial<Config>;
 
   private radius: number;
-  private spawnX = 0;
-  private spawnY = 0;
 
   fading = false;
   activeParticles = 0;
@@ -44,11 +44,6 @@ export class SimpleParticleEmitter
 
       this.addChild(particle);
     }
-  }
-
-  setSpawnPosition(x: number, y: number) {
-    this.spawnX = x;
-    this.spawnY = y;
   }
 
   tick(dt: number) {
@@ -88,13 +83,15 @@ export class SimpleParticleEmitter
         this.activeParticles++;
         particle.visible = true;
 
+        const config = this.config.initialize();
         particle.x =
-          this.spawnX + Math.random() * this.config.spawnRange - this.radius;
+          config.x + Math.random() * this.config.spawnRange - this.radius;
         particle.y =
-          this.spawnY + Math.random() * this.config.spawnRange - this.radius;
+          config.y + Math.random() * this.config.spawnRange - this.radius;
 
-        particle.xVelocity = this.config.xVelocity;
-        particle.yVelocity = this.config.yVelocity;
+        particle.xVelocity = config.xVelocity ?? 0;
+        particle.yVelocity = config.yVelocity ?? 0;
+
         particle.lifetime =
           this.config.lifeTime *
           (1 + this.config.lifeTimeVariance * Math.random());
