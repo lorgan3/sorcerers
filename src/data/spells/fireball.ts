@@ -7,9 +7,13 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Projectile } from ".";
 import { Character } from "../entity/character";
 
+import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
+import { Explosion } from "../../grapics/explosion";
+
 export class Fireball extends Container implements Projectile {
   public readonly body: SimpleBody;
-  private sprite!: AnimatedSprite;
+  private sprite: AnimatedSprite;
+  private particles: SimpleParticleEmitter;
   private bounces = 5;
 
   constructor(x: number, y: number) {
@@ -26,17 +30,22 @@ export class Fireball extends Container implements Projectile {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.sprite = new AnimatedSprite(atlas.animations["spells_fireball"]);
-    this.sprite.scale.set(3);
+    this.sprite = new AnimatedSprite(atlas.animations["spells_flame"]);
     this.sprite.animationSpeed = 0.3;
     this.sprite.play();
-    this.sprite.anchor.set(0.25, 0.25);
+    this.sprite.anchor.set(0.5);
+
+    this.particles = new SimpleParticleEmitter(
+      atlas.animations["spells_puff"],
+      { ...SimpleParticleEmitter.defaultConfig, yVelocity: -3 }
+    );
 
     // const sprite2 = new Sprite(Texture.fromBuffer(circle3x3Canvas.data, 3, 3));
     // sprite2.anchor.set(0);
     // sprite2.scale.set(6);
 
     this.addChild(this.sprite);
+    Level.instance.particleContainer.addEmitter(this.particles);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -50,7 +59,9 @@ export class Fireball extends Container implements Projectile {
 
     if (this.bounces === 0 || playerCollision) {
       Level.instance.remove(this);
+      Level.instance.particleContainer.destroyEmitter(this.particles);
       Level.instance.damage(new ExplosiveDamage(x, y, 16));
+      new Explosion(x * 6, y * 6);
     } else {
       Level.instance.damage(new ExplosiveDamage(x, y, 4));
     }
@@ -60,6 +71,7 @@ export class Fireball extends Container implements Projectile {
     this.body.tick(dt);
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6, y * 6);
+    this.particles.setSpawnPosition(this.position.x, this.position.y);
   }
 
   serialize() {
