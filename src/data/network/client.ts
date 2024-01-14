@@ -40,23 +40,39 @@ export class Client extends Manager {
     }
   }
 
-  join(key: string, name: string, team: Team) {
+  async join(key: string, name: string, team: Team) {
     this.connection = this.peer.connect(key);
 
-    this.connection.on("open", () => {
-      this.connection!.send({
-        type: MessageType.Join,
-        name,
-        team: team.serialize(),
+    return new Promise<void>((resolve, reject) => {
+      const close = () => {
+        this.connection!.close();
+        this.connection = undefined;
+
+        reject();
+      };
+
+      const timer = window.setTimeout(close, 5000);
+
+      this.connection!.on("open", () => {
+        window.clearInterval(timer);
+        this.connection!.send({
+          type: MessageType.Join,
+          name,
+          team: team.serialize(),
+        });
+
+        resolve();
       });
-    });
 
-    this.connection.on("error", (err) => {
-      console.log("error", err);
-    });
+      this.connection!.on("error", (err) => {
+        console.log("error", err);
+        close();
+      });
 
-    this.connection.on("close", () => {
-      console.log("closed");
+      this.connection!.on("close", () => {
+        console.log("closed");
+        close();
+      });
     });
   }
 

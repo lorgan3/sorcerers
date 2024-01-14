@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import Peer from "peerjs";
@@ -27,7 +27,6 @@ const players = ref<string[]>([]);
 const map = ref("");
 
 let peer: Peer | null = null;
-let timer = -1;
 
 const nameValidator = (name: string) => !!name.trim();
 
@@ -43,22 +42,14 @@ const createClient = () => {
 
   peer.once("open", () => {
     peer.off("error");
-    window.clearInterval(timer);
     new Client(peer);
   });
 };
 
-const handleConnect = () => {
-  if (connecting.value) {
+const handleConnect = async () => {
+  if (connecting.value || !Client.instance) {
     return;
   }
-
-  timer = window.setTimeout(() => {
-    peer?.destroy();
-    connecting.value = false;
-
-    createClient();
-  }, 5000);
 
   connecting.value = true;
   set("Settings", {
@@ -67,11 +58,16 @@ const handleConnect = () => {
     defaultTeam: selectedTeam.value,
   });
 
-  Client.instance.join(
-    PEER_ID_PREFIX + key.value,
-    name.value.trim() || "Player",
-    teams.value[selectedTeam.value] || Team.random()
-  );
+  try {
+    await Client.instance.join(
+      PEER_ID_PREFIX + key.value,
+      name.value.trim() || "Player",
+      teams.value[selectedTeam.value] || Team.random()
+    );
+  } catch {
+    connecting.value = false;
+    return;
+  }
 
   Client.instance.onLobbyUpdate(async (message) => {
     switch (message.type) {
@@ -89,6 +85,10 @@ const handleConnect = () => {
             background: {
               data: new Blob([message.map.background.data]),
             },
+            layers: message.map.layers.map((layer) => ({
+              ...layer,
+              data: new Blob([layer.data]),
+            })),
           })
         );
         break;
@@ -100,12 +100,9 @@ onMounted(() => {
   createClient();
 });
 
-onUnmounted(() => {
-  window.clearInterval(timer);
-});
-
 const handleBack = () => {
   if (Client.instance) {
+    Client.instance.peer.disconnect();
     Client.instance.peer.destroy();
   }
 
