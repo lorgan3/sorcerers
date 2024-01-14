@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { Map } from "../data/map";
+import { Map, Layer } from "../data/map";
 import Input from "./Input.vue";
 
 const { onBack } = defineProps<{
   onBack: () => void;
 }>();
 
+const SCALE = 6;
 const background = ref("");
-const backgroundImg = ref<HTMLImageElement | null>(null);
 const terrain = ref("");
-const terrainImg = ref<HTMLImageElement | null>(null);
+const layers = ref<Layer[]>([]);
 
 const name = ref("");
 
@@ -42,6 +42,9 @@ const handleBuild = async () => {
   const map = await Map.fromConfig({
     terrain: { data: terrain.value },
     background: { data: background.value },
+    layers: layers.value
+      .filter((layer) => !!layer.data)
+      .map((layer) => ({ ...layer })),
   });
 
   const url = URL.createObjectURL(await map.toBlob());
@@ -52,16 +55,57 @@ const handleBuild = async () => {
   link.href = url;
   link.click();
 };
+
+const handleAddLayer = () => layers.value.push({ data: "", x: 0, y: 0 });
+
+const handleRemoveLayer = (index: number) => {
+  layers.value = [...layers.value.splice(index, 0)];
+};
+
+const handleAddLayerImage = (event: Event, layer: Layer) => {
+  const file = (event.target as HTMLInputElement).files![0];
+
+  if (!file) {
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => (layer.data = reader.result as string);
+};
+
+const handleMouseDown = (event: MouseEvent, layer: Layer) => {
+  let x = layer.x;
+  let y = layer.y;
+  let startX = event.pageX;
+  let startY = event.pageY;
+
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    layer.x = x + Math.round((moveEvent.pageX - startX) / SCALE);
+    layer.y = y + Math.round((moveEvent.pageY - startY) / SCALE);
+  };
+
+  const handleMouseUp = () => {
+    document.onselectstart = null;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
+
+  event.preventDefault();
+  document.onselectstart = () => false;
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
+};
 </script>
 
 <template>
-  <div class="builder">
+  <div class="builder" :style="{ '--scale': SCALE }">
     <section class="controls flex-list">
       <div class="section">
         <h2>Terrain</h2>
         <label class="inputButton">
           <input type="file" @change="handleAddTerrain" />
-          <img v-if="terrain" :src="terrain" ref="terrainImg" />
+          <img v-if="terrain" :src="terrain" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
         <Input label="Scale" value="6" disabled />
@@ -71,10 +115,44 @@ const handleBuild = async () => {
         <h2>Background</h2>
         <label class="inputButton">
           <input type="file" @change="handleAddBackground" />
-          <img v-if="background" :src="background" ref="backgroundImg" />
+          <img v-if="background" :src="background" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
         <Input label="Scale" value="6" disabled />
+      </div>
+
+      <div class="section">
+        <h2>Overlays</h2>
+        <button class="secondary" @click="handleAddLayer">Add layer</button>
+
+        <div v-for="(layer, i) in layers" class="section">
+          <h3 class="layer-title">
+            Layer {{ i }}
+            <button class="close-button" @click="() => handleRemoveLayer(i)">
+              ✖️
+            </button>
+          </h3>
+          <label class="inputButton">
+            <input
+              type="file"
+              @change="(event) => handleAddLayerImage(event, layer)"
+            />
+            <img v-if="layer.data" :src="(layer.data as string)" />
+            <div v-else class="placeholder">➕ Add image</div>
+          </label>
+
+          <Input
+            label="X"
+            :value="layer.x.toString()"
+            @change="(event: Event) => layer.x = parseInt((event.target as HTMLInputElement).value, 10)"
+          />
+          <Input
+            label="Y"
+            :value="layer.y.toString()"
+            @change="(event: Event) => layer.y = parseInt((event.target as HTMLInputElement).value, 10)"
+          />
+          <Input label="Scale" value="6" disabled />
+        </div>
       </div>
 
       <div class="section">
@@ -92,6 +170,15 @@ const handleBuild = async () => {
       </p>
       <img v-if="background" :src="background" />
       <img v-if="terrain" :src="terrain" />
+      <template v-for="layer in layers">
+        <img
+          v-if="layer.data"
+          :src="(layer.data as string)"
+          @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
+          class="layer"
+          :style="{ translate: `${layer.x * SCALE}px ${layer.y * SCALE}px` }"
+        />
+      </template>
     </section>
   </div>
 </template>
@@ -106,16 +193,31 @@ const handleBuild = async () => {
     border: 4px solid var(--primary);
     border-radius: var(--big-radius);
     padding: 10px;
+    overflow-y: auto;
 
     .section {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 6px;
+    }
+
+    .layer-title {
+      display: flex;
+      justify-content: space-between;
+
+      .close-button {
+        background: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        font-size: 18px;
+      }
     }
 
     label {
       display: flex;
-      gap: 5px;
+      gap: 3px;
 
       span {
         width: 80px;
@@ -160,8 +262,13 @@ const handleBuild = async () => {
 
     img {
       position: absolute;
-      width: 300%;
+      transform-origin: 0 0;
+      scale: 6 6;
       image-rendering: pixelated;
+    }
+
+    .layer {
+      cursor: grab;
     }
 
     .description {
