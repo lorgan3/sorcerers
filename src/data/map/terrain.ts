@@ -1,39 +1,59 @@
 import { Container, Sprite, Texture } from "pixi.js";
 import { CollisionMask } from "../collision/collisionMask";
-import { Map } from ".";
+import { ComputedLayer, Map } from ".";
 import { ellipse9x16 } from "../collision/precomputed/circles";
 import { Killbox } from "./killbox";
+import { UpdatingTexture } from "./updatingTexture";
 
-export class Terrain extends Container {
+export class Terrain {
   private background: Texture;
-  private terrain: Texture;
-  private terrainCtx: OffscreenCanvasRenderingContext2D;
+  private terrain: UpdatingTexture;
+
+  private layerTextures: UpdatingTexture[];
+  private layerSprites: Sprite[];
 
   public collisionMask: CollisionMask;
   public characterMask: CollisionMask;
 
   public readonly killbox: Killbox;
 
-  constructor(private map: Map) {
-    super();
-    this.scale.set(6);
+  public container: Container;
+  public foreground: Container;
 
+  constructor(private map: Map) {
     this.collisionMask = map.collisionMask;
     this.characterMask = this.collisionMask.clone();
 
-    this.terrainCtx = map.terrain.getContext("2d")!;
-    this.terrainCtx.globalCompositeOperation = "destination-out";
-    this.terrain = Texture.from(map.terrain);
-
+    this.terrain = new UpdatingTexture(map.terrain);
     this.background = Texture.from(map.background);
+
+    this.layerTextures = [];
+    this.layerSprites = [];
+    for (let layer of map.layers) {
+      const texture = new UpdatingTexture(layer.data, layer.x, layer.y);
+      this.layerTextures.push(texture);
+
+      const sprite = new Sprite(texture.texture);
+      sprite.position.set(layer.x, layer.y);
+      this.layerSprites.push(sprite);
+    }
 
     this.killbox = new Killbox(this.background.width, this.background.height);
 
-    this.addChild(
+    this.foreground = new Container();
+    this.foreground.scale.set(6);
+    this.foreground.addChild(...this.layerSprites, this.killbox);
+
+    this.container = new Container();
+    this.container.scale.set(6);
+    this.container.addChild(
       new Sprite(this.background),
-      new Sprite(this.terrain),
-      this.killbox
+      new Sprite(this.terrain.texture)
     );
+  }
+
+  get layers() {
+    return this.map.layers;
   }
 
   getSpawnLocations(

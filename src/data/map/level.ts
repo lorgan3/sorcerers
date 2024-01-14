@@ -76,9 +76,10 @@ export class Level {
 
     this.terrain = new Terrain(map);
     this.viewport.addChild(
-      this.terrain,
+      this.terrain.container,
       this.defaultLayer,
       this.particleContainer,
+      this.terrain.foreground,
       this.damageNumberContainer,
       this.uiContainer
     );
