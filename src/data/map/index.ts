@@ -1,6 +1,22 @@
 import { addMetadata, getMetadata } from "meta-png";
 import { CollisionMask } from "../collision/collisionMask";
 
+export interface Layer {
+  data: string | Blob;
+  x: number;
+  y: number;
+}
+
+export interface ComputedLayer {
+  data: OffscreenCanvas;
+  x: number;
+  y: number;
+  cx: number;
+  cy: number;
+  r: number;
+  r2: number;
+}
+
 export interface Config {
   terrain: {
     data: string | Blob;
@@ -8,10 +24,12 @@ export interface Config {
   background: {
     data: string | Blob;
   };
+  layers: Layer[];
 }
 
 const TERRAIN_KEY = "terrain";
 const BACKGROUND_KEY = "background";
+const LAYERS_KEY = "layers";
 const VERSION_KEY = "version";
 
 const VERSION = 1;
@@ -20,7 +38,7 @@ const THUMBNAIL_SIZE = 100;
 export class Map {
   private _terrain?: OffscreenCanvas;
   private _background?: OffscreenCanvas;
-  private _collisionMask?: OffscreenCanvas;
+  private _layers?: ComputedLayer[];
   private _width = 0;
   private _height = 0;
 
@@ -30,10 +48,25 @@ export class Map {
     this.load = Promise.all([
       Map.createCanvasFromData(this.config.terrain.data),
       Map.createCanvasFromData(this.config.background.data),
-    ]).then(([terrain, background]) => {
+      ...config.layers.map((layer) => Map.createCanvasFromData(layer.data)),
+    ]).then(([terrain, background, ...layers]) => {
       this._terrain = terrain;
       this._background = background;
       this._collisionMask = terrain;
+      this._layers = layers.map((layer, i) => {
+        const { x, y } = config.layers[i];
+        const r = (layer.width + layer.height) / 2 - 6;
+        return {
+          data: layer,
+          x,
+          y,
+          cx: x + layer.width / 2,
+          cy: y + layer.height / 2,
+          r,
+          r2: r * r,
+        };
+      });
+
       this._width = terrain.width;
       this._height = terrain.height;
     });
@@ -42,13 +75,13 @@ export class Map {
   static async fromBlob(blob: Blob) {
     let data = new Uint8Array(await blob.arrayBuffer());
 
-    return new Map({
+    return Map.fromConfig({
       background: {
         data: Map.getMetadata(data, BACKGROUND_KEY),
       },
       terrain: {
         data: Map.getMetadata(data, TERRAIN_KEY),
-      },
+      layers: JSON.parse(Map.getMetadata(data, LAYERS_KEY, "[]")),
     });
   }
 
@@ -60,9 +93,12 @@ export class Map {
   }
 
   async toConfig(): Promise<Config> {
-    const [terrain, background] = await Promise.all([
+    const [terrain, background, ...layers] = await Promise.all([
       this.terrain!.convertToBlob({ type: "image/png" }),
       this._background!.convertToBlob({ type: "image/png" }),
+      ...this._layers!.map((layer) =>
+        layer.data.convertToBlob({ type: "image/png" })
+      ),
     ]);
 
     return {
@@ -72,6 +108,11 @@ export class Map {
       background: {
         data: background,
       },
+      layers: this._layers!.map((layer, i) => ({
+        data: layers[i],
+        x: layer.x,
+        y: layer.y,
+      })),
     };
   }
 
@@ -83,9 +124,10 @@ export class Map {
       throw new Error("Only string configs can be converted to blobs for now");
     }
 
-    const [terrain, background] = await Promise.all([
+    const [terrain, background, ...layers] = await Promise.all([
       Map.loadImage(this.config.terrain.data),
       Map.loadImage(this.config.background.data),
+      ...this.config.layers.map((layer) => Map.loadImage(layer.data)),
     ]);
 
     let dw: number, dh: number;
@@ -104,12 +146,26 @@ export class Map {
     ctx.drawImage(background, 0, 0, dw, dh);
     ctx.drawImage(terrain, 0, 0, dw, dh);
 
+    const scale = dw / terrain.width;
+    for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      const { x, y } = this.config.layers[i];
+      ctx.drawImage(
+        layer,
+        x * scale,
+        y * scale,
+        layer.width * scale,
+        layer.height * scale
+      );
+    }
+
     const blob = await canvas.convertToBlob({ type: "image/png" });
     let data = new Uint8Array(await blob.arrayBuffer());
 
     data = addMetadata(data, VERSION_KEY, VERSION.toString());
     data = addMetadata(data, TERRAIN_KEY, this.config.terrain.data);
     data = addMetadata(data, BACKGROUND_KEY, this.config.background.data);
+    data = addMetadata(data, LAYERS_KEY, JSON.stringify(this.config.layers));
 
     return new Blob([data], {
       type: "image/png",
@@ -122,6 +178,10 @@ export class Map {
 
   get background() {
     return this._background!;
+  }
+
+  get layers() {
+    return this._layers!;
   }
 
   get collisionMask() {
@@ -157,14 +217,14 @@ export class Map {
     return createImageBitmap(value);
   }
 
-  private static getMetadata(data: Uint8Array, key: string) {
+  private static getMetadata(data: Uint8Array, key: string, fallback?: string) {
     const value = getMetadata(data, key);
 
-    if (value === undefined) {
+    if (value === undefined && fallback === undefined) {
       throw new Error(`Map does not contain data for ${key}`);
     }
 
-    return value;
+    return (value !== undefined ? value : fallback) as string;
   }
 
   private static async createCanvasFromData(value: string | Blob) {
