@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { Ref, ref } from "vue";
 import { Map, Layer } from "../data/map";
 import Input from "./Input.vue";
+import { CollisionMask } from "../data/collision/collisionMask";
 
 const { onBack } = defineProps<{
   onBack: () => void;
 }>();
 
 const SCALE = 6;
-const background = ref("");
 const terrain = ref("");
+const mask = ref("");
+const background = ref("");
 const layers = ref<Layer[]>([]);
+const addMask = ref(false);
 
 const name = ref("");
 
-const handleAddTerrain = (event: Event) => {
+const addImageFactory = (ref: Ref) => (event: Event) => {
   const file = (event.target as HTMLInputElement).files![0];
 
   if (!file) {
@@ -23,24 +26,27 @@ const handleAddTerrain = (event: Event) => {
 
   var reader = new FileReader();
   reader.readAsDataURL(file);
-  reader.onload = () => (terrain.value = reader.result as string);
+  reader.onload = () => (ref.value = reader.result as string);
 };
 
-const handleAddBackground = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files![0];
-
-  if (!file) {
-    return;
-  }
-
-  var reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => (background.value = reader.result as string);
-};
+const handleAddTerrain = addImageFactory(terrain);
+const handleAddMask = addImageFactory(mask);
+const handleAddBackground = addImageFactory(background);
 
 const handleBuild = async () => {
+  let data: ReturnType<CollisionMask["serialize"]> | undefined;
+
+  if (mask.value) {
+    const canvas = await Map.createCanvasFromData(mask.value);
+    const collisionMask = CollisionMask.fromAlpha(
+      canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height)
+    );
+
+    data = collisionMask.serialize();
+  }
+
   const map = await Map.fromConfig({
-    terrain: { data: terrain.value },
+    terrain: { data: terrain.value, mask: data },
     background: { data: background.value },
     layers: layers.value
       .filter((layer) => !!layer.data)
@@ -96,6 +102,8 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
   document.addEventListener("mousemove", handleMouseMove);
   document.addEventListener("mouseup", handleMouseUp);
 };
+
+const handleEnableMask = () => (addMask.value = true);
 </script>
 
 <template>
@@ -106,6 +114,14 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
         <label class="inputButton">
           <input type="file" @change="handleAddTerrain" />
           <img v-if="terrain" :src="terrain" />
+          <div v-else class="placeholder">➕ Add image</div>
+        </label>
+        <button v-if="!addMask" class="secondary" @click="handleEnableMask">
+          Add mask
+        </button>
+        <label v-else class="inputButton">
+          <input type="file" @change="handleAddMask" />
+          <img v-if="mask" :src="mask" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
         <Input label="Scale" value="6" disabled />
