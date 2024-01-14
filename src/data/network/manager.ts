@@ -6,6 +6,7 @@ import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
 import { Spell } from "../spells";
 import { Cursor } from "../../grapics/cursor/types";
+import { getSquareDistance } from "../../util/math";
 
 const TURN_GRACE_PERIOD = 3000;
 
@@ -60,8 +61,34 @@ export abstract class Manager {
 
     Level.instance.tick(dt);
 
+    if (this.frames % 30 === 0) {
+      this.checkOverlays();
+    }
+
     this.time += dtMs;
     this.frames++;
+  }
+
+  checkOverlays() {
+    const layers = Level.instance.terrain.layers;
+
+    if (!this._self || !layers.length) {
+      return;
+    }
+
+    for (let layer of layers) {
+      let revealed = false;
+
+      for (let character of this._self.characters) {
+        const [x, y] = character.body.precisePosition;
+        if (getSquareDistance(x + 4.5, y + 8, layer.cx, layer.cy) < layer.r2) {
+          revealed = true;
+          break;
+        }
+      }
+
+      Level.instance.terrain.setLayerVisibility(layer, revealed);
+    }
   }
 
   endTurn() {

@@ -56,6 +56,12 @@ export class Terrain {
     return this.map.layers;
   }
 
+  setLayerVisibility(layer: ComputedLayer, revealed: boolean) {
+    this.layerSprites[this.map.layers.indexOf(layer)].alpha = revealed
+      ? 0.2
+      : 1;
+  }
+
   getSpawnLocations(
     distance = Math.round(Math.max(this.map.width, this.map.height) / 24),
     mask = ellipse9x16
