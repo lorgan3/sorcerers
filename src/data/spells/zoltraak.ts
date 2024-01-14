@@ -58,7 +58,7 @@ export class Zoltraak extends Container implements Projectile, Spawnable {
     this.position.set(x * 6, y * 6);
     this.rotation = angle;
 
-    const maxI = Math.floor(distance / 6 / 24);
+    const maxI = Math.min(6, Math.ceil(distance / 6 / 24));
 
     let x2 = x - 24 * Math.cos(angle) - 10;
     let y2 = y - 24 * Math.sin(angle) - 10;
@@ -67,14 +67,14 @@ export class Zoltraak extends Container implements Projectile, Spawnable {
       Level.instance.terrain.subtract(
         x2,
         y2,
+        TOOLS[Math.floor(i / 2)].mask[angleIndex],
         (ctx) => {
           ctx.drawImage(
             TOOLS[Math.floor(i / 2)].canvas[angleIndex],
             x2 | 0,
             y2 | 0
           );
-        },
-        TOOLS[Math.floor(i / 2)].mask[angleIndex]
+        }
       );
 
       x2 -= 23 * Math.cos(angle);

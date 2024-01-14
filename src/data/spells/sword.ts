@@ -62,8 +62,8 @@ export class Sword extends Container implements Projectile {
       .getTargets()
       .getEntities()
       .find((entity) => entity.body instanceof StaticBody);
+
     if (staticEntity) {
-      console.log("collide", this.position.x + 32, staticEntity.getCenter()[0]);
       if (this.position.x + 32 > staticEntity.getCenter()[0]) {
         this.body.addVelocity(1, -3);
       } else {

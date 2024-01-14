@@ -48,11 +48,8 @@ export class FallDamage implements DamageSource {
   damage() {
     const data = SHAPES[this.shape];
 
-    Level.instance.terrain.subtract(
-      this.x,
-      this.y,
-      (ctx) => data.drawShape.call(this, ctx),
-      data.mask
+    Level.instance.terrain.subtract(this.x, this.y, data.mask, (ctx) =>
+      data.drawShape.call(this, ctx)
     );
 
     this.getTargets().damage();

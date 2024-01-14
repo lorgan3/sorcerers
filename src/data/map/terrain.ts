@@ -114,12 +114,14 @@ export class Terrain {
   subtract(
     x: number,
     y: number,
+    mask: CollisionMask,
     fn: (ctx: OffscreenCanvasRenderingContext2D) => void,
-    mask: CollisionMask
+    layerFn?: (ctx: OffscreenCanvasRenderingContext2D) => void
   ) {
-    fn(this.terrainCtx);
-    this.terrainCtx.fill();
-    this.terrain.update();
+    this.terrain.update(fn);
+    for (let layer of this.layerTextures) {
+      layer.update(layerFn ?? fn);
+    }
 
     this.collisionMask.subtract(mask, x | 0, y | 0);
     this.characterMask.subtract(mask, x | 0, y | 0);
@@ -129,11 +131,15 @@ export class Terrain {
     this.subtract(
       x - r,
       y - r,
+      mask,
       (ctx) => {
         ctx.moveTo(x, y);
         ctx.ellipse(x, y, r, r, 0, 0, Math.PI * 2);
       },
-      mask
+      (ctx) => {
+        ctx.moveTo(x, y);
+        ctx.ellipse(x, y, r + 1, r + 1, 0, 0, Math.PI * 2);
+      }
     );
   }
 
