@@ -27,12 +27,10 @@ export class KeyboardController implements Controller {
 
   private handleKeyDown = (event: KeyboardEvent) => {
     this.keyDown(event.key);
-    event.preventDefault();
   };
 
   private handleKeyUp = (event: KeyboardEvent) => {
     this.keyUp(event.key);
-    event.preventDefault();
   };
 
   private handleMouseMove = (event: FederatedPointerEvent) => {
