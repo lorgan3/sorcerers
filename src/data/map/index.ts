@@ -1,5 +1,6 @@
 import { addMetadata, getMetadata } from "meta-png";
 import { CollisionMask } from "../collision/collisionMask";
+import { base64ToBytes, bytesToBase64 } from "../../util/data";
 
 export interface Layer {
   data: string | Blob;
@@ -20,6 +21,7 @@ export interface ComputedLayer {
 export interface Config {
   terrain: {
     data: string | Blob;
+    mask?: ReturnType<CollisionMask["serialize"]>;
   };
   background: {
     data: string | Blob;
@@ -30,6 +32,7 @@ export interface Config {
 const TERRAIN_KEY = "terrain";
 const BACKGROUND_KEY = "background";
 const LAYERS_KEY = "layers";
+const MASK_KEY = "mask";
 const VERSION_KEY = "version";
 
 const VERSION = 1;
@@ -38,6 +41,7 @@ const THUMBNAIL_SIZE = 100;
 export class Map {
   private _terrain?: OffscreenCanvas;
   private _background?: OffscreenCanvas;
+  private _collisionMask?: CollisionMask;
   private _layers?: ComputedLayer[];
   private _width = 0;
   private _height = 0;
@@ -52,7 +56,6 @@ export class Map {
     ]).then(([terrain, background, ...layers]) => {
       this._terrain = terrain;
       this._background = background;
-      this._collisionMask = terrain;
       this._layers = layers.map((layer, i) => {
         const { x, y } = config.layers[i];
         const r = (layer.width + layer.height) / 2 - 6;
@@ -67,6 +70,14 @@ export class Map {
         };
       });
 
+      this._collisionMask = this.config.terrain.mask
+        ? CollisionMask.deserialize(this.config.terrain.mask as any)
+        : CollisionMask.fromAlpha(
+            terrain
+              .getContext("2d")!
+              .getImageData(0, 0, terrain.width, terrain.height)
+          );
+
       this._width = terrain.width;
       this._height = terrain.height;
     });
@@ -74,6 +85,8 @@ export class Map {
 
   static async fromBlob(blob: Blob) {
     let data = new Uint8Array(await blob.arrayBuffer());
+    const maskJson = Map.getMetadata(data, MASK_KEY, "");
+    const mask = maskJson ? JSON.parse(maskJson) : undefined;
 
     return Map.fromConfig({
       background: {
@@ -81,6 +94,15 @@ export class Map {
       },
       terrain: {
         data: Map.getMetadata(data, TERRAIN_KEY),
+        mask: mask
+          ? {
+              ...mask,
+              mask: mask.mask.map(
+                (data: string) => new Uint32Array(base64ToBytes(data).buffer)
+              ),
+            }
+          : undefined,
+      },
       layers: JSON.parse(Map.getMetadata(data, LAYERS_KEY, "[]")),
     });
   }
@@ -104,6 +126,9 @@ export class Map {
     return {
       terrain: {
         data: terrain,
+        mask: this.config.terrain.mask
+          ? this.collisionMask!.serialize()
+          : undefined,
       },
       background: {
         data: background,
@@ -167,6 +192,18 @@ export class Map {
     data = addMetadata(data, BACKGROUND_KEY, this.config.background.data);
     data = addMetadata(data, LAYERS_KEY, JSON.stringify(this.config.layers));
 
+    if (this.config.terrain.mask) {
+      const mask = this.config.terrain.mask.mask;
+      data = addMetadata(
+        data,
+        MASK_KEY,
+        JSON.stringify({
+          ...this.config.terrain.mask,
+          mask: mask.map((array) => bytesToBase64(array)),
+        })
+      );
+    }
+
     return new Blob([data], {
       type: "image/png",
     });
@@ -185,14 +222,7 @@ export class Map {
   }
 
   get collisionMask() {
-    return CollisionMask.fromAlpha(
-      this._collisionMask!.getContext("2d")!.getImageData(
-        0,
-        0,
-        this._collisionMask!.width,
-        this._collisionMask!.height
-      )
-    );
+    return this._collisionMask!;
   }
 
   get width() {
@@ -203,7 +233,7 @@ export class Map {
     return this._height;
   }
 
-  private static loadImage(value: string | Blob) {
+  public static loadImage(value: string | Blob) {
     if (typeof value === "string") {
       return new Promise<HTMLImageElement>((resolve, reject) => {
         const image = new Image();
@@ -227,7 +257,7 @@ export class Map {
     return (value !== undefined ? value : fallback) as string;
   }
 
-  private static async createCanvasFromData(value: string | Blob) {
+  public static async createCanvasFromData(value: string | Blob) {
     const image = await Map.loadImage(value);
 
     const canvas = new OffscreenCanvas(image.width, image.height);
