@@ -10,12 +10,15 @@ import { Team } from "../team";
 import { COLORS } from "./constants";
 import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
-import { Spawnable } from "../entity/types";
+import { Spawnable, isSpawnableEntity } from "../entity/types";
 
 export class Server extends Manager {
   private controller?: KeyboardController;
   private availableColors = [...COLORS];
   private singlePlayer = false;
+  private started = false;
+
+  private disconnectedPlayers: Player[] = [];
 
   private static _serverInstance: Server;
   static get instance() {
@@ -77,6 +80,7 @@ export class Server extends Manager {
 
     this.time = 0;
     this.singlePlayer = this.players.length === 1;
+    this.started = true;
   }
 
   tick(dt: number, dtMs: number) {
@@ -129,11 +133,45 @@ export class Server extends Manager {
     console.log("server start ", this.peer);
 
     this.peer.on("connection", (connection) => {
-      const player = new Player(connection);
-
-      connection.on("open", () => {
-        console.log("open");
+      let player = this.disconnectedPlayers.pop()!;
+      if (!player) {
+        player = new Player();
         this.players.push(player);
+      }
+
+      connection.on("open", async () => {
+        console.log("open");
+        player.reconnect(connection);
+
+        if (this.started) {
+          connection.send({
+            type: MessageType.StartGame,
+            map: await Level.instance.terrain.serialize(),
+          });
+
+          await player.ready;
+          this.syncSinglePlayer(player);
+
+          connection.send({
+            type: MessageType.ActiveCharacter,
+            activePlayer: this.players.indexOf(this.activePlayer!),
+            activeCharacter: this.activePlayer!.active,
+            windSpeed: this.windSpeed,
+            turnStartTime: this.turnStartTime,
+          });
+
+          const spawnables = [...Level.instance.entities].filter(
+            isSpawnableEntity
+          );
+          for (let spawnable of spawnables) {
+            connection.send({
+              type: MessageType.Spawn,
+              id: spawnable.id,
+              kind: spawnable.type,
+              data: spawnable.serializeCreate(),
+            });
+          }
+        }
       });
 
       connection.on("error", (err) => {
@@ -146,16 +184,17 @@ export class Server extends Manager {
 
       connection.on("close", () => {
         console.log("closed");
-        player.destroy();
-        this.players.splice(this.players.indexOf(player));
-        this.availableColors.push(player.color);
 
-        // Temp
-        if (this.activePlayer === player) {
-          this.activePlayer = this.players[0];
+        if (!this.started) {
+          this.players.splice(this.players.indexOf(player));
+          player.destroy();
+          this.availableColors.push(player.color);
+
+          this.syncPlayers();
+        } else {
+          this.disconnectedPlayers.push(player);
+          player.disconnect();
         }
-
-        this.syncPlayers();
       });
     });
   }
@@ -185,6 +224,10 @@ export class Server extends Manager {
   private handleMessage(message: Message, player: Player) {
     switch (message.type) {
       case MessageType.Join:
+        if (this.started) {
+          return;
+        }
+
         const color = this.availableColors.pop();
 
         if (!color) {
@@ -199,17 +242,6 @@ export class Server extends Manager {
           team.isValid() ? team : Team.random(),
           color
         );
-
-        // if (this.started) {
-        //   // Do this before syncing the entities because they contain a reference to the mask!
-        //   player.connection!.send({
-        //     type: MessageType.SyncMap,
-        //     ...Level.instance.terrain.serialize(),
-        //   });
-
-        //   const character = new Character(50, 0, getWord());
-        //   player.addCharacter(character);
-        // }
 
         this.syncPlayers();
         break;
@@ -242,32 +274,36 @@ export class Server extends Manager {
     }
   }
 
+  private syncSinglePlayer(player: Player) {
+    const response: Message = {
+      type: MessageType.SyncPlayers,
+      time: this.time,
+      players: this.players.map((p) => ({
+        name: p.name,
+        team: p.team.serialize(),
+        color: p.color,
+        you: p === player,
+        spell:
+          p.selectedSpell === null ? null : SPELLS.indexOf(p.selectedSpell),
+        characters: p.characters.map((character) => {
+          const [x, y] = character.body.precisePosition;
+          return {
+            id: character.id,
+            name: character.name,
+            hp: character.hp,
+            x,
+            y,
+          };
+        }),
+      })),
+    };
+
+    player.connection?.send(response);
+  }
+
   private syncPlayers() {
     for (let player of this.players) {
-      const response: Message = {
-        type: MessageType.SyncPlayers,
-        time: this.time,
-        players: this.players.map((p) => ({
-          name: p.name,
-          team: p.team.serialize(),
-          color: p.color,
-          you: p === player,
-          spell:
-            p.selectedSpell === null ? null : SPELLS.indexOf(p.selectedSpell),
-          characters: p.characters.map((character) => {
-            const [x, y] = character.body.precisePosition;
-            return {
-              id: character.id,
-              name: character.name,
-              hp: character.hp,
-              x,
-              y,
-            };
-          }),
-        })),
-      };
-
-      player.connection?.send(response);
+      this.syncSinglePlayer(player);
     }
   }
 

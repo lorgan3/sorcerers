@@ -18,11 +18,9 @@ export class Player {
   public selectedSpell: Spell | null = null;
 
   public resolveReady!: () => void;
-  public readonly ready = new Promise<void>(
-    (resolve) => (this.resolveReady = resolve)
-  );
+  public ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
 
-  constructor(public readonly connection?: DataConnection) {}
+  constructor(private _connection?: DataConnection) {}
 
   connect(name: string, team: Team, color: string, controller?: Controller) {
     this._name = name;
@@ -91,5 +89,22 @@ export class Player {
 
   rename(newName: string) {
     this._name = newName;
+  }
+
+  get connection() {
+    return this._connection;
+  }
+
+  disconnect() {
+    this._connection = undefined;
+    this.ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
+  }
+
+  reconnect(connection: DataConnection) {
+    if (this._connection) {
+      throw new Error(`Player ${this._name} is still connected!`);
+    }
+
+    this._connection = connection;
   }
 }
