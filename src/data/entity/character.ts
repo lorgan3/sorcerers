@@ -198,10 +198,6 @@ export class Character extends Container implements HurtableEntity {
     return this.body.serialize();
   }
 
-  serializeCreate() {
-    throw new Error("Method not implemented.");
-  }
-
   deserialize(data: any[]) {
     Level.instance.terrain.characterMask.subtract(
       this.body.mask,

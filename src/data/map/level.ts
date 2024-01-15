@@ -40,7 +40,7 @@ export class Level {
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
 
-  private entities = new Set<TickingEntity>();
+  public readonly entities = new Set<TickingEntity>();
   public readonly entityMap = new Map<number, TickingEntity>();
   public readonly hurtables = new Set<HurtableEntity>();
 

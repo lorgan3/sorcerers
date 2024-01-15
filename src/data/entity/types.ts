@@ -29,6 +29,10 @@ export function isHurtableEntity(
   return "die" in entity;
 }
 
+export function isSpawnableEntity(entity: TickingEntity): entity is Spawnable {
+  return "serializeCreate" in entity;
+}
+
 export enum EntityType {
   Shield,
   Zoltraak,

@@ -7,7 +7,7 @@ import { CollisionMask } from "../collision/collisionMask";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
 import { getIndexFromAngle } from "../collision/util";
 import { Level } from "../map/level";
-import { EntityType, HurtableEntity } from "../entity/types";
+import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
 import { Server } from "../network/server";
 
@@ -15,7 +15,10 @@ const ANIMATION_SPEED = 0.1;
 const FLICKER_SPEED = 0.5;
 const FLICKER_DURATION = 30;
 
-export class Shield extends Container implements Projectile, HurtableEntity {
+export class Shield
+  extends Container
+  implements Projectile, HurtableEntity, Spawnable
+{
   private sprite: AnimatedSprite;
   public readonly body: StaticBody;
   public id = -1;
