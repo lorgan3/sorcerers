@@ -10,6 +10,8 @@ import { Team } from "../data/team";
 import { Map } from "../data/map";
 import Input from "./Input.vue";
 
+const LAST_GAME_KEY = "lastGameKey";
+
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
   onPlay: (map: Map) => void;
@@ -21,8 +23,9 @@ const teams = ref(settings.teams);
 const selectedTeam = ref(settings.defaultTeam ?? 0);
 const name = ref(settings.name);
 const connecting = ref(false);
+const clientReady = ref(false);
 
-const key = ref("");
+const key = ref(sessionStorage.getItem(LAST_GAME_KEY) || "");
 const players = ref<string[]>([]);
 const map = ref("");
 
@@ -31,6 +34,7 @@ let peer: Peer | null = null;
 const nameValidator = (name: string) => !!name.trim();
 
 const createClient = () => {
+  clientReady.value = false;
   const peer = new Peer();
 
   peer.on("error", () => {
@@ -43,6 +47,7 @@ const createClient = () => {
   peer.once("open", () => {
     peer.off("error");
     new Client(peer);
+    clientReady.value = true;
   });
 };
 
@@ -64,6 +69,8 @@ const handleConnect = async () => {
       name.value.trim() || "Player",
       teams.value[selectedTeam.value] || Team.random()
     );
+
+    sessionStorage.setItem(LAST_GAME_KEY, key.value);
   } catch {
     connecting.value = false;
     return;
@@ -81,6 +88,7 @@ const handleConnect = async () => {
           await Map.fromConfig({
             terrain: {
               data: new Blob([message.map.terrain.data]),
+              mask: message.map.terrain.mask,
             },
             background: {
               data: new Blob([message.map.background.data]),
@@ -157,7 +165,7 @@ const handleBack = () => {
       v-if="!players.length"
       @click="handleConnect"
       class="primary"
-      :disabled="!key || !nameValidator(name) || !Client.instance"
+      :disabled="!key || !nameValidator(name) || !clientReady"
     >
       Connect
     </button>
