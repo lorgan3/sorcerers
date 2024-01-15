@@ -114,7 +114,7 @@ export class Map {
     return map;
   }
 
-  async toConfig(): Promise<Config> {
+  async toConfig(forceMask?: boolean): Promise<Config> {
     const [terrain, background, ...layers] = await Promise.all([
       this.terrain!.convertToBlob({ type: "image/png" }),
       this._background!.convertToBlob({ type: "image/png" }),
@@ -126,9 +126,10 @@ export class Map {
     return {
       terrain: {
         data: terrain,
-        mask: this.config.terrain.mask
-          ? this.collisionMask!.serialize()
-          : undefined,
+        mask:
+          this.config.terrain.mask || forceMask
+            ? this.collisionMask!.serialize()
+            : undefined,
       },
       background: {
         data: background,
