@@ -1,3 +1,5 @@
+import { TargetList } from "./targetList";
+
 export interface DamageSource {
   readonly x: number;
   readonly y: number;
@@ -5,6 +7,7 @@ export interface DamageSource {
 
   damage(): void;
   serialize(): any;
+  getTargets(): TargetList;
 }
 
 export enum DamageSourceType {

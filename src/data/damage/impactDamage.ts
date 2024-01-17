@@ -11,12 +11,20 @@ export class ImpactDamage implements DamageSource {
     public readonly x: number,
     public readonly y: number,
     private direction: number,
-    private targets?: TargetList
+    public targets?: TargetList
   ) {}
 
   damage() {
     Level.instance.terrain.subtractCircle(this.x, this.y, 8, circle16x16);
 
+    this.getTargets().damage();
+  }
+
+  serialize() {
+    return [this.x, this.y, this.targets?.serialize()] as const;
+  }
+
+  getTargets() {
     if (!this.targets) {
       this.targets = new TargetList();
 
@@ -37,11 +45,7 @@ export class ImpactDamage implements DamageSource {
       );
     }
 
-    this.targets!.damage();
-  }
-
-  serialize() {
-    return [this.x, this.y, this.targets?.serialize()] as const;
+    return this.targets;
   }
 
   static deserialize(data: ReturnType<ImpactDamage["serialize"]>) {

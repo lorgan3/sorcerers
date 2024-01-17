@@ -6,14 +6,18 @@ export class GenericDamage implements DamageSource {
   public readonly y = 0;
   public readonly type = DamageSourceType.Generic;
 
-  constructor(private targets: TargetList) {}
+  constructor(public targets: TargetList) {}
 
   damage() {
     this.targets.damage();
   }
 
   serialize() {
-    return this.targets?.serialize();
+    return this.targets.serialize();
+  }
+
+  getTargets() {
+    return this.targets;
   }
 
   static deserialize(data: ReturnType<GenericDamage["serialize"]>) {

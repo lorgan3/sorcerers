@@ -42,7 +42,7 @@ export class FallDamage implements DamageSource {
     public readonly x: number,
     public readonly y: number,
     private shape: Shape,
-    private targets?: TargetList
+    public targets?: TargetList
   ) {}
 
   damage() {

@@ -45,6 +45,14 @@ export class ExplosiveDamage implements DamageSource {
       ]
     );
 
+    this.getTargets().damage();
+  }
+
+  serialize() {
+    return [this.x, this.y, this.range, this.targets?.serialize()] as const;
+  }
+
+  getTargets() {
     if (!this.targets) {
       this.targets = new TargetList();
 
@@ -69,11 +77,7 @@ export class ExplosiveDamage implements DamageSource {
       );
     }
 
-    this.targets!.damage();
-  }
-
-  serialize() {
-    return [this.x, this.y, this.range, this.targets?.serialize()] as const;
+    return this.targets;
   }
 
   static deserialize(data: ReturnType<ExplosiveDamage["serialize"]>) {
