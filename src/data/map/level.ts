@@ -17,6 +17,7 @@ import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
 import { MessageType, TurnState } from "../network/types";
 import { ParticleManager } from "../../grapics/particles";
+import { KeyboardController } from "../controller/keyboardController";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -58,6 +59,9 @@ export class Level {
 
     target.appendChild(this.app.view);
 
+    let lastX: number | null = null;
+    let lastY: number | null = null;
+
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
@@ -70,7 +74,21 @@ export class Level {
         underflow: "center",
       })
       .pinch()
-      .wheel({});
+      .wheel({})
+      .on("moved", () => {
+        if (lastX) {
+          const controller = Manager.instance.self
+            .controller as KeyboardController;
+          const [x, y] = controller.getLocalMouse();
+          controller.mouseMove(
+            x + lastX! - this.viewport.x,
+            y + lastY! - this.viewport.y
+          );
+        }
+
+        lastX = this.viewport.x;
+        lastY = this.viewport.y;
+      });
 
     this.app.stage.addChild(this.viewport, this.damageNumberContainer);
 
