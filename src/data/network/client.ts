@@ -1,5 +1,5 @@
 import Peer, { DataConnection } from "peerjs";
-import { Message, MessageType } from "./types";
+import { Message, MessageType, TurnState } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
 import { Character } from "../entity/character";
@@ -32,7 +32,7 @@ export class Client extends Manager {
   tick(dt: number, dtMs: number) {
     super.tick(dt, dtMs);
 
-    if (this.frames % 3 === 0) {
+    if (this.frames % 3 === 0 && this.connection) {
       this.connection!.send({
         type: MessageType.InputState,
         data: this.controller!.serialize(),
@@ -55,6 +55,7 @@ export class Client extends Manager {
 
       this.connection!.on("open", () => {
         window.clearInterval(timer);
+
         this.connection!.send({
           type: MessageType.Join,
           name,
@@ -133,7 +134,7 @@ export class Client extends Manager {
       case MessageType.ActiveCharacter:
         this.windSpeed = message.windSpeed;
         this.turnStartTime = message.turnStartTime;
-        this.turnEnding = false;
+        this.turnState = TurnState.Ongoing;
 
         this.setActiveCharacter(message.activePlayer, message.activeCharacter);
         break;
@@ -156,10 +157,15 @@ export class Client extends Manager {
           message.data
         );
         damageSource.damage();
-        break;
 
-      case MessageType.SyncMap:
-        // Level.instance.terrain.deserialize(message);
+        if (
+          damageSource
+            .getTargets()
+            .getEntities()
+            .includes(this.getActiveCharacter()!)
+        ) {
+          this.setTurnState(TurnState.Ending);
+        }
         break;
 
       case MessageType.Popup:
