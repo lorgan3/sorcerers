@@ -4,14 +4,14 @@ import { CollisionMask } from "./collisionMask";
 // Random value that determines how much gravity a body must receive before something is considered a collision with the ground/ceiling
 const COLLISION_TRIGGER = 7;
 
-const GRAVITY = 0.3;
+const GRAVITY = 0.2;
 const AIR_CONTROL = 0.3;
 const GROUND_FRICTION = 0.88;
 const AIR_FRICTION = 0.98;
 const MIN_MOVEMENT = 0.01;
 
 const SPEED = 0.08;
-const JUMP_STRENGTH = 4;
+const JUMP_STRENGTH = 3;
 
 interface Config {
   mask: CollisionMask;
@@ -86,12 +86,13 @@ export class Body implements PhysicsBody {
 
   jump() {
     if (this.jumped) {
-      return;
+      return false;
     }
 
     this.yVelocity -= JUMP_STRENGTH;
     this.active = 1;
     this.jumped = true;
+    return true;
   }
 
   addVelocity(x: number, y: number) {

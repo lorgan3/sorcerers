@@ -66,7 +66,7 @@ export class Telekinesis extends Container {
         // Probably a mistake, wait for the mouse to be clicked again.
         this.activated = false;
       } else {
-        const power = Math.sqrt(distance / 4);
+        const power = Math.sqrt(distance / 5);
         this.character.body.addAngularVelocity(
           power,
           this.rotation + Math.PI / 2
