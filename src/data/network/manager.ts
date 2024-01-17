@@ -1,6 +1,6 @@
 import Peer from "peerjs";
 import { Player } from "./player";
-import { Popup } from "./types";
+import { Popup, TurnState } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
@@ -27,7 +27,7 @@ export abstract class Manager {
   protected turnStartTime = 0;
   protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
-  protected turnEnding = false;
+  protected turnState = TurnState.Ongoing;
 
   private cursor: Cursor | null = null;
   private popups: Popup[] = [];
@@ -91,16 +91,23 @@ export abstract class Manager {
     }
   }
 
-  endTurn() {
-    if (this.activePlayer?.activeCharacter) {
-      this.activePlayer.activeCharacter.removeWings();
+  setTurnState(turnState: TurnState) {
+    if (turnState === TurnState.Ongoing) {
+      return;
     }
 
-    this.turnEnding = true;
-    this.turnStartTime = Math.min(
-      this.time - this.turnLength + TURN_GRACE_PERIOD,
-      this.turnStartTime
-    );
+    if (turnState === TurnState.Ending) {
+      if (this.activePlayer?.activeCharacter) {
+        this.activePlayer.activeCharacter.removeWings();
+      }
+
+      this.turnStartTime = Math.min(
+        this.time - this.turnLength + TURN_GRACE_PERIOD,
+        this.turnStartTime
+      );
+    }
+
+    this.turnState = turnState;
 
     if (this.cursor) {
       this.cursor.remove();
@@ -143,7 +150,7 @@ export abstract class Manager {
         this.cursor = null;
       }
 
-      if (!this.turnEnding) {
+      if (this.turnState === TurnState.Ongoing) {
         this.cursor = new spell.cursor(player.activeCharacter, spell);
       }
     }
@@ -174,5 +181,9 @@ export abstract class Manager {
         this.activePlayer.selectedSpell
       );
     }
+  }
+
+  getActiveCharacter() {
+    return this.activePlayer?.activeCharacter;
   }
 }

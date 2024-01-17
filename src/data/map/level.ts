@@ -15,7 +15,7 @@ import { HurtableEntity, TickingEntity } from "../entity/types";
 import { DamageNumberContainer } from "../../grapics/damageNumber";
 import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
-import { MessageType } from "../network/types";
+import { MessageType, TurnState } from "../network/types";
 import { ParticleManager } from "../../grapics/particles";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
@@ -179,6 +179,15 @@ export class Level {
   damage(damageSource: DamageSource) {
     if (!Server.instance) {
       return;
+    }
+
+    if (
+      damageSource
+        .getTargets()
+        .getEntities()
+        .includes(Server.instance.getActiveCharacter()!)
+    ) {
+      Server.instance.setTurnState(TurnState.Ending);
     }
 
     damageSource.damage();

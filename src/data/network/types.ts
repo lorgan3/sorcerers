@@ -12,7 +12,6 @@ export enum MessageType {
   SyncPlayers,
   Join,
   SyncDamage,
-  SyncMap,
   Popup,
   LobbyUpdate,
   StartGame,
@@ -85,13 +84,6 @@ export type Message =
       data: any;
     }
   | {
-      type: MessageType.SyncMap;
-      width: number;
-      height: number;
-      background: Uint8ClampedArray;
-      mask: Uint32Array;
-    }
-  | {
       type: MessageType.Popup;
       title: string;
       meta?: string;
@@ -129,4 +121,10 @@ export interface Popup {
   title: string;
   meta?: string;
   duration?: number;
+}
+
+export enum TurnState {
+  Ongoing,
+  Attacked,
+  Ending,
 }

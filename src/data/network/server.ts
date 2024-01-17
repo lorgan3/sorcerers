@@ -1,5 +1,5 @@
 import Peer from "peerjs";
-import { MessageType, Message, Popup } from "./types";
+import { MessageType, Message, Popup, TurnState } from "./types";
 import { Player } from "./player";
 import { Character } from "../entity/character";
 import { KeyboardController } from "../controller/keyboardController";
@@ -86,7 +86,10 @@ export class Server extends Manager {
   tick(dt: number, dtMs: number) {
     super.tick(dt, dtMs);
 
-    if (this.time - this.turnStartTime > this.turnLength) {
+    if (
+      this.time - this.turnStartTime > this.turnLength &&
+      this.turnState === TurnState.Ending
+    ) {
       this.cycleActivePlayer();
 
       if (this.time > this.gameLength) {
@@ -343,7 +346,7 @@ export class Server extends Manager {
 
     this.windSpeed = Math.round(Math.random() * 16 - 8);
     this.turnStartTime = this.time;
-    this.turnEnding = false;
+    this.turnState = TurnState.Ongoing;
 
     this.broadcast({
       type: MessageType.ActiveCharacter,
