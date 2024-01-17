@@ -7,6 +7,7 @@ import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { HurtableEntity } from "../../data/entity/types";
 import { Cursor } from "./types";
+import { Manager } from "../../data/network/manager";
 
 export enum Target {
   Any,
@@ -136,6 +137,7 @@ export class Lock extends Container implements Cursor {
       );
       Level.instance.add(this.projectile!);
       this.visible = false;
+      Manager.instance.setTurnState(this.spell.data.turnState);
     }
   }
 }

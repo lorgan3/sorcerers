@@ -59,7 +59,7 @@ export class Range extends Container implements Cursor {
           }
         }
 
-        Manager.instance.endTurn();
+        Manager.instance.setTurnState(this.spell.data.turnState);
         this._power = 0;
       }
     } else {

@@ -41,7 +41,7 @@ export class ArrowDown extends Container implements Cursor {
         this.spell.data.yOffset
       );
 
-      Manager.instance.endTurn();
+      Manager.instance.setTurnState(this.spell.data.turnState);
     }
   }
 }

@@ -57,7 +57,7 @@ export class ArcaneCircle extends Container implements Cursor {
           this.character
         );
 
-        Manager.instance.endTurn();
+        Manager.instance.setTurnState(this.spell.data.turnState);
       }
 
       return;

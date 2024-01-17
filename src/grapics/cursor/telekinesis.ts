@@ -5,6 +5,7 @@ import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { Manager } from "../../data/network/manager";
+import { TurnState } from "../../data/network/types";
 
 const MIN_DISTANCE = 32;
 const MAX_DISTANCE = 320;
@@ -71,7 +72,7 @@ export class Telekinesis extends Container {
           this.rotation + Math.PI / 2
         );
         Level.instance.remove(this);
-        Manager.instance.endTurn();
+        Manager.instance.setTurnState(TurnState.Ending);
       }
     }
   }

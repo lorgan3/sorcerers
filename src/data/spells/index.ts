@@ -15,6 +15,7 @@ import { ArcaneCircle } from "../../grapics/cursor/magicCircle";
 import { Zoltraak } from "./zoltraak";
 import { ApplyCursor } from "../../grapics/cursor/applyCursor";
 import { Cursor } from "../../grapics/cursor/types";
+import { TurnState } from "../network/types";
 
 export interface Projectile extends DisplayObject {
   body?: PhysicsBody;
@@ -42,6 +43,7 @@ export const SPELLS: Spell[] = [
       yOffset: 20,
       x: 0,
       y: 1,
+      turnState: TurnState.Ending,
     },
   },
   {
@@ -54,6 +56,7 @@ export const SPELLS: Spell[] = [
       yOffset: 10.5,
       x: 3,
       y: 6.5,
+      turnState: TurnState.Attacked,
     },
   },
   {
@@ -64,6 +67,7 @@ export const SPELLS: Spell[] = [
       projectile: Sword,
       xOffset: -5.5,
       yOffset: 0,
+      turnState: TurnState.Attacked,
     },
   },
   {
@@ -73,6 +77,7 @@ export const SPELLS: Spell[] = [
     data: {
       target: Target.Character,
       projectile: Telekinesis,
+      turnState: TurnState.Ongoing,
     },
   },
   {
@@ -85,6 +90,7 @@ export const SPELLS: Spell[] = [
       yOffset: 16,
       x: -8,
       y: -3,
+      turnState: TurnState.Ending,
     },
   },
   {
@@ -95,6 +101,7 @@ export const SPELLS: Spell[] = [
       projectile: Bakuretsu,
       xOffset: 0,
       yOffset: 0,
+      turnState: TurnState.Attacked,
     },
   },
   {
@@ -107,6 +114,7 @@ export const SPELLS: Spell[] = [
       yOffset: 2,
       x: 27 / 6,
       y: 8,
+      turnState: TurnState.Ending,
     },
   },
   {
