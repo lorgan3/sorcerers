@@ -88,7 +88,7 @@ export class Server extends Manager {
 
     if (
       this.time - this.turnStartTime > this.turnLength &&
-      this.turnState === TurnState.Ending
+      this.turnState !== TurnState.Attacked
     ) {
       this.cycleActivePlayer();
 
