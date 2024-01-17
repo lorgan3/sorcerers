@@ -1,9 +1,8 @@
-import { AnimatedSprite, Container, Text } from "pixi.js";
+import { AnimatedSprite, Container, Sprite, Text, Texture } from "pixi.js";
 import { Level } from "../map/level";
 import { Body } from "../collision/body";
 import { Controller, Key } from "../controller/controller";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { ellipse9x16 } from "../collision/precomputed/circles";
 import { Player } from "../network/player";
 import { Force, TargetList } from "../damage/targetList";
 import { HurtableEntity } from "./types";
@@ -12,9 +11,81 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
 import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
 import { ParticleEmitter } from "../../grapics/particles/types";
+import {
+  rectangle6x16,
+  rectangle6x16Canvas,
+} from "../collision/precomputed/rectangles";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 5;
+
+const WALK_DURATION = 20;
+
+enum AnimationState {
+  Idle = "elf_idle",
+  Walk = "elf_walk",
+  Jump = "elf_jump",
+  Float = "elf_float",
+  Land = "elf_land",
+  Fall = "elf_fall",
+  Spell = "elf_spell",
+  SpellIdle = "elf_spellIdle",
+  SpellDone = "elf_spellDone",
+}
+
+interface Config {
+  name: string;
+  loop: boolean;
+  speed: number;
+}
+
+const ANIMATION_CONFIG: Record<AnimationState, Config> = {
+  [AnimationState.Idle]: {
+    name: "elf_idle",
+    loop: true,
+    speed: 0.08,
+  },
+  [AnimationState.Walk]: {
+    name: "elf_walk",
+    loop: true,
+    speed: 0.1,
+  },
+  [AnimationState.Jump]: {
+    name: "elf_jump",
+    loop: false,
+    speed: 0.3,
+  },
+  [AnimationState.Float]: {
+    name: "elf_float",
+    loop: true,
+    speed: 0.1,
+  },
+  [AnimationState.Land]: {
+    name: "elf_land",
+    loop: false,
+    speed: 0.15,
+  },
+  [AnimationState.Fall]: {
+    name: "elf_fall",
+    loop: true,
+    speed: 0.1,
+  },
+  [AnimationState.Spell]: {
+    name: "elf_spell",
+    loop: false,
+    speed: 0.15,
+  },
+  [AnimationState.SpellIdle]: {
+    name: "elf_spellIdle",
+    loop: true,
+    speed: 0.1,
+  },
+  [AnimationState.SpellDone]: {
+    name: "elf_spell",
+    loop: false,
+    speed: -0.15,
+  },
+};
 
 export class Character extends Container implements HurtableEntity {
   public readonly body: Body;
@@ -29,6 +100,8 @@ export class Character extends Container implements HurtableEntity {
   private time = 0;
   private damageSource: DamageSource | null = null;
   private hasWings = false;
+  private animationTimer = 0;
+  private animationState = AnimationState.Idle;
 
   constructor(
     public readonly player: Player,
@@ -39,7 +112,7 @@ export class Character extends Container implements HurtableEntity {
     super();
 
     this.body = new Body(Level.instance.terrain.characterMask, {
-      mask: ellipse9x16,
+      mask: rectangle6x16,
       onCollide: this.onCollide,
     });
     this.body.move(x, y);
@@ -50,18 +123,27 @@ export class Character extends Container implements HurtableEntity {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.sprite = new AnimatedSprite(atlas.animations["wizard_walk"]);
+    this.sprite = new AnimatedSprite(atlas.animations[this.animationState]);
     this.sprite.animationSpeed = 0.08;
     this.sprite.play();
     this.sprite.anchor.set(0.5, 0.5);
-    this.sprite.position.set(26, 32);
-    this.sprite.scale.set(0.4);
+    this.sprite.position.set(16, 28);
+    this.sprite.scale.set(2);
+    this.sprite.onComplete = () => {
+      if (this.animationState === AnimationState.Jump && !this.body.grounded) {
+        this.setAnimationState(AnimationState.Float);
+      } else if (this.animationState === AnimationState.Spell) {
+        this.setAnimationState(AnimationState.SpellIdle);
+      } else {
+        this.setAnimationState(AnimationState.Idle);
+      }
+    };
 
-    // const sprite2 = new Sprite(
-    //   Texture.fromBuffer(ellipse9x16Canvas.data, 9, 16)
-    // );
-    // sprite2.anchor.set(0);
-    // sprite2.scale.set(6);
+    const sprite2 = new Sprite(
+      Texture.fromBuffer(rectangle6x16Canvas.data, 6, 16)
+    );
+    sprite2.anchor.set(0);
+    sprite2.scale.set(6);
 
     this.namePlate = new Text(`${name} ${this._hp}`, {
       fontFamily: "Eternal",
@@ -72,11 +154,11 @@ export class Character extends Container implements HurtableEntity {
       dropShadowAngle: 45,
     });
     this.namePlate.anchor.set(0.5);
-    this.namePlate.position.set(25, -70);
+    this.namePlate.position.set(16, -40);
 
     this.wings = new AnimatedSprite(atlas.animations["wings"]);
     this.wings.scale.set(4);
-    this.wings.position.set(26, 32);
+    this.wings.position.set(16, 28);
     this.wings.anchor.set(0.5);
     this.wings.animationSpeed = 0.2;
     this.wings.visible = false;
@@ -102,11 +184,47 @@ export class Character extends Container implements HurtableEntity {
     }
   };
 
+  private setAnimationState(state: AnimationState, timer?: number) {
+    this.animationTimer = timer || 0;
+
+    if (state === this.animationState) {
+      return;
+    }
+
+    this.animationState = state;
+    const config = ANIMATION_CONFIG[state];
+    this.sprite.textures =
+      AssetsContainer.instance.assets!["atlas"].animations[config.name];
+    this.sprite.currentFrame =
+      config.speed > 0 ? 0 : this.sprite.totalFrames - 1;
+    this.sprite.loop = config.loop;
+    this.sprite.animationSpeed = config.speed;
+    this.sprite.play();
+  }
+
   getCenter(): [number, number] {
-    return [this.position.x + 27, this.position.y + 48];
+    return [this.position.x + 18, this.position.y + 48];
   }
 
   tick(dt: number) {
+    if (this.animationTimer > 0) {
+      this.animationTimer -= dt;
+
+      if (this.animationTimer <= 0) {
+        this.setAnimationState(AnimationState.Idle);
+      }
+    }
+
+    if (!this.body.grounded && Math.abs(this.body.yVelocity) > 1.5) {
+      this.setAnimationState(AnimationState.Float);
+    } else if (
+      (this.animationState === AnimationState.Fall ||
+        this.animationState === AnimationState.Float) &&
+      this.body.grounded
+    ) {
+      this.setAnimationState(AnimationState.Land);
+    }
+
     this.time += dt;
     if (this.time > 3) {
       this.body.active = 1;
@@ -155,21 +273,41 @@ export class Character extends Container implements HurtableEntity {
       !this.hasWings &&
       (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
     ) {
-      this.body.jump();
+      if (this.body.jump()) {
+        this.setAnimationState(AnimationState.Jump, 100);
+      }
     }
   }
 
   controlContinuous(dt: number, controller: Controller) {
     this.control(controller);
+    const lookDirection = Math.sign(
+      controller.getMouse()[0] - this.getCenter()[0]
+    );
+    this.sprite.scale.x = 2 * lookDirection;
 
     if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
       this.body.walk(dt, -1);
-      this.sprite.scale.x = -0.4;
+
+      if (this.body.grounded) {
+        this.setAnimationState(AnimationState.Walk, WALK_DURATION);
+
+        if (this.sprite.animationSpeed * lookDirection < 0) {
+          this.sprite.animationSpeed *= lookDirection;
+        }
+      }
     }
 
     if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
       this.body.walk(dt, 1);
-      this.sprite.scale.x = 0.4;
+
+      if (this.body.grounded) {
+        this.setAnimationState(AnimationState.Walk, WALK_DURATION);
+
+        if (this.sprite.animationSpeed * lookDirection < 0) {
+          this.sprite.animationSpeed *= lookDirection;
+        }
+      }
     }
 
     if (this.hasWings) {
@@ -177,9 +315,7 @@ export class Character extends Container implements HurtableEntity {
         (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W)) &&
         this.body.yVelocity > -1.5
       ) {
-        this.body.addVelocity(0, -0.6 * dt);
-      } else {
-        this.body.addVelocity(0, -0.2 * dt);
+        this.body.addVelocity(0, -0.4 * dt);
       }
     }
   }
