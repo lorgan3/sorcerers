@@ -20,7 +20,8 @@ export class Telekinesis extends Container {
     x: number,
     y: number,
     private character: Character,
-    private controller: Controller
+    private controller: Controller,
+    private source: Character
   ) {
     super();
     this.pivot.set(16, 0);
@@ -33,6 +34,7 @@ export class Telekinesis extends Container {
     this.arrowTip = new Sprite(atlas["spells_arrowTip"]);
     this.arrowTip.scale.y = -1;
     this.addChild(this.arrowBody, this.arrowTip);
+    this.source.setSpellSource(this);
   }
 
   tick() {
@@ -72,6 +74,7 @@ export class Telekinesis extends Container {
           this.rotation + Math.PI / 2
         );
         Level.instance.remove(this);
+        this.source.setSpellSource(this, false);
         Manager.instance.setTurnState(TurnState.Ending);
       }
     }

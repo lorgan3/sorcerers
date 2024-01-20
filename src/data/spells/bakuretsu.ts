@@ -8,6 +8,8 @@ import { Character } from "../entity/character";
 import { CollisionMask } from "../collision/collisionMask";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { rectangle1x200 } from "../collision/precomputed/rectangles";
+import { Manager } from "../network/manager";
+import { TurnState } from "../network/types";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
 const GROW_TIME = 15;
@@ -26,8 +28,9 @@ export class Bakuretsu extends Container implements Projectile {
   private rX = 0;
   private rY = 0;
 
-  constructor(x: number, surface: CollisionMask) {
+  constructor(x: number, surface: CollisionMask, private character: Character) {
     super();
+    character.setSpellSource(this);
     this.rX = Math.round(x);
 
     let distance = surface.height;
@@ -97,6 +100,8 @@ export class Bakuretsu extends Container implements Projectile {
         this.exploded = true;
         Level.instance.shake();
         Level.instance.damage(new ExplosiveDamage(this.rX, this.rY, 32, 6, 10));
+        Manager.instance.setTurnState(TurnState.Ending);
+        this.character.setSpellSource(this, false);
       }
 
       return;
@@ -141,7 +146,11 @@ export class Bakuretsu extends Container implements Projectile {
   deserialize(data: any) {}
 
   static cast(x: number, y: number, character: Character) {
-    const entity = new Bakuretsu(x, Level.instance.terrain.collisionMask);
+    const entity = new Bakuretsu(
+      x,
+      Level.instance.terrain.collisionMask,
+      character
+    );
 
     Level.instance.add(entity);
     return entity;

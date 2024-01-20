@@ -15,6 +15,9 @@ import {
   rectangle6x16,
   rectangle6x16Canvas,
 } from "../collision/precomputed/rectangles";
+import { Manager } from "../network/manager";
+import { TurnState } from "../network/types";
+import { ImpactDamage } from "../damage/impactDamage";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 5;
@@ -108,6 +111,7 @@ export class Character extends Container implements HurtableEntity {
   private hasWings = false;
   private animationTimer = 0;
   private animationState = AnimationState.Idle;
+  private spellSource: any | null = null;
 
   constructor(
     public readonly player: Player,
@@ -164,6 +168,7 @@ export class Character extends Container implements HurtableEntity {
     );
     sprite2.anchor.set(0);
     sprite2.scale.set(6);
+    sprite2.alpha = 0.5;
 
     this.namePlate = new Text(`${name} ${this._hp}`, {
       fontFamily: "Eternal",
@@ -231,7 +236,9 @@ export class Character extends Container implements HurtableEntity {
       this.animationTimer -= dt;
 
       if (this.animationTimer <= 0) {
-        this.setAnimationState(AnimationState.Idle);
+        this.setAnimationState(
+          this.spellSource ? AnimationState.Spell : AnimationState.Idle
+        );
       }
     }
 
@@ -347,6 +354,18 @@ export class Character extends Container implements HurtableEntity {
 
     if (force) {
       this.body.addAngularVelocity(force.power, force.direction);
+    }
+  }
+
+  setSpellSource(source: any, toggle = true) {
+    if (toggle) {
+      this.spellSource = source;
+      if (this.animationState !== AnimationState.SpellIdle) {
+        this.setAnimationState(AnimationState.Spell);
+      }
+    } else if (source === this.spellSource) {
+      this.spellSource = null;
+      this.setAnimationState(AnimationState.SpellDone);
     }
   }
 

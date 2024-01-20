@@ -35,10 +35,12 @@ export class Range extends Container implements Cursor {
 
   remove(): void {
     this.character.removeChild(this);
+    this.character.setSpellSource(this, false);
   }
 
   tick(dt: number, controller: Controller) {
     if (!controller.isKeyDown(Key.M1)) {
+      this.character.setSpellSource(this, false);
       this.visible = false;
 
       if (this._power > 0) {
@@ -63,6 +65,7 @@ export class Range extends Container implements Cursor {
         this._power = 0;
       }
     } else {
+      this.character.setSpellSource(this);
       const [x, y] = controller.getMouse();
       const point = this.parent.position;
 

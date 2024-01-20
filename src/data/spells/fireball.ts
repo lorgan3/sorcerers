@@ -10,12 +10,15 @@ import { Character } from "../entity/character";
 import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
 import { Explosion } from "../../grapics/explosion";
 import { ParticleEmitter } from "../../grapics/particles/types";
+import { Manager } from "../network/manager";
+import { TurnState } from "../network/types";
 
 export class Fireball extends Container implements Projectile {
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
   private bounces = 5;
+  private lifetime = 300;
 
   constructor(x: number, y: number) {
     super();
@@ -66,19 +69,29 @@ export class Fireball extends Container implements Projectile {
     );
 
     if (this.bounces === 0 || playerCollision) {
-      Level.instance.remove(this);
-      Level.instance.particleContainer.destroyEmitter(this.particles);
-      Level.instance.damage(new ExplosiveDamage(x, y, 16));
-      new Explosion(x * 6, y * 6);
+      this.die(x, y);
     } else {
       Level.instance.damage(new ExplosiveDamage(x, y, 4));
     }
   };
 
+  private die(x: number, y: number) {
+    Level.instance.remove(this);
+    Level.instance.particleContainer.destroyEmitter(this.particles);
+    Level.instance.damage(new ExplosiveDamage(x, y, 16));
+    new Explosion(x * 6, y * 6);
+    Manager.instance.setTurnState(TurnState.Ending);
+  }
+
   tick(dt: number) {
     this.body.tick(dt);
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6, y * 6);
+
+    this.lifetime -= dt;
+    if (this.lifetime <= 0) {
+      this.die(x, y);
+    }
   }
 
   serialize() {

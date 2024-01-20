@@ -8,7 +8,6 @@ import { ArrowDown } from "../../grapics/cursor/downArrow";
 import { PhysicsBody } from "../collision";
 import { Lock, Target } from "../../grapics/cursor/lock";
 import { Telekinesis } from "../../grapics/cursor/telekinesis";
-import { Melee } from "./melee";
 import { Shield } from "./shield";
 import { Bakuretsu } from "./bakuretsu";
 import { ArcaneCircle } from "../../grapics/cursor/magicCircle";
@@ -83,8 +82,8 @@ export const SPELLS: Spell[] = [
     cursor: Range,
     data: {
       projectile: Shield,
-      xOffset: 16,
-      yOffset: 16,
+      xOffset: 10,
+      yOffset: 14,
       x: -8,
       y: -3,
       turnState: TurnState.Ending,
@@ -109,7 +108,7 @@ export const SPELLS: Spell[] = [
       projectile: Zoltraak,
       xOffset: 2,
       yOffset: 2,
-      x: 27 / 6,
+      x: 3,
       y: 8,
       turnState: TurnState.Ending,
     },

@@ -34,6 +34,7 @@ export class ArcaneCircle extends Container implements Cursor {
 
   remove(): void {
     this.character.removeChild(this);
+    this.character.setSpellSource(this, false);
   }
 
   tick(dt: number, controller: Controller) {
@@ -41,6 +42,7 @@ export class ArcaneCircle extends Container implements Cursor {
 
     if (!controller.isKeyDown(Key.M1)) {
       if (this.visible) {
+        this.character.setSpellSource(this, false);
         this.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
@@ -61,6 +63,7 @@ export class ArcaneCircle extends Container implements Cursor {
       return;
     }
 
+    this.character.setSpellSource(this);
     const [x, y] = controller.getMouse();
 
     if (this.indicator.scale.x < SCALE_MULTIPLIER) {

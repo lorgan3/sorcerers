@@ -26,7 +26,7 @@ export class Lock extends Container implements Cursor {
   private indicator: AnimatedSprite;
   private projectile: DisplayObject | null = null;
 
-  constructor(character: Character, private spell: Spell) {
+  constructor(private character: Character, private spell: Spell) {
     super();
 
     this.pivot.set(-14, 32);
@@ -133,7 +133,8 @@ export class Lock extends Container implements Cursor {
         position[0] / 6,
         position[1] / 6,
         this.entity,
-        controller
+        controller,
+        this.character
       );
       Level.instance.add(this.projectile!);
       this.visible = false;
