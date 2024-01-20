@@ -37,7 +37,11 @@ for (let folder of folders) {
         ...gif.frames.map((frame) => GifUtil.shareAsJimp(Jimp, frame))
       );
     } else {
-      frames.push(await Jimp.read(`${DIRECTORY}${folder}/${file}`));
+      try {
+        frames.push(await Jimp.read(`${DIRECTORY}${folder}/${file}`));
+      } catch {
+        console.log(`Skipping ${file}`);
+      }
     }
 
     const name = file.split(".")[0];
