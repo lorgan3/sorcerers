@@ -55,6 +55,10 @@ export class StaticBody implements PhysicsBody {
     return 0;
   }
 
+  get direction() {
+    return 0;
+  }
+
   get position(): [number, number] {
     return [this.rX, this.rY];
   }

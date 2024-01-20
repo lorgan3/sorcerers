@@ -292,4 +292,8 @@ export class Body implements PhysicsBody {
   get velocity() {
     return Math.sqrt(this.xVelocity ** 2 + this.yVelocity ** 2);
   }
+
+  get direction() {
+    return Math.atan2(this.yVelocity, this.xVelocity);
+  }
 }

@@ -3,6 +3,8 @@ import { CollisionMask } from "./collisionMask";
 export interface PhysicsBody {
   readonly mask: CollisionMask;
   readonly precisePosition: [number, number];
+  readonly velocity: number;
+  readonly direction: number;
 
   move(x: number, y: number): void;
   addVelocity(x: number, y: number): void;

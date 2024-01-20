@@ -122,6 +122,10 @@ export class SimpleBody implements PhysicsBody {
     return Math.sqrt(this.xVelocity ** 2 + this.yVelocity ** 2);
   }
 
+  get direction() {
+    return Math.atan2(this.yVelocity, this.xVelocity);
+  }
+
   get precisePosition(): [number, number] {
     return [this.x, this.y];
   }
