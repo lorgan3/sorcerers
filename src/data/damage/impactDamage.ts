@@ -28,9 +28,9 @@ export class ImpactDamage implements DamageSource {
     if (!this.targets) {
       this.targets = new TargetList();
 
-      const range = 8 * 12;
+      const range = 8 * 6;
       Level.instance.withNearbyEntities(
-        (this.x + 4) * 6,
+        (this.x + 3) * 6,
         (this.y + 8) * 6,
         range,
         (entity) => {

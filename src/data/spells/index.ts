@@ -36,13 +36,10 @@ export const SPELLS: Spell[] = [
   {
     name: "Melee",
     description: "For less gifted sorcerers",
-    cursor: Range,
+    cursor: ApplyCursor,
     data: {
-      projectile: Melee,
-      xOffset: 18,
-      yOffset: 20,
-      x: 0,
-      y: 1,
+      applyKeys: [Key.M1],
+      apply: (character: Character) => character.melee(),
       turnState: TurnState.Ending,
     },
   },

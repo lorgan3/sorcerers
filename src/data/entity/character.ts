@@ -31,6 +31,7 @@ enum AnimationState {
   Spell = "elf_spell",
   SpellIdle = "elf_spellIdle",
   SpellDone = "elf_spellDone",
+  Swing = "elf_swing",
 }
 
 interface Config {
@@ -85,6 +86,11 @@ const ANIMATION_CONFIG: Record<AnimationState, Config> = {
     loop: false,
     speed: -0.15,
   },
+  [AnimationState.Swing]: {
+    name: "elf_swing",
+    loop: false,
+    speed: 0.25,
+  },
 };
 
 export class Character extends Container implements HurtableEntity {
@@ -127,13 +133,27 @@ export class Character extends Container implements HurtableEntity {
     this.sprite.animationSpeed = 0.08;
     this.sprite.play();
     this.sprite.anchor.set(0.5, 0.5);
-    this.sprite.position.set(16, 28);
+    this.sprite.position.set(18, 28);
     this.sprite.scale.set(2);
     this.sprite.onComplete = () => {
       if (this.animationState === AnimationState.Jump && !this.body.grounded) {
         this.setAnimationState(AnimationState.Float);
       } else if (this.animationState === AnimationState.Spell) {
         this.setAnimationState(AnimationState.SpellIdle);
+      } else if (this.animationState === AnimationState.Swing) {
+        this.setAnimationState(AnimationState.SpellDone);
+        Manager.instance.setTurnState(TurnState.Ending);
+
+        const direction =
+          this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
+        const [cx, cy] = this.getCenter();
+        Level.instance.damage(
+          new ImpactDamage(
+            Math.floor(cx / 6) + this.sprite.scale.x * 6,
+            Math.floor(cy / 6) - 4,
+            direction
+          )
+        );
       } else {
         this.setAnimationState(AnimationState.Idle);
       }
@@ -154,11 +174,11 @@ export class Character extends Container implements HurtableEntity {
       dropShadowAngle: 45,
     });
     this.namePlate.anchor.set(0.5);
-    this.namePlate.position.set(16, -40);
+    this.namePlate.position.set(18, -40);
 
     this.wings = new AnimatedSprite(atlas.animations["wings"]);
-    this.wings.scale.set(4);
-    this.wings.position.set(16, 28);
+    this.wings.scale.set(3);
+    this.wings.position.set(18, 28);
     this.wings.anchor.set(0.5);
     this.wings.animationSpeed = 0.2;
     this.wings.visible = false;
@@ -402,6 +422,10 @@ export class Character extends Container implements HurtableEntity {
 
     Level.instance.particleContainer.destroyEmitter(this.particles!);
     this.particles = undefined;
+  }
+
+  melee() {
+    this.setAnimationState(AnimationState.Swing);
   }
 
   get hp() {
