@@ -28,8 +28,9 @@ export class Shield
   private shieldArea: CollisionMask;
   private flickerTime = 0;
 
-  constructor(x: number, y: number, angle: number) {
+  constructor(x: number, y: number, angle: number, hp: number) {
     super();
+    this._hp = hp;
     this.position.set(x * 6, y * 6);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
@@ -123,7 +124,7 @@ export class Shield
   }
 
   serializeCreate() {
-    return [...this.body.position, this.sprite.rotation] as const;
+    return [...this.body.position, this.sprite.rotation, this.hp] as const;
   }
 
   static create(data: ReturnType<Shield["serializeCreate"]>) {
@@ -137,7 +138,7 @@ export class Shield
 
     const [cx, cy] = character.body.precisePosition;
     const angle = Math.PI / 2 + Math.atan2(cy - y - 3, cx - x - 8);
-    const entity = new Shield(x, y, angle);
+    const entity = new Shield(x, y, angle, 100);
 
     Server.instance.create(entity);
     return entity;
