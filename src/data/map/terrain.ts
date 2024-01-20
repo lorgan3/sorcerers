@@ -1,9 +1,9 @@
 import { Container, Sprite, Texture } from "pixi.js";
 import { CollisionMask } from "../collision/collisionMask";
 import { ComputedLayer, Map } from ".";
-import { ellipse9x16 } from "../collision/precomputed/circles";
 import { Killbox } from "./killbox";
 import { UpdatingTexture } from "./updatingTexture";
+import { rectangle6x16 } from "../collision/precomputed/rectangles";
 
 export class Terrain {
   private background: Texture;
@@ -64,7 +64,7 @@ export class Terrain {
 
   getSpawnLocations(
     distance = Math.round(Math.max(this.map.width, this.map.height) / 24),
-    mask = ellipse9x16
+    mask = rectangle6x16
   ) {
     const locations: Array<[number, number]> = [];
     const tester = CollisionMask.forRect(mask.width, mask.height + distance);
