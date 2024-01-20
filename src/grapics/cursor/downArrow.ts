@@ -25,10 +25,15 @@ export class ArrowDown extends Container implements Cursor {
 
     this.addChild(indicator);
     Level.instance.uiContainer.addChild(this);
+
+    if (spell.data.spellSource) {
+      this.character.setSpellSource(this);
+    }
   }
 
   remove(): void {
     Level.instance.uiContainer.removeChild(this);
+    this.character.setSpellSource(this, false);
   }
 
   tick(dt: number, controller: Controller) {

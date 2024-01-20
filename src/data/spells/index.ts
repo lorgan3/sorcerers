@@ -64,6 +64,7 @@ export const SPELLS: Spell[] = [
       xOffset: -5.5,
       yOffset: 0,
       turnState: TurnState.Attacked,
+      spellSource: true,
     },
   },
   {

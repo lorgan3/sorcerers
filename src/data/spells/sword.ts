@@ -8,6 +8,8 @@ import { FallDamage, Shape } from "../damage/fallDamage";
 import { Projectile } from ".";
 import { Character } from "../entity/character";
 import { StaticBody } from "../collision/staticBody";
+import { Manager } from "../network/manager";
+import { TurnState } from "../network/types";
 
 const SHAKE_INTENSITY = 8;
 
@@ -16,7 +18,7 @@ export class Sword extends Container implements Projectile {
   private sprite!: Sprite;
   private bounces = 40;
   private lastY?: number;
-  private move = 0;
+  private lifetime = 300;
 
   private shakeXOffset = 0;
   private shakeYOffset = 0;
@@ -72,7 +74,7 @@ export class Sword extends Container implements Projectile {
     }
 
     if (this.bounces <= 0) {
-      Level.instance.remove(this);
+      this.die();
     }
   };
 
@@ -81,6 +83,16 @@ export class Sword extends Container implements Projectile {
 
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6 + this.shakeXOffset, y * 6 + this.shakeYOffset);
+
+    this.lifetime -= dt;
+    if (this.lifetime <= 0) {
+      this.die();
+    }
+  }
+
+  die() {
+    Level.instance.remove(this);
+    Manager.instance.setTurnState(TurnState.Ending);
   }
 
   serialize() {
