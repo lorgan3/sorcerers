@@ -52,14 +52,10 @@ export class Range extends Container implements Cursor {
           y +
             this.spell.data.y +
             Math.sin(this.rotation) * this.spell.data.yOffset,
-          this.character
+          this.character,
+          this.power,
+          this.rotation
         );
-
-        if (projectile) {
-          if (projectile.body) {
-            projectile.body.addAngularVelocity(this.power * 5, this.rotation);
-          }
-        }
 
         Manager.instance.setTurnState(this.spell.data.turnState);
         this._power = 0;

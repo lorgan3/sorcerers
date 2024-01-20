@@ -12,15 +12,20 @@ import { Explosion } from "../../grapics/explosion";
 import { ParticleEmitter } from "../../grapics/particles/types";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
+import { EntityType, Spawnable } from "../entity/types";
+import { Server } from "../network/server";
 
-export class Fireball extends Container implements Projectile {
+export class Fireball extends Container implements Projectile, Spawnable {
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
   private bounces = 5;
   private lifetime = 300;
 
-  constructor(x: number, y: number) {
+  public id = -1;
+  public readonly type = EntityType.Fireball;
+
+  constructor(x: number, y: number, speed: number, direction: number) {
     super();
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
@@ -31,6 +36,7 @@ export class Fireball extends Container implements Projectile {
       gravity: 0.25,
     });
     this.body.move(x, y);
+    this.body.addAngularVelocity(speed, direction);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -102,10 +108,32 @@ export class Fireball extends Container implements Projectile {
     this.body.deserialize(data);
   }
 
-  static cast(x: number, y: number, character: Character) {
-    const entity = new Fireball(x, y);
+  serializeCreate() {
+    return [
+      ...this.body.precisePosition,
+      this.body.velocity,
+      this.body.direction,
+    ] as const;
+  }
 
-    Level.instance.add(entity);
+  static create(data: ReturnType<Fireball["serializeCreate"]>) {
+    return new Fireball(...data);
+  }
+
+  static cast(
+    x: number,
+    y: number,
+    character: Character,
+    power: number,
+    direction: number
+  ) {
+    if (!Server.instance) {
+      return;
+    }
+
+    const entity = new Fireball(x, y, power * 5, direction);
+
+    Server.instance.create(entity);
     return entity;
   }
 }

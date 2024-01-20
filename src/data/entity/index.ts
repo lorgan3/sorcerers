@@ -1,3 +1,4 @@
+import { Fireball } from "../spells/fireball";
 import { Shield } from "../spells/shield";
 import { Zoltraak } from "../spells/zoltraak";
 import { EntityType, Spawnable } from "./types";
@@ -14,4 +15,5 @@ export const ENTITIES: Record<
 > = {
   [EntityType.Shield]: Shield,
   [EntityType.Zoltraak]: Zoltraak,
+  [EntityType.Fireball]: Fireball,
 };

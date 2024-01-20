@@ -36,4 +36,5 @@ export function isSpawnableEntity(entity: TickingEntity): entity is Spawnable {
 export enum EntityType {
   Shield,
   Zoltraak,
+  Fireball,
 }
