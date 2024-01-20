@@ -20,6 +20,7 @@ export abstract class Manager {
   protected followTarget: DisplayObject | null = null;
   public players: Player[] = [];
   protected activePlayer: Player | null = null;
+  protected activePlayerIndex = -1;
   protected time = 0;
   protected frames = 0;
   protected windSpeed = 7;
@@ -167,6 +168,7 @@ export abstract class Manager {
 
     this.activePlayer = this.players[player];
     this.activePlayer.active = character;
+    this.activePlayerIndex = player;
 
     this.followTarget = this.activePlayer.activeCharacter;
 
@@ -185,5 +187,9 @@ export abstract class Manager {
 
   getActiveCharacter() {
     return this.activePlayer?.activeCharacter;
+  }
+
+  clearActiveCharacter() {
+    this.activePlayer = null;
   }
 }

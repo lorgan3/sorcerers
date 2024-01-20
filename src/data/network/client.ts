@@ -140,14 +140,14 @@ export class Client extends Manager {
         break;
 
       case MessageType.InputState:
-        this.activePlayer!.controller.deserialize(message.data);
-        this.activePlayer!.activeCharacter.control(
-          this.activePlayer!.controller
+        this.activePlayer?.controller.deserialize(message.data);
+        this.activePlayer?.activeCharacter.control(
+          this.activePlayer.controller
         );
         break;
 
       case MessageType.ActiveUpdate:
-        this.activePlayer!.characters[this.activePlayer!.active].deserialize(
+        this.activePlayer?.characters[this.activePlayer.active].deserialize(
           message.data
         );
         break;
@@ -180,7 +180,17 @@ export class Client extends Manager {
         break;
 
       case MessageType.Die:
-        (Level.instance.entityMap.get(message.id) as HurtableEntity).die();
+        {
+          const entity = Level.instance.entityMap.get(
+            message.id
+          ) as HurtableEntity;
+
+          if (entity === this.getActiveCharacter()) {
+            this.clearActiveCharacter();
+          }
+
+          entity.die();
+        }
         break;
 
       case MessageType.EntityUpdate:
@@ -190,15 +200,17 @@ export class Client extends Manager {
         break;
 
       case MessageType.Spawn:
-        if (!ENTITIES[message.kind]) {
-          throw new Error(
-            `Can't instantiate entity of type ${message.kind} and id ${message.id}`
-          );
-        }
+        {
+          if (!ENTITIES[message.kind]) {
+            throw new Error(
+              `Can't instantiate entity of type ${message.kind} and id ${message.id}`
+            );
+          }
 
-        setId(message.id);
-        const entity = ENTITIES[message.kind]!.create(message.data);
-        Level.instance.add(entity);
+          setId(message.id);
+          const entity = ENTITIES[message.kind]!.create(message.data);
+          Level.instance.add(entity);
+        }
         break;
     }
   }

@@ -45,8 +45,6 @@ export class Player {
 
   removeCharacter(character: Character) {
     const index = this.characters.indexOf(character);
-
-    // @TODO: This is weird if this was the active character, perhaps we need to make a copy of it?
     if (this.active >= this.characters.length) {
       this.active = -1;
     }

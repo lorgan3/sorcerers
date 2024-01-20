@@ -140,6 +140,10 @@ export class Level {
     if (Server.instance) {
       for (let entity of this.hurtables) {
         if (entity.hp <= 0) {
+          if (entity === Server.instance.getActiveCharacter()) {
+            Server.instance.clearActiveCharacter();
+          }
+
           entity.die();
 
           Server.instance.broadcast({

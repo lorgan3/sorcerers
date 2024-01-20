@@ -106,7 +106,7 @@ export class Server extends Manager {
       for (let player of this.players) {
         player.connection?.send(data);
       }
-    } else if (this.frames % 10 === 0 && this.activePlayer!.activeCharacter) {
+    } else if (this.frames % 10 === 0 && this.activePlayer?.activeCharacter) {
       const data: Message = {
         type: MessageType.ActiveUpdate,
         data: this.activePlayer!.activeCharacter.serialize(),
@@ -211,7 +211,7 @@ export class Server extends Manager {
   }
 
   endGame() {
-    if (this.activePlayer!.characters.length) {
+    if (this.activePlayer?.characters.length) {
       this.addPopup({
         title: `${this.activePlayer!.name} wins!`,
         duration: 60000,
@@ -311,14 +311,10 @@ export class Server extends Manager {
   }
 
   private getNextPlayerIndex() {
-    const activePlayerIndex = this.activePlayer
-      ? this.players.indexOf(this.activePlayer)
-      : -1;
-
     for (let i = 0; i < this.players.length; i++) {
-      const index = (activePlayerIndex + i + 1) % this.players.length;
+      const index = (this.activePlayerIndex + i + 1) % this.players.length;
 
-      if (index === activePlayerIndex && !this.singlePlayer) {
+      if (index === this.activePlayerIndex && !this.singlePlayer) {
         continue;
       }
 
