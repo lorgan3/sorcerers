@@ -51,13 +51,11 @@ export class Bakuretsu extends Container implements Projectile {
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
     this.arcaneCircles = ARCANE_CIRCLES.map((size, i) => {
-      const circle = new AnimatedSprite(
-        atlas.animations["spells_arcaneCircle"]
-      );
+      const circle = new AnimatedSprite(atlas.animations["spells_magicCircle"]);
       circle.position.y = -i * 100 - 32;
       circle.anchor.set(0.5);
-      circle.animationSpeed = 0.1;
-      circle.scale.set(size * 1.8);
+      circle.animationSpeed = 0.3;
+      circle.scale.set(size * 1.5);
       circle.tint = 0xff8f7d;
       circle.visible = false;
 

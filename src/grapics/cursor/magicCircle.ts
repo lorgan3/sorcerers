@@ -8,7 +8,7 @@ import { Controller, Key } from "../../data/controller/controller";
 import { Manager } from "../../data/network/manager";
 import { Cursor } from "./types";
 
-const SCALE_MULTIPLIER = 0.5;
+const SCALE_MULTIPLIER = 0.4;
 
 export class ArcaneCircle extends Container implements Cursor {
   private indicator: AnimatedSprite;
@@ -22,11 +22,9 @@ export class ArcaneCircle extends Container implements Cursor {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.indicator = new AnimatedSprite(
-      atlas.animations["spells_arcaneCircle"]
-    );
+    this.indicator = new AnimatedSprite(atlas.animations["spells_magicCircle"]);
     this.indicator.anchor.set(0.5);
-    this.indicator.animationSpeed = 0.1;
+    this.indicator.animationSpeed = 0.4;
     this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
     this.indicator.play();
 
