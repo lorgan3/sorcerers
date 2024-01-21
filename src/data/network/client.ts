@@ -194,9 +194,9 @@ export class Client extends Manager {
         break;
 
       case MessageType.EntityUpdate:
-        this.players.forEach((player, i) =>
-          player.deserialize(message.players[i])
-        );
+        for (let i = 0; i < message.entities.length; i++) {
+          Level.instance.syncables[i].deserialize(message.entities[i]);
+        }
         break;
 
       case MessageType.Spawn:

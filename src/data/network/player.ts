@@ -73,18 +73,6 @@ export class Player {
     return this._color;
   }
 
-  serialize() {
-    return {
-      characters: this.characters.map((character) => character.serialize()),
-    };
-  }
-
-  deserialize(data: any) {
-    for (let index in this.characters) {
-      this.characters[index].deserialize(data.characters[index]);
-    }
-  }
-
   rename(newName: string) {
     this._name = newName;
   }

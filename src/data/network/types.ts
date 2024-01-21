@@ -33,9 +33,7 @@ export type Message =
     }
   | {
       type: MessageType.EntityUpdate;
-      players: Array<{
-        characters: number[][];
-      }>;
+      entities: any[];
     }
   | {
       type: MessageType.ActiveUpdate;

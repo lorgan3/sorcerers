@@ -41,14 +41,19 @@ export function isSpawnableEntity(entity: TickingEntity): entity is Spawnable {
   return "serializeCreate" in entity;
 }
 
+export function isSyncableEntity(entity: TickingEntity): entity is Syncable {
+  return "priority" in entity;
+}
+
 export enum EntityType {
   Shield,
   Zoltraak,
   Fireball,
+  Character,
 }
 
 export enum Priority {
   Low,
-  High,
+  High, // Not used
   Dynamic,
 }

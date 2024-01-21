@@ -11,11 +11,17 @@ import { Viewport } from "pixi-viewport";
 import { Server } from "../network/server";
 import { Map as GameMap } from ".";
 import { Manager } from "../network/manager";
-import { HurtableEntity, TickingEntity } from "../entity/types";
+import {
+  HurtableEntity,
+  Priority,
+  Syncable,
+  TickingEntity,
+  isSyncableEntity,
+} from "../entity/types";
 import { DamageNumberContainer } from "../../grapics/damageNumber";
 import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
-import { MessageType, TurnState } from "../network/types";
+import { TurnState } from "../network/types";
 import { ParticleManager } from "../../grapics/particles";
 import { KeyboardController } from "../controller/keyboardController";
 
@@ -44,6 +50,7 @@ export class Level {
   public readonly entities = new Set<TickingEntity>();
   public readonly entityMap = new Map<number, TickingEntity>();
   public readonly hurtables = new Set<HurtableEntity>();
+  public readonly syncables: Syncable[] = [];
 
   private static _instance: Level;
   static get instance() {
@@ -162,7 +169,9 @@ export class Level {
     }
   }
 
-  add(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
+  add(
+    ...objects: Array<TickingEntity | HurtableEntity | Syncable | DisplayObject>
+  ) {
     this.defaultLayer.addChild(...objects);
 
     for (let object of objects) {
@@ -178,10 +187,16 @@ export class Level {
       if ("hp" in object) {
         this.hurtables.add(object);
       }
+
+      if ("priority" in object && object.priority === Priority.Low) {
+        this.syncables.push(object);
+      }
     }
   }
 
-  remove(...objects: Array<TickingEntity | HurtableEntity | DisplayObject>) {
+  remove(
+    ...objects: Array<TickingEntity | HurtableEntity | Syncable | DisplayObject>
+  ) {
     this.defaultLayer.removeChild(...objects);
 
     for (let object of objects) {
@@ -195,6 +210,10 @@ export class Level {
 
       if ("hp" in object) {
         this.hurtables.delete(object);
+      }
+
+      if ("priority" in object && object.priority === Priority.Low) {
+        this.syncables.splice(this.syncables.indexOf(object), 1);
       }
     }
   }

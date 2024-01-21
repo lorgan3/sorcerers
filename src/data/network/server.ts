@@ -105,7 +105,7 @@ export class Server extends Manager {
     if (this.frames % 30 === 0) {
       const data: Message = {
         type: MessageType.EntityUpdate,
-        players: this.players.map((player) => player.serialize()),
+        entities: Level.instance.syncables.map((entity) => entity.serialize()),
       };
 
       for (let player of this.players) {

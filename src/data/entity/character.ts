@@ -5,7 +5,7 @@ import { Controller, Key } from "../controller/controller";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Player } from "../network/player";
 import { Force, TargetList } from "../damage/targetList";
-import { HurtableEntity } from "./types";
+import { EntityType, HurtableEntity, Priority, Syncable } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
@@ -96,9 +96,11 @@ const ANIMATION_CONFIG: Record<AnimationState, Config> = {
   },
 };
 
-export class Character extends Container implements HurtableEntity {
+export class Character extends Container implements HurtableEntity, Syncable {
   public readonly body: Body;
   public id = -1;
+  public readonly priority = Priority.Low;
+  public readonly type = EntityType.Character;
 
   private sprite: AnimatedSprite;
   private wings: AnimatedSprite;
@@ -385,6 +387,14 @@ export class Character extends Container implements HurtableEntity {
       this.body.mask,
       ...this.body.position
     );
+  }
+
+  serializeCreate() {
+    throw new Error("Method not implemented.");
+  }
+
+  static create(_: any): Character {
+    throw new Error("Method not implemented.");
   }
 
   die() {
