@@ -6,10 +6,19 @@ import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { Manager } from "../../data/network/manager";
-import { Cursor } from "./types";
+import { Cursor, ProjectileConstructor } from "./types";
+import { TurnState } from "../../data/network/types";
 
-export class ArrowDown extends Container implements Cursor {
-  constructor(private character: Character, private spell: Spell) {
+interface TriggerData {
+  xOffset: number;
+  yOffset: number;
+  turnState: TurnState;
+  projectile: ProjectileConstructor;
+  spellSource?: boolean;
+}
+
+export class ArrowDown extends Container implements Cursor<TriggerData> {
+  constructor(private character: Character, private spell: Spell<ArrowDown>) {
     super();
 
     this.pivot.set(-14, 32);
@@ -36,18 +45,18 @@ export class ArrowDown extends Container implements Cursor {
     this.character.setSpellSource(this, false);
   }
 
+  trigger({ xOffset, yOffset, turnState, projectile }: TriggerData) {
+    const position = this.character.player.controller.getMouse();
+    projectile.cast(position[0] / 6 + xOffset, yOffset, this.character);
+
+    Manager.instance.setTurnState(turnState);
+  }
+
   tick(dt: number, controller: Controller) {
     this.position.set(...controller.getLocalMouse());
 
-    const position = controller.getMouse();
     if (controller.isKeyDown(Key.M1)) {
-      this.spell.data.projectile.cast(
-        position[0] / 6 + this.spell.data.xOffset,
-        this.spell.data.yOffset,
-        this.character
-      );
-
-      Manager.instance.setTurnState(this.spell.data.turnState);
+      this.trigger(this.spell.data);
     }
   }
 }

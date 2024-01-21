@@ -2,7 +2,6 @@ import { AnimatedSprite, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
-import { Projectile } from ".";
 import { Character } from "../entity/character";
 
 import { CollisionMask } from "../collision/collisionMask";
@@ -10,6 +9,7 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { rectangle1x200 } from "../collision/precomputed/rectangles";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
+import { TickingEntity } from "../entity/types";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
 const GROW_TIME = 15;
@@ -18,7 +18,7 @@ const EXPLOSION_START_TIME = IMPACT_START_TIME + 15;
 const SHRINK_START_TIME = EXPLOSION_START_TIME + 25;
 const DONE_TIME = SHRINK_START_TIME + 25;
 
-export class Bakuretsu extends Container implements Projectile {
+export class Bakuretsu extends Container implements TickingEntity {
   private arcaneCircles: AnimatedSprite[];
   private impact: AnimatedSprite;
   private explosion: AnimatedSprite;
@@ -140,10 +140,6 @@ export class Bakuretsu extends Container implements Projectile {
       }
     }
   }
-
-  serialize() {}
-
-  deserialize(data: any) {}
 
   static cast(x: number, y: number, character: Character) {
     const entity = new Bakuretsu(

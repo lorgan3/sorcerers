@@ -6,8 +6,9 @@ import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { HurtableEntity } from "../../data/entity/types";
-import { Cursor } from "./types";
+import { Cursor, ProjectileConstructor } from "./types";
 import { Manager } from "../../data/network/manager";
+import { TurnState } from "../../data/network/types";
 
 export enum Target {
   Any,
@@ -19,14 +20,20 @@ export enum Target {
 
 const ANIMATION_SPEED = 0.2;
 
-export class Lock extends Container implements Cursor {
+interface TriggerData {
+  target: Target;
+  projectile: ProjectileConstructor;
+  turnState: TurnState;
+}
+
+export class Lock extends Container implements Cursor<TriggerData> {
   private locked = false;
   private entity: HurtableEntity | null = null;
 
   private indicator: AnimatedSprite;
   private projectile: DisplayObject | null = null;
 
-  constructor(private character: Character, private spell: Spell) {
+  constructor(private character: Character, private spell: Spell<Lock>) {
     super();
 
     this.pivot.set(-14, 32);
@@ -64,6 +71,21 @@ export class Lock extends Container implements Cursor {
       : -ANIMATION_SPEED;
 
     this.indicator.play();
+  }
+
+  trigger({ projectile, turnState }: TriggerData) {
+    const position = this.character.player.controller.getMouse();
+
+    projectile.cast(
+      position[0] / 6,
+      position[1] / 6,
+      this.entity,
+      this.character.player.controller,
+      this.character
+    );
+
+    this.visible = false;
+    Manager.instance.setTurnState(turnState);
   }
 
   tick(dt: number, controller: Controller) {
@@ -129,16 +151,7 @@ export class Lock extends Container implements Cursor {
     }
 
     if (controller.isKeyDown(Key.M1) && this.locked) {
-      this.projectile = new this.spell.data.projectile(
-        position[0] / 6,
-        position[1] / 6,
-        this.entity,
-        controller,
-        this.character
-      );
-      Level.instance.add(this.projectile!);
-      this.visible = false;
-      Manager.instance.setTurnState(this.spell.data.turnState);
+      this.trigger(this.spell.data);
     }
   }
 }

@@ -5,15 +5,25 @@ import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Manager } from "../../data/network/manager";
-import { Cursor } from "./types";
+import { Cursor, ProjectileConstructor } from "./types";
+import { TurnState } from "../../data/network/types";
 
-export class Range extends Container implements Cursor {
+interface TriggerData {
+  x: number;
+  y: number;
+  xOffset: number;
+  yOffset: number;
+  turnState: TurnState;
+  projectile: ProjectileConstructor;
+}
+
+export class Range extends Container implements Cursor<TriggerData> {
   indicator: Sprite;
 
   private initialDist = 0;
   private _power = 0;
 
-  constructor(private character: Character, private spell: Spell) {
+  constructor(private character: Character, private spell: Spell<Range>) {
     super();
 
     this.pivot.set(-14, 32);
@@ -38,26 +48,26 @@ export class Range extends Container implements Cursor {
     this.character.setSpellSource(this, false);
   }
 
+  trigger({ x, y, xOffset, yOffset, turnState, projectile }: TriggerData) {
+    const [px, py] = this.character.body.precisePosition;
+    projectile.cast(
+      px + x + Math.cos(this.rotation) * xOffset,
+      py + y + Math.sin(this.rotation) * yOffset,
+      this.character,
+      this.power,
+      this.rotation
+    );
+
+    Manager.instance.setTurnState(turnState);
+  }
+
   tick(dt: number, controller: Controller) {
     if (!controller.isKeyDown(Key.M1)) {
       this.character.setSpellSource(this, false);
       this.visible = false;
 
       if (this._power > 0) {
-        const [x, y] = this.character.body.precisePosition;
-        const projectile = this.spell.data.projectile.cast(
-          x +
-            this.spell.data.x +
-            Math.cos(this.rotation) * this.spell.data.xOffset,
-          y +
-            this.spell.data.y +
-            Math.sin(this.rotation) * this.spell.data.yOffset,
-          this.character,
-          this.power,
-          this.rotation
-        );
-
-        Manager.instance.setTurnState(this.spell.data.turnState);
+        this.trigger(this.spell.data);
         this._power = 0;
       }
     } else {

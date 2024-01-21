@@ -5,15 +5,15 @@ import { SimpleBody } from "../collision/simpleBody";
 
 import { swordTip } from "../collision/precomputed/triangles";
 import { FallDamage, Shape } from "../damage/fallDamage";
-import { Projectile } from ".";
 import { Character } from "../entity/character";
 import { StaticBody } from "../collision/staticBody";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
+import { TickingEntity } from "../entity/types";
 
 const SHAKE_INTENSITY = 8;
 
-export class Sword extends Container implements Projectile {
+export class Sword extends Container implements TickingEntity {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
   private bounces = 40;
@@ -93,14 +93,6 @@ export class Sword extends Container implements Projectile {
   die() {
     Level.instance.remove(this);
     Manager.instance.setTurnState(TurnState.Ending);
-  }
-
-  serialize() {
-    return this.body.serialize();
-  }
-
-  deserialize(data: any) {
-    this.body.deserialize(data);
   }
 
   static cast(x: number, y: number, character: Character) {

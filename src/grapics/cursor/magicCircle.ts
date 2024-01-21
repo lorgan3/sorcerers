@@ -6,14 +6,27 @@ import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 
 import { Manager } from "../../data/network/manager";
-import { Cursor } from "./types";
+import { Cursor, ProjectileConstructor } from "./types";
+import { TurnState } from "../../data/network/types";
 
 const SCALE_MULTIPLIER = 0.4;
 
-export class ArcaneCircle extends Container implements Cursor {
+interface TriggerData {
+  projectile: ProjectileConstructor;
+  xOffset: number;
+  yOffset: number;
+  x: number;
+  y: number;
+  turnState: TurnState;
+}
+
+export class ArcaneCircle extends Container implements Cursor<TriggerData> {
   private indicator: AnimatedSprite;
 
-  constructor(private character: Character, private spell: Spell) {
+  constructor(
+    private character: Character,
+    private spell: Spell<ArcaneCircle>
+  ) {
     super();
 
     this.pivot.set(0, 100);
@@ -37,6 +50,17 @@ export class ArcaneCircle extends Container implements Cursor {
     this.character.setSpellSource(this, false);
   }
 
+  trigger({ projectile, xOffset, yOffset, x, y, turnState }: TriggerData) {
+    const [px, py] = this.character.body.precisePosition;
+    projectile.cast(
+      px + x + Math.cos(this.rotation - Math.PI / 2) * xOffset,
+      py + y + Math.sin(this.rotation - Math.PI / 2) * yOffset,
+      this.character
+    );
+
+    Manager.instance.setTurnState(turnState);
+  }
+
   tick(dt: number, controller: Controller) {
     const [x2, y2] = this.character.getCenter();
 
@@ -46,18 +70,7 @@ export class ArcaneCircle extends Container implements Cursor {
         this.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
-        const [x, y] = this.character.body.precisePosition;
-        this.spell.data.projectile.cast(
-          x +
-            this.spell.data.x +
-            Math.cos(this.rotation - Math.PI / 2) * this.spell.data.xOffset,
-          y +
-            this.spell.data.y +
-            Math.sin(this.rotation - Math.PI / 2) * this.spell.data.yOffset,
-          this.character
-        );
-
-        Manager.instance.setTurnState(this.spell.data.turnState);
+        this.trigger(this.spell.data);
       }
 
       return;

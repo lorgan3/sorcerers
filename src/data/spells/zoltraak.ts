@@ -2,7 +2,6 @@ import { AnimatedSprite, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
-import { Projectile } from ".";
 import { Character } from "../entity/character";
 
 import {
@@ -39,7 +38,7 @@ const TOOLS = [
   },
 ];
 
-export class Zoltraak extends Container implements Projectile, Spawnable {
+export class Zoltraak extends Container implements Spawnable {
   private impact: AnimatedSprite;
   private time = 0;
 
@@ -108,10 +107,6 @@ export class Zoltraak extends Container implements Projectile, Spawnable {
       Level.instance.remove(this);
     }
   }
-
-  serialize() {}
-
-  deserialize(data: any) {}
 
   serializeCreate() {
     return [

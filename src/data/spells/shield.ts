@@ -1,7 +1,6 @@
 import { AnimatedSprite, Container } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
-import { Projectile } from ".";
 import { Character } from "../entity/character";
 import { CollisionMask } from "../collision/collisionMask";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
@@ -15,10 +14,7 @@ const ANIMATION_SPEED = 0.1;
 const FLICKER_SPEED = 0.5;
 const FLICKER_DURATION = 30;
 
-export class Shield
-  extends Container
-  implements Projectile, HurtableEntity, Spawnable
-{
+export class Shield extends Container implements HurtableEntity, Spawnable {
   private sprite: AnimatedSprite;
   public readonly body: StaticBody;
   public id = -1;
@@ -105,12 +101,6 @@ export class Shield
         this.flickerTime > 0 ? FLICKER_SPEED : ANIMATION_SPEED;
     }
   }
-
-  serialize() {
-    return null;
-  }
-
-  deserialize(data: any) {}
 
   private add() {
     Level.instance.terrain.collisionMask.add(

@@ -79,4 +79,17 @@ export class Telekinesis extends Container {
       }
     }
   }
+
+  static cast(
+    x: number,
+    y: number,
+    character: Character,
+    controller: Controller,
+    source: Character
+  ) {
+    const entity = new Telekinesis(x, y, character, controller, source);
+
+    Level.instance.add(entity);
+    return entity;
+  }
 }
