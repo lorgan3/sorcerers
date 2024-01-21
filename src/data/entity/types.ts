@@ -3,14 +3,13 @@ import { PhysicsBody } from "../collision";
 import { Force } from "../damage/targetList";
 
 export interface TickingEntity extends DisplayObject {
-  id: number;
-
   tick(dt: number): void;
 }
 
 export interface HurtableEntity extends TickingEntity {
   body: PhysicsBody;
   hp: number;
+  id: number;
 
   damage(damage: number, force?: Force): void;
   die(): void;
@@ -19,8 +18,17 @@ export interface HurtableEntity extends TickingEntity {
 
 export interface Spawnable extends TickingEntity {
   readonly type: EntityType;
+  id: number;
 
   serializeCreate(): any;
+  die?(): void;
+}
+
+export interface Syncable<T = any> extends Spawnable {
+  readonly priority: Priority;
+
+  serialize(): T;
+  deserialize(data: T): void;
 }
 
 export function isHurtableEntity(
@@ -37,4 +45,10 @@ export enum EntityType {
   Shield,
   Zoltraak,
   Fireball,
+}
+
+export enum Priority {
+  Low,
+  High,
+  Dynamic,
 }

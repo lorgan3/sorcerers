@@ -9,7 +9,7 @@ import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
-import { HurtableEntity } from "../entity/types";
+import { HurtableEntity, Syncable } from "../entity/types";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -210,6 +210,13 @@ export class Client extends Manager {
           setId(message.id);
           const entity = ENTITIES[message.kind]!.create(message.data);
           Level.instance.add(entity);
+        }
+        break;
+
+      case MessageType.DynamicUpdate:
+        {
+          const entity = Level.instance.entityMap.get(message.id) as Syncable;
+          entity.deserialize(message.data);
         }
         break;
     }

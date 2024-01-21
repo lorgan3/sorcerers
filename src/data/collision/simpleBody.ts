@@ -48,10 +48,10 @@ export class SimpleBody implements PhysicsBody {
   }
 
   deserialize(data: any[]) {
-    this.x = data[1];
-    this.y = data[2];
-    this.xVelocity = data[3];
-    this.yVelocity = data[4];
+    this.x = data[0];
+    this.y = data[1];
+    this.xVelocity = data[2];
+    this.yVelocity = data[3];
   }
 
   addVelocity(x: number, y: number) {

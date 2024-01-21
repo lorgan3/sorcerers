@@ -144,12 +144,7 @@ export class Level {
             Server.instance.clearActiveCharacter();
           }
 
-          entity.die();
-
-          Server.instance.broadcast({
-            type: MessageType.Die,
-            id: entity.id,
-          });
+          Server.instance.kill(entity);
         }
       }
     }
@@ -172,8 +167,11 @@ export class Level {
 
     for (let object of objects) {
       if ("tick" in object) {
-        object.id = getId();
         this.entities.add(object);
+      }
+
+      if ("id" in object) {
+        object.id = getId();
         this.entityMap.set(object.id, object);
       }
 
@@ -189,6 +187,9 @@ export class Level {
     for (let object of objects) {
       if ("tick" in object) {
         this.entities.delete(object);
+      }
+
+      if ("id" in object) {
         this.entityMap.delete(object.id);
       }
 

@@ -19,6 +19,7 @@ export enum MessageType {
   ClientReady,
   Die,
   Spawn,
+  DynamicUpdate,
 }
 
 export type Message =
@@ -112,6 +113,12 @@ export type Message =
     }
   | {
       type: MessageType.Spawn;
+      kind: EntityType;
+      id: number;
+      data: any;
+    }
+  | {
+      type: MessageType.DynamicUpdate;
       kind: EntityType;
       id: number;
       data: any;

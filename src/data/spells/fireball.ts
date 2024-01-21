@@ -11,10 +11,10 @@ import { Explosion } from "../../grapics/explosion";
 import { ParticleEmitter } from "../../grapics/particles/types";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
-import { EntityType, Spawnable } from "../entity/types";
+import { EntityType, Priority, Syncable } from "../entity/types";
 import { Server } from "../network/server";
 
-export class Fireball extends Container implements Projectile, Spawnable {
+export class Fireball extends Container implements Syncable {
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
@@ -23,13 +23,14 @@ export class Fireball extends Container implements Projectile, Spawnable {
 
   public id = -1;
   public readonly type = EntityType.Fireball;
+  public readonly priority = Priority.Dynamic;
 
   constructor(x: number, y: number, speed: number, direction: number) {
     super();
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: circle3x3,
-      onCollide: this.onCollide,
+      onCollide: Server.instance ? this.onCollide : undefined,
       bounciness: -0.9,
       friction: 0.96,
       gravity: 0.25,
@@ -74,17 +75,22 @@ export class Fireball extends Container implements Projectile, Spawnable {
     );
 
     if (this.bounces === 0 || playerCollision) {
-      this.die(x, y);
+      this._die(x, y);
     } else {
       Level.instance.damage(new ExplosiveDamage(x, y, 4));
+      Server.instance.dynamicUpdate(this);
     }
   };
 
-  private die(x: number, y: number) {
+  private _die(x: number, y: number) {
+    Level.instance.damage(new ExplosiveDamage(x, y, 16));
+    Server.instance.kill(this);
+  }
+
+  die() {
     Level.instance.remove(this);
     Level.instance.particleContainer.destroyEmitter(this.particles);
-    Level.instance.damage(new ExplosiveDamage(x, y, 16));
-    new Explosion(x * 6, y * 6);
+    new Explosion(this.position.x, this.position.y);
     Manager.instance.setTurnState(TurnState.Ending);
   }
 
@@ -94,8 +100,8 @@ export class Fireball extends Container implements Projectile, Spawnable {
     this.position.set(x * 6, y * 6);
 
     this.lifetime -= dt;
-    if (this.lifetime <= 0) {
-      this.die(x, y);
+    if (this.lifetime <= 0 && Server.instance) {
+      this._die(x, y);
     }
   }
 
@@ -103,7 +109,7 @@ export class Fireball extends Container implements Projectile, Spawnable {
     return this.body.serialize();
   }
 
-  deserialize(data: any) {
+  deserialize(data: ReturnType<Fireball["serialize"]>) {
     this.body.deserialize(data);
   }
 

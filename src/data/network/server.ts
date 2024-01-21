@@ -10,7 +10,12 @@ import { Team } from "../team";
 import { COLORS } from "./constants";
 import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
-import { Spawnable, isSpawnableEntity } from "../entity/types";
+import {
+  HurtableEntity,
+  Spawnable,
+  Syncable,
+  isSpawnableEntity,
+} from "../entity/types";
 
 export class Server extends Manager {
   private controller?: KeyboardController;
@@ -385,6 +390,26 @@ export class Server extends Manager {
       kind: entity.type,
       data: entity.serializeCreate(),
     });
+  }
+
+  dynamicUpdate(entity: Syncable) {
+    this.broadcast({
+      type: MessageType.DynamicUpdate,
+      id: entity.id,
+      kind: entity.type,
+      data: entity.serialize(),
+    });
+  }
+
+  kill(entity: HurtableEntity | Syncable) {
+    if (entity.die) {
+      this.broadcast({
+        type: MessageType.Die,
+        id: entity.id,
+      });
+
+      entity.die();
+    }
   }
 
   rename(newName: string) {
