@@ -18,11 +18,13 @@ import {
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { ImpactDamage } from "../damage/impactDamage";
+import { Animation, Animator } from "../../grapics/animator";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 5;
 
 const WALK_DURATION = 20;
+const MELEE_DURATION = 45;
 
 enum AnimationState {
   Idle = "elf_idle",
@@ -37,13 +39,7 @@ enum AnimationState {
   Swing = "elf_swing",
 }
 
-interface Config {
-  name: string;
-  loop: boolean;
-  speed: number;
-}
-
-const ANIMATION_CONFIG: Record<AnimationState, Config> = {
+const ANIMATION_CONFIG: Record<AnimationState, Animation<AnimationState>> = {
   [AnimationState.Idle]: {
     name: "elf_idle",
     loop: true,
@@ -58,6 +54,7 @@ const ANIMATION_CONFIG: Record<AnimationState, Config> = {
     name: "elf_jump",
     loop: false,
     speed: 0.3,
+    nextState: AnimationState.Float,
   },
   [AnimationState.Float]: {
     name: "elf_float",
@@ -73,11 +70,13 @@ const ANIMATION_CONFIG: Record<AnimationState, Config> = {
     name: "elf_fall",
     loop: true,
     speed: 0.1,
+    nextState: AnimationState.SpellIdle,
   },
   [AnimationState.Spell]: {
     name: "elf_spell",
     loop: false,
     speed: 0.15,
+    nextState: AnimationState.SpellIdle,
   },
   [AnimationState.SpellIdle]: {
     name: "elf_spellIdle",
@@ -93,6 +92,8 @@ const ANIMATION_CONFIG: Record<AnimationState, Config> = {
     name: "elf_swing",
     loop: false,
     speed: 0.25,
+    nextState: AnimationState.SpellDone,
+    blocking: true,
   },
 };
 
@@ -112,8 +113,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private damageSource: DamageSource | null = null;
   private hasWings = false;
   private animationTimer = 0;
-  private animationState = AnimationState.Idle;
   private spellSource: any | null = null;
+
+  private animator: Animator<AnimationState>;
 
   constructor(
     public readonly player: Player,
@@ -135,35 +137,19 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.sprite = new AnimatedSprite(atlas.animations[this.animationState]);
-    this.sprite.animationSpeed = 0.08;
-    this.sprite.play();
+    this.animator = new Animator<AnimationState>(
+      AssetsContainer.instance.assets!["atlas"].animations
+    )
+      .addAnimations(ANIMATION_CONFIG)
+      .addAnimation(AnimationState.Float, {
+        ...ANIMATION_CONFIG[AnimationState.Float],
+        available: () => !this.body.grounded,
+      });
+
+    this.sprite = this.animator.sprite;
     this.sprite.anchor.set(0.5, 0.5);
     this.sprite.position.set(18, 28);
     this.sprite.scale.set(2);
-    this.sprite.onComplete = () => {
-      if (this.animationState === AnimationState.Jump && !this.body.grounded) {
-        this.setAnimationState(AnimationState.Float);
-      } else if (this.animationState === AnimationState.Spell) {
-        this.setAnimationState(AnimationState.SpellIdle);
-      } else if (this.animationState === AnimationState.Swing) {
-        this.setAnimationState(AnimationState.SpellDone);
-        Manager.instance.setTurnState(TurnState.Ending);
-
-        const direction =
-          this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
-        const [cx, cy] = this.getCenter();
-        Level.instance.damage(
-          new ImpactDamage(
-            Math.floor(cx / 6) + this.sprite.scale.x * 6,
-            Math.floor(cy / 6) - 4,
-            direction
-          )
-        );
-      } else {
-        this.setAnimationState(AnimationState.Idle);
-      }
-    };
 
     const sprite2 = new Sprite(
       Texture.fromBuffer(rectangle6x16Canvas.data, 6, 16)
@@ -211,24 +197,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
   };
 
-  private setAnimationState(state: AnimationState, timer?: number) {
-    this.animationTimer = timer || 0;
-
-    if (state === this.animationState) {
-      return;
-    }
-
-    this.animationState = state;
-    const config = ANIMATION_CONFIG[state];
-    this.sprite.textures =
-      AssetsContainer.instance.assets!["atlas"].animations[config.name];
-    this.sprite.currentFrame =
-      config.speed > 0 ? 0 : this.sprite.totalFrames - 1;
-    this.sprite.loop = config.loop;
-    this.sprite.animationSpeed = config.speed;
-    this.sprite.play();
-  }
-
   getCenter(): [number, number] {
     return [this.position.x + 18, this.position.y + 48];
   }
@@ -238,20 +206,34 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.animationTimer -= dt;
 
       if (this.animationTimer <= 0) {
-        this.setAnimationState(
-          this.spellSource ? AnimationState.Spell : AnimationState.Idle
-        );
+        if (this.animator.animationState === AnimationState.Swing) {
+          this.animator.animate(AnimationState.SpellDone);
+          Manager.instance.setTurnState(TurnState.Ending);
+
+          const direction =
+            this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
+          const [cx, cy] = this.getCenter();
+          Level.instance.damage(
+            new ImpactDamage(
+              Math.floor(cx / 6) + this.sprite.scale.x * 6,
+              Math.floor(cy / 6) - 4,
+              direction
+            )
+          );
+        } else {
+          this.animator.animate();
+        }
       }
     }
 
     if (!this.body.grounded && Math.abs(this.body.yVelocity) > 1.5) {
-      this.setAnimationState(AnimationState.Float);
+      this.animator.animate(AnimationState.Float);
     } else if (
-      (this.animationState === AnimationState.Fall ||
-        this.animationState === AnimationState.Float) &&
+      (this.animator.animationState === AnimationState.Fall ||
+        this.animator.animationState === AnimationState.Float) &&
       this.body.grounded
     ) {
-      this.setAnimationState(AnimationState.Land);
+      this.animator.animate(AnimationState.Land);
     }
 
     this.time += dt;
@@ -303,12 +285,16 @@ export class Character extends Container implements HurtableEntity, Syncable {
       (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
     ) {
       if (this.body.jump()) {
-        this.setAnimationState(AnimationState.Jump, 100);
+        this.animator.animate(AnimationState.Jump);
       }
     }
   }
 
   controlContinuous(dt: number, controller: Controller) {
+    if (this.animator.isBlocking) {
+      return;
+    }
+
     this.control(controller);
     const lookDirection = Math.sign(
       controller.getMouse()[0] - this.getCenter()[0]
@@ -319,7 +305,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.body.walk(dt, -1);
 
       if (this.body.grounded) {
-        this.setAnimationState(AnimationState.Walk, WALK_DURATION);
+        this.animationTimer = WALK_DURATION;
+        this.animator.animate(AnimationState.Walk);
 
         if (this.sprite.animationSpeed * lookDirection < 0) {
           this.sprite.animationSpeed *= lookDirection;
@@ -331,7 +318,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.body.walk(dt, 1);
 
       if (this.body.grounded) {
-        this.setAnimationState(AnimationState.Walk, WALK_DURATION);
+        this.animationTimer = WALK_DURATION;
+        this.animator.animate(AnimationState.Walk);
 
         if (this.sprite.animationSpeed * lookDirection < 0) {
           this.sprite.animationSpeed *= lookDirection;
@@ -362,12 +350,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
   setSpellSource(source: any, toggle = true) {
     if (toggle) {
       this.spellSource = source;
-      if (this.animationState !== AnimationState.SpellIdle) {
-        this.setAnimationState(AnimationState.Spell);
-      }
+      this.animator.animate(AnimationState.Spell);
+      this.animator.setDefaultAnimation(AnimationState.Spell);
     } else if (source === this.spellSource) {
       this.spellSource = null;
-      this.setAnimationState(AnimationState.SpellDone);
+      this.animator.animate(AnimationState.SpellDone);
+      this.animator.setDefaultAnimation(AnimationState.Idle);
     }
   }
 
@@ -454,7 +442,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   melee() {
-    this.setAnimationState(AnimationState.Swing);
+    this.animationTimer = MELEE_DURATION;
+    this.animator.animate(AnimationState.Swing);
   }
 
   get hp() {
