@@ -18,6 +18,12 @@ import MainMenu from "./components/MainMenu.vue";
   --big-radius: 6px;
 }
 
+@property --pulse {
+  syntax: "<number>";
+  initial-value: 1;
+  inherits: false;
+}
+
 @font-face {
   /* https://www.1001freefonts.com/eternal.font */
   font-family: Eternal;
