@@ -6,6 +6,7 @@ import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { Manager } from "../../data/network/manager";
 import { TurnState } from "../../data/network/types";
+import { Element } from "../../data/spells/types";
 
 const MIN_DISTANCE = 32;
 const MAX_DISTANCE = 320;
@@ -68,7 +69,10 @@ export class Telekinesis extends Container {
         // Probably a mistake, wait for the mouse to be clicked again.
         this.activated = false;
       } else {
-        const power = Math.sqrt(distance / 5);
+        const power =
+          Math.sqrt(distance / 5) *
+          Manager.instance.getElementValue(Element.Arcane);
+
         this.character.body.addAngularVelocity(
           power,
           this.rotation + Math.PI / 2
