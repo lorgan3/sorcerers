@@ -333,8 +333,17 @@ export class Server extends Manager {
   }
 
   private randomizeElements() {
+    const amounts = {} as Record<Element, number>;
+    let total = 0;
     for (let element in this.elements) {
-      this.elements[element as Element] = 0.5 + Math.random();
+      const amount = 0.5 + Math.random();
+      amounts[element as Element] = amount;
+      total += amount;
+    }
+
+    for (let element in this.elements) {
+      this.elements[element as Element] =
+        (amounts[element as Element] / total) * 4;
     }
   }
 

@@ -270,13 +270,13 @@ onBeforeUnmount(() => window.clearInterval(id));
           transition: scale 0.2s;
 
           filter: grayscale(1) opacity(0.2) blur(1px);
-          scale: calc(var(--value, 1) * 0.3 + 0.7);
+          scale: calc(var(--value, 1) * 0.4 + 0.6);
         }
 
         &.foreground {
           transition: -webkit-filter 0.5s, filter 0.5s, scale 0.2s;
 
-          scale: calc(var(--value, 1) * 0.3 + 0.7);
+          scale: calc(var(--value, 1) * 0.4 + 0.6);
           filter: opacity(calc(var(--value, 1) - 0.25))
             brightness(calc(var(--pulse, 1) * var(--value, 1)))
             drop-shadow(2px 2px 0px #000);
