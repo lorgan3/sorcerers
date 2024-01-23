@@ -5,8 +5,9 @@ import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
 import { Spell } from "../spells";
-import { Cursor } from "../../grapics/cursor/types";
+import { Cursor } from "../../graphics/cursor/types";
 import { getSquareDistance } from "../../util/math";
+import { Element } from "../spells/types";
 
 const TURN_GRACE_PERIOD = 3000;
 
@@ -23,7 +24,9 @@ export abstract class Manager {
   protected activePlayerIndex = -1;
   protected time = 0;
   protected frames = 0;
-  protected windSpeed = 7;
+  protected elements = Object.fromEntries(
+    Object.values(Element).map((element, i) => [element, i / 2])
+  ) as Record<Element, number>;
 
   protected turnStartTime = 0;
   protected turnLength = 45 * 1000;
@@ -124,7 +127,7 @@ export abstract class Manager {
     return {
       turnTime: Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
       gameTime: Math.max(0, this.gameLength - this.time),
-      windSpeed: this.windSpeed,
+      elements: this.elements,
       players: this.players,
       activePlayer: this.activePlayer,
     };
@@ -191,5 +194,9 @@ export abstract class Manager {
 
   clearActiveCharacter() {
     this.activePlayer = null;
+  }
+
+  getElementValue(element: Element) {
+    return this.elements[element];
   }
 }

@@ -10,6 +10,7 @@ import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
 import { HurtableEntity, Syncable } from "../entity/types";
+import { Element } from "../spells/types";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -132,7 +133,9 @@ export class Client extends Manager {
         break;
 
       case MessageType.ActiveCharacter:
-        this.windSpeed = message.windSpeed;
+        Object.keys(this.elements).forEach(
+          (key, i) => (this.elements[key as Element] = message.elements[i])
+        );
         this.turnStartTime = message.turnStartTime;
         this.turnState = TurnState.Ongoing;
 

@@ -4,6 +4,7 @@ import { Manager } from "../data/network/manager";
 import { ref } from "vue";
 import { Server } from "../data/network/server";
 import { Client } from "../data/network/client";
+import { ELEMENT_MAP } from "../graphics/elements";
 import { Message, MessageType } from "../data/network/types";
 
 const { isOpen, onClose } = defineProps<{
@@ -15,6 +16,7 @@ const SLOTS = 30;
 
 const previewName = ref(Manager.instance?.selectedSpell?.name);
 const previewDescription = ref(Manager.instance?.selectedSpell?.description);
+const previewElements = ref(Manager.instance?.selectedSpell?.elements);
 
 const handleClick = (spell?: Spell) => {
   if (spell) {
@@ -44,12 +46,14 @@ const handleClick = (spell?: Spell) => {
 const onMouseLeave = (event: Event) => {
   previewName.value = Manager.instance.selectedSpell?.name;
   previewDescription.value = Manager.instance.selectedSpell?.description;
+  previewElements.value = Manager.instance.selectedSpell?.elements;
 };
 
 const onMouseEnter = (spell?: Spell) => {
   if (spell) {
     previewName.value = spell.name;
     previewDescription.value = spell.description;
+    previewElements.value = spell.elements;
   }
 };
 </script>
@@ -74,7 +78,17 @@ const onMouseEnter = (spell?: Spell) => {
           </div>
         </div>
         <div class="spell">
-          <span class="name">{{ previewName || "-" }}</span>
+          <span class="name">
+            <span>{{ previewName || "-" }}</span>
+            <span class="elements">
+              <img
+                v-for="element in previewElements"
+                :src="ELEMENT_MAP[element]"
+                :alt="element"
+                :title="element"
+              />
+            </span>
+          </span>
           <span class="description">{{ previewDescription }}</span>
         </div>
       </div>
@@ -159,6 +173,15 @@ const onMouseEnter = (spell?: Spell) => {
         font-family: Eternal;
         font-size: 22px;
         color: var(--highlight);
+
+        .elements {
+          margin-left: 8px;
+
+          img {
+            width: 16px;
+            height: 16px;
+          }
+        }
       }
 
       .description {

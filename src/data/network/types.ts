@@ -43,7 +43,7 @@ export type Message =
       type: MessageType.ActiveCharacter;
       activePlayer: number;
       activeCharacter: number;
-      windSpeed: number;
+      elements: number[];
       turnStartTime: number;
     }
   | {

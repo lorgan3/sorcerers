@@ -3,6 +3,8 @@ import { onBeforeUnmount, onMounted, ref } from "vue";
 import { Manager } from "./../data/network/manager";
 import { Player } from "./../data/network/player";
 import { Popup } from "../data/network/types";
+import { Element } from "../data/spells/types";
+import { ELEMENT_MAP } from "../graphics/elements";
 
 interface ActivePopup extends Popup {
   out: boolean;
@@ -13,7 +15,11 @@ const numberFormatter = new Intl.DateTimeFormat("en-GB", {
   second: "2-digit",
 });
 
-const windSpeed = ref(0);
+const elements = ref(
+  Object.fromEntries(
+    Object.values(Element).map((element) => [element, 1])
+  ) as Record<Element, number>
+);
 const turnTime = ref(0);
 const gameTime = ref(0);
 const players = ref<Player[]>([]);
@@ -26,7 +32,7 @@ const poll = () => {
   }
 
   const data = Manager.instance.getHudData();
-  windSpeed.value = data.windSpeed;
+  elements.value = data.elements;
   turnTime.value = data.turnTime;
   gameTime.value = data.gameTime;
   players.value = data.players;
@@ -89,13 +95,26 @@ onBeforeUnmount(() => window.clearInterval(id));
         numberFormatter.format(gameTime)
       }}</span>
     </div>
-    <div class="wind socket" :key="windSpeed">
+    <div class="elements socket">
       <span
-        v-for="i in Math.abs(windSpeed)"
-        :class="{ arrow: true, left: windSpeed < 0 }"
-        :style="{ '--wind-index': i * Math.sign(windSpeed) }"
+        class="element"
+        v-for="(value, element) in elements"
+        :style="{
+          '--value': value,
+        }"
       >
-        ➤
+        <img
+          :src="ELEMENT_MAP[element]"
+          :alt="element"
+          :title="element"
+          class="background"
+        />
+        <img
+          :src="ELEMENT_MAP[element]"
+          :alt="element"
+          :title="element"
+          class="foreground"
+        />
       </span>
     </div>
   </div>
@@ -156,7 +175,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   grid-template:
     "hp hp hp"
     "timer clock clock"
-    "wind wind wind";
+    "elements elements elements";
 
   padding: 10px;
   gap: 10px;
@@ -232,17 +251,38 @@ onBeforeUnmount(() => window.clearInterval(id));
     grid-area: clock;
   }
 
-  .wind {
-    grid-area: wind;
+  .elements {
+    grid-area: elements;
+    display: flex;
+    justify-content: space-around;
 
-    .left {
-      scale: -1 1;
-    }
+    .element {
+      position: relative;
+      height: 32px;
+      width: 32px;
 
-    .arrow {
-      animation: 1.2s grow infinite;
-      animation-delay: calc(0.1s * var(--wind-index));
-      display: inline-block;
+      img {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        &.background {
+          transition: scale 0.2s;
+
+          filter: grayscale(1) opacity(0.2) blur(1px);
+          scale: calc(var(--value, 1) * 0.3 + 0.7);
+        }
+
+        &.foreground {
+          transition: -webkit-filter 0.5s, filter 0.5s, scale 0.2s;
+
+          scale: calc(var(--value, 1) * 0.3 + 0.7);
+          filter: opacity(calc(var(--value, 1) - 0.25))
+            brightness(calc(var(--pulse, 1) * var(--value, 1)))
+            drop-shadow(2px 2px 0px #000);
+          animation: pulse calc(var(--value, 1) * 2s) infinite;
+        }
+      }
     }
   }
 
@@ -280,21 +320,17 @@ onBeforeUnmount(() => window.clearInterval(id));
     }
   }
 
-  @keyframes grow {
+  @keyframes pulse {
     0% {
-      transform: scale(0.5);
+      --pulse: 1;
     }
-    20% {
-      transform: scale(0.5);
-    }
+
     50% {
-      transform: scale(1);
+      --pulse: 1.5;
     }
-    80% {
-      transform: scale(0.5);
-    }
+
     100% {
-      transform: scale(0.5);
+      --pulse: 1;
     }
   }
 }

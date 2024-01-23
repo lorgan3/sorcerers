@@ -18,11 +18,11 @@ import {
   TickingEntity,
   isSyncableEntity,
 } from "../entity/types";
-import { DamageNumberContainer } from "../../grapics/damageNumber";
+import { DamageNumberContainer } from "../../graphics/damageNumber";
 import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
 import { TurnState } from "../network/types";
-import { ParticleManager } from "../../grapics/particles";
+import { ParticleManager } from "../../graphics/particles";
 import { KeyboardController } from "../controller/keyboardController";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
