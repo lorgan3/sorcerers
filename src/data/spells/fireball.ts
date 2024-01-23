@@ -6,13 +6,14 @@ import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Character } from "../entity/character";
 
-import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
-import { Explosion } from "../../grapics/explosion";
-import { ParticleEmitter } from "../../grapics/particles/types";
+import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
+import { Explosion } from "../../graphics/explosion";
+import { ParticleEmitter } from "../../graphics/particles/types";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Priority, Syncable } from "../entity/types";
 import { Server } from "../network/server";
+import { Element } from "./types";
 
 export class Fireball extends Container implements Syncable {
   public readonly body: SimpleBody;
@@ -77,13 +78,29 @@ export class Fireball extends Container implements Syncable {
     if (this.bounces === 0 || playerCollision) {
       this._die(x, y);
     } else {
-      Level.instance.damage(new ExplosiveDamage(x, y, 4));
+      Level.instance.damage(
+        new ExplosiveDamage(
+          x,
+          y,
+          4,
+          1,
+          1 + Manager.instance.getElementValue(Element.Elemental)
+        )
+      );
       Server.instance.dynamicUpdate(this);
     }
   };
 
   private _die(x: number, y: number) {
-    Level.instance.damage(new ExplosiveDamage(x, y, 16));
+    Level.instance.damage(
+      new ExplosiveDamage(
+        x,
+        y,
+        16,
+        5,
+        3 + Manager.instance.getElementValue(Element.Elemental)
+      )
+    );
     Server.instance.kill(this);
   }
 
@@ -136,7 +153,7 @@ export class Fireball extends Container implements Syncable {
       return;
     }
 
-    const entity = new Fireball(x, y, power * 5, direction);
+    const entity = new Fireball(x, y, power * 6, direction);
 
     Server.instance.create(entity);
     return entity;

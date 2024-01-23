@@ -10,6 +10,7 @@ import { rectangle1x200 } from "../collision/precomputed/rectangles";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { TickingEntity } from "../entity/types";
+import { Element } from "./types";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
 const GROW_TIME = 15;
@@ -99,7 +100,15 @@ export class Bakuretsu extends Container implements TickingEntity {
       if (!this.exploded) {
         this.exploded = true;
         Level.instance.shake();
-        Level.instance.damage(new ExplosiveDamage(this.rX, this.rY, 32, 6, 10));
+        Level.instance.damage(
+          new ExplosiveDamage(
+            this.rX,
+            this.rY,
+            32,
+            6,
+            6 * Manager.instance.getElementValue(Element.Elemental)
+          )
+        );
         Manager.instance.setTurnState(TurnState.Ending);
         this.character.setSpellSource(this, false);
       }

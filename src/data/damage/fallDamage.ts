@@ -20,7 +20,6 @@ const SHAPES: Record<
     xOffset: number;
     yOffset: number;
     range: number;
-    damage: number;
   }
 > = {
   [Shape.SwordTip]: {
@@ -31,7 +30,6 @@ const SHAPES: Record<
     xOffset: 6.5,
     yOffset: 10,
     range: 80,
-    damage: 10,
   },
 };
 
@@ -42,6 +40,7 @@ export class FallDamage implements DamageSource {
     public readonly x: number,
     public readonly y: number,
     private shape: Shape,
+    private power: number,
     public targets?: TargetList
   ) {}
 
@@ -69,7 +68,7 @@ export class FallDamage implements DamageSource {
       if (isHurtableEntity(entity)) {
         const [x] = entity.getCenter();
         const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
-        this.targets!.add(entity, data.damage, {
+        this.targets!.add(entity, this.power, {
           power: 1,
           direction,
         });
@@ -88,6 +87,7 @@ export class FallDamage implements DamageSource {
       data[0],
       data[1],
       data[2],
+      0,
       TargetList.deserialize(data[3])
     );
   }

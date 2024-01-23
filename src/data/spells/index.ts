@@ -108,7 +108,7 @@ const BAKURETSU = spell(ArrowDown, {
 const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
   description: "Magical death laser",
-  elements: [Element.Elemental],
+  elements: [Element.Arcane],
   data: {
     projectile: Zoltraak,
     xOffset: 2,

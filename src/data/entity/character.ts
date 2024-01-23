@@ -9,8 +9,8 @@ import { EntityType, HurtableEntity, Priority, Syncable } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
-import { SimpleParticleEmitter } from "../../grapics/particles/simpleParticleEmitter";
-import { ParticleEmitter } from "../../grapics/particles/types";
+import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
+import { ParticleEmitter } from "../../graphics/particles/types";
 import {
   rectangle6x16,
   rectangle6x16Canvas,
@@ -18,13 +18,16 @@ import {
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { ImpactDamage } from "../damage/impactDamage";
-import { Animation, Animator } from "../../grapics/animator";
+import { Animation, Animator } from "../../graphics/animator";
+import { Element } from "../spells/types";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 5;
 
 const WALK_DURATION = 20;
 const MELEE_DURATION = 45;
+
+const MELEE_POWER = 20;
 
 enum AnimationState {
   Idle = "elf_idle",
@@ -217,7 +220,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
             new ImpactDamage(
               Math.floor(cx / 6) + this.sprite.scale.x * 6,
               Math.floor(cy / 6) - 4,
-              direction
+              direction,
+              MELEE_POWER * Manager.instance.getElementValue(Element.Physical)
             )
           );
         } else {
@@ -350,7 +354,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
   setSpellSource(source: any, toggle = true) {
     if (toggle) {
       this.spellSource = source;
-      this.animator.animate(AnimationState.Spell);
+
+      if (this.animator.animationState !== AnimationState.SpellIdle) {
+        this.animator.animate(AnimationState.Spell);
+      }
+
       this.animator.setDefaultAnimation(AnimationState.Spell);
     } else if (source === this.spellSource) {
       this.spellSource = null;

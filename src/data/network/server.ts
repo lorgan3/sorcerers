@@ -16,6 +16,7 @@ import {
   Syncable,
   isSpawnableEntity,
 } from "../entity/types";
+import { Element } from "../spells/types";
 
 export class Server extends Manager {
   private controller?: KeyboardController;
@@ -164,7 +165,7 @@ export class Server extends Manager {
             type: MessageType.ActiveCharacter,
             activePlayer: this.players.indexOf(this.activePlayer!),
             activeCharacter: this.activePlayer!.active,
-            windSpeed: this.windSpeed,
+            elements: Object.values(this.elements),
             turnStartTime: this.turnStartTime,
           });
 
@@ -331,6 +332,12 @@ export class Server extends Manager {
     return null;
   }
 
+  private randomizeElements() {
+    for (let element in this.elements) {
+      this.elements[element as Element] = 0.5 + Math.random();
+    }
+  }
+
   private cycleActivePlayer() {
     const activePlayerIndex = this.getNextPlayerIndex();
 
@@ -345,15 +352,15 @@ export class Server extends Manager {
       (player.active + 1) % player.characters.length
     );
 
-    this.windSpeed = Math.round(Math.random() * 16 - 8);
     this.turnStartTime = this.time;
     this.turnState = TurnState.Ongoing;
+    this.randomizeElements();
 
     this.broadcast({
       type: MessageType.ActiveCharacter,
       activePlayer: activePlayerIndex,
       activeCharacter: this.activePlayer!.active,
-      windSpeed: this.windSpeed,
+      elements: Object.values(this.elements),
       turnStartTime: this.turnStartTime,
     });
 

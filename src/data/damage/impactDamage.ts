@@ -11,6 +11,7 @@ export class ImpactDamage implements DamageSource {
     public readonly x: number,
     public readonly y: number,
     private direction: number,
+    private power: number,
     public targets?: TargetList
   ) {}
 
@@ -36,8 +37,8 @@ export class ImpactDamage implements DamageSource {
         (entity) => {
           if (isHurtableEntity(entity)) {
             const [x, y] = entity.getCenter();
-            this.targets!.add(entity, 20, {
-              power: 5,
+            this.targets!.add(entity, this.power, {
+              power: this.power / 5,
               direction: this.direction,
             });
           }
@@ -52,6 +53,7 @@ export class ImpactDamage implements DamageSource {
     return new ImpactDamage(
       data[0],
       data[1],
+      0,
       0,
       TargetList.deserialize(data[2])
     );

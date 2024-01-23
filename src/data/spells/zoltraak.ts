@@ -19,8 +19,10 @@ import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { TargetList } from "../damage/targetList";
 import { GenericDamage } from "../damage/genericDamage";
 import { Server } from "../network/server";
+import { Manager } from "../network/manager";
+import { Element } from "./types";
 
-const DAMAGE = 45;
+const DAMAGE = 40;
 const MAX_DISTANCE = 912;
 
 const TOOLS = [
@@ -57,7 +59,8 @@ export class Zoltraak extends Container implements Spawnable {
     this.position.set(x * 6, y * 6);
     this.rotation = angle;
 
-    const maxI = Math.min(6, Math.ceil(distance / 6 / 24));
+    // const maxI = Math.min(6, Math.ceil(distance / 6 / 24));
+    const maxI = 6;
 
     let x2 = x - 24 * Math.cos(angle) - 10;
     let y2 = y - 24 * Math.sin(angle) - 10;
@@ -158,7 +161,7 @@ export class Zoltraak extends Container implements Spawnable {
     targets.sort((a, b) => a.distance - b.distance);
     const targetList = new TargetList();
 
-    let damage = DAMAGE;
+    let damage = DAMAGE * Manager.instance.getElementValue(Element.Arcane);
     for (let target of targets) {
       targetList.add(target.entity, damage);
 

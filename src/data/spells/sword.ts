@@ -10,13 +10,14 @@ import { StaticBody } from "../collision/staticBody";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { TickingEntity } from "../entity/types";
+import { Element } from "./types";
 
 const SHAKE_INTENSITY = 8;
 
 export class Sword extends Container implements TickingEntity {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
-  private bounces = 40;
+  private bounces = 40 * Manager.instance.getElementValue(Element.Physical);
   private lastY?: number;
   private lifetime = 300;
 
@@ -57,7 +58,12 @@ export class Sword extends Container implements TickingEntity {
     this.shakeXOffset = Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
     this.shakeYOffset = Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
 
-    const damage = new FallDamage(x, y - 4, Shape.SwordTip);
+    const damage = new FallDamage(
+      x,
+      y - 4,
+      Shape.SwordTip,
+      7 * Manager.instance.getElementValue(Element.Arcane)
+    );
     Level.instance.damage(damage);
 
     const staticEntity = damage
