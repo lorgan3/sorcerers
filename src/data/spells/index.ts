@@ -1,24 +1,26 @@
-import { Range } from "../../grapics/cursor/range";
+import { Range } from "../../graphics/cursor/range";
 import { Fireball } from "./fireball";
 import { Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { Sword } from "./sword";
-import { ArrowDown } from "../../grapics/cursor/downArrow";
-import { Lock, Target } from "../../grapics/cursor/lock";
-import { Telekinesis } from "../../grapics/cursor/telekinesis";
+import { ArrowDown } from "../../graphics/cursor/downArrow";
+import { Lock, Target } from "../../graphics/cursor/lock";
+import { Telekinesis } from "../../graphics/cursor/telekinesis";
 import { Shield } from "./shield";
 import { Bakuretsu } from "./bakuretsu";
-import { ArcaneCircle } from "../../grapics/cursor/magicCircle";
+import { ArcaneCircle } from "../../graphics/cursor/magicCircle";
 import { Zoltraak } from "./zoltraak";
-import { ApplyCursor } from "../../grapics/cursor/applyCursor";
-import { Cursor } from "../../grapics/cursor/types";
+import { ApplyCursor } from "../../graphics/cursor/applyCursor";
+import { Cursor } from "../../graphics/cursor/types";
 import { TurnState } from "../network/types";
+import { Element } from "./types";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
   description?: string;
   cursor: new (character: Character, spell: Spell<C>) => C;
   data: Parameters<C["trigger"]>[0];
+  elements: Element[];
 }
 
 function spell<C extends Cursor>(
@@ -28,19 +30,10 @@ function spell<C extends Cursor>(
   return { ...config, cursor };
 }
 
-spell(ApplyCursor, {
-  name: "Melee",
-  description: "For less gifted sorcerers",
-  data: {
-    applyKeys: [Key.M1],
-    apply: (character: Character) => character.melee(),
-    turnState: TurnState.Ending,
-  },
-});
-
 const MELEE = spell(ApplyCursor, {
   name: "Melee",
   description: "For less gifted sorcerers",
+  elements: [Element.Physical],
   data: {
     applyKeys: [Key.M1],
     apply: (character: Character) => character.melee(),
@@ -51,6 +44,7 @@ const MELEE = spell(ApplyCursor, {
 const FIREBALL = spell(Range, {
   name: "Fireball",
   description: "Generic fireball",
+  elements: [Element.Elemental],
   data: {
     projectile: Fireball,
     xOffset: 7,
@@ -64,6 +58,7 @@ const FIREBALL = spell(Range, {
 const ARTHUR_SWORD = spell(ArrowDown, {
   name: "Arthur's sword",
   description: "Giant sword from the sky",
+  elements: [Element.Physical, Element.Arcane],
   data: {
     projectile: Sword,
     xOffset: -5.5,
@@ -76,6 +71,7 @@ const ARTHUR_SWORD = spell(ArrowDown, {
 const TELEKINESIS = spell(Lock, {
   name: "Telekinesis",
   description: "Move from a distance",
+  elements: [Element.Arcane],
   data: {
     target: Target.Character,
     projectile: Telekinesis,
@@ -86,6 +82,7 @@ const TELEKINESIS = spell(Lock, {
 const SHIELD = spell(Range, {
   name: "Shield",
   description: "Contingency plan",
+  elements: [Element.Physical, Element.Life],
   data: {
     projectile: Shield,
     xOffset: 10,
@@ -99,6 +96,7 @@ const SHIELD = spell(Range, {
 const BAKURETSU = spell(ArrowDown, {
   name: "Bakuretsu",
   description: "Ekusuuu ploooooooosion",
+  elements: [Element.Elemental, Element.Arcane],
   data: {
     projectile: Bakuretsu,
     xOffset: 0,
@@ -110,6 +108,7 @@ const BAKURETSU = spell(ArrowDown, {
 const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
   description: "Magical death laser",
+  elements: [Element.Elemental],
   data: {
     projectile: Zoltraak,
     xOffset: 2,
@@ -122,6 +121,7 @@ const ZOLTRAAK = spell(ArcaneCircle, {
 
 const WINGS = spell(ApplyCursor, {
   name: "Wings",
+  elements: [Element.Life],
   data: {
     applyKeys: [Key.Up, Key.W],
     apply: (character: Character) => character.giveWings(),
