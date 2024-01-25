@@ -1,4 +1,3 @@
-import { Range } from "../../graphics/cursor/range";
 import { Fireball } from "./fireball";
 import { Key } from "../controller/controller";
 import { Character } from "../entity/character";
@@ -14,6 +13,7 @@ import { ApplyCursor } from "../../graphics/cursor/applyCursor";
 import { Cursor } from "../../graphics/cursor/types";
 import { TurnState } from "../network/types";
 import { Element } from "./types";
+import { PoweredArcaneCircle } from "../../graphics/cursor/poweredArcaneCircle";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
@@ -41,7 +41,7 @@ const MELEE = spell(ApplyCursor, {
   },
 });
 
-const FIREBALL = spell(Range, {
+const FIREBALL = spell(PoweredArcaneCircle, {
   name: "Fireball",
   description: "Generic fireball",
   elements: [Element.Elemental],
@@ -79,7 +79,7 @@ const TELEKINESIS = spell(Lock, {
   },
 });
 
-const SHIELD = spell(Range, {
+const SHIELD = spell(ArcaneCircle, {
   name: "Shield",
   description: "Contingency plan",
   elements: [Element.Physical, Element.Life],
