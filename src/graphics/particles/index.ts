@@ -18,11 +18,24 @@ export class ParticleManager extends Container<ParticleEmitter> {
     }
   }
 
-  destroyEmitter(particleEmitter: ParticleEmitter, immediate?: boolean) {
+  destroyEmitter(particleEmitter?: ParticleEmitter, immediate?: boolean) {
+    if (!particleEmitter) {
+      return undefined;
+    }
+
     if (immediate || particleEmitter.activeParticles === 0) {
       this.removeChild(particleEmitter);
-    } else {
-      particleEmitter.fade();
+      return undefined;
     }
+
+    particleEmitter.fade();
+    return undefined;
+  }
+
+  replaceEmitter(newEmitter: ParticleEmitter, oldEmitter?: ParticleEmitter) {
+    this.destroyEmitter(oldEmitter, true);
+    this.addEmitter(newEmitter);
+
+    return newEmitter;
   }
 }

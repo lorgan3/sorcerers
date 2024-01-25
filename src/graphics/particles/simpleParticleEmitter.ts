@@ -7,11 +7,18 @@ interface Config {
   lifeTimeVariance: number;
   spawnFrequency: number;
   spawnRange: number;
+  animate: boolean;
+  fade: boolean;
+  xAcceleration?: number;
+  yAcceleration?: number;
   initialize: () => {
     x: number;
     y: number;
     xVelocity?: number;
     yVelocity?: number;
+    frame?: number;
+    scale?: number;
+    alpha?: number;
   };
   pool: number;
 }
@@ -25,6 +32,8 @@ export class SimpleParticleEmitter
     lifeTimeVariance: 0.2,
     spawnFrequency: 0.5,
     spawnRange: 32,
+    animate: true,
+    fade: false,
     pool: 40,
   } satisfies Partial<Config>;
 
@@ -63,13 +72,30 @@ export class SimpleParticleEmitter
         continue;
       }
 
+      if (this.config.xAcceleration) {
+        particle.xVelocity *= this.config.xAcceleration;
+      }
+
+      if (this.config.yAcceleration) {
+        particle.yVelocity *= this.config.yAcceleration;
+      }
+
       particle.x += particle.xVelocity * dt;
       particle.y += particle.yVelocity * dt;
 
-      particle.currentFrame =
-        ((1 - particle.lifetime / this.config.lifeTime) *
-          (particle.totalFrames - 1)) |
-        0;
+      if (this.config.animate) {
+        particle.currentFrame =
+          ((1 - particle.lifetime / this.config.lifeTime) *
+            (particle.totalFrames - 1)) |
+          0;
+      }
+
+      if (this.config.fade) {
+        particle.alpha = Math.min(
+          particle.alpha,
+          (particle.lifetime / this.config.lifeTime) * 2 + 0.2
+        );
+      }
     }
   }
 
@@ -91,6 +117,9 @@ export class SimpleParticleEmitter
 
         particle.xVelocity = config.xVelocity ?? 0;
         particle.yVelocity = config.yVelocity ?? 0;
+        particle.currentFrame = config.frame ?? 0;
+        particle.scale.set(config.scale ?? 1);
+        particle.alpha = config.alpha ?? 1;
 
         particle.lifetime =
           this.config.lifeTime *

@@ -7,6 +7,8 @@ export interface Animation<K extends string> {
   blocking?: boolean;
   nextState?: K;
   available?: () => boolean;
+  onStart?: () => void;
+  onEnd?: () => void;
 }
 
 export class Animator<K extends string = string> {
@@ -60,11 +62,13 @@ export class Animator<K extends string = string> {
   }
 
   animate(name = this.defaultState!, force = false) {
-    if (
-      !force &&
-      (this.state === name || this.animations[this.state]?.blocking)
-    ) {
+    const oldConfig = this.animations[this.state!];
+    if (!force && (this.state === name || oldConfig?.blocking)) {
       return;
+    }
+
+    if (oldConfig?.onEnd) {
+      oldConfig.onEnd();
     }
 
     this.state = name;
@@ -76,6 +80,10 @@ export class Animator<K extends string = string> {
     this.sprite.animationSpeed = config.speed;
 
     this.sprite.play();
+
+    if (config.onStart) {
+      config.onStart();
+    }
   }
 
   setDefaultAnimation(name: K) {

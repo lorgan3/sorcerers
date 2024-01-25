@@ -10,3 +10,10 @@ export const ELEMENT_MAP: Record<Element, string> = {
   [Element.Elemental]: Elemental,
   [Element.Life]: Life,
 };
+
+export const ELEMENT_ATLAS_MAP: Record<Element, string> = {
+  [Element.Physical]: "icons_physical",
+  [Element.Arcane]: "icons_arcane",
+  [Element.Elemental]: "icons_elemental",
+  [Element.Life]: "icons_life",
+};

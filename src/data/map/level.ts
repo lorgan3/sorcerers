@@ -43,6 +43,7 @@ export class Level {
   public readonly damageNumberContainer = new DamageNumberContainer();
   public readonly uiContainer = new Container();
   public readonly particleContainer = new ParticleManager();
+  public readonly backgroundParticles = new ParticleManager();
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -102,6 +103,7 @@ export class Level {
     this.terrain = new Terrain(map);
     this.viewport.addChild(
       this.terrain.container,
+      this.backgroundParticles,
       this.defaultLayer,
       this.particleContainer,
       this.terrain.foreground,
@@ -143,6 +145,7 @@ export class Level {
     this.damageNumberContainer.tick(dt);
     this.terrain.killbox.tick(dt);
     this.particleContainer.tick(dt);
+    this.backgroundParticles.tick(dt);
 
     if (Server.instance) {
       for (let entity of this.hurtables) {

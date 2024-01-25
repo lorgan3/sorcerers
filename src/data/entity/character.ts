@@ -20,6 +20,10 @@ import { TurnState } from "../network/types";
 import { ImpactDamage } from "../damage/impactDamage";
 import { Animation, Animator } from "../../graphics/animator";
 import { Element } from "../spells/types";
+import {
+  createBackgroundParticles,
+  createWandParticles,
+} from "../../graphics/particles/factory/character";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 5;
@@ -110,6 +114,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private wings: AnimatedSprite;
   private namePlate: Text;
   private particles?: ParticleEmitter;
+  private foregroundParticles?: ParticleEmitter;
 
   private _hp = 100;
   private time = 0;
@@ -148,6 +153,29 @@ export class Character extends Container implements HurtableEntity, Syncable {
       .addAnimation(AnimationState.Float, {
         ...ANIMATION_CONFIG[AnimationState.Float],
         available: () => !this.body.grounded,
+      })
+      .addAnimation(AnimationState.SpellIdle, {
+        ...ANIMATION_CONFIG[AnimationState.SpellIdle],
+        onStart: () => {
+          this.particles = Level.instance.backgroundParticles.replaceEmitter(
+            createBackgroundParticles(this),
+            this.particles
+          );
+          this.foregroundParticles =
+            Level.instance.particleContainer.replaceEmitter(
+              createWandParticles(this),
+              this.foregroundParticles
+            );
+        },
+        onEnd: () => {
+          this.particles = Level.instance.backgroundParticles.destroyEmitter(
+            this.particles!
+          );
+          this.foregroundParticles =
+            Level.instance.particleContainer.destroyEmitter(
+              this.foregroundParticles!
+            );
+        },
       });
 
     this.sprite = this.animator.sprite;
@@ -408,33 +436,31 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.wings.visible = true;
     this.wings.play();
 
-    if (this.particles) {
-      Level.instance.particleContainer.destroyEmitter(this.particles, true);
-    }
-
-    this.particles = new SimpleParticleEmitter(
-      AssetsContainer.instance.assets!["atlas"].animations["spells_sparkle"],
-      {
-        ...SimpleParticleEmitter.defaultConfig,
-        spawnRange: 64,
-        spawnFrequency: 0.2,
-        initialize: () =>
-          Math.random() > 0.5
-            ? {
-                x: this.position.x - 32,
-                y: this.position.y + 60,
-                xVelocity: -2,
-                yVelocity: 2,
-              }
-            : {
-                x: this.position.x + 86,
-                y: this.position.y + 60,
-                xVelocity: 2,
-                yVelocity: 2,
-              },
-      }
+    this.foregroundParticles = Level.instance.particleContainer.replaceEmitter(
+      new SimpleParticleEmitter(
+        AssetsContainer.instance.assets!["atlas"].animations["spells_sparkle"],
+        {
+          ...SimpleParticleEmitter.defaultConfig,
+          spawnRange: 64,
+          spawnFrequency: 0.2,
+          initialize: () =>
+            Math.random() > 0.5
+              ? {
+                  x: this.position.x - 32,
+                  y: this.position.y + 60,
+                  xVelocity: -2,
+                  yVelocity: 2,
+                }
+              : {
+                  x: this.position.x + 86,
+                  y: this.position.y + 60,
+                  xVelocity: 2,
+                  yVelocity: 2,
+                },
+        }
+      ),
+      this.foregroundParticles
     );
-    Level.instance.particleContainer.addEmitter(this.particles);
   }
 
   removeWings() {
@@ -446,8 +472,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.wings.visible = false;
     this.wings.stop();
 
-    Level.instance.particleContainer.destroyEmitter(this.particles!);
-    this.particles = undefined;
+    this.foregroundParticles = Level.instance.particleContainer.destroyEmitter(
+      this.foregroundParticles!
+    );
   }
 
   melee() {

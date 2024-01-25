@@ -153,7 +153,7 @@ export class Fireball extends Container implements Syncable {
       return;
     }
 
-    const entity = new Fireball(x, y, power * 6, direction);
+    const entity = new Fireball(x, y, power * 1.5, direction);
 
     Server.instance.create(entity);
     return entity;
