@@ -117,6 +117,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private hasWings = false;
   private animationTimer = 0;
   private spellSource: any | null = null;
+  private lookDirection = 1;
 
   private animator: Animator<AnimationState>;
 
@@ -300,10 +301,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
 
     this.control(controller);
-    const lookDirection = Math.sign(
+    this.lookDirection = Math.sign(
       controller.getMouse()[0] - this.getCenter()[0]
     );
-    this.sprite.scale.x = 2 * lookDirection;
+    this.sprite.scale.x = 2 * this.lookDirection;
 
     if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
       this.body.walk(dt, -1);
@@ -312,8 +313,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.animationTimer = WALK_DURATION;
         this.animator.animate(AnimationState.Walk);
 
-        if (this.sprite.animationSpeed * lookDirection < 0) {
-          this.sprite.animationSpeed *= lookDirection;
+        if (this.sprite.animationSpeed * this.lookDirection < 0) {
+          this.sprite.animationSpeed *= this.lookDirection;
         }
       }
     }
@@ -325,8 +326,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.animationTimer = WALK_DURATION;
         this.animator.animate(AnimationState.Walk);
 
-        if (this.sprite.animationSpeed * lookDirection < 0) {
-          this.sprite.animationSpeed *= lookDirection;
+        if (this.sprite.animationSpeed * this.lookDirection < 0) {
+          this.sprite.animationSpeed *= this.lookDirection;
         }
       }
     }
@@ -462,5 +463,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this._hp = hp;
     this.namePlate.text = `${this.name} ${Math.ceil(this._hp)}`;
     this.body.active = 1;
+  }
+
+  get direction() {
+    return this.lookDirection;
   }
 }
