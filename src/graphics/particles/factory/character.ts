@@ -34,7 +34,7 @@ export const createWandParticles = (character: Character) =>
             Math.random() * character.player.selectedSpell!.elements.length
           ),
           scale: Math.random() * 0.3 + 0.2,
-          alpha: Math.random() * 0.3 + 0.7,
+          alpha: Math.random() * 0.2 + 0.8,
         };
       },
     }
@@ -50,7 +50,7 @@ export const createBackgroundParticles = (character: Character) =>
     ),
     {
       ...SimpleParticleEmitter.defaultConfig,
-      spawnRange: 32,
+      spawnRange: 64,
       spawnFrequency: 0.05,
       animate: false,
       fade: true,
@@ -59,10 +59,14 @@ export const createBackgroundParticles = (character: Character) =>
         const direction = Math.random() - 0.5;
 
         return {
-          x: character.position.x + 18 + direction * 64,
-          y: character.position.y + 80,
+          x:
+            character.position.x +
+            18 -
+            character.direction * 16 +
+            direction * 64,
+          y: character.position.y + 48,
           xVelocity: direction,
-          yVelocity: -0.5 - Math.random(),
+          yVelocity: -0.2 - Math.random() * 0.5,
           frame: Math.floor(
             Math.random() * character.player.selectedSpell!.elements.length
           ),

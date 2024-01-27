@@ -16,7 +16,6 @@ const blocks: SpriteBlock[] = [];
 const DIRECTORY = "./public/atlas/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?
-// @todo this doesn't really work for margins > 1
 const MARGIN = 1;
 
 const contents = fs.readdirSync(DIRECTORY);
@@ -118,44 +117,7 @@ packer.fit(blocks);
 const atlas = new Jimp(packer.root.w, packer.root.h);
 for (let block of blocks) {
   if (block.fit!.used) {
-    atlas
-      .blit(block.jimp, block.fit!.x + MARGIN, block.fit!.y + MARGIN)
-      .blit(
-        block.jimp,
-        block.fit!.x + MARGIN,
-        block.fit!.y,
-        0,
-        0,
-        block.w - MARGIN * 2,
-        MARGIN
-      )
-      .blit(
-        block.jimp,
-        block.fit!.x + MARGIN,
-        block.fit!.y + block.h - MARGIN,
-        0,
-        block.h - MARGIN * 3,
-        block.w - MARGIN * 2,
-        MARGIN
-      )
-      .blit(
-        block.jimp,
-        block.fit!.x,
-        block.fit!.y + MARGIN,
-        0,
-        0,
-        MARGIN,
-        block.h - MARGIN * 2
-      )
-      .blit(
-        block.jimp,
-        block.fit!.x + block.w - MARGIN,
-        block.fit!.y + MARGIN,
-        block.w - MARGIN * 3,
-        0,
-        MARGIN,
-        block.h - MARGIN * 2
-      );
+    atlas.composite(block.jimp, block.fit!.x + MARGIN, block.fit!.y + MARGIN);
 
     frames[block.name] = {
       frame: {
