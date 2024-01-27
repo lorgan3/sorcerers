@@ -26,7 +26,7 @@ import {
 } from "../../graphics/particles/factory/character";
 
 // Start bouncing when impact is greater than this value
-const BOUNCE_TRIGGER = 5;
+const BOUNCE_TRIGGER = 4;
 
 const WALK_DURATION = 20;
 const MELEE_DURATION = 45;
@@ -223,8 +223,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
         x / 6 + this.body.xVelocity / 2,
         y / 6 + this.body.yVelocity / 2,
         velocity > 8 ? 12 : 8,
-        velocity * 0.6,
-        2
+        velocity * 0.5,
+        1.5
       );
     }
   };
