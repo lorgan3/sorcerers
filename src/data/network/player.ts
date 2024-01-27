@@ -44,6 +44,10 @@ export class Player {
   }
 
   removeCharacter(character: Character) {
+    if (character === this.activeCharacter) {
+      this.active--;
+    }
+
     const index = this.characters.indexOf(character);
     if (this.active >= this.characters.length) {
       this.active = -1;
