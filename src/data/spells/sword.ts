@@ -19,7 +19,7 @@ export class Sword extends Container implements TickingEntity {
   private sprite!: Sprite;
   private bounces = 40 * Manager.instance.getElementValue(Element.Physical);
   private lastY?: number;
-  private lifetime = 300;
+  private lifetime = 150;
 
   private shakeXOffset = 0;
   private shakeYOffset = 0;

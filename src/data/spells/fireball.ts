@@ -20,7 +20,7 @@ export class Fireball extends Container implements Syncable {
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
   private bounces = 5;
-  private lifetime = 300;
+  private lifetime = 100;
 
   public id = -1;
   public readonly type = EntityType.Fireball;
@@ -97,8 +97,8 @@ export class Fireball extends Container implements Syncable {
         x,
         y,
         16,
-        5,
-        3 + Manager.instance.getElementValue(Element.Elemental)
+        3,
+        2 + Manager.instance.getElementValue(Element.Elemental)
       )
     );
     Server.instance.kill(this);
