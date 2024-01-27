@@ -16,7 +16,6 @@ import {
   Priority,
   Syncable,
   TickingEntity,
-  isSyncableEntity,
 } from "../entity/types";
 import { DamageNumberContainer } from "../../graphics/damageNumber";
 import { DamageSource } from "../damage/types";
@@ -24,6 +23,7 @@ import { getId } from "../entity";
 import { TurnState } from "../network/types";
 import { ParticleManager } from "../../graphics/particles";
 import { KeyboardController } from "../controller/keyboardController";
+import { Character } from "../entity/character";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -31,11 +31,12 @@ const SINK_AMOUNT = 20;
 const SHAKE_AMOUNT = 10;
 const SHAKE_INTENSITY = 12;
 const SHAKE_INTERVAL = 25;
+const KILL_DELAY = 20;
 
 export class Level {
   private app: Application<HTMLCanvasElement>;
   public readonly viewport: Viewport;
-  private followedEntity: DisplayObject | null = null;
+  public followedEntity: DisplayObject | null = null;
   private followTime = 0;
   private intervalId = -1;
 
@@ -52,6 +53,9 @@ export class Level {
   public readonly entityMap = new Map<number, TickingEntity>();
   public readonly hurtables = new Set<HurtableEntity>();
   public readonly syncables: Syncable[] = [];
+
+  private deadCharacterQueue: Character[] = [];
+  private deathQueueTimer = 0;
 
   private static _instance: Level;
   static get instance() {
@@ -151,8 +155,20 @@ export class Level {
     if (Server.instance) {
       for (let entity of this.hurtables) {
         if (entity.hp <= 0) {
-          if (entity === Server.instance.getActiveCharacter()) {
-            Server.instance.clearActiveCharacter();
+          if (entity instanceof Character) {
+            if (!this.deadCharacterQueue.includes(entity)) {
+              if (entity === Server.instance.getActiveCharacter()) {
+                Server.instance.clearActiveCharacter();
+              }
+
+              //@todo: keep track of the last damage dealer instead
+              if (entity.hp < -500) {
+                Server.instance.kill(entity);
+              } else {
+                this.deadCharacterQueue.push(entity);
+              }
+            }
+            break;
           }
 
           Server.instance.kill(entity);
@@ -316,5 +332,22 @@ export class Level {
       speed: 12,
       allowButtons: true,
     });
+  }
+
+  performDeathQueue(dt: number) {
+    if (this.deadCharacterQueue.length === 0) {
+      return false;
+    }
+
+    Server.instance.setTurnState(TurnState.Killing);
+    Server.instance.follow(this.deadCharacterQueue[0]);
+
+    this.deathQueueTimer += dt;
+    if (this.deathQueueTimer >= KILL_DELAY) {
+      this.deathQueueTimer = 0;
+      Server.instance.kill(this.deadCharacterQueue.shift()!);
+    }
+
+    return true;
   }
 }

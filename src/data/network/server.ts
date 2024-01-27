@@ -93,6 +93,13 @@ export class Server extends Manager {
     super.tick(dt, dtMs);
 
     if (
+      this.turnState === TurnState.Ending ||
+      this.turnState === TurnState.Killing
+    ) {
+      Level.instance.performDeathQueue(dt);
+    }
+
+    if (
       this.time - this.turnStartTime > this.turnLength &&
       this.turnState !== TurnState.Attacked
     ) {
@@ -430,5 +437,17 @@ export class Server extends Manager {
 
   rename(newName: string) {
     this._self!.rename(newName);
+  }
+
+  follow(target: HurtableEntity) {
+    if (Level.instance.followedEntity === target) {
+      return;
+    }
+
+    Level.instance.follow(target);
+    this.broadcast({
+      type: MessageType.Focus,
+      id: target.id,
+    });
   }
 }

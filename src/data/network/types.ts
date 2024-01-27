@@ -20,6 +20,7 @@ export enum MessageType {
   Die,
   Spawn,
   DynamicUpdate,
+  Focus,
 }
 
 export type Message =
@@ -120,6 +121,10 @@ export type Message =
       kind: EntityType;
       id: number;
       data: any;
+    }
+  | {
+      type: MessageType.Focus;
+      id: number;
     };
 
 export interface Popup {
@@ -132,4 +137,5 @@ export enum TurnState {
   Ongoing,
   Attacked,
   Ending,
+  Killing,
 }

@@ -222,6 +222,15 @@ export class Client extends Manager {
           entity.deserialize(message.data);
         }
         break;
+
+      case MessageType.Focus:
+        {
+          const entity = Level.instance.entityMap.get(
+            message.id
+          ) as HurtableEntity;
+          Level.instance.follow(entity);
+        }
+        break;
     }
   }
 
