@@ -24,6 +24,8 @@ import {
   createBackgroundParticles,
   createWandParticles,
 } from "../../graphics/particles/factory/character";
+import { createCharacterGibs } from "./gib/characterGibs";
+import { Explosion } from "../../graphics/explosion";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 4;
@@ -429,6 +431,34 @@ export class Character extends Container implements HurtableEntity, Syncable {
     );
 
     this.player.removeCharacter(this);
+
+    const [x, y] = this.getCenter();
+    new Explosion(x, y);
+    Level.instance.shake();
+    Level.instance.damage(new ExplosiveDamage(x / 6, y / 6, 16, 1, 1));
+
+    const gibs = createCharacterGibs(...this.body.precisePosition);
+    gibs.forEach((gib) =>
+      gib.body.addVelocity((Math.random() - 0.5) * 12, -Math.random() * 6)
+    );
+    Level.instance.add(...gibs);
+
+    Level.instance.terrain.draw((ctx) => {
+      const splat =
+        AssetsContainer.instance.assets!["atlas"].textures["elf_splat"];
+
+      ctx.drawImage(
+        splat.baseTexture.resource.source,
+        splat.frame.left,
+        splat.frame.top,
+        splat.frame.width,
+        splat.frame.height,
+        x / 6 - splat.frame.width / 2,
+        y / 6 - splat.frame.height / 2 + 5,
+        splat.frame.width,
+        splat.frame.height
+      );
+    });
   }
 
   giveWings() {
