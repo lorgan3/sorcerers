@@ -69,6 +69,7 @@ export class Level {
 
     let lastX: number | null = null;
     let lastY: number | null = null;
+    let lastScale: number | null = null;
 
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
@@ -84,20 +85,20 @@ export class Level {
       .pinch()
       .wheel({})
       .on("moved", () => {
-        if (lastX) {
+        if (lastScale && lastScale === this.viewport.scale.x) {
           const controller = Manager.instance.self
             .controller as KeyboardController;
           const [x, y] = controller.getLocalMouse();
           controller.mouseMove(
-            x + lastX! - this.viewport.x,
-            y + lastY! - this.viewport.y
+            x + (lastX! - this.viewport.x) / this.viewport.scale.x,
+            y + (lastY! - this.viewport.y) / this.viewport.scale.y
           );
         }
 
+        lastScale = this.viewport.scale.x;
         lastX = this.viewport.x;
         lastY = this.viewport.y;
       });
-
     this.app.stage.addChild(this.viewport, this.damageNumberContainer);
 
     this.terrain = new Terrain(map);
