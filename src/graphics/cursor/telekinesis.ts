@@ -70,8 +70,8 @@ export class Telekinesis extends Container {
         this.activated = false;
       } else {
         const power =
-          Math.sqrt(distance / 5) *
-          Manager.instance.getElementValue(Element.Arcane);
+          Math.sqrt(distance / 10) *
+          (0.5 + Manager.instance.getElementValue(Element.Arcane) * 0.5);
 
         this.character.body.addAngularVelocity(
           power,
