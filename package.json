@@ -14,26 +14,26 @@
   },
   "dependencies": {
     "@pixi/sound": "5.2.2",
-    "firebase": "^10.7.1",
+    "firebase": "^10.7.2",
     "meta-png": "^1.0.6",
     "peerjs": "^1.5.2",
     "pixi-viewport": "^5.0.2",
-    "pixi.js": "^7.3.2",
-    "vue": "^3.3.11"
+    "pixi.js": "^7.4.0",
+    "vue": "^3.4.15"
   },
   "devDependencies": {
-    "@babel/types": "^7.23.5",
-    "@vitejs/plugin-vue": "^4.5.2",
+    "@babel/types": "^7.23.9",
+    "@vitejs/plugin-vue": "^5.0.3",
     "binpacking": "^0.0.1",
     "gifwrap": "^0.10.1",
     "jimp": "^0.22.10",
-    "jsdom": "^23.0.1",
-    "sass": "^1.69.5",
+    "jsdom": "^24.0.0",
+    "sass": "^1.70.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "vite": "^5.0.7",
-    "vitest": "^1.0.4",
-    "vue-tsc": "^1.8.25"
+    "vite": "^5.0.12",
+    "vitest": "^1.2.2",
+    "vue-tsc": "^1.8.27"
   },
   "resolutions": {
     "@types/css-font-loading-module": "^0.0.8"
