@@ -6,13 +6,16 @@ export class UpdatingTexture {
 
   constructor(canvas: OffscreenCanvas, offsetX = 0, offsetY = 0) {
     this.ctx = canvas.getContext("2d")!;
-    this.ctx.globalCompositeOperation = "destination-out";
     this.ctx.translate(-offsetX, -offsetY);
 
     this.texture = Texture.from(canvas);
   }
 
-  update(fn: (ctx: OffscreenCanvasRenderingContext2D) => void) {
+  update(
+    mode: GlobalCompositeOperation,
+    fn: (ctx: OffscreenCanvasRenderingContext2D) => void
+  ) {
+    this.ctx.globalCompositeOperation = mode;
     fn(this.ctx);
     this.ctx.fill();
 

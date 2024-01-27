@@ -118,9 +118,9 @@ export class Terrain {
     fn: (ctx: OffscreenCanvasRenderingContext2D) => void,
     layerFn?: (ctx: OffscreenCanvasRenderingContext2D) => void
   ) {
-    this.terrain.update(fn);
+    this.terrain.update("destination-out", fn);
     for (let layer of this.layerTextures) {
-      layer.update(layerFn ?? fn);
+      layer.update("destination-out", layerFn ?? fn);
     }
 
     this.collisionMask.subtract(mask, x | 0, y | 0);
@@ -141,6 +141,16 @@ export class Terrain {
         ctx.ellipse(x, y, r + 1, r + 1, 0, 0, Math.PI * 2);
       }
     );
+  }
+
+  draw(
+    fn: (ctx: OffscreenCanvasRenderingContext2D) => void,
+    layerFn?: (ctx: OffscreenCanvasRenderingContext2D) => void
+  ) {
+    this.terrain.update("source-atop", fn);
+    for (let layer of this.layerTextures) {
+      layer.update("source-atop", layerFn ?? fn);
+    }
   }
 
   serialize() {
