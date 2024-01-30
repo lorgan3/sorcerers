@@ -56,7 +56,7 @@ export class Gib extends Sprite implements TickingEntity {
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6, y * 6);
 
-    if (this.bloody && Math.random() > 0.8) {
+    if (this.bloody && Math.random() > 0.7) {
       Level.instance.bloodEmitter.spawn(
         x * 6 + this.offsetX + (Math.random() - 0.5) * 4,
         y * 6 + this.offsetY + (Math.random() - 0.5) * 4,
