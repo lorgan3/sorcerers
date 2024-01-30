@@ -14,8 +14,8 @@ export interface ComputedLayer {
   y: number;
   cx: number;
   cy: number;
-  r: number;
-  r2: number;
+  right: number;
+  bottom: number;
 }
 
 export interface Config {
@@ -68,8 +68,8 @@ export class Map {
           y,
           cx: x + layer.width / 2,
           cy: y + layer.height / 2,
-          r,
-          r2: r * r,
+          right: x + layer.width,
+          bottom: y + layer.height,
         };
       });
 

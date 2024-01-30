@@ -6,7 +6,6 @@ import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
 import { Spell } from "../spells";
 import { Cursor } from "../../graphics/cursor/types";
-import { getSquareDistance } from "../../util/math";
 import { Element } from "../spells/types";
 
 const TURN_GRACE_PERIOD = 3000;
@@ -85,7 +84,12 @@ export abstract class Manager {
 
       for (let character of this._self.characters) {
         const [x, y] = character.body.precisePosition;
-        if (getSquareDistance(x + 4.5, y + 8, layer.cx, layer.cy) < layer.r2) {
+        if (
+          x + 6 >= layer.x &&
+          x <= layer.right &&
+          y + 16 >= layer.y &&
+          y <= layer.bottom
+        ) {
           revealed = true;
           break;
         }
