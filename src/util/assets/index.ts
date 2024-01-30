@@ -5,6 +5,7 @@ import { MAP_LOADER } from "./mapLoader";
 
 export const defaultMaps = {
   playground: `${import.meta.env.BASE_URL}maps/playground.png`,
+  castle: `${import.meta.env.BASE_URL}maps/castle.png`,
 };
 
 export const loadAsMap = (src: string) => ({
