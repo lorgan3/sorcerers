@@ -9,6 +9,7 @@ import { Level } from "../map/level";
 import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
 import { Server } from "../network/server";
+import { DamageSource } from "../damage/types";
 
 const ANIMATION_SPEED = 0.1;
 const FLICKER_SPEED = 0.5;
@@ -90,8 +91,10 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     }
   }
 
-  damage(damage: number) {
+  damage(source: DamageSource, damage: number) {
     this.hp -= damage;
+
+    Level.instance.bloodEmitter.burst(this, damage, source);
   }
 
   tick(dt: number) {

@@ -7,6 +7,7 @@ import { DamageSource } from "../../data/damage/types";
 
 const TINT_MAP: Partial<Record<EntityType, number>> = {
   [EntityType.Character]: 0xb91e1e,
+  [EntityType.Shield]: 0xaf9b45,
 };
 
 export class BloodEmitter
