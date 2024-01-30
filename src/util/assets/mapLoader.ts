@@ -19,7 +19,7 @@ const mapLoader = {
   testParse: (_, resolvedAsset?: ResolvedAsset) =>
     Promise.resolve(resolvedAsset?.loadParser === MAP_LOADER),
 
-  parse: (asset: Blob) => Map.fromBlob(asset),
+  parse: (asset: Blob) => Map.parse(asset),
 } as LoaderParser;
 
 extensions.add(mapLoader);

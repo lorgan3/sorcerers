@@ -83,12 +83,12 @@ export class Map {
     });
   }
 
-  static async fromBlob(blob: Blob) {
+  static async parse(blob: Blob): Promise<Config> {
     let data = new Uint8Array(await blob.arrayBuffer());
     const maskJson = Map.getMetadata(data, MASK_KEY, "");
     const mask = maskJson ? JSON.parse(maskJson) : undefined;
 
-    return Map.fromConfig({
+    return {
       background: {
         data: Map.getMetadata(data, BACKGROUND_KEY),
       },
@@ -104,7 +104,11 @@ export class Map {
           : undefined,
       },
       layers: JSON.parse(Map.getMetadata(data, LAYERS_KEY, "[]")),
-    });
+    };
+  }
+
+  static async fromBlob(blob: Blob) {
+    return Map.fromConfig(await Map.parse(blob));
   }
 
   static async fromConfig(config: Config) {

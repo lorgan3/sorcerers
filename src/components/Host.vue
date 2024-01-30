@@ -140,7 +140,9 @@ const handleStart = async () => {
   if (selectedMap.value === CUSTOM) {
     onPlay(await Map.fromBlob(customMap.value!));
   } else {
-    onPlay(AssetsContainer.instance.assets![selectedMap.value]);
+    onPlay(
+      await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value])
+    );
   }
 };
 </script>
