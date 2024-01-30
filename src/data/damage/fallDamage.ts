@@ -51,7 +51,7 @@ export class FallDamage implements DamageSource {
       data.drawShape.call(this, ctx)
     );
 
-    this.getTargets().damage();
+    this.getTargets().damage(this);
   }
 
   getTargets() {

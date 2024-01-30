@@ -18,7 +18,7 @@ export class ImpactDamage implements DamageSource {
   damage() {
     Level.instance.terrain.subtractCircle(this.x, this.y, 8, circle16x16);
 
-    this.getTargets().damage();
+    this.getTargets().damage(this);
   }
 
   serialize() {
@@ -29,7 +29,7 @@ export class ImpactDamage implements DamageSource {
     if (!this.targets) {
       this.targets = new TargetList();
 
-      const range = 8 * 6;
+      const range = 9 * 6;
       Level.instance.withNearbyEntities(
         (this.x + 3) * 6,
         (this.y + 8) * 6,

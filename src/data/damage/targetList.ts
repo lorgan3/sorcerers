@@ -1,5 +1,6 @@
 import { HurtableEntity } from "../entity/types";
 import { Level } from "../map/level";
+import { DamageSource } from "./types";
 
 export interface Force {
   direction: number;
@@ -25,9 +26,10 @@ export class TargetList {
     return this;
   }
 
-  damage() {
+  damage(source: DamageSource) {
     for (let target of this.targets) {
       (Level.instance.entityMap.get(target.entityId) as HurtableEntity).damage(
+        source,
         target.damage,
         target.force
       );

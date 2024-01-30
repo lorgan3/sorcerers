@@ -45,7 +45,7 @@ export class ExplosiveDamage implements DamageSource {
       ]
     );
 
-    this.getTargets().damage();
+    this.getTargets().damage(this);
   }
 
   serialize() {

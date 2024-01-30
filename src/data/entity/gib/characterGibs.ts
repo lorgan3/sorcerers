@@ -10,6 +10,7 @@ export const createCharacterGibs = (x: number, y: number) => {
     mask: circle3x3,
     offsetX: -7,
     offsetY: -9,
+    bloody: true,
   });
   head.body.move(x, y);
 
@@ -18,6 +19,7 @@ export const createCharacterGibs = (x: number, y: number) => {
     mask: circle3x3,
     offsetX: -3,
     offsetY: 3,
+    bloody: true,
   });
   arm.body.move(x + 3, y + 6);
 
@@ -34,6 +36,7 @@ export const createCharacterGibs = (x: number, y: number) => {
     mask: circle3x3,
     offsetX: 0,
     offsetY: -6,
+    bloody: true,
   });
   legL.body.move(x + 1, y + 12);
 
@@ -42,6 +45,7 @@ export const createCharacterGibs = (x: number, y: number) => {
     mask: circle3x3,
     offsetX: 0,
     offsetY: -6,
+    bloody: true,
   });
   legR.body.move(x - 1, y + 12);
 

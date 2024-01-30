@@ -10,6 +10,7 @@ export interface GibConfig {
   offsetY: number;
   mask: CollisionMask;
   maskSprite?: Sprite;
+  bloody?: boolean;
 }
 
 const LIFETIME = 80;
@@ -17,9 +18,22 @@ const LIFETIME = 80;
 export class Gib extends Sprite implements TickingEntity {
   public readonly body: SimpleBody;
   private time = LIFETIME;
+  private bloody: boolean;
+  private offsetX: number;
+  private offsetY: number;
 
-  constructor({ texture, offsetX, offsetY, mask, maskSprite }: GibConfig) {
+  constructor({
+    texture,
+    offsetX,
+    offsetY,
+    mask,
+    maskSprite,
+    bloody = false,
+  }: GibConfig) {
     super(texture);
+    this.bloody = bloody;
+    this.offsetX = -offsetX * 2;
+    this.offsetY = -offsetY * 2;
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask,
@@ -41,6 +55,15 @@ export class Gib extends Sprite implements TickingEntity {
     this.body.tick(dt);
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6, y * 6);
+
+    if (this.bloody && Math.random() > 0.8) {
+      Level.instance.bloodEmitter.spawn(
+        x * 6 + this.offsetX + (Math.random() - 0.5) * 4,
+        y * 6 + this.offsetY + (Math.random() - 0.5) * 4,
+        0,
+        0
+      );
+    }
 
     this.time -= dt;
     if (this.time <= 0) {

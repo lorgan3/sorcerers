@@ -24,6 +24,7 @@ import { TurnState } from "../network/types";
 import { ParticleManager } from "../../graphics/particles";
 import { KeyboardController } from "../controller/keyboardController";
 import { Character } from "../entity/character";
+import { BloodEmitter } from "../../graphics/particles/bloodEmitter";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -45,6 +46,7 @@ export class Level {
   public readonly uiContainer = new Container();
   public readonly particleContainer = new ParticleManager();
   public readonly backgroundParticles = new ParticleManager();
+  public readonly bloodEmitter = new BloodEmitter();
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -115,6 +117,8 @@ export class Level {
       this.damageNumberContainer,
       this.uiContainer
     );
+
+    this.backgroundParticles.addEmitter(this.bloodEmitter);
 
     window.addEventListener("keydown", (event: KeyboardEvent) => {
       if (!event.repeat && event.key === "c") {

@@ -1,8 +1,8 @@
 import { TargetList } from "./targetList";
 
 export interface DamageSource {
-  readonly x: number;
-  readonly y: number;
+  readonly x?: number;
+  readonly y?: number;
   readonly type: DamageSourceType;
 
   damage(): void;

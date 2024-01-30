@@ -250,7 +250,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
           Level.instance.damage(
             new ImpactDamage(
               Math.floor(cx / 6) + this.sprite.scale.x * 6,
-              Math.floor(cy / 6) - 4,
+              Math.floor(cy / 6) - 6,
               direction,
               MELEE_POWER * Manager.instance.getElementValue(Element.Physical)
             )
@@ -372,10 +372,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
   }
 
-  damage(damage: number, force?: Force) {
+  damage(source: DamageSource, damage: number, force?: Force) {
     this.hp -= damage;
 
     Level.instance.damageNumberContainer.add(damage, ...this.getCenter());
+    Level.instance.bloodEmitter.burst(this, damage, source);
 
     if (force) {
       this.body.addAngularVelocity(force.power, force.direction);
@@ -442,6 +443,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       gib.body.addVelocity((Math.random() - 0.5) * 12, -Math.random() * 6)
     );
     Level.instance.add(...gibs);
+    Level.instance.bloodEmitter.burst(this, 100);
 
     Level.instance.terrain.draw((ctx) => {
       const splat =

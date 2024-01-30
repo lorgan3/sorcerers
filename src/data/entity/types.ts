@@ -1,19 +1,10 @@
 import { DisplayObject } from "pixi.js";
 import { PhysicsBody } from "../collision";
 import { Force } from "../damage/targetList";
+import { DamageSource } from "../damage/types";
 
 export interface TickingEntity extends DisplayObject {
   tick(dt: number): void;
-}
-
-export interface HurtableEntity extends TickingEntity {
-  body: PhysicsBody;
-  hp: number;
-  id: number;
-
-  damage(damage: number, force?: Force): void;
-  die(): void;
-  getCenter(): [number, number];
 }
 
 export interface Spawnable extends TickingEntity {
@@ -22,6 +13,15 @@ export interface Spawnable extends TickingEntity {
 
   serializeCreate(): any;
   die?(): void;
+}
+
+export interface HurtableEntity extends Spawnable {
+  body: PhysicsBody;
+  hp: number;
+
+  damage(source: DamageSource, damage: number, force?: Force): void;
+  die(): void;
+  getCenter(): [number, number];
 }
 
 export interface Syncable<T = any> extends Spawnable {
