@@ -15,6 +15,7 @@ const mask = ref("");
 const background = ref("");
 const layers = ref<Layer[]>([]);
 const addMask = ref(false);
+const preview = ref<HTMLDivElement>();
 
 const name = ref("");
 
@@ -85,7 +86,12 @@ const loadMap = (config: Config, map: string) => {
   }
 };
 
-const handleAddLayer = () => layers.value.push({ data: "", x: 0, y: 0 });
+const handleAddLayer = () =>
+  layers.value.push({
+    data: "",
+    x: Math.round(preview.value!.scrollLeft / 6),
+    y: Math.round(preview.value!.scrollTop / 6),
+  });
 
 const handleRemoveLayer = (index: number) => {
   layers.value = [...layers.value.splice(index, 0)];
@@ -214,7 +220,7 @@ const handleEnableMask = () => (addMask.value = true);
       <button class="primary" @click="handleBuild">Build</button>
       <button class="secondary" @click="onBack">Back</button>
     </section>
-    <section class="preview">
+    <section class="preview" ref="preview">
       <div v-if="!terrain && !background" class="description">
         <p>
           Build your own map by drawing a terrain and background image. All
@@ -245,14 +251,16 @@ const handleEnableMask = () => (addMask.value = true);
       </div>
       <img v-if="background" :src="background" />
       <img v-if="terrain" :src="terrain" />
-      <template v-for="layer in layers">
-        <img
+      <template v-for="(layer, i) in layers">
+        <div
           v-if="layer.data"
-          :src="(layer.data as string)"
-          @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
           class="layer"
+          @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
           :style="{ translate: `${layer.x * SCALE}px ${layer.y * SCALE}px` }"
-        />
+        >
+          <span class="meta">Layer {{ i }} ({{ layer.x }}, {{ layer.y }})</span>
+          <img :src="(layer.data as string)" />
+        </div>
       </template>
     </section>
   </div>
@@ -340,6 +348,34 @@ const handleEnableMask = () => (addMask.value = true);
 
     .layer {
       cursor: grab;
+      position: relative;
+
+      .meta {
+        display: none;
+        position: absolute;
+        font-family: Eternal;
+        font-size: 36px;
+        top: -40px;
+        z-index: 100;
+      }
+
+      img {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      &:hover {
+        img {
+          top: -6px;
+          left: -6px;
+          border: 1px solid rgba(0, 0, 0, 0.6);
+        }
+
+        .meta {
+          display: block;
+        }
+      }
     }
 
     .description {
