@@ -21,7 +21,7 @@ export interface ComputedLayer {
 export interface Config {
   terrain: {
     data: string | Blob;
-    mask?: ReturnType<CollisionMask["serialize"]>;
+    mask?: string | ReturnType<CollisionMask["serialize"]>;
   };
   background: {
     data: string | Blob;
@@ -52,8 +52,11 @@ export class Map {
     this.load = Promise.all([
       Map.createCanvasFromData(this.config.terrain.data),
       Map.createCanvasFromData(this.config.background.data),
+      typeof this.config.terrain.mask === "string"
+        ? Map.createCanvasFromData(this.config.terrain.mask)
+        : undefined,
       ...config.layers.map((layer) => Map.createCanvasFromData(layer.data)),
-    ]).then(([terrain, background, ...layers]) => {
+    ]).then(([terrain, background, mask, ...layers]) => {
       this._terrain = terrain;
       this._background = background;
       this._layers = layers.map((layer, i) => {
@@ -70,13 +73,21 @@ export class Map {
         };
       });
 
-      this._collisionMask = this.config.terrain.mask
-        ? CollisionMask.deserialize(this.config.terrain.mask as any)
-        : CollisionMask.fromAlpha(
-            terrain
-              .getContext("2d")!
-              .getImageData(0, 0, terrain.width, terrain.height)
-          );
+      if (typeof this.config.terrain.mask === "object") {
+        this._collisionMask = CollisionMask.deserialize(
+          this.config.terrain.mask as any
+        );
+      } else if (mask) {
+        this._collisionMask = CollisionMask.fromAlpha(
+          mask.getContext("2d")!.getImageData(0, 0, mask.width, mask.height)
+        );
+      } else {
+        this._collisionMask = CollisionMask.fromAlpha(
+          terrain
+            .getContext("2d")!
+            .getImageData(0, 0, terrain.width, terrain.height)
+        );
+      }
 
       this._width = terrain.width;
       this._height = terrain.height;
@@ -85,8 +96,6 @@ export class Map {
 
   static async parse(blob: Blob): Promise<Config> {
     let data = new Uint8Array(await blob.arrayBuffer());
-    const maskJson = Map.getMetadata(data, MASK_KEY, "");
-    const mask = maskJson ? JSON.parse(maskJson) : undefined;
 
     return {
       background: {
@@ -94,14 +103,7 @@ export class Map {
       },
       terrain: {
         data: Map.getMetadata(data, TERRAIN_KEY),
-        mask: mask
-          ? {
-              ...mask,
-              mask: mask.mask.map(
-                (data: string) => new Uint32Array(base64ToBytes(data).buffer)
-              ),
-            }
-          : undefined,
+        mask: Map.getMetadata(data, MASK_KEY, "") || undefined,
       },
       layers: JSON.parse(Map.getMetadata(data, LAYERS_KEY, "[]")),
     };
@@ -197,16 +199,8 @@ export class Map {
     data = addMetadata(data, BACKGROUND_KEY, this.config.background.data);
     data = addMetadata(data, LAYERS_KEY, JSON.stringify(this.config.layers));
 
-    if (this.config.terrain.mask) {
-      const mask = this.config.terrain.mask.mask;
-      data = addMetadata(
-        data,
-        MASK_KEY,
-        JSON.stringify({
-          ...this.config.terrain.mask,
-          mask: mask.map((array) => bytesToBase64(array)),
-        })
-      );
+    if (typeof this.config.terrain.mask === "string") {
+      data = addMetadata(data, MASK_KEY, this.config.terrain.mask);
     }
 
     return new Blob([data], {

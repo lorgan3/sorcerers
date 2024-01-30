@@ -2,7 +2,6 @@
 import { Ref, ref } from "vue";
 import { Map, Layer, Config } from "../data/map";
 import Input from "./Input.vue";
-import { CollisionMask } from "../data/collision/collisionMask";
 import { defaultMaps } from "../util/assets";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 
@@ -36,19 +35,8 @@ const handleAddMask = addImageFactory(mask);
 const handleAddBackground = addImageFactory(background);
 
 const handleBuild = async () => {
-  let data: ReturnType<CollisionMask["serialize"]> | undefined;
-
-  if (mask.value) {
-    const canvas = await Map.createCanvasFromData(mask.value);
-    const collisionMask = CollisionMask.fromAlpha(
-      canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height)
-    );
-
-    data = collisionMask.serialize();
-  }
-
   const map = await Map.fromConfig({
-    terrain: { data: terrain.value, mask: data },
+    terrain: { data: terrain.value, mask: mask.value },
     background: { data: background.value },
     layers: layers.value
       .filter((layer) => !!layer.data)
@@ -89,8 +77,12 @@ const loadMap = (config: Config, map: string) => {
   layers.value = config.layers;
   name.value = map;
 
-  // Collision mask cannot be restored so easily.
-  mask.value = "";
+  if (config.terrain.mask) {
+    mask.value = config.terrain.mask as string;
+    addMask.value = true;
+  } else {
+    mask.value = "";
+  }
 };
 
 const handleAddLayer = () => layers.value.push({ data: "", x: 0, y: 0 });
