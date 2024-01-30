@@ -234,7 +234,10 @@ export class Body implements PhysicsBody {
       const amount = Math.min(2, Math.ceil(Math.abs(this.xVelocity)));
 
       // Check if we can walk up steps <= 45 degrees.
-      if (!this.surface.collidesWith(this.mask, this.rX, this.rY - amount)) {
+      if (
+        this.yVelocity >= 0 &&
+        !this.surface.collidesWith(this.mask, this.rX, this.rY - amount)
+      ) {
         this.y = this.rY - amount;
 
         this.rY = this.y;
