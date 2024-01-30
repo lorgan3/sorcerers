@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Ref, ref } from "vue";
-import { Map, Layer } from "../data/map";
+import { Map, Layer, Config } from "../data/map";
 import Input from "./Input.vue";
 import { CollisionMask } from "../data/collision/collisionMask";
+import { defaultMaps } from "../util/assets";
+import { AssetsContainer } from "../util/assets/assetsContainer";
 
 const { onBack } = defineProps<{
   onBack: () => void;
@@ -62,6 +64,35 @@ const handleBuild = async () => {
   link.click();
 };
 
+const handleLoadCustom = async (event: Event) => {
+  const file = (event.target as HTMLInputElement).files![0];
+
+  if (!file) {
+    return;
+  }
+
+  try {
+    const config = await Map.parse(file);
+    loadMap(config, file.name.split(".").slice(0, -1).join(""));
+  } catch {
+    alert(`No map data was found in ${file.name}`);
+  }
+};
+
+const handleLoad = (map: string) => {
+  loadMap(AssetsContainer.instance.assets![map], map);
+};
+
+const loadMap = (config: Config, map: string) => {
+  terrain.value = config.terrain.data as string;
+  background.value = config.background.data as string;
+  layers.value = config.layers;
+  name.value = map;
+
+  // Collision mask cannot be restored so easily.
+  mask.value = "";
+};
+
 const handleAddLayer = () => layers.value.push({ data: "", x: 0, y: 0 });
 
 const handleRemoveLayer = (index: number) => {
@@ -112,7 +143,12 @@ const handleEnableMask = () => (addMask.value = true);
       <div class="section">
         <h2>Terrain</h2>
         <label class="inputButton">
-          <input type="file" @change="handleAddTerrain" />
+          <input
+            hidden
+            type="file"
+            @change="handleAddTerrain"
+            accept="image/*"
+          />
           <img v-if="terrain" :src="terrain" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
@@ -120,7 +156,7 @@ const handleEnableMask = () => (addMask.value = true);
           Add mask
         </button>
         <label v-else class="inputButton">
-          <input type="file" @change="handleAddMask" />
+          <input hidden type="file" @change="handleAddMask" accept="image/*" />
           <img v-if="mask" :src="mask" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
@@ -130,7 +166,12 @@ const handleEnableMask = () => (addMask.value = true);
       <div class="section">
         <h2>Background</h2>
         <label class="inputButton">
-          <input type="file" @change="handleAddBackground" />
+          <input
+            hidden
+            type="file"
+            @change="handleAddBackground"
+            accept="image/*"
+          />
           <img v-if="background" :src="background" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
@@ -150,8 +191,10 @@ const handleEnableMask = () => (addMask.value = true);
           </h3>
           <label class="inputButton">
             <input
+              hidden
               type="file"
               @change="(event) => handleAddLayerImage(event, layer)"
+              accept="image/*"
             />
             <img v-if="layer.data" :src="(layer.data as string)" />
             <div v-else class="placeholder">➕ Add image</div>
@@ -180,10 +223,34 @@ const handleEnableMask = () => (addMask.value = true);
       <button class="secondary" @click="onBack">Back</button>
     </section>
     <section class="preview">
-      <p class="description">
-        Build your own map by drawing a terrain and background image. All opaque
-        pixels on the terrain will be used as collision map for the level.
-      </p>
+      <div v-if="!terrain && !background" class="description">
+        <p>
+          Build your own map by drawing a terrain and background image. All
+          opaque pixels on the terrain will be used as collision map for the
+          level.
+          <br />You can also load a default or custom map to adjust it or see
+          how it's made.
+        </p>
+        <ul class="map-list">
+          <li v-for="(asset, name) of defaultMaps">
+            <label class="map" @click="handleLoad(name)">
+              <img :src="asset" />
+              <div>{{ name }}</div>
+            </label>
+          </li>
+          <li>
+            <label class="map custom-map">
+              <input
+                type="file"
+                hidden
+                @change="handleLoadCustom"
+                accept="image/*"
+              />
+              <div>➕ Custom map</div>
+            </label>
+          </li>
+        </ul>
+      </div>
       <img v-if="background" :src="background" />
       <img v-if="terrain" :src="terrain" />
       <template v-for="layer in layers">
@@ -245,10 +312,6 @@ const handleEnableMask = () => (addMask.value = true);
     }
 
     .inputButton {
-      input {
-        display: none;
-      }
-
       .placeholder {
         width: 100%;
         height: 100px;
@@ -291,6 +354,55 @@ const handleEnableMask = () => (addMask.value = true);
       position: absolute;
       padding: 20px;
       max-width: 600px;
+
+      .map-list {
+        display: flex;
+        gap: 12px;
+        margin: 12px 12px 12px 0;
+      }
+
+      .map {
+        position: relative;
+        box-shadow: 0 0 10px inset var(--primary);
+        border-radius: var(--small-radius);
+        background: var(--background);
+        width: 200px;
+        height: 100px;
+        display: block;
+        cursor: pointer;
+
+        div {
+          position: relative;
+          background: rgba(255, 255, 255, 0.6);
+          width: 100%;
+          padding: 3px;
+          box-sizing: border-box;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
+        }
+
+        img {
+          position: absolute;
+          left: 0;
+          top: 0;
+          scale: 1 1;
+
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+
+      .custom-map {
+        display: flex;
+        align-items: center;
+
+        div {
+          background-color: transparent;
+        }
+      }
     }
   }
 }
