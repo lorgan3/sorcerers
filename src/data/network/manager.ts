@@ -4,7 +4,7 @@ import { Popup, TurnState } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { DisplayObject } from "pixi.js";
-import { Spell } from "../spells";
+import { Spell, getSpellCost } from "../spells";
 import { Cursor } from "../../graphics/cursor/types";
 import { Element } from "../spells/types";
 
@@ -141,6 +141,7 @@ export abstract class Manager {
       elements: this.elements,
       players: this.players,
       activePlayer: this.activePlayer,
+      mana: this._self?.mana || 0,
     };
   }
 
@@ -165,7 +166,10 @@ export abstract class Manager {
         this.cursor = null;
       }
 
-      if (this.turnState === TurnState.Ongoing) {
+      if (
+        this.turnState === TurnState.Ongoing &&
+        player.mana >= getSpellCost(spell)
+      ) {
         this.cursor = new spell.cursor(player.activeCharacter, spell);
       }
     }
@@ -183,6 +187,7 @@ export abstract class Manager {
     this.activePlayer = this.players[player];
     this.activePlayer.active = character;
     this.activePlayerIndex = player;
+    this.activePlayer.nextTurn();
 
     this.followTarget = this.activePlayer.activeCharacter;
 
@@ -191,7 +196,10 @@ export abstract class Manager {
       this.cursor = null;
     }
 
-    if (this.activePlayer.selectedSpell) {
+    if (
+      this.activePlayer.selectedSpell &&
+      this.activePlayer.mana >= getSpellCost(this.activePlayer.selectedSpell)
+    ) {
       this.cursor = new this.activePlayer.selectedSpell.cursor(
         this.activePlayer.activeCharacter,
         this.activePlayer.selectedSpell
