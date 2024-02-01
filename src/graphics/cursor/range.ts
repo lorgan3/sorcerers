@@ -1,7 +1,7 @@
 import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell } from "../../data/spells";
+import { Spell, getSpellCost } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Manager } from "../../data/network/manager";
@@ -49,6 +49,8 @@ export class Range extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ x, y, xOffset, yOffset, turnState, projectile }: TriggerData) {
+    this.character.player.mana -= getSpellCost(this.spell);
+
     const [px, py] = this.character.body.precisePosition;
     projectile.cast(
       px + x + Math.cos(this.rotation) * xOffset,

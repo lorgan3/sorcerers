@@ -1,7 +1,7 @@
 import { AnimatedSprite, Container, DisplayObject } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell } from "../../data/spells";
+import { Spell, getSpellCost } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
@@ -74,6 +74,8 @@ export class Lock extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ projectile, turnState }: TriggerData) {
+    this.character.player.mana -= getSpellCost(this.spell);
+
     const position = this.character.player.controller.getMouse();
 
     projectile.cast(
@@ -123,7 +125,7 @@ export class Lock extends Container implements Cursor<TriggerData> {
         this.entity = null;
         Level.instance.withNearbyEntities(
           ...position,
-          16,
+          20,
           (entity: HurtableEntity) => {
             this.entity = entity;
             return true;

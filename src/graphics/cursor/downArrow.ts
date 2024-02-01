@@ -1,7 +1,7 @@
 import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell } from "../../data/spells";
+import { Spell, getSpellCost } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
@@ -46,6 +46,8 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ xOffset, yOffset, turnState, projectile }: TriggerData) {
+    this.character.player.mana -= getSpellCost(this.spell);
+
     const position = this.character.player.controller.getMouse();
     projectile.cast(position[0] / 6 + xOffset, yOffset, this.character);
 

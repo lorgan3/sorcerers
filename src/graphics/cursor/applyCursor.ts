@@ -1,4 +1,4 @@
-import { Spell } from "../../data/spells";
+import { Spell, getSpellCost } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Cursor } from "./types";
@@ -21,6 +21,8 @@ export class ApplyCursor implements Cursor<TriggerData> {
   remove(): void {}
 
   trigger({ apply, turnState }: TriggerData) {
+    this.character.player.mana -= getSpellCost(this.spell);
+
     this.applied = true;
     apply(this.character);
 

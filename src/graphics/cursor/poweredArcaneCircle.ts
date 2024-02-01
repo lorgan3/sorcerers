@@ -1,7 +1,7 @@
 import { AnimatedSprite, Container } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell } from "../../data/spells";
+import { Spell, getSpellCost } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 
@@ -67,6 +67,8 @@ export class PoweredArcaneCircle
   }
 
   trigger({ projectile, xOffset, yOffset, x, y, turnState }: TriggerData) {
+    this.character.player.mana -= getSpellCost(this.spell);
+
     const [px, py] = this.character.body.precisePosition;
     const rotation = this.indicator.rotation - Math.PI / 2;
 
