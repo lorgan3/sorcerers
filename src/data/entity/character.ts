@@ -1,4 +1,10 @@
-import { AnimatedSprite, Container, Sprite, Text, Texture } from "pixi.js";
+import {
+  AnimatedSprite,
+  BitmapText,
+  Container,
+  Sprite,
+  Texture,
+} from "pixi.js";
 import { Level } from "../map/level";
 import { Body } from "../collision/body";
 import { Controller, Key } from "../controller/controller";
@@ -114,7 +120,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   private sprite: AnimatedSprite;
   private wings: AnimatedSprite;
-  private namePlate: Text;
+  private namePlate: BitmapText;
   private particles?: ParticleEmitter;
   private foregroundParticles?: ParticleEmitter;
 
@@ -192,13 +198,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
     sprite2.scale.set(6);
     sprite2.alpha = 0.5;
 
-    this.namePlate = new Text(`${name} ${this._hp}`, {
-      fontFamily: "Eternal",
-      fontSize: 32,
-      fill: this.player.color,
-      dropShadow: true,
-      dropShadowDistance: 4,
-      dropShadowAngle: 45,
+    this.namePlate = new BitmapText(`${name} ${this._hp}`, {
+      fontName: "Eternal",
+      tint: this.player.color,
     });
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(18, -40);
@@ -375,7 +377,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   damage(source: DamageSource, damage: number, force?: Force) {
     this.hp -= damage;
 
-    Level.instance.damageNumberContainer.add(damage, ...this.getCenter());
+    Level.instance.numberContainer.damage(damage, ...this.getCenter());
     Level.instance.bloodEmitter.burst(this, damage, source);
 
     if (force) {

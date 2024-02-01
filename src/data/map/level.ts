@@ -42,7 +42,7 @@ export class Level {
   private intervalId = -1;
 
   private defaultLayer = new Container();
-  public readonly damageNumberContainer = new DamageNumberContainer();
+  public readonly numberContainer = new DamageNumberContainer();
   public readonly uiContainer = new Container();
   public readonly particleContainer = new ParticleManager();
   public readonly backgroundParticles = new ParticleManager();
@@ -105,7 +105,7 @@ export class Level {
         lastX = this.viewport.x;
         lastY = this.viewport.y;
       });
-    this.app.stage.addChild(this.viewport, this.damageNumberContainer);
+    this.app.stage.addChild(this.viewport, this.numberContainer);
 
     this.terrain = new Terrain(map);
     this.viewport.addChild(
@@ -114,7 +114,7 @@ export class Level {
       this.defaultLayer,
       this.particleContainer,
       this.terrain.foreground,
-      this.damageNumberContainer,
+      this.numberContainer,
       this.uiContainer
     );
 
@@ -151,7 +151,7 @@ export class Level {
   }
 
   tick(dt: number) {
-    this.damageNumberContainer.tick(dt);
+    this.numberContainer.tick(dt);
     this.terrain.killbox.tick(dt);
     this.particleContainer.tick(dt);
     this.backgroundParticles.tick(dt);

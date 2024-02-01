@@ -1,3 +1,4 @@
+import { BitmapFont } from "pixi.js";
 import { getAssets } from ".";
 
 export class AssetsContainer {
@@ -15,6 +16,19 @@ export class AssetsContainer {
 
     getAssets().then((assets) => {
       this.assets = assets;
+
+      BitmapFont.from(
+        "Eternal",
+        {
+          fontFamily: "Eternal",
+          fontSize: 32,
+          fill: "#fff",
+          dropShadow: true,
+          dropShadowDistance: 4,
+          dropShadowAngle: 45,
+        },
+        { chars: BitmapFont.ALPHANUMERIC }
+      );
 
       if (this.callback) {
         this.callback();

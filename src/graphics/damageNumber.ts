@@ -1,19 +1,20 @@
-import { Container, Text } from "pixi.js";
+import { BitmapText, Container, Text } from "pixi.js";
 
 const SPEED = -1;
 const LIFETIME = 100;
 
-class DamageNumber extends Text {
+enum Color {
+  Damage = "#f00",
+  Heal = "#0f0",
+}
+
+class DamageNumber extends BitmapText {
   lifetime = LIFETIME;
 
-  constructor(amount: number, x: number, y: number) {
-    super(`-${Math.ceil(amount)}`, {
-      fontFamily: "Eternal",
-      fontSize: 32,
-      fill: "#f00",
-      dropShadow: true,
-      dropShadowDistance: 4,
-      dropShadowAngle: 45,
+  constructor(amount: string, x: number, y: number, color: Color) {
+    super(amount, {
+      fontName: "Eternal",
+      tint: color,
     });
     this.anchor.set(0.5);
     this.position.set(x, y);
@@ -36,7 +37,15 @@ export class DamageNumberContainer extends Container<DamageNumber> {
     }
   }
 
-  add(amount: number, x: number, y: number) {
-    this.addChild(new DamageNumber(amount, x, y));
+  private add(amount: string, x: number, y: number, color: Color) {
+    this.addChild(new DamageNumber(amount, x, y, color));
+  }
+
+  damage(amount: number, x: number, y: number) {
+    this.add(`-${Math.ceil(amount)}`, x, y, Color.Damage);
+  }
+
+  heal(amount: number, x: number, y: number) {
+    this.add(`${Math.ceil(amount)}`, x, y, Color.Heal);
   }
 }
