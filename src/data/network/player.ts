@@ -5,6 +5,7 @@ import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";
 import { Team } from "../team";
 import { Spell } from "../spells";
+import { MANA_BASE_GAIN, MANA_PER_TURN_GAIN, MAX_MANA } from "./constants";
 
 export class Player {
   public readonly characters: Character[] = [];
@@ -14,6 +15,8 @@ export class Player {
   private _team = Team.empty();
   private _color = "";
   private _controller: Controller = new NetworkController();
+  private _mana = 0;
+  private turn = 0;
 
   public selectedSpell: Spell | null = null;
 
@@ -44,11 +47,11 @@ export class Player {
   }
 
   removeCharacter(character: Character) {
-    if (character === this.activeCharacter) {
+    const index = this.characters.indexOf(character);
+    if (index <= this.active) {
       this.active--;
     }
 
-    const index = this.characters.indexOf(character);
     if (this.active >= this.characters.length) {
       this.active = -1;
     }
@@ -96,5 +99,27 @@ export class Player {
     }
 
     this._connection = connection;
+  }
+
+  get mana() {
+    return this._mana;
+  }
+
+  set mana(value: number) {
+    const oldMana = this._mana;
+    this._mana = Math.min(value, MAX_MANA);
+
+    const diff = this._mana - oldMana;
+    if (diff > 0) {
+      Level.instance.numberContainer.mana(
+        diff,
+        ...this.activeCharacter.getCenter()
+      );
+    }
+  }
+
+  nextTurn() {
+    this.turn++;
+    this.mana += MANA_BASE_GAIN + MANA_PER_TURN_GAIN * this.turn;
   }
 }

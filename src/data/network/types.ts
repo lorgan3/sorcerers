@@ -46,6 +46,7 @@ export type Message =
       activeCharacter: number;
       elements: number[];
       turnStartTime: number;
+      newMana: number;
     }
   | {
       type: MessageType.SpawnCharacter;

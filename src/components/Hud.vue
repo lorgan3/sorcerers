@@ -5,6 +5,7 @@ import { Player } from "./../data/network/player";
 import { Popup } from "../data/network/types";
 import { Element } from "../data/spells/types";
 import { ELEMENT_MAP } from "../graphics/elements";
+import { MAX_MANA } from "../data/network/constants";
 
 interface ActivePopup extends Popup {
   out: boolean;
@@ -22,6 +23,7 @@ const elements = ref(
 );
 const turnTime = ref(0);
 const gameTime = ref(0);
+const mana = ref(0);
 const players = ref<Player[]>([]);
 const activePlayer = ref<Player | null>(null);
 const popup = ref<ActivePopup | null>(null);
@@ -37,6 +39,7 @@ const poll = () => {
   gameTime.value = data.gameTime;
   players.value = data.players;
   activePlayer.value = data.activePlayer;
+  mana.value = data.mana;
 
   if (!popup.value) {
     const popped = Manager.instance.popupPop();
@@ -86,14 +89,20 @@ onBeforeUnmount(() => window.clearInterval(id));
       </ul>
     </div>
     <div class="timer socket">
-      <span :class="{ timeout: turnTime < 10000 && turnTime > 0 }">{{
-        Math.ceil(turnTime / 1000)
-      }}</span>
+      <span
+        :class="{ text: true, timeout: turnTime < 10000 && turnTime > 0 }"
+        >{{ Math.ceil(turnTime / 1000) }}</span
+      >
     </div>
     <div class="clock socket">
-      <span :class="{ timeout: gameTime < 120000 && gameTime > 0 }">{{
-        numberFormatter.format(gameTime)
-      }}</span>
+      <span
+        :class="{ text: true, timeout: gameTime < 120000 && gameTime > 0 }"
+        >{{ numberFormatter.format(gameTime) }}</span
+      >
+    </div>
+    <div class="mana socket">
+      <span class="mana-bar" :style="{ '--value': (mana / MAX_MANA) * 100 }" />
+      <span class="text">{{ Math.ceil(mana) }}</span>
     </div>
     <div class="elements socket">
       <span
@@ -175,6 +184,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   grid-template:
     "hp hp hp"
     "timer clock clock"
+    "mana mana mana"
     "elements elements elements";
 
   padding: 10px;
@@ -191,6 +201,11 @@ onBeforeUnmount(() => window.clearInterval(id));
     .players {
       grid-template-rows: 1fr;
     }
+  }
+
+  .text {
+    display: block;
+    margin-bottom: -4px;
   }
 
   .players {
@@ -238,17 +253,19 @@ onBeforeUnmount(() => window.clearInterval(id));
     border-radius: 8px;
     padding: 6px;
     text-align: center;
-    min-height: 22px;
     font-family: Eternal;
     font-size: 22px;
+    box-sizing: border-box;
   }
 
   .timer {
     grid-area: timer;
+    width: 60px;
   }
 
   .clock {
     grid-area: clock;
+    width: 130px;
   }
 
   .elements {
@@ -282,6 +299,35 @@ onBeforeUnmount(() => window.clearInterval(id));
             drop-shadow(2px 2px 0px #000);
           animation: pulse calc(var(--value, 1) * 2s) infinite;
         }
+      }
+    }
+  }
+
+  .mana {
+    grid-area: mana;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    &-bar {
+      display: block;
+      width: 100%;
+      height: 5px;
+      background: #564f43;
+      border-radius: 4px;
+
+      &::after {
+        content: "";
+        display: block;
+        height: 6px;
+        width: calc(var(--value, 0) * 1%);
+        background: rgb(42, 60, 255);
+        filter: brightness(var(--pulse, 1));
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
+        translate: 0 -1px;
+        transition: 0.3s width;
+        animation: pulse 3s infinite;
       }
     }
   }

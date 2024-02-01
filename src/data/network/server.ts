@@ -378,6 +378,7 @@ export class Server extends Manager {
       activeCharacter: this.activePlayer!.active,
       elements: Object.values(this.elements),
       turnStartTime: this.turnStartTime,
+      newMana: player.mana,
     });
 
     this.addPopup({

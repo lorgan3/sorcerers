@@ -6,6 +6,7 @@ const LIFETIME = 100;
 enum Color {
   Damage = "#f00",
   Heal = "#0f0",
+  Mana = "#2a3cff",
 }
 
 class DamageNumber extends BitmapText {
@@ -47,5 +48,9 @@ export class DamageNumberContainer extends Container<DamageNumber> {
 
   heal(amount: number, x: number, y: number) {
     this.add(`${Math.ceil(amount)}`, x, y, Color.Heal);
+  }
+
+  mana(amount: number, x: number, y: number) {
+    this.add(`${Math.ceil(amount)}`, x, y, Color.Mana);
   }
 }
