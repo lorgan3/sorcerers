@@ -14,6 +14,7 @@ import { Cursor } from "../../graphics/cursor/types";
 import { TurnState } from "../network/types";
 import { Element } from "./types";
 import { PoweredArcaneCircle } from "../../graphics/cursor/poweredArcaneCircle";
+import { Manager } from "../network/manager";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
@@ -21,6 +22,8 @@ export interface Spell<C extends Cursor = any> {
   cursor: new (character: Character, spell: Spell<C>) => C;
   data: Parameters<C["trigger"]>[0];
   elements: Element[];
+  cost: number;
+  costMultiplier?: () => number;
 }
 
 function spell<C extends Cursor>(
@@ -30,10 +33,14 @@ function spell<C extends Cursor>(
   return { ...config, cursor };
 }
 
+export const getSpellCost = (spell: Spell) =>
+  spell.cost * (spell.costMultiplier?.() || 1);
+
 const MELEE = spell(ApplyCursor, {
   name: "Melee",
   description: "For less gifted sorcerers",
   elements: [Element.Physical],
+  cost: 5,
   data: {
     applyKeys: [Key.M1],
     apply: (character: Character) => character.melee(),
@@ -45,6 +52,7 @@ const FIREBALL = spell(PoweredArcaneCircle, {
   name: "Fireball",
   description: "Generic fireball",
   elements: [Element.Elemental],
+  cost: 10,
   data: {
     projectile: Fireball,
     xOffset: 7,
@@ -59,6 +67,7 @@ const ARTHUR_SWORD = spell(ArrowDown, {
   name: "Arthur's sword",
   description: "Giant sword from the sky",
   elements: [Element.Physical, Element.Arcane],
+  cost: 30,
   data: {
     projectile: Sword,
     xOffset: -5.5,
@@ -72,6 +81,7 @@ const TELEKINESIS = spell(Lock, {
   name: "Telekinesis",
   description: "Move from a distance",
   elements: [Element.Arcane],
+  cost: 40,
   data: {
     target: Target.Character,
     projectile: Telekinesis,
@@ -83,6 +93,9 @@ const SHIELD = spell(ArcaneCircle, {
   name: "Shield",
   description: "Contingency plan",
   elements: [Element.Physical, Element.Life],
+  cost: 10,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   data: {
     projectile: Shield,
     xOffset: 10,
@@ -97,6 +110,9 @@ const BAKURETSU = spell(ArrowDown, {
   name: "Bakuretsu",
   description: "Ekusuuu ploooooooosion",
   elements: [Element.Elemental, Element.Arcane],
+  cost: 40,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Arcane) * 0.4,
   data: {
     projectile: Bakuretsu,
     xOffset: 0,
@@ -109,6 +125,7 @@ const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
   description: "Magical death laser",
   elements: [Element.Arcane],
+  cost: 20,
   data: {
     projectile: Zoltraak,
     xOffset: 2,
@@ -122,6 +139,9 @@ const ZOLTRAAK = spell(ArcaneCircle, {
 const WINGS = spell(ApplyCursor, {
   name: "Wings",
   elements: [Element.Life],
+  cost: 20,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   data: {
     applyKeys: [Key.Up, Key.W],
     apply: (character: Character) => character.giveWings(),
