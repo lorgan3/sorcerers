@@ -17,6 +17,10 @@ const SLOTS = 30;
 const previewName = ref(Manager.instance?.selectedSpell?.name);
 const previewDescription = ref(Manager.instance?.selectedSpell?.description);
 const previewElements = ref(Manager.instance?.selectedSpell?.elements);
+const previewCost = ref(Manager.instance?.selectedSpell?.cost || 0);
+const previewMultiplier = ref(
+  Manager.instance?.selectedSpell?.costMultiplier?.() || 1
+);
 
 const handleClick = (spell?: Spell) => {
   if (spell) {
@@ -47,6 +51,9 @@ const onMouseLeave = (event: Event) => {
   previewName.value = Manager.instance.selectedSpell?.name;
   previewDescription.value = Manager.instance.selectedSpell?.description;
   previewElements.value = Manager.instance.selectedSpell?.elements;
+  previewCost.value = Manager.instance?.selectedSpell?.cost || 0;
+  previewMultiplier.value =
+    Manager.instance?.selectedSpell?.costMultiplier?.() || 1;
 };
 
 const onMouseEnter = (spell?: Spell) => {
@@ -54,6 +61,8 @@ const onMouseEnter = (spell?: Spell) => {
     previewName.value = spell.name;
     previewDescription.value = spell.description;
     previewElements.value = spell.elements;
+    previewCost.value = spell.cost;
+    previewMultiplier.value = spell.costMultiplier?.() || 1;
   }
 };
 </script>
@@ -78,8 +87,23 @@ const onMouseEnter = (spell?: Spell) => {
           </div>
         </div>
         <div class="spell">
-          <span class="name">
-            <span>{{ previewName || "-" }}</span>
+          <div class="description-container">
+            <span class="name">
+              <span>{{ previewName || "-" }}</span>
+            </span>
+            <span class="description">{{ previewDescription }}</span>
+          </div>
+
+          <div class="mana-container">
+            <span
+              v-if="previewCost"
+              :class="{
+                cost: true,
+                positive: previewMultiplier < 1,
+                negative: previewMultiplier > 1,
+              }"
+              >{{ Math.ceil(previewCost * previewMultiplier) }}</span
+            >
             <span class="elements">
               <img
                 v-for="element in previewElements"
@@ -88,8 +112,7 @@ const onMouseEnter = (spell?: Spell) => {
                 :title="element"
               />
             </span>
-          </span>
-          <span class="description">{{ previewDescription }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -165,27 +188,50 @@ const onMouseEnter = (spell?: Spell) => {
 
     .spell {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      justify-content: space-between;
       padding: 6px;
       padding-top: 0;
+
+      .description-container,
+      .mana-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+      }
+
+      .mana-container {
+        align-items: center;
+      }
 
       .name {
         font-family: Eternal;
         font-size: 22px;
         color: var(--highlight);
-
-        .elements {
-          margin-left: 8px;
-
-          img {
-            width: 16px;
-            height: 16px;
-          }
-        }
       }
 
       .description {
         font-size: 12px;
+      }
+
+      .elements {
+        img {
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      .cost {
+        font-family: Eternal;
+        font-size: 22px;
+
+        &.positive {
+          color: rgb(62, 102, 62);
+        }
+
+        &.negative {
+          color: rgb(94, 51, 51);
+        }
       }
     }
   }
