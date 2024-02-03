@@ -97,6 +97,20 @@ button {
   width: 100%;
 }
 
+@keyframes pulse {
+  0% {
+    --pulse: 1;
+  }
+
+  50% {
+    --pulse: 1.6;
+  }
+
+  100% {
+    --pulse: 1;
+  }
+}
+
 /* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126
    License: none (public domain)

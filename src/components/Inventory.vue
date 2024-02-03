@@ -86,15 +86,8 @@ const onMouseEnter = (spell?: Spell) => {
             }}</span>
           </div>
         </div>
-        <div class="spell">
-          <div class="description-container">
-            <span class="name">
-              <span>{{ previewName || "-" }}</span>
-            </span>
-            <span class="description">{{ previewDescription }}</span>
-          </div>
-
-          <div class="mana-container">
+        <div v-if="previewName" class="spell">
+          <div class="magic">
             <span
               v-if="previewCost"
               :class="{
@@ -112,6 +105,12 @@ const onMouseEnter = (spell?: Spell) => {
                 :title="element"
               />
             </span>
+          </div>
+          <div class="details">
+            <span class="name">
+              <span>{{ previewName }}</span>
+            </span>
+            <span class="description">{{ previewDescription }}</span>
           </div>
         </div>
       </div>
@@ -189,32 +188,29 @@ const onMouseEnter = (spell?: Spell) => {
     .spell {
       display: flex;
       flex-direction: row;
-      justify-content: space-between;
+      align-items: center;
       padding: 6px;
       padding-top: 0;
+      gap: 6px;
+      word-wrap: break-word;
 
-      .description-container,
-      .mana-container {
+      .magic {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        align-items: center;
+        background: var(--background-dark);
+        padding: 3px 0;
+        border-radius: var(--big-radius);
+        height: 38px;
+        gap: 6px;
+        width: 60px;
         justify-content: space-evenly;
       }
 
-      .mana-container {
-        align-items: center;
-      }
-
-      .name {
-        font-family: Eternal;
-        font-size: 22px;
-        color: var(--highlight);
-      }
-
-      .description {
-        font-size: 12px;
-      }
-
       .elements {
+        display: flex;
+        flex-direction: column;
+
         img {
           width: 16px;
           height: 16px;
@@ -223,7 +219,12 @@ const onMouseEnter = (spell?: Spell) => {
 
       .cost {
         font-family: Eternal;
-        font-size: 22px;
+        font-size: 36px;
+        margin-bottom: -4px;
+        animation: pulse 3s infinite;
+        color: rgb(42, 60, 255);
+        filter: brightness(var(--pulse, 1));
+        text-shadow: 1px 1px 1px black;
 
         &.positive {
           color: rgb(62, 102, 62);
@@ -231,6 +232,24 @@ const onMouseEnter = (spell?: Spell) => {
 
         &.negative {
           color: rgb(94, 51, 51);
+        }
+      }
+
+      .details {
+        display: flex;
+        flex-direction: column;
+        width: 0;
+
+        flex: 1;
+
+        .name {
+          font-family: Eternal;
+          font-size: 22px;
+          color: var(--highlight);
+        }
+
+        .description {
+          font-size: 12px;
         }
       }
     }

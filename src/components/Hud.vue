@@ -365,19 +365,5 @@ onBeforeUnmount(() => window.clearInterval(id));
       transform: rotate(0deg);
     }
   }
-
-  @keyframes pulse {
-    0% {
-      --pulse: 1;
-    }
-
-    50% {
-      --pulse: 1.5;
-    }
-
-    100% {
-      --pulse: 1;
-    }
-  }
 }
 </style>
