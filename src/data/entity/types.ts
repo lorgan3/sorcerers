@@ -34,7 +34,7 @@ export interface Syncable<T = any> extends Spawnable {
 export function isHurtableEntity(
   entity: TickingEntity
 ): entity is HurtableEntity {
-  return "die" in entity;
+  return "getCenter" in entity;
 }
 
 export function isSpawnableEntity(entity: TickingEntity): entity is Spawnable {
@@ -50,6 +50,7 @@ export enum EntityType {
   Zoltraak,
   Fireball,
   Character,
+  MagicScroll,
 }
 
 export enum Priority {

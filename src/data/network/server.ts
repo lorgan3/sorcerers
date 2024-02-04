@@ -17,6 +17,7 @@ import {
   isSpawnableEntity,
 } from "../entity/types";
 import { Element } from "../spells/types";
+import { MagicScroll } from "../entity/magicScroll";
 
 export class Server extends Manager {
   private controller?: KeyboardController;
@@ -388,6 +389,12 @@ export class Server extends Manager {
         this.activePlayer!.activeCharacter.name
       ),
     });
+
+    const item = new MagicScroll(
+      ...Level.instance.getRandomSpawnLocation(),
+      Element.Elemental
+    );
+    this.create(item);
   }
 
   protected addPopup(popup: Popup): void {
