@@ -59,7 +59,7 @@ export class Bakuretsu extends Container implements TickingEntity {
       circle.position.y = -i * 100 - 32;
       circle.anchor.set(0.5);
       circle.animationSpeed = 0.3;
-      circle.scale.set(size * 1.5);
+      circle.scale.set(size * 3);
       circle.tint = 0xd98031;
       circle.visible = false;
 

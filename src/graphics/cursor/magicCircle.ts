@@ -10,7 +10,7 @@ import { Cursor, ProjectileConstructor } from "./types";
 import { TurnState } from "../../data/network/types";
 import { Level } from "../../data/map/level";
 
-const SCALE_MULTIPLIER = 0.4;
+const SCALE_MULTIPLIER = 0.8;
 const ANIMATION_SPEED = -0.4;
 
 interface TriggerData {
@@ -36,7 +36,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
     this.indicator = new AnimatedSprite(atlas.animations["spells_magicCircle"]);
-    this.indicator.pivot.set(0, 156);
+    this.indicator.pivot.set(0, 78);
     this.indicator.anchor.set(0.5);
     this.indicator.animationSpeed = ANIMATION_SPEED;
     this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
