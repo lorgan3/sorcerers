@@ -147,6 +147,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       onCollide: this.onCollide,
     });
     this.body.move(x, y);
+    this.position.set(x * 6, y * 6);
     Level.instance.terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
