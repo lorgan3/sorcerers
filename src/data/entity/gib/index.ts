@@ -35,7 +35,7 @@ export class Gib extends Sprite implements TickingEntity {
     this.offsetX = -offsetX * 2;
     this.offsetY = -offsetY * 2;
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(Level.instance.terrain.collisionMask, {
       mask,
       bounciness: -0.7,
       gravity: 0.25,
