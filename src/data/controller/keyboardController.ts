@@ -1,4 +1,4 @@
-import { FederatedPointerEvent } from "pixi.js";
+import { FederatedPointerEvent, FederatedWheelEvent } from "pixi.js";
 import { Controller, Key, isKey, keyMap } from "./controller";
 import { Viewport } from "pixi-viewport";
 
@@ -15,6 +15,7 @@ export class KeyboardController implements Controller {
   public isHost = false;
 
   private eventHandlers = new Map<Key, Set<() => void>>();
+  private scrollEventHandlers = new Set<(event: FederatedWheelEvent) => void>();
 
   constructor(private target: Viewport) {
     window.addEventListener("keydown", this.handleKeyDown);
@@ -22,11 +23,14 @@ export class KeyboardController implements Controller {
     this.target.addListener("pointermove", this.handleMouseMove);
     this.target.addListener("pointerdown", this.handleMouseDown);
     this.target.addListener("pointerup", this.handleMouseUp);
+    this.target.addListener("wheel", this.handleScroll);
     window.addEventListener("contextmenu", this.handleContextMenu);
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
-    this.keyDown(event.key);
+    if (!event.repeat) {
+      this.keyDown(event.key);
+    }
   };
 
   private handleKeyUp = (event: KeyboardEvent) => {
@@ -54,6 +58,10 @@ export class KeyboardController implements Controller {
       event.global.y / this.target.scale.y + this.target.top,
       event.button === 0 ? Key.M1 : Key.M2
     );
+  };
+
+  private handleScroll = (event: FederatedWheelEvent) => {
+    this.scrollEventHandlers.forEach((fn) => fn(event));
   };
 
   destroy() {
@@ -118,6 +126,14 @@ export class KeyboardController implements Controller {
 
   removeKeyListener(key: Key, fn: () => void) {
     this.eventHandlers.get(key)?.delete(fn);
+  }
+
+  addScrollListener(fn: (event: FederatedWheelEvent) => void) {
+    this.scrollEventHandlers.add(fn);
+  }
+
+  removeScrollListener(fn: (event: FederatedWheelEvent) => void) {
+    this.scrollEventHandlers.delete(fn);
   }
 
   isMouseDown() {

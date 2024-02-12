@@ -30,6 +30,7 @@ export enum Key {
   B = "b",
   E = "e",
   F = "f",
+  C = "c",
   M1 = "M1",
   M2 = "M2",
 }

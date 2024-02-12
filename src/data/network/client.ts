@@ -14,7 +14,6 @@ import { Element } from "../spells/types";
 
 export class Client extends Manager {
   private connection?: DataConnection;
-  private controller?: KeyboardController;
 
   private static _clientInstance: Client;
   static get instance() {
@@ -83,7 +82,7 @@ export class Client extends Manager {
   }
 
   connect(controller: KeyboardController) {
-    this.controller = controller;
+    super.connect(controller);
 
     this.connection!.off("data");
     this.connection!.on("data", (data) => {

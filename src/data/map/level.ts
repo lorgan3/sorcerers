@@ -10,7 +10,6 @@ import { CollisionMask } from "../collision/collisionMask";
 import { Viewport } from "pixi-viewport";
 import { Server } from "../network/server";
 import { Map as GameMap } from ".";
-import { Manager } from "../network/manager";
 import {
   HurtableEntity,
   Priority,
@@ -22,24 +21,19 @@ import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
 import { TurnState } from "../network/types";
 import { ParticleManager } from "../../graphics/particles";
-import { KeyboardController } from "../controller/keyboardController";
 import { Character } from "../entity/character";
 import { BloodEmitter } from "../../graphics/particles/bloodEmitter";
+import { CameraTarget } from "../../graphics/cameraTarget";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
 const SINK_AMOUNT = 20;
-const SHAKE_AMOUNT = 10;
-const SHAKE_INTENSITY = 12;
-const SHAKE_INTERVAL = 25;
 const KILL_DELAY = 20;
 
 export class Level {
   private app: Application<HTMLCanvasElement>;
   public readonly viewport: Viewport;
   public followedEntity: DisplayObject | null = null;
-  private followTime = 0;
-  private intervalId = -1;
 
   private defaultLayer = new Container();
   public readonly numberContainer = new DamageNumberContainer();
@@ -47,6 +41,7 @@ export class Level {
   public readonly particleContainer = new ParticleManager();
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
+  public readonly cameraTarget: CameraTarget;
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -73,38 +68,15 @@ export class Level {
 
     target.appendChild(this.app.view);
 
-    let lastX: number | null = null;
-    let lastY: number | null = null;
-    let lastScale: number | null = null;
-
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
       worldWidth: map.terrain.width * 6,
       worldHeight: map.terrain.height * 6,
       events: this.app.renderer.events,
-    })
-      .clamp({
-        direction: "all",
-        underflow: "center",
-      })
-      .pinch()
-      .wheel({})
-      .on("moved", () => {
-        if (lastScale && lastScale === this.viewport.scale.x) {
-          const controller = Manager.instance.self
-            .controller as KeyboardController;
-          const [x, y] = controller.getLocalMouse();
-          controller.mouseMove(
-            x + (lastX! - this.viewport.x) / this.viewport.scale.x,
-            y + (lastY! - this.viewport.y) / this.viewport.scale.y
-          );
-        }
+    });
 
-        lastScale = this.viewport.scale.x;
-        lastX = this.viewport.x;
-        lastY = this.viewport.y;
-      });
+    this.cameraTarget = new CameraTarget(this.viewport);
     this.app.stage.addChild(this.viewport, this.numberContainer);
 
     this.terrain = new Terrain(map);
@@ -119,18 +91,6 @@ export class Level {
     );
 
     this.backgroundParticles.addEmitter(this.bloodEmitter);
-
-    window.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (!event.repeat && event.key === "c") {
-        Manager.instance.clearFollowTarget();
-        this.mouseEdges();
-      }
-    });
-    window.addEventListener("keyup", (event: KeyboardEvent) => {
-      if (event.key === "c") {
-        this.viewport.plugins.remove("mouse-edges");
-      }
-    });
   }
 
   getRandomSpawnLocation() {
@@ -151,6 +111,7 @@ export class Level {
   }
 
   tick(dt: number) {
+    this.cameraTarget.tick(dt);
     this.numberContainer.tick(dt);
     this.terrain.killbox.tick(dt);
     this.particleContainer.tick(dt);
@@ -182,14 +143,6 @@ export class Level {
 
     for (let entity of this.entities) {
       entity.tick(dt);
-    }
-
-    if (this.followedEntity) {
-      this.followTime -= dt;
-
-      if (this.followTime <= 0) {
-        this.unfollow();
-      }
     }
   }
 
@@ -278,19 +231,8 @@ export class Level {
     }
   }
 
-  follow(target: DisplayObject) {
-    this.followTime = 30;
-
-    if (this.followedEntity === target || this.intervalId !== -1) {
-      return;
-    }
-
-    this.followedEntity = target;
-    this.viewport.plugins.remove("mouse-edges");
-    this.viewport.follow(target, {
-      speed: 24,
-      radius: 100,
-    });
+  follow(target: HurtableEntity) {
+    this.cameraTarget.setTarget(target);
   }
 
   sink() {
@@ -301,41 +243,11 @@ export class Level {
   }
 
   shake() {
-    this.unfollow();
-    window.clearInterval(this.intervalId);
-
-    const center = this.viewport.center;
-
-    let shakes = SHAKE_AMOUNT;
-    this.intervalId = window.setInterval(() => {
-      this.viewport!.animate({
-        time: SHAKE_INTERVAL,
-        position: {
-          x: center.x + Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2,
-          y: center.y + Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2,
-        },
-      });
-
-      shakes--;
-      if (shakes <= 0) {
-        window.clearInterval(this.intervalId);
-        this.intervalId = -1;
-      }
-    }, SHAKE_INTERVAL);
+    this.cameraTarget.shake();
   }
 
-  private unfollow() {
-    this.followedEntity = null;
-    this.viewport.plugins.remove("follow");
-  }
-
-  private mouseEdges() {
-    this.unfollow();
-    this.viewport.mouseEdges({
-      radius: 100,
-      speed: 12,
-      allowButtons: true,
-    });
+  unfollow() {
+    this.cameraTarget.setTarget();
   }
 
   performDeathQueue(dt: number) {

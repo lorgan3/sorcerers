@@ -20,7 +20,6 @@ import { Element } from "../spells/types";
 import { MagicScroll } from "../entity/magicScroll";
 
 export class Server extends Manager {
-  private controller?: KeyboardController;
   private availableColors = [...COLORS];
   private singlePlayer = false;
   private started = false;
@@ -41,7 +40,7 @@ export class Server extends Manager {
   }
 
   connect(controller: KeyboardController) {
-    this.controller = controller;
+    super.connect(controller);
     controller.isHost = true;
 
     this._self!.connect(

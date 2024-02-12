@@ -3,10 +3,10 @@ import { Player } from "./player";
 import { Popup, TurnState } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
-import { DisplayObject } from "pixi.js";
 import { Spell, getSpellCost } from "../spells";
 import { Cursor } from "../../graphics/cursor/types";
 import { Element } from "../spells/types";
+import { HurtableEntity } from "../entity/types";
 
 const TURN_GRACE_PERIOD = 3000;
 
@@ -17,7 +17,8 @@ export abstract class Manager {
   }
 
   protected _self: Player | null = null;
-  protected followTarget: DisplayObject | null = null;
+  protected controller?: KeyboardController;
+  protected followTarget: HurtableEntity | null = null;
   public players: Player[] = [];
   protected activePlayer: Player | null = null;
   protected activePlayerIndex = -1;
@@ -39,7 +40,10 @@ export abstract class Manager {
     Manager._instance = this;
   }
 
-  abstract connect(controller: KeyboardController): void;
+  connect(controller: KeyboardController) {
+    this.controller = controller;
+    Level.instance.cameraTarget.connect(controller);
+  }
 
   tick(dt: number, dtMs: number) {
     if (
