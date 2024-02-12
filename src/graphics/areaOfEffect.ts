@@ -3,13 +3,26 @@ import { SimpleParticleEmitter } from "./particles/simpleParticleEmitter";
 import { Element } from "../data/spells/types";
 import { Level } from "../data/map/level";
 import { AssetsContainer } from "../util/assets/assetsContainer";
-import { ELEMENT_ATLAS_MAP } from "./elements";
+import { ELEMENT_ATLAS_MAP, ELEMENT_COLOR_MAP } from "./elements";
 import { ParticleEmitter } from "./particles/types";
+import { Layer, TickingEntity } from "../data/entity/types";
+import { map } from "../util/math";
 
-const RANGE_MULTIPLIER = 0.05;
+export class AreaOfEffect extends Container implements TickingEntity {
+  public layer = Layer.Background;
 
-export class AreaOfEffect extends Container {
+  private static rangeMultiplier = 0.05;
+  private static growDuration = 90;
+  private static expansionDuration = 20;
+  private static maxAlpha = 0.4;
+
   private emitter?: ParticleEmitter;
+  private time = 0;
+
+  private circle: AnimatedSprite;
+
+  private growSize: number;
+  private expansionSize: number;
 
   constructor(
     x: number,
@@ -20,20 +33,23 @@ export class AreaOfEffect extends Container {
     super();
     this.position.set(x * 6, y * 6);
 
+    this.expansionSize = this.range * AreaOfEffect.rangeMultiplier;
+    this.growSize = Math.min(0.8, this.expansionSize / 4);
+
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    const circle = new AnimatedSprite(
+    this.circle = new AnimatedSprite(
       atlas.animations["spells_flatMagicCircle"]
     );
-    circle.position.set(32, 32);
-    circle.anchor.set(0.5);
-    circle.animationSpeed = 0.2;
-    circle.scale.set(range * RANGE_MULTIPLIER);
-    circle.tint = 0xd98031;
-    circle.alpha = 0.6;
-    circle.play();
+    this.circle.position.set(32, 32);
+    this.circle.anchor.set(0.5);
+    this.circle.animationSpeed = 0.08;
+    this.circle.scale.set(0);
+    this.circle.tint = ELEMENT_COLOR_MAP[element];
+    this.circle.alpha = 0.0;
+    this.circle.play();
 
-    this.addChild(circle);
+    this.addChild(this.circle);
 
     this.emitter = Level.instance.backgroundParticles.replaceEmitter(
       new SimpleParticleEmitter(
@@ -59,5 +75,36 @@ export class AreaOfEffect extends Container {
       ),
       this.emitter
     );
+  }
+
+  tick(dt: number) {
+    this.time += dt;
+
+    if (this.time < AreaOfEffect.growDuration) {
+      this.circle.scale.set(
+        (this.growSize * Math.min(this.time, AreaOfEffect.growDuration)) /
+          AreaOfEffect.growDuration
+      );
+      this.circle.alpha = map(
+        0,
+        AreaOfEffect.maxAlpha,
+        this.time / AreaOfEffect.growDuration
+      );
+    } else if (
+      this.time <
+      AreaOfEffect.growDuration + AreaOfEffect.expansionDuration
+    ) {
+      const t = this.time - AreaOfEffect.growDuration;
+      this.circle.scale.set(
+        map(
+          this.growSize,
+          this.expansionSize,
+          Math.min(t, AreaOfEffect.expansionDuration) /
+            AreaOfEffect.expansionDuration
+        )
+      );
+    } else {
+      this.circle.scale.set(this.expansionSize);
+    }
   }
 }

@@ -4,15 +4,24 @@ import { Body } from "../collision/body";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
-import { EntityType, HurtableEntity, Priority, Syncable } from "./types";
+import { EntityType, HurtableEntity, Item, Priority, Syncable } from "./types";
 
 import { circle9x9 } from "../collision/precomputed/circles";
 import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
 import { Element } from "../spells/types";
 import { ELEMENT_ATLAS_MAP } from "../../graphics/elements";
+import { Server } from "../network/server";
+import { AreaOfEffect } from "../../graphics/areaOfEffect";
+import { Character } from "./character";
 
-export class MagicScroll extends Container implements Syncable, HurtableEntity {
+export class MagicScroll
+  extends Container
+  implements Syncable, HurtableEntity, Item
+{
+  private static floatSpeed = 0.3;
+  private static floatDuration = 90;
+
   public readonly body: Body;
   public id = -1;
   public readonly priority = Priority.Low;
@@ -20,6 +29,8 @@ export class MagicScroll extends Container implements Syncable, HurtableEntity {
   public hp = 1;
 
   private time = 0;
+  private activateTime = -1;
+  private aoe?: AreaOfEffect;
 
   constructor(x: number, y: number, private element: Element) {
     super();
@@ -64,6 +75,21 @@ export class MagicScroll extends Container implements Syncable, HurtableEntity {
 
   tick(dt: number) {
     this.time += dt;
+
+    if (this.activateTime >= 0) {
+      const activeTime = this.time - this.activateTime;
+
+      this.position.y -= MagicScroll.floatSpeed * dt;
+      this.aoe!.position.y = this.position.y;
+
+      this.alpha = 1 - activeTime / MagicScroll.floatDuration;
+      if (activeTime > MagicScroll.floatDuration) {
+        this.die();
+      }
+
+      return;
+    }
+
     if (this.time > 30) {
       this.body.active = 1;
     }
@@ -76,12 +102,21 @@ export class MagicScroll extends Container implements Syncable, HurtableEntity {
         this.position.set(x * 6, y * 6);
       }
 
-      Level.instance.withNearbyEntities(
-        this.position.x,
-        this.position.y,
-        32 * 6,
-        console.log
-      );
+      if (Server.instance) {
+        Level.instance.withNearbyEntities(
+          this.position.x,
+          this.position.y,
+          48,
+          (entity: HurtableEntity) => {
+            if (!(entity instanceof Character)) {
+              return;
+            }
+
+            Server.instance.activate(this);
+            return true;
+          }
+        );
+      }
     }
   }
 
@@ -101,5 +136,13 @@ export class MagicScroll extends Container implements Syncable, HurtableEntity {
     return new MagicScroll(...data);
   }
 
-  die() {}
+  die() {
+    Level.instance.remove(this);
+  }
+
+  activate() {
+    this.activateTime = this.time;
+    this.aoe = new AreaOfEffect(...this.body.precisePosition, 64, this.element);
+    Level.instance.add(this.aoe);
+  }
 }
