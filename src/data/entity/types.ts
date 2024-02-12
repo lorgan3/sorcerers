@@ -38,6 +38,10 @@ export interface Syncable<T = any> extends Spawnable {
   deserialize(data: T): void;
 }
 
+export interface Item extends Spawnable {
+  activate(): void;
+}
+
 export function isHurtableEntity(
   entity: TickingEntity
 ): entity is HurtableEntity {

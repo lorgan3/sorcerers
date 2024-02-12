@@ -9,7 +9,7 @@ import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
-import { HurtableEntity, Syncable } from "../entity/types";
+import { HurtableEntity, Item, Syncable } from "../entity/types";
 import { Element } from "../spells/types";
 
 export class Client extends Manager {
@@ -228,6 +228,13 @@ export class Client extends Manager {
             message.id
           ) as HurtableEntity;
           Level.instance.follow(entity);
+        }
+        break;
+
+      case MessageType.Activate:
+        {
+          const item = Level.instance.entityMap.get(message.id) as Item;
+          item.activate();
         }
         break;
     }

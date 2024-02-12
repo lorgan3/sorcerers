@@ -12,6 +12,7 @@ import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
 import {
   HurtableEntity,
+  Item,
   Spawnable,
   Syncable,
   isSpawnableEntity,
@@ -455,6 +456,15 @@ export class Server extends Manager {
     this.broadcast({
       type: MessageType.Focus,
       id: target.id,
+    });
+  }
+
+  activate(item: Item) {
+    item.activate();
+
+    this.broadcast({
+      type: MessageType.Focus,
+      id: item.id,
     });
   }
 }

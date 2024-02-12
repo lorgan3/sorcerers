@@ -21,6 +21,7 @@ export enum MessageType {
   Spawn,
   DynamicUpdate,
   Focus,
+  Activate,
 }
 
 export type Message =
@@ -125,6 +126,10 @@ export type Message =
     }
   | {
       type: MessageType.Focus;
+      id: number;
+    }
+  | {
+      type: MessageType.Activate;
       id: number;
     };
 
