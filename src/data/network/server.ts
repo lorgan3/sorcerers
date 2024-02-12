@@ -19,6 +19,7 @@ import {
 } from "../entity/types";
 import { Element } from "../spells/types";
 import { MagicScroll } from "../entity/magicScroll";
+import { getRandom } from "../../util/object";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -392,7 +393,7 @@ export class Server extends Manager {
 
     const item = new MagicScroll(
       ...Level.instance.getRandomSpawnLocation(),
-      Element.Elemental
+      getRandom(Element)
     );
     this.create(item);
   }
