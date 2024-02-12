@@ -12,6 +12,7 @@ import { Server } from "../network/server";
 import { Map as GameMap } from ".";
 import {
   HurtableEntity,
+  Layer,
   Priority,
   Syncable,
   TickingEntity,
@@ -39,9 +40,15 @@ export class Level {
   public readonly numberContainer = new DamageNumberContainer();
   public readonly uiContainer = new Container();
   public readonly particleContainer = new ParticleManager();
+  public readonly backgroundContainer = new Container();
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
+
+  private layers: Record<Layer, Container> = {
+    [Layer.Background]: this.backgroundContainer,
+    [Layer.Default]: this.defaultLayer,
+  };
 
   public readonly terrain: Terrain;
   private spawnLocations: Array<[number, number]> = [];
@@ -81,8 +88,10 @@ export class Level {
 
     this.terrain = new Terrain(map);
     this.viewport.addChild(
-      this.terrain.container,
+      this.terrain.backgroundSprite,
       this.backgroundParticles,
+      this.backgroundContainer,
+      this.terrain.terrainSprite,
       this.defaultLayer,
       this.particleContainer,
       this.terrain.foreground,
@@ -149,9 +158,13 @@ export class Level {
   add(
     ...objects: Array<TickingEntity | HurtableEntity | Syncable | DisplayObject>
   ) {
-    this.defaultLayer.addChild(...objects);
-
     for (let object of objects) {
+      if ("layer" in object) {
+        this.layers[object.layer!].addChild(object);
+      } else {
+        this.defaultLayer.addChild(object);
+      }
+
       if ("tick" in object) {
         this.entities.add(object);
       }
@@ -174,9 +187,13 @@ export class Level {
   remove(
     ...objects: Array<TickingEntity | HurtableEntity | Syncable | DisplayObject>
   ) {
-    this.defaultLayer.removeChild(...objects);
-
     for (let object of objects) {
+      if ("layer" in object) {
+        this.layers[object.layer!].removeChild(object);
+      } else {
+        this.defaultLayer.removeChild(object);
+      }
+
       if ("tick" in object) {
         this.entities.delete(object);
       }

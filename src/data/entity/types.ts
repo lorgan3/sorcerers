@@ -3,8 +3,15 @@ import { PhysicsBody } from "../collision";
 import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
 
+export enum Layer {
+  Background,
+  Default,
+}
+
 export interface TickingEntity extends DisplayObject {
   tick(dt: number): void;
+
+  layer?: Layer;
 }
 
 export interface Spawnable extends TickingEntity {

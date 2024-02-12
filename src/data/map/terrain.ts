@@ -17,7 +17,8 @@ export class Terrain {
 
   public readonly killbox: Killbox;
 
-  public container: Container;
+  public backgroundSprite: Sprite;
+  public terrainSprite: Sprite;
   public foreground: Container;
 
   constructor(private map: Map) {
@@ -25,7 +26,12 @@ export class Terrain {
     this.characterMask = this.collisionMask.clone();
 
     this.terrain = new UpdatingTexture(map.terrain);
+    this.terrainSprite = new Sprite(this.terrain.texture);
+    this.terrainSprite.scale.set(6);
+
     this.background = Texture.from(map.background);
+    this.backgroundSprite = new Sprite(this.background);
+    this.backgroundSprite.scale.set(6);
 
     this.layerTextures = [];
     this.layerSprites = [];
@@ -43,13 +49,6 @@ export class Terrain {
     this.foreground = new Container();
     this.foreground.scale.set(6);
     this.foreground.addChild(...this.layerSprites, this.killbox);
-
-    this.container = new Container();
-    this.container.scale.set(6);
-    this.container.addChild(
-      new Sprite(this.background),
-      new Sprite(this.terrain.texture)
-    );
   }
 
   get layers() {
