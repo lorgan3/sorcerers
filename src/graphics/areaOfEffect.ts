@@ -11,13 +11,15 @@ import { map } from "../util/math";
 export class AreaOfEffect extends Container implements TickingEntity {
   public layer = Layer.Background;
 
-  private static rangeMultiplier = 0.05;
+  private static rangeMultiplier = 0.05 / 6;
   private static growDuration = 90;
   private static expansionDuration = 20;
   private static maxAlpha = 0.4;
+  private static fadeDuration = 60;
 
   private emitter?: ParticleEmitter;
   private time = 0;
+  private fadeTime = -1;
 
   private circle: AnimatedSprite;
 
@@ -31,7 +33,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
     private element: Element
   ) {
     super();
-    this.position.set(x * 6, y * 6);
+    this.position.set(x, y);
 
     this.expansionSize = this.range * AreaOfEffect.rangeMultiplier;
     this.growSize = Math.min(0.8, this.expansionSize / 4);
@@ -41,7 +43,6 @@ export class AreaOfEffect extends Container implements TickingEntity {
     this.circle = new AnimatedSprite(
       atlas.animations["spells_flatMagicCircle"]
     );
-    this.circle.position.set(32, 32);
     this.circle.anchor.set(0.5);
     this.circle.animationSpeed = 0.08;
     this.circle.scale.set(0);
@@ -56,7 +57,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
         [atlas.textures[`${ELEMENT_ATLAS_MAP[element]}_bright`]],
         {
           ...SimpleParticleEmitter.defaultConfig,
-          spawnRange: range * 6,
+          spawnRange: range,
           spawnFrequency: 0.05,
           animate: false,
           fade: true,
@@ -79,6 +80,21 @@ export class AreaOfEffect extends Container implements TickingEntity {
 
   tick(dt: number) {
     this.time += dt;
+
+    if (this.fadeTime > -1) {
+      const t = this.time - this.fadeTime;
+      this.circle.alpha = map(
+        AreaOfEffect.maxAlpha,
+        0,
+        t / AreaOfEffect.fadeDuration
+      );
+
+      if (this.time - this.fadeTime >= AreaOfEffect.fadeDuration) {
+        Level.instance.remove(this);
+      }
+
+      return;
+    }
 
     if (this.time < AreaOfEffect.growDuration) {
       this.circle.scale.set(
@@ -106,5 +122,10 @@ export class AreaOfEffect extends Container implements TickingEntity {
     } else {
       this.circle.scale.set(this.expansionSize);
     }
+  }
+
+  fade() {
+    Level.instance.backgroundParticles.destroyEmitter(this.emitter);
+    this.fadeTime = this.time;
   }
 }

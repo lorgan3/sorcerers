@@ -14,6 +14,7 @@ import { ELEMENT_ATLAS_MAP } from "../../graphics/elements";
 import { Server } from "../network/server";
 import { AreaOfEffect } from "../../graphics/areaOfEffect";
 import { Character } from "./character";
+import { Manager } from "../network/manager";
 
 export class MagicScroll
   extends Container
@@ -21,6 +22,8 @@ export class MagicScroll
 {
   private static floatSpeed = 0.3;
   private static floatDuration = 90;
+  private static appearDuration = 30;
+  static aoeRange = 64 * 6;
 
   public readonly body: Body;
   public id = -1;
@@ -29,10 +32,12 @@ export class MagicScroll
   public hp = 1;
 
   private time = 0;
+  private lastActiveTime = 0;
   private activateTime = -1;
+  private _appeared = false;
   private aoe?: AreaOfEffect;
 
-  constructor(x: number, y: number, private element: Element) {
+  constructor(x: number, y: number, public readonly element: Element) {
     super();
 
     this.body = new Body(Level.instance.terrain.characterMask, {
@@ -48,15 +53,16 @@ export class MagicScroll
 
     const sprite = new Sprite(atlas.textures["items_scroll"]);
     sprite.anchor.set(0.5, 0.5);
-    sprite.position.set(24, 16);
+    sprite.position.set(24, 24);
     sprite.scale.set(2);
 
     const glyph = new Sprite(atlas.textures[ELEMENT_ATLAS_MAP[element]]);
     glyph.anchor.set(0.5, 0.5);
-    glyph.position.set(20, 20);
+    glyph.position.set(20, 28);
     glyph.rotation = Math.PI / 12;
 
     this.addChild(sprite, glyph);
+    this.alpha = 0;
   }
 
   damage(
@@ -74,28 +80,44 @@ export class MagicScroll
   }
 
   tick(dt: number) {
+    if (!this._appeared) {
+      return;
+    }
+
     this.time += dt;
+
+    if (this.time <= MagicScroll.appearDuration) {
+      this.alpha = this.time / MagicScroll.appearDuration;
+      return;
+    }
 
     if (this.activateTime >= 0) {
       const activeTime = this.time - this.activateTime;
+
+      if (activeTime > MagicScroll.floatDuration) {
+        this.visible = false;
+
+        if (Manager.instance.isEnding()) {
+          this.die();
+        }
+
+        return;
+      }
 
       this.position.y -= MagicScroll.floatSpeed * dt;
       this.aoe!.position.y = this.position.y;
 
       this.alpha = 1 - activeTime / MagicScroll.floatDuration;
-      if (activeTime > MagicScroll.floatDuration) {
-        this.die();
-      }
 
       return;
     }
 
-    if (this.time > 30) {
+    if (this.time - this.lastActiveTime > 30) {
       this.body.active = 1;
     }
 
     if (this.body.active) {
-      this.time = 0;
+      this.lastActiveTime = this.time;
 
       if (this.body.tick(dt)) {
         const [x, y] = this.body.precisePosition;
@@ -104,8 +126,7 @@ export class MagicScroll
 
       if (Server.instance) {
         Level.instance.withNearbyEntities(
-          this.position.x,
-          this.position.y,
+          ...this.getCenter(),
           48,
           (entity: HurtableEntity) => {
             if (!(entity instanceof Character)) {
@@ -138,11 +159,28 @@ export class MagicScroll
 
   die() {
     Level.instance.remove(this);
+    this.aoe?.fade();
   }
 
   activate() {
     this.activateTime = this.time;
-    this.aoe = new AreaOfEffect(...this.body.precisePosition, 64, this.element);
+    this.aoe = new AreaOfEffect(
+      ...this.getCenter(),
+      MagicScroll.aoeRange,
+      this.element
+    );
     Level.instance.add(this.aoe);
+  }
+
+  get activated() {
+    return this.activateTime > -1;
+  }
+
+  appear() {
+    this._appeared = true;
+  }
+
+  get appeared() {
+    return this.time >= MagicScroll.appearDuration;
   }
 }

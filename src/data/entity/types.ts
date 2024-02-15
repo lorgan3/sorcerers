@@ -39,6 +39,7 @@ export interface Syncable<T = any> extends Spawnable {
 }
 
 export interface Item extends Spawnable {
+  appear(): void;
   activate(): void;
 }
 
@@ -54,6 +55,10 @@ export function isSpawnableEntity(entity: TickingEntity): entity is Spawnable {
 
 export function isSyncableEntity(entity: TickingEntity): entity is Syncable {
   return "priority" in entity;
+}
+
+export function isItem(entity: TickingEntity): entity is Item {
+  return "activate" in entity;
 }
 
 export enum EntityType {
