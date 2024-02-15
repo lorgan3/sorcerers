@@ -114,6 +114,14 @@ export class KeyboardController implements Controller {
     return !!(this.serverKeys & keyMap[key]);
   }
 
+  isLocalKeyDown(key?: Key) {
+    if (!key) {
+      return !!this.pressedKeys;
+    }
+
+    return !!(this.pressedKeys & keyMap[key]);
+  }
+
   addKeyListener(key: Key, fn: () => void) {
     if (this.eventHandlers.has(key)) {
       this.eventHandlers.get(key)!.add(fn);

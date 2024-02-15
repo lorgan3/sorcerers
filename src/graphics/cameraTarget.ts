@@ -3,15 +3,17 @@ import { KeyboardController } from "../data/controller/keyboardController";
 import { Key } from "../data/controller/controller";
 import { HurtableEntity } from "../data/entity/types";
 import { getDistance } from "../util/math";
+import { Manager } from "../data/network/manager";
 
 export class CameraTarget {
-  static maxScale = 1.5;
-  static minScale = 0.4;
-  static zoomSpeed = 0.01;
+  private static maxScale = 1.5;
+  private static zoomSpeed = 0.01;
+  private static highlightDelay = 90;
+  private static continueDelay = 120;
 
-  static maxSpeed = 50;
-  static damping = 50;
-  static acc = 0.1;
+  private static maxSpeed = 50;
+  private static damping = 50;
+  private static acc = 0.1;
 
   static shakeAmount = 10;
   static shakeIntensity = 12;
@@ -19,6 +21,11 @@ export class CameraTarget {
 
   private controller: KeyboardController | undefined;
   private target?: HurtableEntity;
+  private callback?: () => void;
+  highlightQueue: Array<{
+    target: HurtableEntity;
+    callback?: () => void;
+  }> = [];
   private position: [number, number];
 
   private attached = true;
@@ -29,6 +36,7 @@ export class CameraTarget {
 
   private speed = CameraTarget.acc;
   private scale = 1;
+  private time = 0;
 
   constructor(private viewport: Viewport) {
     this.position = [
@@ -44,10 +52,28 @@ export class CameraTarget {
 
     let position: [number, number] | undefined;
 
+    this.time += dt;
+    if (this.time >= CameraTarget.highlightDelay && this.callback) {
+      this.callback();
+      this.callback = undefined;
+    }
+
+    if (this.highlightQueue.length) {
+      if (this.time >= CameraTarget.continueDelay) {
+        const entry = this.highlightQueue.pop()!;
+        this.time = 0;
+        this.target = entry.target;
+        this.callback = entry.callback;
+      }
+    }
+
     if (this.target && this.attached) {
       position = this.target.getCenter();
     } else {
-      if (this.target?.body.velocity !== 0) {
+      if (
+        Manager.instance.self?.activeCharacter === this.target &&
+        this.target?.body.velocity !== 0
+      ) {
         this.attached = true;
         this.speed = 0;
       }
@@ -55,7 +81,7 @@ export class CameraTarget {
       position = this.controller.getLocalMouse();
     }
 
-    if (this.controller.isKeyDown(Key.C)) {
+    if (this.controller.isLocalKeyDown(Key.C)) {
       position = this.controller.getLocalMouse();
 
       if (!this.oldCDown) {
@@ -146,8 +172,26 @@ export class CameraTarget {
     }
   }
 
-  setTarget(target?: HurtableEntity) {
-    this.target = target;
+  setTarget(target: HurtableEntity) {
+    if (this.highlightQueue.length > 0) {
+      this.highlightQueue.splice(0, 1, { target });
+    } else {
+      this.target = target;
+    }
+  }
+
+  highlight(target: HurtableEntity, callback?: () => void) {
+    if (this.highlightQueue.length === 0) {
+      if (this.target) {
+        this.highlightQueue.push({ target: this.target });
+      }
+
+      this.time = 0;
+      this.target = target;
+      this.callback = callback;
+    } else {
+      this.highlightQueue.splice(1, 0, { target, callback });
+    }
   }
 
   connect(controller: KeyboardController) {

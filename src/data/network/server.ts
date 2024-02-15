@@ -460,11 +460,20 @@ export class Server extends Manager {
     });
   }
 
+  highlight(target: HurtableEntity, callback?: () => void) {
+    Level.instance.cameraTarget.highlight(target, callback);
+
+    this.broadcast({
+      type: MessageType.Highlight,
+      id: target.id,
+    });
+  }
+
   activate(item: Item) {
     item.activate();
 
     this.broadcast({
-      type: MessageType.Focus,
+      type: MessageType.Activate,
       id: item.id,
     });
   }
