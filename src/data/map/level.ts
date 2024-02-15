@@ -142,7 +142,7 @@ export class Level {
                 this.deadCharacterQueue.push(entity);
               }
             }
-            break;
+            continue;
           }
 
           Server.instance.kill(entity);
@@ -248,10 +248,6 @@ export class Level {
     }
   }
 
-  follow(target: HurtableEntity) {
-    this.cameraTarget.setTarget(target);
-  }
-
   sink() {
     this.shake();
 
@@ -263,24 +259,20 @@ export class Level {
     this.cameraTarget.shake();
   }
 
-  unfollow() {
-    this.cameraTarget.setTarget();
-  }
-
-  performDeathQueue(dt: number) {
+  performDeathQueue() {
     if (this.deadCharacterQueue.length === 0) {
-      return false;
+      Server.instance.setTurnState(TurnState.Ending);
+      return;
     }
 
     Server.instance.setTurnState(TurnState.Killing);
-    Server.instance.follow(this.deadCharacterQueue[0]);
 
-    this.deathQueueTimer += dt;
-    if (this.deathQueueTimer >= KILL_DELAY) {
-      this.deathQueueTimer = 0;
-      Server.instance.kill(this.deadCharacterQueue.shift()!);
-    }
+    const character = this.deadCharacterQueue[0];
+    Server.instance.highlight(character, () => {
+      Server.instance.kill(character);
+      this.deadCharacterQueue.shift();
 
-    return true;
+      this.performDeathQueue();
+    });
   }
 }

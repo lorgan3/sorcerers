@@ -94,11 +94,8 @@ export class Server extends Manager {
   tick(dt: number, dtMs: number) {
     super.tick(dt, dtMs);
 
-    if (
-      this.turnState === TurnState.Ending ||
-      this.turnState === TurnState.Killing
-    ) {
-      Level.instance.performDeathQueue(dt);
+    if (this._turnState === TurnState.Ending) {
+      Level.instance.performDeathQueue();
     }
 
     if (
@@ -448,12 +445,9 @@ export class Server extends Manager {
     this._self!.rename(newName);
   }
 
-  follow(target: HurtableEntity) {
-    if (Level.instance.followedEntity === target) {
-      return;
-    }
+  focus(target: HurtableEntity) {
+    Level.instance.cameraTarget.setTarget(target);
 
-    Level.instance.follow(target);
     this.broadcast({
       type: MessageType.Focus,
       id: target.id,
