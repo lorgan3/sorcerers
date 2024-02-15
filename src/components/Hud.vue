@@ -16,11 +16,15 @@ const numberFormatter = new Intl.DateTimeFormat("en-GB", {
   second: "2-digit",
 });
 
-const elements = ref(
+const getElements = () =>
   Object.fromEntries(
-    Object.values(Element).map((element) => [element, 1])
-  ) as Record<Element, number>
-);
+    Object.values(Element).map((element) => [
+      element,
+      Manager.instance.getElementValue(element),
+    ])
+  ) as Record<Element, number>;
+
+const elements = ref(getElements());
 const turnTime = ref(0);
 const gameTime = ref(0);
 const mana = ref(0);
@@ -34,7 +38,7 @@ const poll = () => {
   }
 
   const data = Manager.instance.getHudData();
-  elements.value = data.elements;
+  elements.value = getElements();
   turnTime.value = data.turnTime;
   gameTime.value = data.gameTime;
   players.value = data.players;

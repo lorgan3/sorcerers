@@ -1,26 +1,31 @@
 <script setup lang="ts">
 import { SPELLS, Spell } from "../data/spells";
 import { Manager } from "../data/network/manager";
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { Server } from "../data/network/server";
 import { Client } from "../data/network/client";
 import { ELEMENT_MAP } from "../graphics/elements";
 import { Message, MessageType } from "../data/network/types";
 
-const { isOpen, onClose } = defineProps<{
+const props = defineProps<{
   isOpen: boolean;
   onClose: () => void;
 }>();
 
 const SLOTS = 30;
 
-const previewName = ref(Manager.instance?.selectedSpell?.name);
-const previewDescription = ref(Manager.instance?.selectedSpell?.description);
-const previewElements = ref(Manager.instance?.selectedSpell?.elements);
-const previewCost = ref(Manager.instance?.selectedSpell?.cost || 0);
-const previewMultiplier = ref(
-  Manager.instance?.selectedSpell?.costMultiplier?.() || 1
-);
+const previewSpell = ref(Manager.instance?.selectedSpell);
+const previewMultiplier = ref(1);
+
+const poll = () => {
+  if (props.isOpen) {
+    previewMultiplier.value = previewSpell.value?.costMultiplier?.() || 1;
+  }
+};
+
+let id = -1;
+onMounted(() => (id = window.setInterval(poll, 1000)));
+onBeforeUnmount(() => window.clearInterval(id));
 
 const handleClick = (spell?: Spell) => {
   if (spell) {
@@ -44,24 +49,19 @@ const handleClick = (spell?: Spell) => {
     }
   }
 
-  onClose();
+  props.onClose();
 };
 
 const onMouseLeave = (event: Event) => {
-  previewName.value = Manager.instance.selectedSpell?.name;
-  previewDescription.value = Manager.instance.selectedSpell?.description;
-  previewElements.value = Manager.instance.selectedSpell?.elements;
-  previewCost.value = Manager.instance?.selectedSpell?.cost || 0;
+  previewSpell.value = Manager.instance.selectedSpell;
+
   previewMultiplier.value =
     Manager.instance?.selectedSpell?.costMultiplier?.() || 1;
 };
 
 const onMouseEnter = (spell?: Spell) => {
   if (spell) {
-    previewName.value = spell.name;
-    previewDescription.value = spell.description;
-    previewElements.value = spell.elements;
-    previewCost.value = spell.cost;
+    previewSpell.value = spell;
     previewMultiplier.value = spell.costMultiplier?.() || 1;
   }
 };
@@ -69,7 +69,7 @@ const onMouseEnter = (spell?: Spell) => {
 
 <template>
   <div class="clip">
-    <div :class="{ wrapper: true, isOpen }">
+    <div :class="{ wrapper: true, isOpen: props.isOpen }">
       <div class="inventory" @mouseleave="onMouseLeave">
         <div class="grid">
           <div
@@ -86,20 +86,20 @@ const onMouseEnter = (spell?: Spell) => {
             }}</span>
           </div>
         </div>
-        <div v-if="previewName" class="spell">
+        <div v-if="previewSpell" class="spell">
           <div class="magic">
             <span
-              v-if="previewCost"
+              v-if="previewSpell.cost"
               :class="{
                 cost: true,
                 positive: previewMultiplier < 1,
                 negative: previewMultiplier > 1,
               }"
-              >{{ Math.ceil(previewCost * previewMultiplier) }}</span
+              >{{ Math.ceil(previewSpell.cost * previewMultiplier) }}</span
             >
             <span class="elements">
               <img
-                v-for="element in previewElements"
+                v-for="element in previewSpell.elements"
                 :src="ELEMENT_MAP[element]"
                 :alt="element"
                 :title="element"
@@ -108,9 +108,9 @@ const onMouseEnter = (spell?: Spell) => {
           </div>
           <div class="details">
             <span class="name">
-              <span>{{ previewName }}</span>
+              <span>{{ previewSpell.name }}</span>
             </span>
-            <span class="description">{{ previewDescription }}</span>
+            <span class="description">{{ previewSpell.description }}</span>
           </div>
         </div>
       </div>

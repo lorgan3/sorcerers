@@ -151,7 +151,6 @@ export abstract class Manager {
     return {
       turnTime: Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
       gameTime: Math.max(0, this.gameLength - this.time),
-      elements: this.elements,
       players: this.players,
       activePlayer: this.activePlayer,
       mana: this._self?.mana || 0,
@@ -164,10 +163,6 @@ export abstract class Manager {
 
   popupPop() {
     return this.popups.pop();
-  }
-
-  clearFollowTarget() {
-    this.followTarget = null;
   }
 
   selectSpell(spell: Spell, player: Player = this._self!) {
@@ -229,6 +224,28 @@ export abstract class Manager {
   }
 
   getElementValue(element: Element) {
+    if (!!this.activePlayer) {
+      let buffed = false;
+      Level.instance.withNearbyEntities(
+        ...this.activePlayer.activeCharacter.getCenter(),
+        MagicScroll.aoeRange / 2,
+        (entity: HurtableEntity) => {
+          if (
+            entity instanceof MagicScroll &&
+            entity.element === element &&
+            entity.activated
+          ) {
+            buffed = true;
+            return true;
+          }
+        }
+      );
+
+      if (buffed) {
+        return Math.min(1.75, this.elements[element] * 2);
+      }
+    }
+
     return this.elements[element];
   }
 }

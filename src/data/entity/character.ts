@@ -244,9 +244,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
       if (this.animationTimer <= 0) {
         if (this.animator.animationState === AnimationState.Swing) {
-          this.animator.animate(AnimationState.SpellDone);
-          Manager.instance.setTurnState(TurnState.Ending);
-
           const direction =
             this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
           const [cx, cy] = this.getCenter();
@@ -258,6 +255,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
               MELEE_POWER * Manager.instance.getElementValue(Element.Physical)
             )
           );
+
+          this.animator.animate(AnimationState.SpellDone);
+          Manager.instance.setTurnState(TurnState.Ending);
         } else {
           this.animator.animate();
         }
@@ -523,7 +523,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   set hp(hp: number) {
     this._hp = hp;
-    this.namePlate.text = `${this.name} ${Math.ceil(this._hp)}`;
+    this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
     this.body.active = 1;
   }
 
