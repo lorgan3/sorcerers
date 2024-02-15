@@ -9,7 +9,7 @@ import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
-import { HurtableEntity, Item, Syncable } from "../entity/types";
+import { HurtableEntity, Item, Syncable, isItem } from "../entity/types";
 import { Element } from "../spells/types";
 
 export class Client extends Manager {
@@ -136,7 +136,7 @@ export class Client extends Manager {
           (key, i) => (this.elements[key as Element] = message.elements[i])
         );
         this.turnStartTime = message.turnStartTime;
-        this.turnState = TurnState.Ongoing;
+        this._turnState = TurnState.Ongoing;
 
         this.setActiveCharacter(message.activePlayer, message.activeCharacter);
         break;
@@ -227,7 +227,21 @@ export class Client extends Manager {
           const entity = Level.instance.entityMap.get(
             message.id
           ) as HurtableEntity;
-          Level.instance.follow(entity);
+
+          Level.instance.cameraTarget.setTarget(entity);
+        }
+        break;
+
+      case MessageType.Highlight:
+        {
+          const entity = Level.instance.entityMap.get(
+            message.id
+          ) as HurtableEntity;
+
+          Level.instance.cameraTarget.highlight(
+            entity,
+            isItem(entity) ? () => entity.appear() : undefined
+          );
         }
         break;
 
