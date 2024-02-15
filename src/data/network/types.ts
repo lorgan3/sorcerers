@@ -145,6 +145,7 @@ export interface Popup {
 }
 
 export enum TurnState {
+  Spawning,
   Ongoing,
   Attacked,
   Ending,

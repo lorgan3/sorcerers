@@ -100,9 +100,11 @@ export class Server extends Manager {
 
     if (
       this.time - this.turnStartTime > this.turnLength &&
-      this.turnState !== TurnState.Attacked
+      this._turnState !== TurnState.Attacked &&
+      this._turnState !== TurnState.Killing &&
+      this._turnState !== TurnState.Spawning
     ) {
-      this.cycleActivePlayer();
+      this.preCycleActivePlayer();
 
       if (this.time > this.gameLength) {
         Level.instance.sink();
@@ -353,6 +355,23 @@ export class Server extends Manager {
     }
   }
 
+  private preCycleActivePlayer() {
+    this.setTurnState(TurnState.Spawning);
+
+    const item = this.create(
+      new MagicScroll(
+        ...Level.instance.getRandomSpawnLocation(),
+        getRandom(Element)
+      )
+    );
+
+    this.highlight(item, () => {
+      item.appear();
+
+      this.cycleActivePlayer();
+    });
+  }
+
   private cycleActivePlayer() {
     const activePlayerIndex = this.getNextPlayerIndex();
 
@@ -368,7 +387,7 @@ export class Server extends Manager {
     );
 
     this.turnStartTime = this.time;
-    this.turnState = TurnState.Ongoing;
+    this._turnState = TurnState.Ongoing;
     this.randomizeElements();
 
     this.broadcast({
@@ -387,12 +406,6 @@ export class Server extends Manager {
         this.activePlayer!.activeCharacter.name
       ),
     });
-
-    const item = new MagicScroll(
-      ...Level.instance.getRandomSpawnLocation(),
-      getRandom(Element)
-    );
-    this.create(item);
   }
 
   protected addPopup(popup: Popup): void {
@@ -410,7 +423,7 @@ export class Server extends Manager {
     }
   }
 
-  create(entity: Spawnable) {
+  create<T extends Spawnable>(entity: T) {
     Level.instance.add(entity);
 
     this.broadcast({
@@ -419,6 +432,8 @@ export class Server extends Manager {
       kind: entity.type,
       data: entity.serializeCreate(),
     });
+
+    return entity;
   }
 
   dynamicUpdate(entity: Syncable) {

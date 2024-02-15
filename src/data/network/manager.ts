@@ -7,6 +7,7 @@ import { Spell, getSpellCost } from "../spells";
 import { Cursor } from "../../graphics/cursor/types";
 import { Element } from "../spells/types";
 import { HurtableEntity } from "../entity/types";
+import { MagicScroll } from "../entity/magicScroll";
 
 const TURN_GRACE_PERIOD = 3000;
 
@@ -18,7 +19,6 @@ export abstract class Manager {
 
   protected _self: Player | null = null;
   protected controller?: KeyboardController;
-  protected followTarget: HurtableEntity | null = null;
   public players: Player[] = [];
   protected activePlayer: Player | null = null;
   protected activePlayerIndex = -1;
@@ -31,7 +31,7 @@ export abstract class Manager {
   protected turnStartTime = 0;
   protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
-  protected turnState = TurnState.Ongoing;
+  protected _turnState = TurnState.Ongoing;
 
   private cursor: Cursor | null = null;
   private popups: Popup[] = [];
@@ -46,25 +46,16 @@ export abstract class Manager {
   }
 
   tick(dt: number, dtMs: number) {
-    if (
-      this._self === this.activePlayer &&
-      this._self?.activeCharacter &&
-      this._self.controller.isKeyDown()
-    ) {
-      Level.instance.follow(this._self.activeCharacter);
-      this.followTarget = null;
-    } else if (this.followTarget) {
-      Level.instance.follow(this.followTarget);
-    }
-
     if (this.cursor) {
       this.cursor.tick(dt, this.activePlayer!.controller);
     }
 
-    this.activePlayer?.activeCharacter?.controlContinuous(
-      dt,
-      this.activePlayer.controller
-    );
+    if (this.isControlling()) {
+      this.activePlayer?.activeCharacter?.controlContinuous(
+        dt,
+        this.activePlayer.controller
+      );
+    }
 
     Level.instance.tick(dt);
 
@@ -108,7 +99,7 @@ export abstract class Manager {
       return;
     }
 
-    if (this.turnState === TurnState.Killing) {
+    if (this._turnState === TurnState.Killing) {
       this.turnStartTime = Math.min(
         this.time - this.turnLength + TURN_GRACE_PERIOD,
         this.turnStartTime
@@ -126,7 +117,7 @@ export abstract class Manager {
       );
     }
 
-    this.turnState = turnState;
+    this._turnState = turnState;
 
     if (this.cursor) {
       this.cursor.remove();
@@ -136,6 +127,24 @@ export abstract class Manager {
 
   get self() {
     return this._self!;
+  }
+
+  get turnState() {
+    return this._turnState;
+  }
+
+  isEnding() {
+    return (
+      this._turnState !== TurnState.Ongoing &&
+      this._turnState !== TurnState.Attacked
+    );
+  }
+
+  isControlling() {
+    return (
+      this._turnState !== TurnState.Killing &&
+      this._turnState !== TurnState.Spawning
+    );
   }
 
   getHudData() {
@@ -171,7 +180,7 @@ export abstract class Manager {
       }
 
       if (
-        this.turnState === TurnState.Ongoing &&
+        this._turnState === TurnState.Ongoing &&
         player.mana >= getSpellCost(spell)
       ) {
         this.cursor = new spell.cursor(player.activeCharacter, spell);
@@ -193,7 +202,7 @@ export abstract class Manager {
     this.activePlayerIndex = player;
     this.activePlayer.nextTurn();
 
-    this.followTarget = this.activePlayer.activeCharacter;
+    Level.instance.cameraTarget.setTarget(this.activePlayer.activeCharacter);
 
     if (this.cursor) {
       this.cursor.remove();
