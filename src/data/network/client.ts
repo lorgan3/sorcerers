@@ -251,6 +251,10 @@ export class Client extends Manager {
           item.activate();
         }
         break;
+
+      case MessageType.turnState:
+        this.setTurnState(message.state);
+        break;
     }
   }
 

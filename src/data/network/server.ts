@@ -486,4 +486,17 @@ export class Server extends Manager {
       id: item.id,
     });
   }
+
+  setTurnState(turnState: TurnState) {
+    if (turnState === this._turnState) {
+      return;
+    }
+
+    super.setTurnState(turnState);
+
+    this.broadcast({
+      type: MessageType.turnState,
+      state: turnState,
+    });
+  }
 }

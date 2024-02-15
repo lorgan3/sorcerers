@@ -23,6 +23,7 @@ export enum MessageType {
   Focus,
   Highlight,
   Activate,
+  turnState,
 }
 
 export type Message =
@@ -136,6 +137,10 @@ export type Message =
   | {
       type: MessageType.Activate;
       id: number;
+    }
+  | {
+      type: MessageType.turnState;
+      state: TurnState;
     };
 
 export interface Popup {
