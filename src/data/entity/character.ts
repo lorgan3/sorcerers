@@ -378,7 +378,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
   damage(source: DamageSource, damage: number, force?: Force) {
     this.hp -= damage;
 
-    Level.instance.numberContainer.damage(damage, ...this.getCenter());
     Level.instance.bloodEmitter.burst(this, damage, source);
 
     if (force) {
@@ -522,6 +521,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   set hp(hp: number) {
+    const oldHp = this._hp;
+    const diff = hp - oldHp;
+    if (diff > 0) {
+      Level.instance.numberContainer.heal(diff, ...this.getCenter());
+    } else if (diff < 0) {
+      Level.instance.numberContainer.damage(diff, ...this.getCenter());
+    }
+
     this._hp = hp;
     this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
     this.body.active = 1;
