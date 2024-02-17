@@ -1,4 +1,4 @@
-import { Sprite, Texture } from "pixi.js";
+import { Sprite } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Element } from "../spells/types";
@@ -7,7 +7,6 @@ import { AreaOfEffect } from "../../graphics/areaOfEffect";
 import { BaseItem } from "./baseItem";
 import { EntityType } from "./types";
 import { Character } from "./character";
-import { circle9x9Canvas } from "../collision/precomputed/circles";
 
 export class MagicScroll extends BaseItem {
   static aoeRange = 64 * 6;
@@ -30,12 +29,12 @@ export class MagicScroll extends BaseItem {
     glyph.position.set(20, 28);
     glyph.rotation = Math.PI / 12;
 
-    const sprite2 = new Sprite(Texture.fromBuffer(circle9x9Canvas.data, 9, 9));
-    sprite2.anchor.set(0);
-    sprite2.alpha = 0.3;
-    sprite2.scale.set(6);
+    // const sprite2 = new Sprite(Texture.fromBuffer(circle9x9Canvas.data, 9, 9));
+    // sprite2.anchor.set(0);
+    // sprite2.alpha = 0.3;
+    // sprite2.scale.set(6);
 
-    this.addChild(sprite, glyph, sprite2);
+    this.addChild(sprite, glyph);
   }
 
   serialize() {
