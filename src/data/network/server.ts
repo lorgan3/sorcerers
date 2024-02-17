@@ -18,8 +18,7 @@ import {
   isSpawnableEntity,
 } from "../entity/types";
 import { Element } from "../spells/types";
-import { MagicScroll } from "../entity/magicScroll";
-import { getRandom } from "../../util/object";
+import { getRandomItem } from "../entity";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -359,10 +358,7 @@ export class Server extends Manager {
     this.setTurnState(TurnState.Spawning);
 
     const item = this.create(
-      new MagicScroll(
-        ...Level.instance.getRandomSpawnLocation(),
-        getRandom(Element)
-      )
+      getRandomItem(...Level.instance.getRandomSpawnLocation())
     );
 
     this.highlight(item, () => {
@@ -478,12 +474,13 @@ export class Server extends Manager {
     });
   }
 
-  activate(item: Item) {
-    item.activate();
+  activate(item: Item, character: Character) {
+    item.activate(character);
 
     this.broadcast({
       type: MessageType.Activate,
       id: item.id,
+      tId: character.id,
     });
   }
 

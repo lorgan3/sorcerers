@@ -2,6 +2,7 @@ import { DisplayObject } from "pixi.js";
 import { PhysicsBody } from "../collision";
 import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
+import { Character } from "./character";
 
 export enum Layer {
   Background,
@@ -38,9 +39,10 @@ export interface Syncable<T = any> extends Spawnable {
   deserialize(data: T): void;
 }
 
-export interface Item extends Spawnable {
+export interface Item extends Spawnable, HurtableEntity {
   appear(): void;
-  activate(): void;
+  activate(character: Character): void;
+  die(): void;
 }
 
 export function isHurtableEntity(
@@ -67,6 +69,7 @@ export enum EntityType {
   Fireball,
   Character,
   MagicScroll,
+  Potion,
 }
 
 export enum Priority {
