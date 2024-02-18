@@ -13,7 +13,8 @@ export class CameraTarget {
   private static continueDelay = 120;
 
   private static maxSpeed = 50;
-  private static damping = 50;
+  private static damping = 40;
+  private static dampingAmount = 0.96;
   private static acc = 0.1;
 
   static shakeAmount = 10;
@@ -110,20 +111,25 @@ export class CameraTarget {
 
     // Clamp position to world edges
     position = [
-      Math.max(
-        Math.min(
-          position[0],
-          this.viewport.worldWidth - this.viewport.screenWidth / 2 / this.scale
-        ),
-        this.viewport.screenWidth / 2 / this.scale
+      Math.round(
+        Math.max(
+          Math.min(
+            position[0],
+            this.viewport.worldWidth -
+              this.viewport.screenWidth / 2 / this.scale
+          ),
+          this.viewport.screenWidth / 2 / this.scale
+        )
       ),
-      Math.max(
-        Math.min(
-          position[1],
-          this.viewport.worldHeight -
-            this.viewport.screenHeight / 2 / this.scale
-        ),
-        this.viewport.screenHeight / 2 / this.scale
+      Math.round(
+        Math.max(
+          Math.min(
+            position[1],
+            this.viewport.worldHeight -
+              this.viewport.screenHeight / 2 / this.scale
+          ),
+          this.viewport.screenHeight / 2 / this.scale
+        )
       ),
     ];
 
@@ -138,13 +144,13 @@ export class CameraTarget {
     const sx = sum ? (speed * adx) / sum : 0;
     const sy = sum ? (speed * ady) / sum : 0;
 
-    if (adx > sx) {
+    if (adx > sx && adx > 1) {
       this.position[0] += Math.sign(dx) * sx;
     } else {
       this.position[0] = position[0];
     }
 
-    if (ady > sy) {
+    if (ady > sy && ady > 1) {
       this.position[1] += Math.sign(dy) * sy;
     } else {
       this.position[1] = position[1];
@@ -165,11 +171,12 @@ export class CameraTarget {
         CameraTarget.maxSpeed,
         this.speed + Math.pow(CameraTarget.acc, dt)
       );
-    } else {
-      this.speed = Math.max(
-        CameraTarget.acc,
-        this.speed - Math.pow(CameraTarget.acc, dt)
-      );
+    } else if (this.speed !== 0) {
+      this.speed *= CameraTarget.dampingAmount;
+
+      if (Math.abs(this.speed) < 1) {
+        this.speed = 0;
+      }
     }
   }
 
