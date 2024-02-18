@@ -8,6 +8,7 @@ import { Manager } from "../data/network/manager";
 export class CameraTarget {
   private static maxScale = 1.5;
   private static zoomSpeed = 0.01;
+  private static maxZoomScale = 10;
   private static highlightDelay = 90;
   private static continueDelay = 120;
 
@@ -198,10 +199,17 @@ export class CameraTarget {
     this.controller = controller;
 
     controller.addScrollListener((event) => {
-      const minScale = this.viewport.screenHeight / this.viewport.worldHeight;
+      const zoomDelta =
+        event.deltaY > 0
+          ? Math.min(CameraTarget.maxZoomScale, event.deltaY)
+          : Math.max(-CameraTarget.maxZoomScale, event.deltaY);
+      const minScale = Math.max(
+        this.viewport.screenHeight / this.viewport.worldHeight,
+        this.viewport.screenWidth / this.viewport.worldWidth
+      );
       this.scale = Math.min(
         CameraTarget.maxScale,
-        Math.max(minScale, this.scale - event.deltaY * CameraTarget.zoomSpeed)
+        Math.max(minScale, this.scale - zoomDelta * CameraTarget.zoomSpeed)
       );
 
       const oldWidth = this.viewport.width;
