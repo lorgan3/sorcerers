@@ -15,12 +15,16 @@ import { Element } from "../spells/types";
 export class Client extends Manager {
   private connection?: DataConnection;
 
-  private static _clientInstance: Client;
+  private static _clientInstance?: Client;
   static get instance() {
-    return Client._clientInstance;
+    return Client._clientInstance!;
   }
 
   constructor(peer: Peer) {
+    if (Client._clientInstance !== undefined) {
+      throw new Error("Client already exists!");
+    }
+
     super(peer);
     Client._clientInstance = this;
   }
@@ -82,6 +86,10 @@ export class Client extends Manager {
   }
 
   connect(controller: KeyboardController) {
+    if (this.controller) {
+      throw new Error("Connecting an already connected client!");
+    }
+
     super.connect(controller);
 
     this.connection!.off("data");
@@ -92,6 +100,13 @@ export class Client extends Manager {
     this.broadcast({
       type: MessageType.ClientReady,
     });
+  }
+
+  destroy() {
+    console.log("Destroying client");
+    Client._clientInstance = undefined;
+    this.connection?.off("data");
+    this.connection?.close();
   }
 
   private handleMessage(message: Message) {

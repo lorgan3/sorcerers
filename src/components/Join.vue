@@ -34,6 +34,8 @@ let peer: Peer | null = null;
 const nameValidator = (name: string) => !!name.trim();
 
 const createClient = () => {
+  Client.instance?.destroy();
+
   clientReady.value = false;
   const peer = new Peer();
 
@@ -104,9 +106,7 @@ const handleConnect = async () => {
   });
 };
 
-onMounted(() => {
-  createClient();
-});
+onMounted(() => createClient());
 
 const handleBack = () => {
   if (Client.instance) {

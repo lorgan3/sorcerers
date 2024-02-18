@@ -34,6 +34,8 @@ const key = ref("");
 const players = ref<string[]>();
 
 const createServer = () => {
+  Server.instance?.destroy();
+
   key.value = Math.floor(Math.random() * 10000)
     .toString()
     .padStart(4, "0");
@@ -73,9 +75,7 @@ onMounted(() => {
   }, 1000);
 });
 
-onUnmounted(() => {
-  window.clearInterval(timer);
-});
+onUnmounted(() => window.clearInterval(timer));
 
 const nameValidator = (name: string) => !!name.trim();
 

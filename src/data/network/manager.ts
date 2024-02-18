@@ -45,6 +45,8 @@ export abstract class Manager {
     Level.instance.cameraTarget.connect(controller);
   }
 
+  abstract destroy(): void;
+
   tick(dt: number, dtMs: number) {
     if (this.cursor) {
       this.cursor.tick(dt, this.activePlayer!.controller);

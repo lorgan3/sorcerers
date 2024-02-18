@@ -27,12 +27,16 @@ export class Server extends Manager {
 
   private disconnectedPlayers: Player[] = [];
 
-  private static _serverInstance: Server;
+  private static _serverInstance?: Server;
   static get instance() {
-    return Server._serverInstance;
+    return Server._serverInstance!;
   }
 
   constructor(peer: Peer) {
+    if (Server._serverInstance !== undefined) {
+      throw new Error("Server already exists!");
+    }
+
     super(peer);
     Server._serverInstance = this;
 
@@ -41,6 +45,10 @@ export class Server extends Manager {
   }
 
   connect(controller: KeyboardController) {
+    if (this.controller) {
+      throw new Error("Connecting an already connected server!");
+    }
+
     super.connect(controller);
     controller.isHost = true;
 
@@ -50,6 +58,16 @@ export class Server extends Manager {
       this._self!.color,
       this.controller
     );
+  }
+
+  destroy() {
+    console.log("Destroying server");
+    Server._serverInstance = undefined;
+
+    for (let player of this.players) {
+      player.connection?.off("data");
+      player.connection?.close();
+    }
   }
 
   join(name: string, team: Team) {
@@ -146,7 +164,7 @@ export class Server extends Manager {
   }
 
   listen() {
-    console.log("server start ", this.peer);
+    console.log("Server starting", this.peer);
 
     this.peer.on("connection", (connection) => {
       let player = this.disconnectedPlayers.pop()!;
