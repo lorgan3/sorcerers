@@ -11,6 +11,8 @@ import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { TickingEntity } from "../entity/types";
 import { Element } from "./types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 const SHAKE_INTENSITY = 8;
 
@@ -46,6 +48,8 @@ export class Sword extends Container implements TickingEntity {
     // sprite2.scale.set(6);
 
     this.addChild(this.sprite);
+
+    ControllableSound.fromEntity([x * 6, y * 6], Sound.Arrow);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -65,6 +69,10 @@ export class Sword extends Container implements TickingEntity {
       7 * Manager.instance.getElementValue(Element.Arcane)
     );
     Level.instance.damage(damage);
+    ControllableSound.fromEntity(
+      [this.position.x, this.position.y],
+      Sound.Step
+    );
 
     const staticEntity = damage
       .getTargets()
