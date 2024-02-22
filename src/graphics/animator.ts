@@ -1,24 +1,29 @@
 import { AnimatedSprite, Texture } from "pixi.js";
 
-export interface Animation<K extends string> {
+export interface Animation<K extends string, S> {
   name: string;
   loop: boolean;
   speed: number;
   blocking?: boolean;
   nextState?: K;
-  available?: () => boolean;
-  onStart?: () => void;
-  onEnd?: () => void;
+  duration?: number;
+  available?: (self: S) => boolean;
+  onStart?: (self: S) => void;
+  onEnd?: (self: S) => void;
+  continuous?: (self: S, time: number) => number;
 }
 
-export class Animator<K extends string = string> {
-  private animations: Partial<Record<K, Animation<K>>> = {};
+export class Animator<K extends string = string, S = any> {
+  private animations: Partial<Record<K, Animation<K, S>>> = {};
   private state?: K;
   private defaultState?: K;
+  private time = 0;
+  private nextTime = 0;
+  private completeTime = 0;
 
   public readonly sprite: AnimatedSprite;
 
-  constructor(private atlas: Record<string, Texture[]>) {
+  constructor(private atlas: Record<string, Texture[]>, private self: S) {
     this.sprite = new AnimatedSprite([Texture.EMPTY]);
     this.sprite.onComplete = this.onComplete;
   }
@@ -29,7 +34,7 @@ export class Animator<K extends string = string> {
     if (config.nextState) {
       const nextConfig = this.animations[config.nextState]!;
 
-      if (!nextConfig.available || nextConfig.available()) {
+      if (!nextConfig.available || nextConfig.available(this.self)) {
         this.animate(config.nextState, true);
         return;
       }
@@ -38,7 +43,7 @@ export class Animator<K extends string = string> {
     this.animate(this.defaultState!, true);
   };
 
-  addAnimation(name: K, data: Animation<K>) {
+  addAnimation(name: K, data: Animation<K, S>) {
     this.animations[name] = data;
 
     if (!this.defaultState) {
@@ -49,7 +54,7 @@ export class Animator<K extends string = string> {
     return this;
   }
 
-  addAnimations(animations: Partial<Record<K, Animation<K>>>) {
+  addAnimations(animations: Partial<Record<K, Animation<K, S>>>) {
     this.animations = { ...this.animations, ...animations };
 
     if (!this.defaultState) {
@@ -62,17 +67,22 @@ export class Animator<K extends string = string> {
   }
 
   animate(name = this.defaultState!, force = false) {
+    const config = this.animations[name]!;
+    this.completeTime = config.duration ? this.time + config.duration : 0;
+
     const oldConfig = this.animations[this.state!];
     if (!force && (this.state === name || oldConfig?.blocking)) {
       return;
     }
 
     if (oldConfig?.onEnd) {
-      oldConfig.onEnd();
+      oldConfig.onEnd(this.self);
     }
 
+    this.time = 0;
+    this.nextTime = 0;
+    this.completeTime = config.duration || 0;
     this.state = name;
-    const config = this.animations[name]!;
     this.sprite.textures = this.atlas[config.name];
     this.sprite.currentFrame =
       config.speed > 0 ? 0 : this.sprite.totalFrames - 1;
@@ -82,8 +92,24 @@ export class Animator<K extends string = string> {
     this.sprite.play();
 
     if (config.onStart) {
-      config.onStart();
+      config.onStart(this.self);
     }
+  }
+
+  tick(dt: number) {
+    if (!this.state) {
+      return;
+    }
+
+    const config = this.animations[this.state]!;
+
+    if (config.duration && this.time >= this.completeTime) {
+      this.onComplete();
+    } else if (config.continuous && this.time >= this.nextTime) {
+      this.nextTime = this.time + config.continuous(this.self, this.time);
+    }
+
+    this.time += dt;
   }
 
   setDefaultAnimation(name: K) {

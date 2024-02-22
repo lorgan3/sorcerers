@@ -155,9 +155,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.animator = new Animator<AnimationState>(
-      AssetsContainer.instance.assets!["atlas"].animations
-    )
+    this.animator = new Animator<AnimationState>(atlas.animations, this)
       .addAnimations(ANIMATION_CONFIG)
       .addAnimation(AnimationState.Float, {
         ...ANIMATION_CONFIG[AnimationState.Float],
