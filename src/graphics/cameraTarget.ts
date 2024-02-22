@@ -180,11 +180,12 @@ export class CameraTarget {
     }
   }
 
-  setTarget(target: HurtableEntity) {
+  setTarget(target: HurtableEntity, callback?: () => void) {
     if (this.highlightQueue.length > 0) {
-      this.highlightQueue.splice(0, 1, { target });
+      this.highlightQueue.splice(0, 1, { target, callback });
     } else {
       this.target = target;
+      this.callback = callback;
     }
   }
 

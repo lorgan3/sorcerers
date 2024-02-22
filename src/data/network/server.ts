@@ -400,25 +400,27 @@ export class Server extends Manager {
       (player.active + 1) % player.characters.length
     );
 
-    this.turnStartTime = this.time;
-    this._turnState = TurnState.Ongoing;
-    this.randomizeElements();
+    Level.instance.cameraTarget.setTarget(player.activeCharacter, () => {
+      this.turnStartTime = this.time;
+      this._turnState = TurnState.Ongoing;
+      this.randomizeElements();
 
-    this.broadcast({
-      type: MessageType.ActiveCharacter,
-      activePlayer: activePlayerIndex,
-      activeCharacter: this.activePlayer!.active,
-      elements: Object.values(this.elements),
-      turnStartTime: this.turnStartTime,
-      newMana: player.mana,
-    });
+      this.broadcast({
+        type: MessageType.ActiveCharacter,
+        activePlayer: activePlayerIndex,
+        activeCharacter: this.activePlayer!.active,
+        elements: Object.values(this.elements),
+        turnStartTime: this.turnStartTime,
+        newMana: player.mana,
+      });
 
-    this.addPopup({
-      title: `${this.activePlayer!.name}'s turn`,
-      meta: MESSAGES[Math.floor(Math.random() * MESSAGES.length)].replace(
-        PLACEHOLDER,
-        this.activePlayer!.activeCharacter.name
-      ),
+      this.addPopup({
+        title: `${this.activePlayer!.name}'s turn`,
+        meta: MESSAGES[Math.floor(Math.random() * MESSAGES.length)].replace(
+          PLACEHOLDER,
+          this.activePlayer!.activeCharacter.name
+        ),
+      });
     });
   }
 

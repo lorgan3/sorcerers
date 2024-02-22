@@ -29,7 +29,6 @@ import { CameraTarget } from "../../graphics/cameraTarget";
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
 const SINK_AMOUNT = 20;
-const KILL_DELAY = 20;
 
 export class Level {
   private app: Application<HTMLCanvasElement>;
@@ -274,5 +273,16 @@ export class Level {
 
       this.performDeathQueue();
     });
+  }
+
+  getViewport() {
+    const center = this.viewport.center;
+    return {
+      x: center.x,
+      y: center.y,
+      width: this.viewport.worldScreenWidth || 0,
+      height: this.viewport.worldScreenHeight || 0,
+      scale: this.viewport.scale.x,
+    };
   }
 }

@@ -199,8 +199,6 @@ export abstract class Manager {
     this.activePlayerIndex = player;
     this.activePlayer.nextTurn();
 
-    Level.instance.cameraTarget.setTarget(this.activePlayer.activeCharacter);
-
     if (this.cursor) {
       this.cursor.remove();
       this.cursor = null;
@@ -215,6 +213,8 @@ export abstract class Manager {
         this.activePlayer.selectedSpell
       );
     }
+
+    return this.activePlayer.activeCharacter;
   }
 
   getActiveCharacter() {
