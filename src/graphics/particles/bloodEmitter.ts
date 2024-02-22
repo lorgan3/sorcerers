@@ -8,7 +8,7 @@ import { Level } from "../../data/map/level";
 
 const TINT_MAP: Partial<Record<EntityType, number>> = {
   [EntityType.Character]: 0xb91e1e,
-  [EntityType.Shield]: 0xaf9b45,
+  [EntityType.Shield]: 0x0690ce,
 };
 
 export class BloodEmitter
@@ -56,7 +56,7 @@ export class BloodEmitter
       particle.alpha = Math.min(1, particle.lifetime / 10);
 
       if (
-        !Level.instance.terrain.characterMask.collidesWithPoint(
+        !Level.instance.terrain.collisionMask.collidesWithPoint(
           (particle.x / 6) | 0,
           (particle.y / 6) | 0
         )
@@ -111,12 +111,12 @@ export class BloodEmitter
       source?.x !== undefined ? Math.atan2(source.y! - cy, source.x! - cx) : 0;
     const variance = source?.x !== undefined ? Math.PI / 12 : Math.PI * 2;
 
-    const amount = Math.ceil(Math.sqrt(damage) * 2);
+    const amount = Math.ceil(Math.sqrt(damage) * 3);
     for (let i = 0; i < amount; i++) {
       const speed = 5 + Math.random() * 4;
       this.spawn(
-        cx + (Math.random() - 0.5) * 12,
-        cy + (Math.random() - 0.5) * 12,
+        cx + (Math.random() - 0.5) * 24,
+        cy + (Math.random() - 0.5) * 24,
         Math.cos(direction + (Math.random() - 0.5) * variance) * speed,
         Math.sin(direction + (Math.random() - 0.5) * variance) * speed,
         TINT_MAP[entity.type]

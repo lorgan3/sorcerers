@@ -129,4 +129,10 @@ export class SimpleParticleEmitter
       }
     }
   }
+
+  burst(count: number) {
+    for (let i = 0; i < count; i++) {
+      this.spawn();
+    }
+  }
 }
