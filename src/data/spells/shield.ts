@@ -11,19 +11,19 @@ import { StaticBody } from "../collision/staticBody";
 import { Server } from "../network/server";
 import { DamageSource } from "../damage/types";
 
-const ANIMATION_SPEED = 0.1;
-const FLICKER_SPEED = 0.5;
-const FLICKER_DURATION = 30;
-
 export class Shield extends Container implements HurtableEntity, Spawnable {
+  private static spawnSpeed = 0.15;
+  private static flickerSpeed = 0.25;
+
   private sprite: AnimatedSprite;
+  private shineEffect: AnimatedSprite;
+
   public readonly body: StaticBody;
   public id = -1;
   public readonly type = EntityType.Shield;
 
-  private _hp = 100;
+  private _hp = 40;
   private shieldArea: CollisionMask;
-  private flickerTime = 0;
 
   constructor(x: number, y: number, angle: number, hp: number) {
     super();
@@ -32,15 +32,31 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.sprite = new AnimatedSprite(atlas.animations["shield"]);
-    this.sprite.animationSpeed = ANIMATION_SPEED;
+    this.sprite = new AnimatedSprite(atlas.animations["spells_manaShield"]);
+    this.sprite.animationSpeed = Shield.spawnSpeed;
     this.sprite.play();
-    this.sprite.scale.set(3);
+    this.sprite.scale.set(-1.5, 1.5);
     this.sprite.anchor.set(0.5);
-    this.sprite.position.set(70, 70);
-    this.sprite.rotation = angle;
+    this.sprite.position.set(60, 70);
+    this.sprite.rotation = angle - Math.PI / 2;
+    this.sprite.loop = false;
 
-    const index = getIndexFromAngle(this.sprite.rotation - Math.PI / 2);
+    this.shineEffect = new AnimatedSprite(
+      atlas.animations["spells_manaShieldShine"]
+    );
+    this.shineEffect.animationSpeed = Shield.flickerSpeed;
+    this.shineEffect.scale.set(-1.5, 1.5);
+    this.shineEffect.anchor.set(0.5);
+    this.shineEffect.position.set(60, 70);
+    this.shineEffect.rotation = angle - Math.PI / 2;
+    this.shineEffect.loop = false;
+    this.shineEffect.visible = false;
+    this.shineEffect.onComplete = () => {
+      this.shineEffect.visible = false;
+      this.sprite.visible = true;
+    };
+
+    const index = getIndexFromAngle(this.sprite.rotation);
     this.body = new StaticBody(Level.instance.terrain.characterMask, {
       mask: rotatedRectangle6x24[index],
     });
@@ -52,12 +68,19 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     );
 
     // const sprite2 = new Sprite(
-    //   Texture.fromBuffer(rotatedRectangle6x24Canvas[index].data, 24, 24)
+    //   Texture.fromBuffer(
+    //     rotatedRectangle6x24Canvas[index]
+    //       .getContext("2d")!
+    //       .getImageData(0, 0, 24, 24).data,
+    //     24,
+    //     24
+    //   )
     // );
+    // sprite2.alpha = 0.3;
     // sprite2.anchor.set(0);
     // sprite2.scale.set(6);
 
-    this.addChild(this.sprite);
+    this.addChild(this.sprite, this.shineEffect);
     this.add();
   }
 
@@ -83,33 +106,30 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
 
   set hp(hp: number) {
     this._hp = hp;
-    this.flickerTime = FLICKER_DURATION;
-
-    if (this._hp > 0) {
-      // Terrain might be damaged so re-add the shield.
-      this.add();
-    }
   }
 
   damage(source: DamageSource, damage: number) {
     this.hp -= damage;
 
+    if (this._hp > 0) {
+      this.sprite.visible = false;
+      this.shineEffect.visible = true;
+      this.shineEffect.currentFrame = 0;
+      this.shineEffect.play();
+
+      this.add();
+    }
+
     Level.instance.bloodEmitter.burst(this, damage, source);
   }
 
-  tick(dt: number) {
-    if (this.flickerTime > 0) {
-      this.flickerTime -= dt;
-      this.sprite.animationSpeed =
-        this.flickerTime > 0 ? FLICKER_SPEED : ANIMATION_SPEED;
-    }
-  }
+  tick(dt: number) {}
 
   private add() {
-    Level.instance.terrain.collisionMask.add(
-      this.body.mask,
-      ...this.body.position
-    );
+    // Level.instance.terrain.collisionMask.add(
+    //   this.body.mask,
+    //   ...this.body.position
+    // );
     Level.instance.terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
