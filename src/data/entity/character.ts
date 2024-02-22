@@ -15,7 +15,6 @@ import { EntityType, HurtableEntity, Priority, Syncable } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
-import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { ParticleEmitter } from "../../graphics/particles/types";
 import {
   rectangle6x16,
@@ -34,6 +33,7 @@ import { createCharacterGibs } from "./gib/characterGibs";
 import { Explosion } from "../../graphics/explosion";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Wings } from "./wings";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 4;
@@ -139,7 +139,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
   public readonly type = EntityType.Character;
 
   private sprite: AnimatedSprite;
-  private wings: AnimatedSprite;
   private namePlate: BitmapText;
   private particles?: ParticleEmitter;
   private foregroundParticles?: ParticleEmitter;
@@ -147,10 +146,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private _hp = 100;
   private time = 0;
   private damageSource: DamageSource | null = null;
-  private hasWings = false;
-  private animationTimer = 0;
   private spellSource: any | null = null;
   private lookDirection = 1;
+  private wings?: Wings;
 
   private animator: Animator<AnimationState>;
 
@@ -239,14 +237,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(18, -40);
 
-    this.wings = new AnimatedSprite(atlas.animations["wings"]);
-    this.wings.scale.set(3);
-    this.wings.position.set(18, 28);
-    this.wings.anchor.set(0.5);
-    this.wings.animationSpeed = 0.2;
-    this.wings.visible = false;
-
-    this.addChild(this.wings, this.sprite, this.namePlate);
+    this.addChild(this.sprite, this.namePlate);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -329,7 +320,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   control(controller: Controller) {
     if (
       this.body.grounded &&
-      !this.hasWings &&
+      !this.wings &&
       (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
     ) {
       if (this.body.jump()) {
@@ -373,12 +364,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
       }
     }
 
-    if (this.hasWings) {
-      if (
-        (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W)) &&
-        this.body.yVelocity > -1.5
-      ) {
-        this.body.addVelocity(0, -0.4 * dt);
+    if (
+      this.wings &&
+      (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
+    ) {
+      this.wings.flap();
+      this.animator.animate(AnimationState.Float);
+
+      if (this.wings.power <= 0) {
+        this.removeWings();
       }
     }
   }
@@ -475,53 +469,21 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   giveWings() {
-    this.hasWings = true;
-    this.wings.visible = true;
-    this.wings.play();
-
-    this.foregroundParticles = Level.instance.particleContainer.replaceEmitter(
-      new SimpleParticleEmitter(
-        AssetsContainer.instance.assets!["atlas"].animations["spells_sparkle"],
-        {
-          ...SimpleParticleEmitter.defaultConfig,
-          spawnRange: 64,
-          spawnFrequency: 0.2,
-          initialize: () =>
-            Math.random() > 0.5
-              ? {
-                  x: this.position.x - 32,
-                  y: this.position.y + 60,
-                  xVelocity: -2,
-                  yVelocity: 2,
-                }
-              : {
-                  x: this.position.x + 86,
-                  y: this.position.y + 60,
-                  xVelocity: 2,
-                  yVelocity: 2,
-                },
-        }
-      ),
-      this.foregroundParticles
-    );
+    this.wings = new Wings(this);
+    this.addChildAt(this.wings, 0);
   }
 
   removeWings() {
-    if (!this.hasWings) {
+    if (!this.wings) {
       return;
     }
 
-    this.hasWings = false;
-    this.wings.visible = false;
     this.wings.stop();
-
-    this.foregroundParticles = Level.instance.particleContainer.destroyEmitter(
-      this.foregroundParticles!
-    );
+    this.removeChild(this.wings);
+    this.wings = undefined;
   }
 
   melee() {
-    this.animationTimer = MELEE_DURATION;
     this.animator.animate(AnimationState.Swing);
   }
 

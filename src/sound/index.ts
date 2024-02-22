@@ -24,6 +24,7 @@ export enum Sound {
   Glass = "glassSnd",
   Crack = "crackSnd",
   Beam = "beamSnd",
+  Wing = "wingSnd",
 }
 
 interface SoundData {
@@ -87,6 +88,7 @@ addSoundData(Sound.Glass, "260433__roganmcdougald__glass-break-small-jar-01");
 addSoundData(Sound.Glass, "260432__roganmcdougald__glass-break-small-jar-02");
 addSoundData(Sound.Crack, "536921__eminyildirim__ice-crack-low");
 addSoundData(Sound.Beam, "351222__arctis__hardstyle-bass-kick-9-with-reverb");
+addSoundData(Sound.Wing, "626317__klankbeeld__wing-beat-eurasian-wren-220124");
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(

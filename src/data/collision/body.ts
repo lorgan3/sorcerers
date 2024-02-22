@@ -38,7 +38,7 @@ export class Body implements PhysicsBody {
   private jumped = false;
 
   public readonly mask: CollisionMask;
-  private gravity: number;
+  public gravity: number;
   private airFriction: number;
   private groundFriction: number;
   private airControl: number;
@@ -164,6 +164,7 @@ export class Body implements PhysicsBody {
           }
         }
 
+        this.jumped = false;
         this.yVelocity = 0;
         this.y = alignY(this.y);
         this.rY = this.y;
@@ -266,7 +267,6 @@ export class Body implements PhysicsBody {
       }
     }
 
-    this.jumped = false;
     this.x += this.xVelocity * dt;
     this.rX = alignX(this.x);
 
