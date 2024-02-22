@@ -33,33 +33,37 @@ const customUpload = ref();
 const key = ref("");
 const players = ref<string[]>();
 
-const createServer = () => {
-  Server.instance?.destroy();
+let promise = ref<Promise<void>>();
 
-  key.value = Math.floor(Math.random() * 10000)
-    .toString()
-    .padStart(4, "0");
+const createServer = () =>
+  new Promise<void>((resolve) => {
+    Server.instance?.destroy();
 
-  const peer = new Peer(PEER_ID_PREFIX + key.value);
+    key.value = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0");
 
-  peer.on("error", () => {
-    peer.destroy();
+    const peer = new Peer(PEER_ID_PREFIX + key.value);
 
-    createServer();
+    peer.on("error", () => {
+      peer.destroy();
+
+      createServer().then(resolve);
+    });
+
+    peer.once("open", () => {
+      peer.off("error");
+
+      const server = new Server(peer);
+      server.join(name.value, teams.value[selectedTeam.value] || Team.random());
+      server.listen();
+      resolve();
+    });
   });
-
-  peer.once("open", () => {
-    peer.off("error");
-
-    const server = new Server(peer);
-    server.join(name.value, teams.value[selectedTeam.value] || Team.random());
-    server.listen();
-  });
-};
 
 let timer = -1;
 onMounted(() => {
-  createServer();
+  promise.value = createServer();
 
   timer = window.setInterval(() => {
     if (!Server.instance) {
@@ -134,6 +138,8 @@ const handleStart = async () => {
     name: name.value,
     defaultTeam: selectedTeam.value,
   });
+
+  await promise.value;
 
   window.clearInterval(timer);
 
