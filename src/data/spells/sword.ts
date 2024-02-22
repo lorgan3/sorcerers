@@ -25,6 +25,7 @@ export class Sword extends Container implements TickingEntity {
 
   private shakeXOffset = 0;
   private shakeYOffset = 0;
+  private fallingSound?: ControllableSound;
 
   constructor(x: number, y: number) {
     super();
@@ -49,7 +50,10 @@ export class Sword extends Container implements TickingEntity {
 
     this.addChild(this.sprite);
 
-    ControllableSound.fromEntity([x * 6, y * 6], Sound.Arrow);
+    this.fallingSound = ControllableSound.fromEntity(
+      [x * 6, y * 6],
+      Sound.Arrow
+    );
   }
 
   private onCollide = (x: number, y: number) => {
@@ -97,6 +101,7 @@ export class Sword extends Container implements TickingEntity {
 
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6 + this.shakeXOffset, y * 6 + this.shakeYOffset);
+    this.fallingSound?.update([this.position.x, this.position.y]);
 
     this.lifetime -= dt;
     if (this.lifetime <= 0) {
