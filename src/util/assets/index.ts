@@ -2,6 +2,7 @@ import { Assets } from "@pixi/assets";
 import Eternal from "../../assets/Eternal.ttf";
 import "./mapLoader";
 import { MAP_LOADER } from "./mapLoader";
+import { SOUND_ASSETS } from "../../sound";
 
 export const defaultMaps = {
   playground: `${import.meta.env.BASE_URL}maps/playground.png`,
@@ -19,6 +20,7 @@ Assets.addBundle("assets", {
   ...Object.fromEntries(
     Object.entries(defaultMaps).map(([key, value]) => [key, loadAsMap(value)])
   ),
+  ...SOUND_ASSETS,
 });
 
 let promise: Promise<any> | undefined;
