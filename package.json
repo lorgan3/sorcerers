@@ -10,6 +10,7 @@
     "test": "vitest",
     "check-types": "vue-tsc --noEmit",
     "atlas-packer": "node --no-warnings --loader ts-node/esm ./scripts/atlasPacker.ts",
+    "sound-compresser": "node --no-warnings --loader ts-node/esm ./scripts/soundCompresser.ts",
     "install": "yarn atlas-packer"
   },
   "dependencies": {
@@ -23,8 +24,10 @@
   },
   "devDependencies": {
     "@babel/types": "^7.23.9",
+    "@types/fluent-ffmpeg": "^2.1.24",
     "@vitejs/plugin-vue": "^5.0.3",
     "binpacking": "^0.0.1",
+    "fluent-ffmpeg": "^2.1.2",
     "gifwrap": "^0.10.1",
     "jimp": "^0.22.10",
     "jsdom": "^24.0.0",
