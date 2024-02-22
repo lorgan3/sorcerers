@@ -32,12 +32,14 @@ import {
 } from "../../graphics/particles/factory/character";
 import { createCharacterGibs } from "./gib/characterGibs";
 import { Explosion } from "../../graphics/explosion";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 4;
 
 const WALK_DURATION = 20;
-const MELEE_DURATION = 45;
+const MELEE_DURATION = 50;
 
 const MELEE_POWER = 20;
 
@@ -54,7 +56,10 @@ enum AnimationState {
   Swing = "elf_swing",
 }
 
-const ANIMATION_CONFIG: Record<AnimationState, Animation<AnimationState>> = {
+const ANIMATION_CONFIG: Record<
+  AnimationState,
+  Animation<AnimationState, Character>
+> = {
   [AnimationState.Idle]: {
     name: "elf_idle",
     loop: true,
@@ -64,28 +69,35 @@ const ANIMATION_CONFIG: Record<AnimationState, Animation<AnimationState>> = {
     name: "elf_walk",
     loop: true,
     speed: 0.1,
+    continuous: (entity) => {
+      ControllableSound.fromEntity(entity, Sound.Step);
+      return 22 + Math.random() * 5;
+    },
+    duration: WALK_DURATION,
   },
   [AnimationState.Jump]: {
     name: "elf_jump",
     loop: false,
     speed: 0.3,
     nextState: AnimationState.Float,
+    onStart: (entity) => ControllableSound.fromEntity(entity, Sound.Jump),
   },
   [AnimationState.Float]: {
     name: "elf_float",
     loop: true,
     speed: 0.1,
+    available: (entity) => !entity.body.grounded,
   },
   [AnimationState.Land]: {
     name: "elf_land",
     loop: false,
     speed: 0.15,
+    onStart: (entity) => ControllableSound.fromEntity(entity, Sound.Land),
   },
   [AnimationState.Fall]: {
     name: "elf_fall",
     loop: true,
     speed: 0.1,
-    nextState: AnimationState.SpellIdle,
   },
   [AnimationState.Spell]: {
     name: "elf_spell",
@@ -109,6 +121,14 @@ const ANIMATION_CONFIG: Record<AnimationState, Animation<AnimationState>> = {
     speed: 0.25,
     nextState: AnimationState.SpellDone,
     blocking: true,
+    duration: MELEE_DURATION,
+    continuous: (entity, time) => {
+      if (time > 0) {
+        ControllableSound.fromEntity(entity, Sound.Swing);
+      }
+
+      return 30;
+    },
   },
 };
 
@@ -157,10 +177,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     this.animator = new Animator<AnimationState>(atlas.animations, this)
       .addAnimations(ANIMATION_CONFIG)
-      .addAnimation(AnimationState.Float, {
-        ...ANIMATION_CONFIG[AnimationState.Float],
-        available: () => !this.body.grounded,
-      })
       .addAnimation(AnimationState.SpellIdle, {
         ...ANIMATION_CONFIG[AnimationState.SpellIdle],
         onStart: () => {
@@ -182,6 +198,25 @@ export class Character extends Container implements HurtableEntity, Syncable {
             Level.instance.particleContainer.destroyEmitter(
               this.foregroundParticles!
             );
+        },
+      })
+      .addAnimation(AnimationState.Swing, {
+        ...ANIMATION_CONFIG[AnimationState.Swing],
+        onEnd: () => {
+          const direction =
+            this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
+          const [cx, cy] = this.getCenter();
+          Level.instance.damage(
+            new ImpactDamage(
+              Math.round(cx / 6) + this.sprite.scale.x * 6.5,
+              Math.round(cy / 6) - 6,
+              direction,
+              MELEE_POWER * Manager.instance.getElementValue(Element.Physical)
+            )
+          );
+
+          this.animator.animate(AnimationState.SpellDone);
+          Manager.instance.setTurnState(TurnState.Ending);
         },
       });
 
@@ -237,41 +272,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   tick(dt: number) {
-    if (this.animationTimer > 0) {
-      this.animationTimer -= dt;
-
-      if (this.animationTimer <= 0) {
-        if (this.animator.animationState === AnimationState.Swing) {
-          const direction =
-            this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
-          const [cx, cy] = this.getCenter();
-          Level.instance.damage(
-            new ImpactDamage(
-              Math.floor(cx / 6) + this.sprite.scale.x * 6,
-              Math.floor(cy / 6) - 6,
-              direction,
-              MELEE_POWER * Manager.instance.getElementValue(Element.Physical)
-            )
-          );
-
-          this.animator.animate(AnimationState.SpellDone);
-          Manager.instance.setTurnState(TurnState.Ending);
-        } else {
-          this.animator.animate();
-        }
-      }
-    }
-
-    if (!this.body.grounded && Math.abs(this.body.yVelocity) > 1.5) {
-      this.animator.animate(AnimationState.Float);
-    } else if (
-      (this.animator.animationState === AnimationState.Fall ||
-        this.animator.animationState === AnimationState.Float) &&
-      this.body.grounded
-    ) {
-      this.animator.animate(AnimationState.Land);
-    }
-
     this.time += dt;
     if (this.time > 3) {
       this.body.active = 1;
@@ -312,6 +312,18 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ...this.body.position
       );
     }
+
+    this.animator.tick(dt);
+
+    if (!this.body.grounded && Math.abs(this.body.yVelocity) > 2) {
+      this.animator.animate(AnimationState.Float);
+    } else if (
+      (this.animator.animationState === AnimationState.Fall ||
+        this.animator.animationState === AnimationState.Float) &&
+      this.body.grounded
+    ) {
+      this.animator.animate(AnimationState.Land);
+    }
   }
 
   control(controller: Controller) {
@@ -341,7 +353,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.body.walk(dt, -1);
 
       if (this.body.grounded) {
-        this.animationTimer = WALK_DURATION;
         this.animator.animate(AnimationState.Walk);
 
         if (this.sprite.animationSpeed * this.lookDirection < 0) {
@@ -354,7 +365,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.body.walk(dt, 1);
 
       if (this.body.grounded) {
-        this.animationTimer = WALK_DURATION;
         this.animator.animate(AnimationState.Walk);
 
         if (this.sprite.animationSpeed * this.lookDirection < 0) {
@@ -377,6 +387,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.hp -= damage;
 
     Level.instance.bloodEmitter.burst(this, damage, source);
+    ControllableSound.fromEntity(this, Sound.Splat);
 
     if (force) {
       this.body.addAngularVelocity(force.power, force.direction);

@@ -7,15 +7,19 @@ import { Level } from "../../data/map/level";
 import { Manager } from "../../data/network/manager";
 import { TurnState } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 const MIN_DISTANCE = 32;
 const MAX_DISTANCE = 320;
 const SPRITE_SIZE = 32;
+const SOUND_DISTANCE = 60;
 
 export class Telekinesis extends Container {
   private arrowBody: Sprite;
   private arrowTip: Sprite;
   private activated = true;
+  private lastDistance = 0;
 
   constructor(
     x: number,
@@ -56,6 +60,16 @@ export class Telekinesis extends Container {
       MIN_DISTANCE
     );
 
+    if (distance - this.lastDistance > SOUND_DISTANCE) {
+      this.lastDistance = distance;
+
+      if (Math.random() > 0.6) {
+        ControllableSound.fromEntity(this.character, Sound.Bow);
+      }
+    } else if (distance < this.lastDistance) {
+      this.lastDistance = distance;
+    }
+
     this.arrowBody.scale.y = distance / SPRITE_SIZE;
     this.arrowBody.scale.x = 2 - this.arrowBody.scale.y / 10;
     this.arrowTip.position.y = SPRITE_SIZE / 2 + distance;
@@ -80,6 +94,7 @@ export class Telekinesis extends Container {
         Level.instance.remove(this);
         this.source.setSpellSource(this, false);
         Manager.instance.setTurnState(TurnState.Ending);
+        ControllableSound.fromEntity(this.character, Sound.Arrow);
       }
     }
   }

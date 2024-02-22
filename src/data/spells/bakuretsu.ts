@@ -11,9 +11,11 @@ import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { TickingEntity } from "../entity/types";
 import { Element } from "./types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
-const GROW_TIME = 15;
+const GROW_TIME = 30;
 const IMPACT_START_TIME = ARCANE_CIRCLES.length * GROW_TIME + 30;
 const EXPLOSION_START_TIME = IMPACT_START_TIME + 15;
 const SHRINK_START_TIME = EXPLOSION_START_TIME + 25;
@@ -28,6 +30,7 @@ export class Bakuretsu extends Container implements TickingEntity {
   private exploded = false;
   private rX = 0;
   private rY = 0;
+  private choirSnd?: ControllableSound;
 
   constructor(x: number, surface: CollisionMask, private character: Character) {
     super();
@@ -51,6 +54,11 @@ export class Bakuretsu extends Container implements TickingEntity {
 
     this.rY = Math.round(this.rY);
     this.position.set(this.rX * 6, this.rY * 6);
+
+    this.choirSnd = ControllableSound.fromEntity(
+      [this.rX * 6, this.rY * 6],
+      Sound.Choir
+    );
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -117,6 +125,7 @@ export class Bakuretsu extends Container implements TickingEntity {
     }
 
     if (this.time >= EXPLOSION_START_TIME) {
+      this.choirSnd?.fade(dt, 25);
       if (!this.explosion.visible) {
         this.explosion.visible = true;
         this.explosion.play();
@@ -126,9 +135,15 @@ export class Bakuretsu extends Container implements TickingEntity {
     }
 
     if (this.time >= IMPACT_START_TIME) {
+      this.choirSnd?.fade(dt, 25);
       if (!this.impact.visible) {
         this.impact.visible = true;
         this.impact.play();
+
+        ControllableSound.fromEntity(
+          [this.rX * 6, this.rY * 6],
+          Sound.Explosion
+        );
       }
 
       return;

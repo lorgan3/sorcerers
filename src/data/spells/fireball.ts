@@ -14,6 +14,8 @@ import { TurnState } from "../network/types";
 import { EntityType, Priority, Syncable } from "../entity/types";
 import { Server } from "../network/server";
 import { Element } from "./types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export class Fireball extends Container implements Syncable {
   public readonly body: SimpleBody;
@@ -64,6 +66,7 @@ export class Fireball extends Container implements Syncable {
 
     this.addChild(this.sprite);
     Level.instance.particleContainer.addEmitter(this.particles);
+    ControllableSound.fromEntity([x * 6, y * 6], Sound.Fire);
   }
 
   private onCollide = (x: number, y: number) => {

@@ -16,6 +16,8 @@ import { DamageSource } from "../damage/types";
 import { Server } from "../network/server";
 import { Character } from "./character";
 import { Manager } from "../network/manager";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export abstract class BaseItem extends Container implements Syncable, Item {
   protected static floatSpeed = 0.3;
@@ -142,6 +144,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
 
   appear() {
     this._appeared = true;
+    ControllableSound.fromEntity(this, Sound.Pop);
   }
 
   get appeared() {

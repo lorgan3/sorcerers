@@ -10,6 +10,8 @@ import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 const DEFAULT_POWER = 5;
 const DEFAULT_DAMAGE_MULTIPLIER = 5;
@@ -44,6 +46,18 @@ export class ExplosiveDamage implements DamageSource {
         this.range as keyof typeof ExplosiveDamage.RangeToMaskMap
       ]
     );
+
+    if (this.range <= 8) {
+      ControllableSound.fromEntity(
+        [this.x * 6, this.y * 6],
+        Sound.ExplosionSmall
+      );
+    } else {
+      ControllableSound.fromEntity(
+        [this.x * 6, this.y * 6],
+        Sound.ExplosionMedium
+      );
+    }
 
     this.getTargets().damage(this);
   }

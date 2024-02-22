@@ -7,6 +7,8 @@ import { ELEMENT_ATLAS_MAP, ELEMENT_COLOR_MAP } from "./elements";
 import { ParticleEmitter } from "./particles/types";
 import { Layer, TickingEntity } from "../data/entity/types";
 import { map } from "../util/math";
+import { ControllableSound } from "../sound/controllableSound";
+import { Sound } from "../sound";
 
 export class AreaOfEffect extends Container implements TickingEntity {
   public layer = Layer.Background;
@@ -25,6 +27,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
 
   private growSize: number;
   private expansionSize: number;
+  private expanded = false;
 
   constructor(
     x: number,
@@ -110,6 +113,13 @@ export class AreaOfEffect extends Container implements TickingEntity {
       this.time <
       AreaOfEffect.growDuration + AreaOfEffect.expansionDuration
     ) {
+      if (!this.expanded) {
+        this.expanded = true;
+        ControllableSound.fromEntity(
+          [this.position.x, this.position.y],
+          Sound.Schwing
+        );
+      }
       const t = this.time - AreaOfEffect.growDuration;
       this.circle.scale.set(
         map(

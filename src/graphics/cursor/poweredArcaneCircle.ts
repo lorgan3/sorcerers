@@ -9,6 +9,8 @@ import { Manager } from "../../data/network/manager";
 import { Cursor, ProjectileConstructor } from "./types";
 import { TurnState } from "../../data/network/types";
 import { Level } from "../../data/map/level";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 const SCALE_MULTIPLIER = 0.8;
 const ANIMATION_SPEED = -0.4;
@@ -34,6 +36,7 @@ export class PoweredArcaneCircle
 
   private power = 0;
   private powerDirection = 1;
+  private sound?: ControllableSound;
 
   constructor(
     private character: Character,
@@ -64,6 +67,7 @@ export class PoweredArcaneCircle
   remove(): void {
     Level.instance.uiContainer.removeChild(this);
     this.character.setSpellSource(this, false);
+    this.sound?.destroy();
   }
 
   trigger({ projectile, xOffset, yOffset, x, y, turnState }: TriggerData) {
@@ -91,9 +95,25 @@ export class PoweredArcaneCircle
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
         this.trigger(this.spell.data);
+        this.sound?.destroy();
+        this.sound = undefined;
       }
 
       return;
+    }
+
+    if (this.visible) {
+      if (this.sound) {
+        this.sound.update(this.character);
+      } else {
+        this.sound = ControllableSound.fromEntity(
+          this.character,
+          Sound.DarkMagic,
+          {
+            loop: true,
+          }
+        );
+      }
     }
 
     const [x2, y2] = this.character.getCenter();

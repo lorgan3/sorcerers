@@ -4,6 +4,8 @@ import { EntityType } from "./types";
 import { Character } from "./character";
 import { POTION_DATA, PotionType } from "./potionData";
 import { BaseItem } from "./baseItem";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export class Potion extends BaseItem {
   public readonly type = EntityType.Potion;
@@ -45,6 +47,7 @@ export class Potion extends BaseItem {
   activate(character: Character) {
     super.activate(character);
 
+    ControllableSound.fromEntity(this, Sound.Potion);
     POTION_DATA[this.potionType].activate(character);
   }
 }

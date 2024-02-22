@@ -122,12 +122,18 @@ export class Terrain {
       layer.update("destination-out", layerFn ?? fn);
     }
 
-    this.collisionMask.subtract(mask, x | 0, y | 0);
+    const hit = this.collisionMask.collidesWith(mask, x | 0, y | 0);
+    if (hit) {
+      this.collisionMask.subtract(mask, x | 0, y | 0);
+    }
+
     this.characterMask.subtract(mask, x | 0, y | 0);
+
+    return hit;
   }
 
   subtractCircle(x: number, y: number, r: number, mask: CollisionMask) {
-    this.subtract(
+    return this.subtract(
       x - r,
       y - r,
       mask,

@@ -7,6 +7,8 @@ import { AreaOfEffect } from "../../graphics/areaOfEffect";
 import { BaseItem } from "./baseItem";
 import { EntityType } from "./types";
 import { Character } from "./character";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export class MagicScroll extends BaseItem {
   static aoeRange = 64 * 6;
@@ -61,6 +63,7 @@ export class MagicScroll extends BaseItem {
   activate(character: Character) {
     super.activate(character);
 
+    ControllableSound.fromEntity(this, Sound.Paper);
     this.aoe = new AreaOfEffect(
       ...this.getCenter(),
       MagicScroll.aoeRange,

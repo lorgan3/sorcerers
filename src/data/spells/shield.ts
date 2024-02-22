@@ -10,6 +10,8 @@ import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
 import { Server } from "../network/server";
 import { DamageSource } from "../damage/types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export class Shield extends Container implements HurtableEntity, Spawnable {
   private static spawnSpeed = 0.15;
@@ -82,6 +84,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
 
     this.addChild(this.sprite, this.shineEffect);
     this.add();
+    ControllableSound.fromEntity(this, Sound.Schwing);
   }
 
   getCenter(): [number, number] {
@@ -98,6 +101,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
       ...this.body.position
     );
     Level.instance.remove(this);
+    ControllableSound.fromEntity(this, Sound.Glass);
   }
 
   get hp() {
@@ -116,6 +120,8 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
       this.shineEffect.visible = true;
       this.shineEffect.currentFrame = 0;
       this.shineEffect.play();
+
+      ControllableSound.fromEntity(this, Sound.Crack);
 
       this.add();
     }

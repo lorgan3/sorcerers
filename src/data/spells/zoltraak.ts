@@ -21,6 +21,8 @@ import { GenericDamage } from "../damage/genericDamage";
 import { Server } from "../network/server";
 import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 const DAMAGE = 40;
 const MAX_DISTANCE = 912;
@@ -101,6 +103,8 @@ export class Zoltraak extends Container implements Spawnable {
     this.impact.play();
 
     this.addChild(this.impact);
+
+    ControllableSound.fromEntity([x * 6, y * 6], Sound.Beam);
   }
 
   tick(dt: number) {

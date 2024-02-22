@@ -3,6 +3,8 @@ import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export class ImpactDamage implements DamageSource {
   public readonly type = DamageSourceType.Impact;
@@ -16,7 +18,9 @@ export class ImpactDamage implements DamageSource {
   ) {}
 
   damage() {
-    Level.instance.terrain.subtractCircle(this.x, this.y, 8, circle16x16);
+    if (Level.instance.terrain.subtractCircle(this.x, this.y, 8, circle16x16)) {
+      ControllableSound.fromEntity([this.x * 6, this.y * 6], Sound.Stone);
+    }
 
     this.getTargets().damage(this);
   }
@@ -29,7 +33,7 @@ export class ImpactDamage implements DamageSource {
     if (!this.targets) {
       this.targets = new TargetList();
 
-      const range = 9 * 6;
+      const range = 10 * 6;
       Level.instance.withNearbyEntities(
         (this.x + 3) * 6,
         (this.y + 8) * 6,
