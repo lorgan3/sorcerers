@@ -27,7 +27,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   private _hp = 40;
   private shieldArea: CollisionMask;
 
-  constructor(x: number, y: number, angle: number, hp: number) {
+  constructor(x: number, y: number, private direction: number, hp: number) {
     super();
     this._hp = hp;
     this.position.set(x * 6, y * 6);
@@ -40,7 +40,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     this.sprite.scale.set(-1.5, 1.5);
     this.sprite.anchor.set(0.5);
     this.sprite.position.set(60, 70);
-    this.sprite.rotation = angle - Math.PI / 2;
+    this.sprite.rotation = direction - Math.PI / 2;
     this.sprite.loop = false;
 
     this.shineEffect = new AnimatedSprite(
@@ -50,7 +50,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     this.shineEffect.scale.set(-1.5, 1.5);
     this.shineEffect.anchor.set(0.5);
     this.shineEffect.position.set(60, 70);
-    this.shineEffect.rotation = angle - Math.PI / 2;
+    this.shineEffect.rotation = direction - Math.PI / 2;
     this.shineEffect.loop = false;
     this.shineEffect.visible = false;
     this.shineEffect.onComplete = () => {
@@ -143,7 +143,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   }
 
   serializeCreate() {
-    return [...this.body.position, this.sprite.rotation, this.hp] as const;
+    return [...this.body.position, this.direction, this.hp] as const;
   }
 
   static create(data: ReturnType<Shield["serializeCreate"]>) {
