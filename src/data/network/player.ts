@@ -121,5 +121,6 @@ export class Player {
   nextTurn() {
     this.turn++;
     this.mana += MANA_BASE_GAIN + MANA_PER_TURN_GAIN * this.turn;
+    this._controller.resetKeys();
   }
 }

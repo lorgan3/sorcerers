@@ -6,6 +6,7 @@ export interface Controller {
   pressedKeys: number;
   deserialize(buffer: [number, number, number]): void;
   destroy(): void;
+  resetKeys(): void;
   // addKeyListener(key: Key, fn: () => void): () => void;
 }
 

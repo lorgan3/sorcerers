@@ -156,6 +156,11 @@ export class KeyboardController implements Controller {
     return [this.mouseX, this.mouseY];
   }
 
+  resetKeys() {
+    this.pressedKeys = 0;
+    this.serverKeys = 0;
+  }
+
   serialize(): [number, number, number] {
     if (this.isHost) {
       this.serverKeys = this.pressedKeys;

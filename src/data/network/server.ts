@@ -137,7 +137,11 @@ export class Server extends Manager {
       for (let player of this.players) {
         player.connection?.send(data);
       }
-    } else if (this.frames % 10 === 0 && this.activePlayer?.activeCharacter) {
+    } else if (
+      this.frames % 10 === 0 &&
+      this.activePlayer?.activeCharacter &&
+      this.isControlling()
+    ) {
       const data: Message = {
         type: MessageType.ActiveUpdate,
         data: this.activePlayer!.activeCharacter.serialize(),
@@ -150,7 +154,8 @@ export class Server extends Manager {
 
     if (
       this.frames % 3 === 0 &&
-      this.players.indexOf(this.activePlayer!) === 0
+      this.players.indexOf(this.activePlayer!) === 0 &&
+      this.isControlling()
     ) {
       const pressedKeys = (
         this.activePlayer!.controller as KeyboardController
@@ -283,7 +288,7 @@ export class Server extends Manager {
       case MessageType.InputState:
         player.controller.deserialize(message.data);
 
-        if (player === this.activePlayer) {
+        if (player === this.activePlayer && this.isControlling()) {
           this.broadcast(message);
         }
         break;
@@ -400,7 +405,7 @@ export class Server extends Manager {
       (player.active + 1) % player.characters.length
     );
 
-    Level.instance.cameraTarget.setTarget(player.activeCharacter, () => {
+    this.focus(player.activeCharacter, () => {
       this.turnStartTime = this.time;
       this._turnState = TurnState.Ongoing;
       this.randomizeElements();
@@ -461,7 +466,7 @@ export class Server extends Manager {
     });
   }
 
-  kill(entity: HurtableEntity | Syncable) {
+  kill(entity: HurtableEntity | Spawnable) {
     if (entity.die) {
       this.broadcast({
         type: MessageType.Die,
@@ -476,8 +481,8 @@ export class Server extends Manager {
     this._self!.rename(newName);
   }
 
-  focus(target: HurtableEntity) {
-    Level.instance.cameraTarget.setTarget(target);
+  focus(target: HurtableEntity, callback?: () => void) {
+    Level.instance.cameraTarget.setTarget(target, callback);
 
     this.broadcast({
       type: MessageType.Focus,
