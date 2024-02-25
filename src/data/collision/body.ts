@@ -85,7 +85,7 @@ export class Body implements PhysicsBody {
   }
 
   jump() {
-    if (this.jumped) {
+    if (this.jumped || this.yVelocity < -JUMP_STRENGTH) {
       return false;
     }
 
