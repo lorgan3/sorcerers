@@ -70,6 +70,8 @@ export enum EntityType {
   Character,
   MagicScroll,
   Potion,
+  Catastravia,
+  CatastraviaMissile,
 }
 
 export enum Priority {

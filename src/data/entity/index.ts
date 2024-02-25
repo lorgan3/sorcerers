@@ -1,3 +1,5 @@
+import { Catastravia } from "../spells/catastravia";
+import { CatastraviaMissile } from "../spells/catastraviaMissile";
 import { Fireball } from "../spells/fireball";
 import { Shield } from "../spells/shield";
 import { Element } from "../spells/types";
@@ -24,6 +26,8 @@ export const ENTITIES: Record<
   [EntityType.Character]: Character,
   [EntityType.MagicScroll]: MagicScroll,
   [EntityType.Potion]: Potion,
+  [EntityType.Catastravia]: Catastravia,
+  [EntityType.CatastraviaMissile]: CatastraviaMissile,
 };
 
 interface SpawnRateData {

@@ -39,6 +39,17 @@ export const getSquareDistance = (
 export const getDistance = (x1: number, y1: number, x2: number, y2: number) =>
   Math.sqrt(getSquareDistance(x1, y1, x2, y2));
 
+export const getAngle = (x1: number, y1: number, x2: number, y2: number) =>
+  Math.atan2(y2 - y1, x2 - x1);
+
 export const map = (from: number, to: number, t: number) => {
   return from * (1 - t) + to * t;
 };
+
+const wrap = (value: number, from: number, to: number) => {
+  const range = to - from;
+  return value - range * Math.floor((value - from) / range);
+};
+
+export const angleDiff = (from: number, to: number) =>
+  wrap(to - from, -Math.PI, Math.PI);

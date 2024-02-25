@@ -15,6 +15,7 @@ import { TurnState } from "../network/types";
 import { Element } from "./types";
 import { PoweredArcaneCircle } from "../../graphics/cursor/poweredArcaneCircle";
 import { Manager } from "../network/manager";
+import { Catastravia } from "./catastravia";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
@@ -148,6 +149,21 @@ const WINGS = spell(ApplyCursor, {
   },
 });
 
+const CATASTRAVIA = spell(PoweredArcaneCircle, {
+  name: "Catastravia",
+  description: "Holy missile volley",
+  elements: [Element.Life, Element.Arcane],
+  cost: 30,
+  data: {
+    projectile: Catastravia,
+    xOffset: 2,
+    yOffset: 2,
+    x: 3,
+    y: 8,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -157,4 +173,5 @@ export const SPELLS: Spell[] = [
   BAKURETSU,
   ZOLTRAAK,
   WINGS,
+  CATASTRAVIA,
 ];
