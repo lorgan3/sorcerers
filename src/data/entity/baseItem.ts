@@ -88,8 +88,8 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       if (activeTime > BaseItem.floatDuration) {
         this.visible = false;
 
-        if (Manager.instance.isEnding()) {
-          this.die();
+        if (Server.instance && Server.instance.isEnding()) {
+          Server.instance.kill(this);
         }
 
         return;
