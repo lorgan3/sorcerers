@@ -1,4 +1,4 @@
-import { Container, Texture } from "pixi.js";
+import { ColorSource, Container, Texture } from "pixi.js";
 import { Particle } from "./particle";
 import { ParticleEmitter } from "./types";
 
@@ -11,6 +11,7 @@ interface Config {
   fade: boolean;
   xAcceleration?: number;
   yAcceleration?: number;
+  tint?: ColorSource;
   initialize: () => {
     x: number;
     y: number;
@@ -51,6 +52,10 @@ export class SimpleParticleEmitter
       particle.visible = false;
       particle.anchor.set(0.5);
 
+      if (config.tint) {
+        particle.tint = config.tint;
+      }
+
       this.addChild(particle);
     }
   }
@@ -85,7 +90,7 @@ export class SimpleParticleEmitter
 
       if (this.config.animate) {
         particle.currentFrame =
-          ((1 - particle.lifetime / this.config.lifeTime) *
+          ((1 - particle.lifetime / particle.maxLifetime) *
             (particle.totalFrames - 1)) |
           0;
       }
@@ -93,7 +98,7 @@ export class SimpleParticleEmitter
       if (this.config.fade) {
         particle.alpha = Math.min(
           particle.alpha,
-          (particle.lifetime / this.config.lifeTime) * 2 + 0.2
+          (particle.lifetime / particle.maxLifetime) * 2 + 0.2
         );
       }
     }
@@ -121,9 +126,10 @@ export class SimpleParticleEmitter
         particle.scale.set(config.scale ?? 1);
         particle.alpha = config.alpha ?? 1;
 
-        particle.lifetime =
+        particle.maxLifetime =
           this.config.lifeTime *
           (1 + this.config.lifeTimeVariance * Math.random());
+        particle.lifetime = particle.maxLifetime;
 
         return;
       }
