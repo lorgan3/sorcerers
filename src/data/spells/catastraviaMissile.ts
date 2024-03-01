@@ -43,7 +43,6 @@ export class CatastraviaMissile extends Container implements Spawnable {
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: circle3x3,
       onCollide: Server.instance ? this.onCollide : undefined,
-      bounciness: 1,
       friction: 1,
       gravity: 0,
     });
