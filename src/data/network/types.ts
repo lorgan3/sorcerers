@@ -42,6 +42,7 @@ export type Message =
   | {
       type: MessageType.ActiveUpdate;
       data: number[];
+      entities: any[];
     }
   | {
       type: MessageType.ActiveCharacter;

@@ -13,6 +13,7 @@ import { DamageSource } from "../damage/types";
 import {
   HurtableEntity,
   Item,
+  Priority,
   Spawnable,
   Syncable,
   isSpawnableEntity,
@@ -131,7 +132,9 @@ export class Server extends Manager {
     if (this.frames % 30 === 0) {
       const data: Message = {
         type: MessageType.EntityUpdate,
-        entities: Level.instance.syncables.map((entity) => entity.serialize()),
+        entities: Level.instance.syncables[Priority.Low].map((entity) =>
+          entity.serialize()
+        ),
       };
 
       for (let player of this.players) {
@@ -145,6 +148,9 @@ export class Server extends Manager {
       const data: Message = {
         type: MessageType.ActiveUpdate,
         data: this.activePlayer!.activeCharacter.serialize(),
+        entities: Level.instance.syncables[Priority.High].map((entity) =>
+          entity.serialize()
+        ),
       };
 
       for (let player of this.players) {

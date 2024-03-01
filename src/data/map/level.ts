@@ -55,10 +55,13 @@ export class Level {
   public readonly entities = new Set<TickingEntity>();
   public readonly entityMap = new Map<number, TickingEntity>();
   public readonly hurtables = new Set<HurtableEntity>();
-  public readonly syncables: Syncable[] = [];
+  public readonly syncables: Record<Priority, Syncable[]> = {
+    [Priority.Dynamic]: [],
+    [Priority.Low]: [],
+    [Priority.High]: [],
+  };
 
   private deadCharacterQueue: Character[] = [];
-  private deathQueueTimer = 0;
 
   private static _instance: Level;
   static get instance() {
@@ -177,8 +180,8 @@ export class Level {
         this.hurtables.add(object);
       }
 
-      if ("priority" in object && object.priority === Priority.Low) {
-        this.syncables.push(object);
+      if ("priority" in object) {
+        this.syncables[object.priority].push(object);
       }
     }
   }
@@ -205,8 +208,11 @@ export class Level {
         this.hurtables.delete(object);
       }
 
-      if ("priority" in object && object.priority === Priority.Low) {
-        this.syncables.splice(this.syncables.indexOf(object), 1);
+      if ("priority" in object) {
+        this.syncables[object.priority].splice(
+          this.syncables[object.priority].indexOf(object),
+          1
+        );
       }
     }
   }

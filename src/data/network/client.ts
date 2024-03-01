@@ -9,7 +9,13 @@ import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
-import { HurtableEntity, Item, Syncable, isItem } from "../entity/types";
+import {
+  HurtableEntity,
+  Item,
+  Priority,
+  Syncable,
+  isItem,
+} from "../entity/types";
 import { Element } from "../spells/types";
 
 export class Client extends Manager {
@@ -169,6 +175,12 @@ export class Client extends Manager {
         this.activePlayer?.characters[this.activePlayer.active].deserialize(
           message.data
         );
+
+        for (let i = 0; i < message.entities.length; i++) {
+          Level.instance.syncables[Priority.High][i].deserialize(
+            message.entities[i]
+          );
+        }
         break;
 
       case MessageType.SyncDamage:
@@ -214,7 +226,9 @@ export class Client extends Manager {
 
       case MessageType.EntityUpdate:
         for (let i = 0; i < message.entities.length; i++) {
-          Level.instance.syncables[i].deserialize(message.entities[i]);
+          Level.instance.syncables[Priority.Low][i].deserialize(
+            message.entities[i]
+          );
         }
         break;
 

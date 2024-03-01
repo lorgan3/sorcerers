@@ -76,6 +76,6 @@ export enum EntityType {
 
 export enum Priority {
   Low,
-  High, // Not used
+  High,
   Dynamic,
 }
