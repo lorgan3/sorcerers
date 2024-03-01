@@ -72,6 +72,7 @@ export enum EntityType {
   Potion,
   Catastravia,
   CatastraviaMissile,
+  MagicMissile,
 }
 
 export enum Priority {

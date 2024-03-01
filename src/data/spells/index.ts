@@ -16,6 +16,8 @@ import { Element } from "./types";
 import { PoweredArcaneCircle } from "../../graphics/cursor/poweredArcaneCircle";
 import { Manager } from "../network/manager";
 import { Catastravia } from "./catastravia";
+import { MagicMissile } from "./magicMissile";
+import { getAngle } from "../../util/math";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
@@ -164,6 +166,32 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
   },
 });
 
+const MAGIC_MISSILE = spell(ApplyCursor, {
+  name: "Magic missile",
+  description: "",
+  elements: [Element.Life],
+  cost: 30,
+  data: {
+    applyKeys: [Key.M1],
+    turnState: TurnState.Attacked,
+    apply: (character) => {
+      const [cx, cy] = character.body.precisePosition;
+      const rotation = getAngle(
+        cx * 6,
+        cy * 6,
+        ...character.player.controller.getMouse()
+      );
+
+      MagicMissile.cast(
+        cx + 3 + Math.cos(rotation) * 7,
+        cy + 6.5 + Math.sin(rotation) * 10.5,
+        character,
+        rotation
+      );
+    },
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -174,4 +202,5 @@ export const SPELLS: Spell[] = [
   ZOLTRAAK,
   WINGS,
   CATASTRAVIA,
+  MAGIC_MISSILE,
 ];

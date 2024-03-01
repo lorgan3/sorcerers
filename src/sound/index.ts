@@ -26,6 +26,7 @@ export enum Sound {
   Beam = "beamSnd",
   Wing = "wingSnd",
   FireWork = "fireworkSnd",
+  Sparkle = "sparkleSnd",
 }
 
 interface SoundData {
@@ -91,7 +92,8 @@ addSoundData(Sound.Crack, "536921__eminyildirim__ice-crack-low");
 addSoundData(Sound.Beam, "351222__arctis__hardstyle-bass-kick-9-with-reverb");
 addSoundData(Sound.Wing, "626317__klankbeeld__wing-beat-eurasian-wren-220124");
 addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers1", 0.6);
-addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers2"), 0.6;
+addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers2", 0.6);
+addSoundData(Sound.Sparkle, "141256__autistic-lucario__magic-sound-loop", 0.4);
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
