@@ -61,3 +61,4 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Crack](https://freesound.org/people/EminYILDIRIM/sounds/536921/): EminYILDIRIM
 - [Beam](https://freesound.org/people/ArcTis/sounds/351222/): ArcTis
 - [Fireworks](https://freesound.org/people/el_boss/sounds/588199/): el_boss
+- [Sparkle](https://freesound.org/people/Autistic%20Lucario/sounds/141256/): Ryan Smith
