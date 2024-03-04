@@ -21,7 +21,7 @@ export class SimpleBody implements PhysicsBody {
   private y = 0;
   public gravity: number;
   private friction: number;
-  private bounciness: number;
+  public bounciness: number;
   private onCollide?: (x: number, y: number) => void;
 
   public readonly mask: CollisionMask;

@@ -73,6 +73,8 @@ export enum EntityType {
   Catastravia,
   CatastraviaMissile,
   MagicMissile,
+  GateOfBabylon,
+  SmallSword,
 }
 
 export enum Priority {

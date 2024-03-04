@@ -18,6 +18,7 @@ import { Manager } from "../network/manager";
 import { Catastravia } from "./catastravia";
 import { MagicMissile } from "./magicMissile";
 import { getAngle } from "../../util/math";
+import { GateOfBabylon } from "./gateOfBabylon";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
@@ -192,6 +193,18 @@ const MAGIC_MISSILE = spell(ApplyCursor, {
   },
 });
 
+const BABYLON = spell(ArrowDown, {
+  name: "Gates of babylon",
+  elements: [Element.Physical],
+  cost: 30,
+  data: {
+    projectile: GateOfBabylon,
+    xOffset: -0.5,
+    yOffset: 0,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -203,4 +216,5 @@ export const SPELLS: Spell[] = [
   WINGS,
   CATASTRAVIA,
   MAGIC_MISSILE,
+  BABYLON,
 ];

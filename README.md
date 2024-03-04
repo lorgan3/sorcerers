@@ -36,6 +36,7 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Glyphs](https://opengameart.org/content/glyphs): Jinn
 - [Items](https://opengameart.org/content/16x16-assorted-rpg-icons): Shade
 - [Castle map decorations](https://alcoholism.itch.io/dark-castle-tileset): alcoholism
+- [Swords](https://opengameart.org/content/squire-job-set): SCaydi
 
 ### Sounds
 
