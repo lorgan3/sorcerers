@@ -19,7 +19,7 @@ const SHAKE_INTENSITY = 8;
 export class Sword extends Container implements TickingEntity {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
-  private bounces = 40 * Manager.instance.getElementValue(Element.Physical);
+  private bounces = 120 * Manager.instance.getElementValue(Element.Physical);
   private lastY?: number;
   private lifetime = 150;
 
@@ -33,7 +33,7 @@ export class Sword extends Container implements TickingEntity {
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: swordTip,
       onCollide: this.onCollide,
-      bounciness: 0.7,
+      bounciness: 0.8,
       friction: 0.95,
     });
     this.body.move(Math.round(x), y);
