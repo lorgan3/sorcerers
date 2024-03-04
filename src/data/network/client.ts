@@ -51,7 +51,7 @@ export class Client extends Manager {
   }
 
   async join(key: string, name: string, team: Team) {
-    this.connection = this.peer.connect(key);
+    this.connection = this.peer.connect(key, { reliable: true });
 
     return new Promise<void>((resolve, reject) => {
       const close = () => {
