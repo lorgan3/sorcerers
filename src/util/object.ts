@@ -1,3 +1,5 @@
+import { getRandom as getRandomFromArray } from "./array";
+
 export const Bool = {
   True: true,
   False: false,
@@ -28,7 +30,5 @@ export const assertValue = <V, O extends { [key: string]: V }>(
 };
 
 export const getRandom = <T>(obj: Record<string, T>) => {
-  const values = Object.values(obj);
-
-  return values[Math.floor(values.length * Math.random())];
+  return getRandomFromArray(Object.values(obj));
 };
