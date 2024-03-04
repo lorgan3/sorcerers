@@ -78,16 +78,13 @@ export class Sword extends Container implements TickingEntity {
       Sound.Step
     );
 
-    const staticEntity = damage
-      .getTargets()
-      .getEntities()
-      .find((entity) => entity.body instanceof StaticBody);
+    for (let entity of damage.getTargets().getEntities()) {
+      const [x, y] = entity.body instanceof StaticBody ? [1, -3] : [0.75, 0];
 
-    if (staticEntity) {
-      if (this.position.x + 32 > staticEntity.getCenter()[0]) {
-        this.body.addVelocity(1, -3);
+      if (this.position.x + 32 > entity.getCenter()[0]) {
+        this.body.addVelocity(x, y);
       } else {
-        this.body.addVelocity(-1, -3);
+        this.body.addVelocity(x * -1, y);
       }
     }
 
