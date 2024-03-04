@@ -1,5 +1,10 @@
 import { CollisionMask } from "../collision/collisionMask";
-import { swordTip, swordTipCanvas } from "../collision/precomputed/triangles";
+import {
+  smallSwordTip,
+  smallSwordTipCanvas,
+  swordTip,
+  swordTipCanvas,
+} from "../collision/precomputed/triangles";
 import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
@@ -7,6 +12,7 @@ import { isHurtableEntity } from "../entity/types";
 
 export enum Shape {
   SwordTip,
+  SmallSword,
 }
 
 const SHAPES: Record<
@@ -30,6 +36,15 @@ const SHAPES: Record<
     xOffset: 6.5,
     yOffset: 10,
     range: 80,
+  },
+  [Shape.SmallSword]: {
+    drawShape: function (ctx) {
+      ctx.drawImage(smallSwordTipCanvas, this.x, this.y);
+    },
+    mask: smallSwordTip,
+    xOffset: 0.5,
+    yOffset: 10,
+    range: 30,
   },
 };
 

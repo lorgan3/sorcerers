@@ -14,3 +14,17 @@ ctx1.fill();
 export const swordTip = CollisionMask.fromAlpha(
   ctx1.getImageData(0, 0, 11, 10)
 );
+
+export const smallSwordTipCanvas = new OffscreenCanvas(3, 6);
+const ctx2 = smallSwordTipCanvas.getContext("2d")!;
+ctx2.fillStyle = "#000000";
+ctx2.fillRect(0, 0, 3, 4);
+ctx2.moveTo(0, 4);
+ctx2.lineTo(3, 4);
+ctx2.lineTo(1, 6);
+ctx2.lineTo(0, 4);
+ctx2.fill();
+
+export const smallSwordTip = CollisionMask.fromAlpha(
+  ctx2.getImageData(0, 0, 3, 6)
+);

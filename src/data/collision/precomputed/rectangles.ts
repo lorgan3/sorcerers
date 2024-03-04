@@ -25,7 +25,7 @@ const createRectangleCanvas = (dX: number, dY = dX) => {
   ctx.fillRect(0, 0, dX, dY);
   ctx.fill();
 
-  return ctx.getImageData(0, 0, dX, dY);
+  return canvas;
 };
 
 export const rotatedRectangle2x24Canvas = angles.map((angle) =>
@@ -50,7 +50,16 @@ export const rotatedRectangle6x24 = rotatedRectangle6x24Canvas.map((canvas) =>
 );
 
 export const rectangle1x200Canvas = createRectangleCanvas(1, 200);
-export const rectangle1x200 = CollisionMask.fromAlpha(rectangle1x200Canvas);
+export const rectangle1x200 = CollisionMask.fromAlpha(
+  rectangle1x200Canvas.getContext("2d")!.getImageData(0, 0, 1, 200)
+);
 
 export const rectangle6x16Canvas = createRectangleCanvas(6, 16);
-export const rectangle6x16 = CollisionMask.fromAlpha(rectangle6x16Canvas);
+export const rectangle6x16 = CollisionMask.fromAlpha(
+  rectangle6x16Canvas.getContext("2d")!.getImageData(0, 0, 6, 16)
+);
+
+export const rectangle1x6Canvas = createRectangleCanvas(1, 6);
+export const rectangle1x6 = CollisionMask.fromAlpha(
+  rectangle1x6Canvas.getContext("2d")!.getImageData(0, 0, 1, 6)
+);

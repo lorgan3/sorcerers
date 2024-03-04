@@ -224,9 +224,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.sprite.position.set(18, 28);
     this.sprite.scale.set(2);
 
-    const sprite2 = new Sprite(
-      Texture.fromBuffer(rectangle6x16Canvas.data, 6, 16)
-    );
+    const sprite2 = new Sprite(Texture.from(rectangle6x16Canvas));
     sprite2.anchor.set(0);
     sprite2.scale.set(6);
     sprite2.alpha = 0.5;
