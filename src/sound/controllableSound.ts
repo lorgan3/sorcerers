@@ -10,7 +10,7 @@ class ControllableSound {
   private static soundInstanceCountMap = new Map<Sound, number>();
   private static soundPlaytimeMap = new Map<Sound, number>();
 
-  static MAX_INSTANCES = 3;
+  static MAX_INSTANCES = 5;
   static MIN_INTERVAL = 100;
 
   private static rateLimitSound(alias: Sound) {

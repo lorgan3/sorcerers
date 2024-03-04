@@ -82,7 +82,7 @@ addSoundData(Sound.ExplosionMedium, "175430__qubodup__excalibur-howitzer-shot");
 addSoundData(Sound.DarkMagic, "442825__qubodup__dark-magic-loop", 0.7);
 addSoundData(Sound.Schwing, "513739__daleonfire__sword-schwing");
 addSoundData(Sound.Paper, "689301__cakon__se-turn-the-page1");
-addSoundData(Sound.Arrow, "119060__jphilipp__arrow-shot");
+addSoundData(Sound.Arrow, "119060__jphilipp__arrow-shot", 0.7);
 addSoundData(Sound.Bow, "536085__eminyildirim__leather-bow-stretch1");
 addSoundData(Sound.Bow, "536085__eminyildirim__leather-bow-stretch2");
 addSoundData(Sound.Bow, "536085__eminyildirim__leather-bow-stretch3");
@@ -91,8 +91,8 @@ addSoundData(Sound.Glass, "260432__roganmcdougald__glass-break-small-jar-02");
 addSoundData(Sound.Crack, "536921__eminyildirim__ice-crack-low");
 addSoundData(Sound.Beam, "351222__arctis__hardstyle-bass-kick-9-with-reverb");
 addSoundData(Sound.Wing, "626317__klankbeeld__wing-beat-eurasian-wren-220124");
-addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers1", 0.6);
-addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers2", 0.6);
+addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers1", 0.5);
+addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers2", 0.5);
 addSoundData(Sound.Sparkle, "141256__autistic-lucario__magic-sound-loop", 0.4);
 
 export const SOUND_ASSETS = Object.fromEntries(
