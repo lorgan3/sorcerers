@@ -74,6 +74,7 @@ export class Level {
     this.app = new Application({
       resizeTo: window,
     });
+    window.addEventListener("resize", this.resize);
 
     target.appendChild(this.app.view);
 
@@ -103,6 +104,11 @@ export class Level {
 
     this.backgroundParticles.addEmitter(this.bloodEmitter);
   }
+
+  private resize = () => {
+    this.app.resize();
+    this.viewport.resize(window.innerWidth, window.innerHeight);
+  };
 
   getRandomSpawnLocation() {
     if (!this.spawnLocations.length) {
