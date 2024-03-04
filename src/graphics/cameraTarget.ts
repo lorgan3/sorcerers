@@ -15,7 +15,7 @@ export class CameraTarget {
   private static maxSpeed = 50;
   private static damping = 40;
   private static dampingAmount = 0.96;
-  private static acc = 0.1;
+  private static acc = 0.2;
 
   static shakeAmount = 10;
   static shakeIntensity = 12;
@@ -169,10 +169,10 @@ export class CameraTarget {
     ) {
       this.speed = Math.min(
         CameraTarget.maxSpeed,
-        this.speed + Math.pow(CameraTarget.acc, dt)
+        this.speed + CameraTarget.acc * dt
       );
     } else if (this.speed !== 0) {
-      this.speed *= CameraTarget.dampingAmount;
+      this.speed *= Math.pow(CameraTarget.dampingAmount, dt);
 
       if (Math.abs(this.speed) < 1) {
         this.speed = 0;
