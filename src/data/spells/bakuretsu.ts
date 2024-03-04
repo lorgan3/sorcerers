@@ -6,13 +6,13 @@ import { Character } from "../entity/character";
 
 import { CollisionMask } from "../collision/collisionMask";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
-import { rectangle1x200 } from "../collision/precomputed/rectangles";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { TickingEntity } from "../entity/types";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { probeX } from "../map/utils";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
 const GROW_TIME = 30;
@@ -37,22 +37,7 @@ export class Bakuretsu extends Container implements TickingEntity {
     character.setSpellSource(this);
     this.rX = Math.round(x);
 
-    let distance = surface.height;
-    while (distance > 1) {
-      distance /= 2;
-
-      if (
-        !surface.collidesWith(
-          rectangle1x200,
-          this.rX,
-          Math.round(this.rY + distance - 200)
-        )
-      ) {
-        this.rY += distance;
-      }
-    }
-
-    this.rY = Math.round(this.rY);
+    this.rY = probeX(surface, this.rX);
     this.position.set(this.rX * 6, this.rY * 6);
 
     this.choirSnd = ControllableSound.fromEntity(
