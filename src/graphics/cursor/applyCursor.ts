@@ -27,7 +27,7 @@ export class ApplyCursor implements Cursor<TriggerData> {
     apply(this.character);
 
     if (turnState) {
-      Manager.instance.setTurnState(TurnState.Attacked);
+      Manager.instance.setTurnState(turnState);
     }
   }
 

@@ -19,6 +19,8 @@ import { Catastravia } from "./catastravia";
 import { MagicMissile } from "./magicMissile";
 import { getAngle } from "../../util/math";
 import { GateOfBabylon } from "./gateOfBabylon";
+import { Level } from "../map/level";
+import { Blink } from "./blink";
 
 export interface Spell<C extends Cursor = any> {
   name: string;
@@ -205,6 +207,26 @@ const BABYLON = spell(ArrowDown, {
   },
 });
 
+const BLINK = spell(ApplyCursor, {
+  name: "Blink",
+  elements: [Element.Physical],
+  cost: 15,
+  data: {
+    applyKeys: [Key.M1],
+    turnState: TurnState.Attacked,
+    apply: (character) => {
+      const [cx, cy] = character.body.precisePosition;
+      const rotation = getAngle(
+        cx * 6,
+        cy * 6,
+        ...character.player.controller.getMouse()
+      );
+
+      Level.instance.add(new Blink(rotation, character));
+    },
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -217,4 +239,5 @@ export const SPELLS: Spell[] = [
   CATASTRAVIA,
   MAGIC_MISSILE,
   BABYLON,
+  BLINK,
 ];
