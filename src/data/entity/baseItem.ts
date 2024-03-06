@@ -126,6 +126,16 @@ export abstract class BaseItem extends Container implements Syncable, Item {
             return true;
           }
         );
+
+        if (
+          Level.instance.terrain.killbox.collidesWith(
+            this.body.mask,
+            this.position.x,
+            this.position.y
+          )
+        ) {
+          Server.instance.kill(this);
+        }
       }
     }
   }
