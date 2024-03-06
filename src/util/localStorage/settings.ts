@@ -5,6 +5,7 @@ export interface Settings {
   name: string;
   teams: Team[];
   defaultTeam: number;
+  tutorialDone: boolean;
 }
 
 // In an ideal world this returns `Settings[K]` but typescript doesn't understand
@@ -39,5 +40,6 @@ export const defaults = (): Settings => {
     name: "Player",
     teams: [Team.random()],
     defaultTeam: -1,
+    tutorialDone: false,
   };
 };

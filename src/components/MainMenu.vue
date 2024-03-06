@@ -7,6 +7,7 @@ import { connect } from "../data/network";
 import Hud from "./Hud.vue";
 import Host from "./Host.vue";
 import Join from "./Join.vue";
+import Tutorial from "./Tutorial.vue";
 import { Map } from "../data/map";
 import Inventory from "./Inventory.vue";
 import { Key } from "../data/controller/controller";
@@ -56,6 +57,7 @@ const handleCloseInventory = () => {
   <div v-if="menu === Menu.Game" class="render-target" ref="canvas">
     <Hud />
     <Inventory :isOpen="inventoryOpen" :onClose="handleCloseInventory" />
+    <Tutorial />
   </div>
   <div v-else-if="menu === Menu.Builder" class="background">
     <Builder :onBack="handleBack" />
