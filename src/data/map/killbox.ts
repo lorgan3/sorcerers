@@ -1,4 +1,4 @@
-import { Container, Texture, TilingSprite } from "pixi.js";
+import { Container, Graphics, Texture, TilingSprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { CollisionMask } from "../collision/collisionMask";
@@ -13,6 +13,7 @@ const SPRITE_OFFSET = 5;
 
 export class Killbox extends Container {
   private sprite: TilingSprite;
+  private bottom: Graphics;
 
   private animation: Texture[];
   private index = 0;
@@ -33,13 +34,21 @@ export class Killbox extends Container {
     this.sprite.scale.y = 0.3;
     this.sprite.alpha = 0.7;
 
-    this.addChild(this.sprite);
+    this.bottom = new Graphics();
+    this.bottom.beginFill(0x783fbc, 0.7);
+    this.bottom.drawRect(0, 0, 1, 1);
+    this.bottom.endFill();
+    this.bottom.width = width;
+    this.bottom.position.y = 9.6;
+
+    this.addChild(this.sprite, this.bottom);
   }
 
   tick(dt: number) {
     if (this.level > this.newLevel) {
       this.level = Math.max(this.newLevel, this.level - RISE_SPEED * dt);
       this.position.y = this.level - SPRITE_OFFSET;
+      this.bottom.height = this.level - SPRITE_OFFSET;
 
       for (let entity of Level.instance.hurtables) {
         if (
