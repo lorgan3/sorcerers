@@ -316,6 +316,20 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
   }
 
+  move(x: number, y: number) {
+    Level.instance.terrain.characterMask.subtract(
+      this.body.mask,
+      ...this.body.position
+    );
+
+    this.body.move(x, y);
+
+    Level.instance.terrain.characterMask.add(
+      this.body.mask,
+      ...this.body.position
+    );
+  }
+
   control(controller: Controller) {
     if (
       this.body.grounded &&

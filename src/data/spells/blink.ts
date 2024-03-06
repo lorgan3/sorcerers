@@ -70,7 +70,7 @@ export class Blink extends Container implements TickingEntity {
         )
       );
       new Implosion(x * 6, y * 6);
-      this.character.body.move(x, y);
+      this.character.move(x, y);
 
       Level.instance.remove(this);
       Level.instance.particleContainer.destroyEmitter(this.particles);
