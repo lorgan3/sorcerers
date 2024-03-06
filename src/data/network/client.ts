@@ -290,6 +290,14 @@ export class Client extends Manager {
       case MessageType.turnState:
         this.setTurnState(message.state);
         break;
+
+      case MessageType.Sink:
+        if (Level.instance.terrain.killbox.level < message.level) {
+          Level.instance.shake();
+        }
+
+        Level.instance.terrain.killbox.level = message.level;
+        break;
     }
   }
 

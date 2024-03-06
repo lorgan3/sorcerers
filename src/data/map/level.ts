@@ -261,9 +261,9 @@ export class Level {
 
   sink() {
     this.shake();
-
     this.terrain.killbox.rise(SINK_AMOUNT);
-    // this.viewport.worldHeight -= SINK_AMOUNT * 6;
+
+    return this.terrain.killbox.level;
   }
 
   shake() {

@@ -24,6 +24,7 @@ export enum MessageType {
   Highlight,
   Activate,
   turnState,
+  Sink,
 }
 
 export type Message =
@@ -143,6 +144,10 @@ export type Message =
   | {
       type: MessageType.turnState;
       state: TurnState;
+    }
+  | {
+      type: MessageType.Sink;
+      level: number;
     };
 
 export interface Popup {

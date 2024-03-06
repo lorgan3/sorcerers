@@ -25,6 +25,7 @@ export class Server extends Manager {
   private availableColors = [...COLORS];
   private singlePlayer = false;
   private started = false;
+  private suddenDeath = false;
 
   private disconnectedPlayers: Player[] = [];
 
@@ -125,7 +126,17 @@ export class Server extends Manager {
       this.preCycleActivePlayer();
 
       if (this.time > this.gameLength) {
-        Level.instance.sink();
+        if (!this.suddenDeath) {
+          this.suddenDeath = true;
+          this.addPopup({
+            title: "Sudden death!",
+          });
+        }
+
+        this.broadcast({
+          type: MessageType.Sink,
+          level: Level.instance.sink(),
+        });
       }
     }
 
@@ -216,6 +227,11 @@ export class Server extends Manager {
               data: spawnable.serializeCreate(),
             });
           }
+
+          this.broadcast({
+            type: MessageType.Sink,
+            level: Level.instance.terrain.killbox.level,
+          });
         }
       });
 

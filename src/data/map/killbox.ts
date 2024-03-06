@@ -17,14 +17,14 @@ export class Killbox extends Container {
 
   private animation: Texture[];
   private index = 0;
-  private level: number;
+  private _level: number;
   private newLevel: number;
 
   constructor(width: number, height: number) {
     super();
     this.position.y = height - SPRITE_OFFSET;
-    this.level = height;
-    this.newLevel = this.level;
+    this._level = height;
+    this.newLevel = this._level;
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
     this.animation = atlas.animations["wave"];
@@ -45,25 +45,10 @@ export class Killbox extends Container {
   }
 
   tick(dt: number) {
-    if (this.level > this.newLevel) {
-      this.level = Math.max(this.newLevel, this.level - RISE_SPEED * dt);
-      this.position.y = this.level - SPRITE_OFFSET;
-      this.bottom.height = this.level - SPRITE_OFFSET;
-
-      for (let entity of Level.instance.hurtables) {
-        if (
-          entity instanceof Character &&
-          this.collidesWith(
-            entity.body.mask,
-            entity.position.x,
-            entity.position.y
-          )
-        ) {
-          Level.instance.damage(
-            new GenericDamage(new TargetList().add(entity, 999))
-          );
-        }
-      }
+    if (this._level > this.newLevel) {
+      this._level = Math.max(this.newLevel, this._level - RISE_SPEED * dt);
+      this.position.y = this._level - SPRITE_OFFSET;
+      this.bottom.height = this._level - SPRITE_OFFSET;
     }
 
     const index = (this.index + dt * ANIMATION_SPEED) % this.animation.length;
@@ -75,10 +60,18 @@ export class Killbox extends Container {
   }
 
   collidesWith(other: CollisionMask, dx: number, dy: number) {
-    return dy / 6 + other.height > this.level;
+    return dy / 6 + other.height > this._level;
   }
 
   rise(amount: number) {
     this.newLevel -= amount;
+  }
+
+  get level() {
+    return this.newLevel;
+  }
+
+  set level(value: number) {
+    this.newLevel = value;
   }
 }
