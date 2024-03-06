@@ -67,11 +67,14 @@ export class Animator<K extends string = string, S = any> {
   }
 
   animate(name = this.defaultState!, force = false) {
-    const config = this.animations[name]!;
-    this.completeTime = config.duration ? this.time + config.duration : 0;
-
     const oldConfig = this.animations[this.state!];
     if (!force && (this.state === name || oldConfig?.blocking)) {
+      return;
+    }
+
+    const config = this.animations[name]!;
+    this.completeTime = config.duration ? this.time + config.duration : 0;
+    if (this.state === name) {
       return;
     }
 
