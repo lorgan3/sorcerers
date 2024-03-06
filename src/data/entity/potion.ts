@@ -10,8 +10,13 @@ import { Sound } from "../../sound";
 export class Potion extends BaseItem {
   public readonly type = EntityType.Potion;
 
-  constructor(x: number, y: number, private potionType: PotionType) {
-    super(x, y);
+  constructor(
+    x: number,
+    y: number,
+    _appeared: boolean,
+    private potionType: PotionType
+  ) {
+    super(x, y, _appeared);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -36,8 +41,8 @@ export class Potion extends BaseItem {
     this.body.deserialize(data);
   }
 
-  serializeCreate(): [number, number, PotionType] {
-    return [...this.body.precisePosition, this.potionType];
+  serializeCreate(): [number, number, boolean, PotionType] {
+    return [...this.body.precisePosition, this._appeared, this.potionType];
   }
 
   static create(data: ReturnType<Potion["serializeCreate"]>): Potion {

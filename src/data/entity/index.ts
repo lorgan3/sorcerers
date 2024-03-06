@@ -43,37 +43,42 @@ interface SpawnRateData {
 
 const SPAWN_RATES: SpawnRateData[] = [
   {
-    spawn: (x: number, y: number) => new Potion(x, y, PotionType.HealthPotion),
+    spawn: (x: number, y: number) =>
+      new Potion(x, y, false, PotionType.HealthPotion),
     weight: 1,
   },
   {
     spawn: (x: number, y: number) =>
-      new Potion(x, y, PotionType.SmallHealthPotion),
-    weight: 2,
-  },
-  {
-    spawn: (x: number, y: number) => new Potion(x, y, PotionType.ManaPotion),
+      new Potion(x, y, false, PotionType.SmallHealthPotion),
     weight: 2,
   },
   {
     spawn: (x: number, y: number) =>
-      new Potion(x, y, PotionType.SmallManaPotion),
+      new Potion(x, y, false, PotionType.ManaPotion),
+    weight: 2,
+  },
+  {
+    spawn: (x: number, y: number) =>
+      new Potion(x, y, false, PotionType.SmallManaPotion),
     weight: 3,
   },
   {
-    spawn: (x: number, y: number) => new MagicScroll(x, y, Element.Arcane),
+    spawn: (x: number, y: number) =>
+      new MagicScroll(x, y, false, Element.Arcane),
     weight: 1,
   },
   {
-    spawn: (x: number, y: number) => new MagicScroll(x, y, Element.Elemental),
+    spawn: (x: number, y: number) =>
+      new MagicScroll(x, y, false, Element.Elemental),
     weight: 1,
   },
   {
-    spawn: (x: number, y: number) => new MagicScroll(x, y, Element.Life),
+    spawn: (x: number, y: number) => new MagicScroll(x, y, false, Element.Life),
     weight: 1,
   },
   {
-    spawn: (x: number, y: number) => new MagicScroll(x, y, Element.Physical),
+    spawn: (x: number, y: number) =>
+      new MagicScroll(x, y, false, Element.Physical),
     weight: 1,
   },
 ];

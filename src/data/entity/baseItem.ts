@@ -15,7 +15,6 @@ import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
 import { Server } from "../network/server";
 import { Character } from "./character";
-import { Manager } from "../network/manager";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 
@@ -34,9 +33,8 @@ export abstract class BaseItem extends Container implements Syncable, Item {
   protected time = 0;
   protected lastActiveTime = 0;
   protected activateTime = -1;
-  protected _appeared = false;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, protected _appeared = false) {
     super();
 
     this.body = new Body(Level.instance.terrain.characterMask, {
