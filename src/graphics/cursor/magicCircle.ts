@@ -28,10 +28,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
   private indicator: AnimatedSprite;
   private sound?: ControllableSound;
 
-  constructor(
-    private character: Character,
-    private spell: Spell<ArcaneCircle>
-  ) {
+  constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
 
     this.visible = false;

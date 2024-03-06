@@ -15,7 +15,7 @@ export class ApplyCursor implements Cursor<TriggerData> {
   private applied = false;
   constructor(
     private character: Character,
-    private spell: Spell<ApplyCursor>
+    private spell: Spell<TriggerData>
   ) {}
 
   remove(): void {}

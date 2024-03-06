@@ -22,19 +22,19 @@ import { GateOfBabylon } from "./gateOfBabylon";
 import { Level } from "../map/level";
 import { Blink } from "./blink";
 
-export interface Spell<C extends Cursor = any> {
+export interface Spell<TData = any> {
   name: string;
   description?: string;
-  cursor: new (character: Character, spell: Spell<C>) => C;
-  data: Parameters<C["trigger"]>[0];
+  cursor: new (character: Character, spell: Spell<TData>) => Cursor<TData>;
+  data: TData;
   elements: Element[];
   cost: number;
   costMultiplier?: () => number;
 }
 
-function spell<C extends Cursor>(
-  cursor: new (character: Character, spell: Spell<any>) => C,
-  config: Omit<Spell<C>, "cursor">
+function spell<TData>(
+  cursor: new (character: Character, spell: Spell<TData>) => Cursor<TData>,
+  config: Omit<Spell<TData>, "cursor">
 ) {
   return { ...config, cursor };
 }

@@ -18,7 +18,7 @@ interface TriggerData {
 }
 
 export class ArrowDown extends Container implements Cursor<TriggerData> {
-  constructor(private character: Character, private spell: Spell<ArrowDown>) {
+  constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
 
     this.pivot.set(-14, 32);

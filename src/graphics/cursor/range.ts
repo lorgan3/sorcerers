@@ -23,7 +23,7 @@ export class Range extends Container implements Cursor<TriggerData> {
   private initialDist = 0;
   private _power = 0;
 
-  constructor(private character: Character, private spell: Spell<Range>) {
+  constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
 
     this.pivot.set(-14, 32);

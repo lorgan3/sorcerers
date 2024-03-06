@@ -38,10 +38,7 @@ export class PoweredArcaneCircle
   private powerDirection = 1;
   private sound?: ControllableSound;
 
-  constructor(
-    private character: Character,
-    private spell: Spell<PoweredArcaneCircle>
-  ) {
+  constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
 
     this.visible = false;

@@ -33,7 +33,7 @@ export class Lock extends Container implements Cursor<TriggerData> {
   private indicator: AnimatedSprite;
   private projectile: DisplayObject | null = null;
 
-  constructor(private character: Character, private spell: Spell<Lock>) {
+  constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
 
     this.pivot.set(-14, 32);
