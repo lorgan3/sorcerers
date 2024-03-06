@@ -115,8 +115,8 @@ export class BloodEmitter
     for (let i = 0; i < amount; i++) {
       const speed = 5 + Math.random() * 4;
       this.spawn(
-        cx + (Math.random() - 0.5) * 24,
-        cy + (Math.random() - 0.5) * 24,
+        cx + (Math.random() - 0.5) * 48,
+        cy + (Math.random() - 0.5) * 48,
         Math.cos(direction + (Math.random() - 0.5) * variance) * speed,
         Math.sin(direction + (Math.random() - 0.5) * variance) * speed,
         TINT_MAP[entity.type]

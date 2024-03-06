@@ -27,9 +27,12 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   private _hp = 40;
   private shieldArea: CollisionMask;
 
-  constructor(x: number, y: number, private direction: number, hp: number) {
+  constructor(x: number, y: number, private direction: number, hp?: number) {
     super();
-    this._hp = hp;
+    if (hp) {
+      this._hp = hp;
+    }
+
     this.position.set(x * 6, y * 6);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
@@ -132,10 +135,10 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   tick(dt: number) {}
 
   private add() {
-    // Level.instance.terrain.collisionMask.add(
-    //   this.body.mask,
-    //   ...this.body.position
-    // );
+    Level.instance.terrain.collisionMask.add(
+      this.body.mask,
+      ...this.body.position
+    );
     Level.instance.terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
@@ -157,7 +160,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
 
     const [cx, cy] = character.body.precisePosition;
     const angle = Math.PI / 2 + Math.atan2(cy - y - 3, cx - x - 8);
-    const entity = new Shield(x, y, angle, 100);
+    const entity = new Shield(x, y, angle);
 
     Server.instance.create(entity);
     return entity;
