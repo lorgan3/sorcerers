@@ -416,10 +416,16 @@ export class Server extends Manager {
       this._turnState = TurnState.Ongoing;
       this.randomizeElements();
 
+      // Character died in the mean time.
+      if (!this.activePlayer) {
+        this.cycleActivePlayer();
+        return;
+      }
+
       this.broadcast({
         type: MessageType.ActiveCharacter,
         activePlayer: activePlayerIndex,
-        activeCharacter: this.activePlayer!.active,
+        activeCharacter: this.activePlayer.active,
         elements: Object.values(this.elements),
         turnStartTime: this.turnStartTime,
         newMana: player.mana,
