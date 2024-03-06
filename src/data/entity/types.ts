@@ -52,7 +52,7 @@ export function isHurtableEntity(
 }
 
 export function isSpawnableEntity(entity: TickingEntity): entity is Spawnable {
-  return "serializeCreate" in entity;
+  return "serializeCreate" in entity && !(entity instanceof Character);
 }
 
 export function isSyncableEntity(entity: TickingEntity): entity is Syncable {
