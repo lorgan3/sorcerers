@@ -70,7 +70,7 @@ export class Sword extends Container implements TickingEntity {
       x,
       y - 4,
       Shape.SwordTip,
-      7 * Manager.instance.getElementValue(Element.Arcane)
+      4 * Manager.instance.getElementValue(Element.Arcane)
     );
     Level.instance.damage(damage);
     ControllableSound.fromEntity(
@@ -79,7 +79,8 @@ export class Sword extends Container implements TickingEntity {
     );
 
     for (let entity of damage.getTargets().getEntities()) {
-      const [x, y] = entity.body instanceof StaticBody ? [1, -3] : [0.75, 0];
+      const [x, y] =
+        entity.body instanceof StaticBody ? [0.75, -1.5] : [0.3, 0];
 
       if (this.position.x + 32 > entity.getCenter()[0]) {
         this.body.addVelocity(x, y);

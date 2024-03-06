@@ -84,7 +84,7 @@ export class FallDamage implements DamageSource {
         const [x] = entity.getCenter();
         const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
         this.targets!.add(entity, this.power, {
-          power: 1,
+          power: 0.5,
           direction,
         });
       }
