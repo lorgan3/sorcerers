@@ -19,6 +19,8 @@ export class SimpleBody implements PhysicsBody {
 
   private x = 0;
   private y = 0;
+  private rx = 0;
+  private ry = 0;
   public gravity: number;
   private friction: number;
   public bounciness: number;
@@ -78,8 +80,8 @@ export class SimpleBody implements PhysicsBody {
     this.yVelocity += this.gravity * dt;
     const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
     const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
-    let x = alignX(this.x);
-    let y = alignY(this.y);
+    this.rx = alignX(this.x);
+    this.ry = alignY(this.y);
 
     this.xVelocity *= Math.pow(this.friction, dt);
     this.yVelocity *= Math.pow(this.friction, dt);
@@ -89,26 +91,34 @@ export class SimpleBody implements PhysicsBody {
 
     if (
       this.xVelocity !== 0 &&
-      this.surface.collidesWith(this.mask, alignX(this.x + this.xVelocity), y)
+      this.surface.collidesWith(
+        this.mask,
+        alignX(this.x + this.xVelocity),
+        this.ry
+      )
     ) {
       xCollision = alignX(this.x + this.xVelocity);
       this.xVelocity *= this.bounciness;
 
       if (this.bounciness <= 0) {
-        this.x = x;
+        this.x = this.rx;
       }
     }
     this.x += this.xVelocity * dt;
 
     if (
       this.yVelocity !== 0 &&
-      this.surface.collidesWith(this.mask, x, alignY(this.y + this.yVelocity))
+      this.surface.collidesWith(
+        this.mask,
+        this.rx,
+        alignY(this.y + this.yVelocity)
+      )
     ) {
       yCollision = alignY(this.y + this.yVelocity);
       this.yVelocity *= this.bounciness;
 
       if (this.bounciness <= 0) {
-        this.y = y;
+        this.y = this.ry;
       }
     }
     this.y += this.yVelocity * dt;
@@ -117,7 +127,7 @@ export class SimpleBody implements PhysicsBody {
       (xCollision !== undefined || yCollision !== undefined) &&
       this.onCollide
     ) {
-      this.onCollide(xCollision || x, yCollision || y);
+      this.onCollide(xCollision || this.rx, yCollision || this.ry);
     }
 
     return true;
@@ -133,5 +143,9 @@ export class SimpleBody implements PhysicsBody {
 
   get precisePosition(): [number, number] {
     return [this.x, this.y];
+  }
+
+  get position(): [number, number] {
+    return [this.rx, this.ry];
   }
 }
