@@ -75,6 +75,7 @@ export enum EntityType {
   MagicMissile,
   GateOfBabylon,
   SmallSword,
+  Reelseiden,
 }
 
 export enum Priority {

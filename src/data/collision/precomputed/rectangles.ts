@@ -49,6 +49,20 @@ export const rotatedRectangle6x24 = rotatedRectangle6x24Canvas.map((canvas) =>
   CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 24, 24))
 );
 
+export const rotatedRectangle4x32Canvas = angles.map((angle) =>
+  createRotatedRectangleCanvas(angle, 4, 32)
+);
+export const rotatedRectangle4x32 = rotatedRectangle4x32Canvas.map((canvas) =>
+  CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 32, 32))
+);
+
+export const rotatedRectangle2x40Canvas = angles.map((angle) =>
+  createRotatedRectangleCanvas(angle, 2, 40)
+);
+export const rotatedRectangle2x40 = rotatedRectangle2x40Canvas.map((canvas) =>
+  CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 40, 40))
+);
+
 export const rectangle1x200Canvas = createRectangleCanvas(1, 200);
 export const rectangle1x200 = CollisionMask.fromAlpha(
   rectangle1x200Canvas.getContext("2d")!.getImageData(0, 0, 1, 200)

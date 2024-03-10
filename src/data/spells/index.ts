@@ -21,6 +21,7 @@ import { getAngle } from "../../util/math";
 import { GateOfBabylon } from "./gateOfBabylon";
 import { Level } from "../map/level";
 import { Blink } from "./blink";
+import { Reelseiden } from "./reelseiden";
 
 export interface Spell<TData = any> {
   name: string;
@@ -227,6 +228,18 @@ const BLINK = spell(ApplyCursor, {
   },
 });
 
+const REELSEIDEN = spell(Lock, {
+  name: "Reelseiden",
+  description: "Slash anything anywhere",
+  elements: [Element.Physical],
+  cost: 30,
+  data: {
+    target: Target.Any,
+    projectile: Reelseiden,
+    turnState: TurnState.Ending,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -240,4 +253,5 @@ export const SPELLS: Spell[] = [
   MAGIC_MISSILE,
   BABYLON,
   BLINK,
+  REELSEIDEN,
 ];
