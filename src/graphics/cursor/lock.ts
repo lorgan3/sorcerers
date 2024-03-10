@@ -79,10 +79,9 @@ export class Lock extends Container implements Cursor<TriggerData> {
     const position = this.character.player.controller.getMouse();
 
     projectile.cast(
-      position[0] / 6,
-      position[1] / 6,
+      Math.round(position[0] / 6),
+      Math.round(position[1] / 6),
       this.entity,
-      this.character.player.controller,
       this.character
     );
 

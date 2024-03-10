@@ -2,7 +2,7 @@ import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Character } from "../../data/entity/character";
-import { Controller, Key } from "../../data/controller/controller";
+import { Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { Manager } from "../../data/network/manager";
 import { TurnState } from "../../data/network/types";
@@ -25,7 +25,6 @@ export class Telekinesis extends Container {
     x: number,
     y: number,
     private character: Character,
-    private controller: Controller,
     private source: Character
   ) {
     super();
@@ -47,7 +46,7 @@ export class Telekinesis extends Container {
 
     this.position.set(...position);
 
-    const mouse = this.controller.getMouse();
+    const mouse = this.character.player.controller.getMouse();
     this.rotation =
       Math.atan2(position[1] - mouse[1], position[0] - mouse[0]) + Math.PI / 2;
 
@@ -74,11 +73,11 @@ export class Telekinesis extends Container {
     this.arrowBody.scale.x = 2 - this.arrowBody.scale.y / 10;
     this.arrowTip.position.y = SPRITE_SIZE / 2 + distance;
 
-    if (this.controller.isKeyDown(Key.M1)) {
+    if (this.character.player.controller.isKeyDown(Key.M1)) {
       this.activated = true;
     }
 
-    if (!this.controller.isKeyDown(Key.M1) && this.activated) {
+    if (!this.character.player.controller.isKeyDown(Key.M1) && this.activated) {
       if (realDistance < MIN_DISTANCE / 2) {
         // Probably a mistake, wait for the mouse to be clicked again.
         this.activated = false;
@@ -99,14 +98,8 @@ export class Telekinesis extends Container {
     }
   }
 
-  static cast(
-    x: number,
-    y: number,
-    character: Character,
-    controller: Controller,
-    source: Character
-  ) {
-    const entity = new Telekinesis(x, y, character, controller, source);
+  static cast(x: number, y: number, character: Character, source: Character) {
+    const entity = new Telekinesis(x, y, character, source);
 
     Level.instance.add(entity);
     return entity;
