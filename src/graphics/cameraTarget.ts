@@ -1,9 +1,10 @@
 import { Viewport } from "pixi-viewport";
 import { KeyboardController } from "../data/controller/keyboardController";
 import { Key } from "../data/controller/controller";
-import { HurtableEntity } from "../data/entity/types";
+import { HurtableEntity, Spawnable } from "../data/entity/types";
 import { getDistance } from "../util/math";
 import { Manager } from "../data/network/manager";
+import { Character } from "../data/entity/character";
 
 export class CameraTarget {
   private static maxScale = 1.5;
@@ -22,10 +23,10 @@ export class CameraTarget {
   static shakeInterval = 25;
 
   private controller: KeyboardController | undefined;
-  private target?: HurtableEntity;
+  private target?: Spawnable;
   private callback?: () => void;
   highlightQueue: Array<{
-    target: HurtableEntity;
+    target: Spawnable;
     callback?: () => void;
   }> = [];
   private position: [number, number];
@@ -74,7 +75,7 @@ export class CameraTarget {
     } else {
       if (
         Manager.instance.self?.activeCharacter === this.target &&
-        this.target?.body.velocity !== 0
+        (this.target as Character).body.velocity !== 0
       ) {
         this.attached = true;
         this.speed = 0;
@@ -180,7 +181,7 @@ export class CameraTarget {
     }
   }
 
-  setTarget(target: HurtableEntity, callback?: () => void) {
+  setTarget(target: Spawnable, callback?: () => void) {
     if (this.highlightQueue.length > 0) {
       this.highlightQueue.splice(0, 1, { target, callback });
     } else {
@@ -189,7 +190,7 @@ export class CameraTarget {
     }
   }
 
-  highlight(target: HurtableEntity, callback?: () => void) {
+  highlight(target: Spawnable, callback?: () => void) {
     if (this.highlightQueue.length === 0) {
       if (this.target) {
         this.highlightQueue.push({ target: this.target });

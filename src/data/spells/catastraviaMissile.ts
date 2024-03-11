@@ -98,6 +98,10 @@ export class CatastraviaMissile extends Container implements Spawnable {
     Level.instance.particleContainer.destroyEmitter(this.particles);
   }
 
+  getCenter(): [number, number] {
+    return [this.position.x + 8, this.position.y + 8];
+  }
+
   tick(dt: number) {
     this.time += dt;
 
@@ -120,7 +124,7 @@ export class CatastraviaMissile extends Container implements Spawnable {
     if (this.time > CatastraviaMissile.growTime) {
       if (!this.launched) {
         this.launched = true;
-        ControllableSound.fromEntity([x * 6, y * 6], Sound.FireWork);
+        ControllableSound.fromEntity(this, Sound.FireWork);
       }
 
       this.body.tick(dt);

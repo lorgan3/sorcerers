@@ -40,11 +40,13 @@ export class GateOfBabylon extends Container implements Spawnable {
 
     const y = probeX(Level.instance.terrain.collisionMask, _x) - 50;
 
-    this.sound = ControllableSound.fromEntity(
-      [_x * 6, y * 6],
-      Sound.DarkMagic,
-      { loop: true }
-    );
+    this.sound = ControllableSound.fromEntity(this, Sound.DarkMagic, {
+      loop: true,
+    });
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
   }
 
   tick(dt: number) {

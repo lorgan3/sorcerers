@@ -24,10 +24,7 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Implosion } from "../../graphics/implosion";
 
-export class MagicMissile
-  extends Container
-  implements Syncable, HurtableEntity
-{
+export class MagicMissile extends Container implements Syncable {
   private static lifetime = 200;
 
   public readonly body: SimpleBody;
@@ -95,10 +92,6 @@ export class MagicMissile
     Level.instance.cameraTarget.setTarget(this);
   }
 
-  hp = 1;
-
-  damage(): void {}
-
   getCenter(): [number, number] {
     return [this.position.x + 24, this.position.y + 24];
   }
@@ -136,13 +129,9 @@ export class MagicMissile
     if (this.sound) {
       this.sound.update([this.position.x, this.position.y]);
     } else {
-      this.sound = ControllableSound.fromEntity(
-        [this.position.x, this.position.y],
-        Sound.Sparkle,
-        {
-          loop: true,
-        }
-      );
+      this.sound = ControllableSound.fromEntity(this, Sound.Sparkle, {
+        loop: true,
+      });
     }
 
     this.body.tick(dt);

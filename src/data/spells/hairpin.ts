@@ -70,6 +70,10 @@ export class Hairpin extends Container implements Spawnable {
     Manager.instance.setTurnState(TurnState.Ending);
   }
 
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
+  }
+
   serializeCreate() {
     return [
       this._x,

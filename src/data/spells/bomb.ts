@@ -37,7 +37,7 @@ export class Bomb extends Container implements Item {
     super();
     this.arcanePower = Manager.instance.getElementValue(Element.Arcane);
     this.fuse = Bomb.fuseTime * (0.5 + Math.random());
-    ControllableSound.fromEntity([x * 6, y * 6], Sound.Launch);
+    ControllableSound.fromEntity(this, Sound.Launch);
 
     this.body = new Body(Level.instance.terrain.characterMask, {
       mask: circle3x3,
@@ -93,10 +93,7 @@ export class Bomb extends Container implements Item {
       Server.instance.dynamicUpdate(this);
     }
 
-    ControllableSound.fromEntity(
-      [this.position.x, this.position.y],
-      Sound.Land
-    );
+    ControllableSound.fromEntity(this, Sound.Land);
   };
 
   private _die(x: number, y: number) {

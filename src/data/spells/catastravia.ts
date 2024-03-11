@@ -47,6 +47,10 @@ export class Catastravia extends Container implements Spawnable {
     this.targetY = Math.floor(cy / 6 + Math.sin(direction) * distance);
   }
 
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
+  }
+
   tick(dt: number) {
     if (!Server.instance) {
       return;

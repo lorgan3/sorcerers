@@ -104,7 +104,11 @@ export class Zoltraak extends Container implements Spawnable {
 
     this.addChild(this.impact);
 
-    ControllableSound.fromEntity([x * 6, y * 6], Sound.Beam);
+    ControllableSound.fromEntity(this, Sound.Beam);
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
   }
 
   tick(dt: number) {

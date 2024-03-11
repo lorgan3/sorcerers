@@ -3,11 +3,9 @@ import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
-import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Character } from "../entity/character";
 
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
-import { Explosion } from "../../graphics/explosion";
 import { ParticleEmitter } from "../../graphics/particles/types";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
@@ -72,7 +70,7 @@ export class Nephtear extends Container implements Spawnable {
 
     this.addChild(this.sprite);
     Level.instance.particleContainer.addEmitter(this.particles);
-    ControllableSound.fromEntity([x * 6, y * 6], Sound.Fire);
+    ControllableSound.fromEntity(this, Sound.Fire);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -96,6 +94,10 @@ export class Nephtear extends Container implements Spawnable {
     Level.instance.particleContainer.destroyEmitter(this.particles);
     new IceImpact(this.position.x, this.position.y, this.sprite.rotation);
     Manager.instance.setTurnState(TurnState.Ending);
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x + 8, this.position.y + 8];
   }
 
   tick(dt: number) {

@@ -91,6 +91,10 @@ export class SmallSword extends Container implements Spawnable {
     }
   };
 
+  getCenter(): [number, number] {
+    return [this.position.x - 7, this.position.y + 36];
+  }
+
   tick(dt: number) {
     this.time += dt;
     this.sprite.height =
@@ -104,10 +108,7 @@ export class SmallSword extends Container implements Spawnable {
 
     if (this.time >= SmallSword.spawnTime) {
       if (!this.fallingSound) {
-        this.fallingSound = ControllableSound.fromEntity(
-          [this.position.x, this.position.y],
-          Sound.Arrow
-        );
+        this.fallingSound = ControllableSound.fromEntity(this, Sound.Arrow);
       }
 
       this.body.tick(dt);

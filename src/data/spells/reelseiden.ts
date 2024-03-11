@@ -109,12 +109,13 @@ export class Reelseiden extends Container implements Spawnable {
       Level.instance.damage(new GenericDamage(targetList));
     }
 
-    ControllableSound.fromEntity(
-      [this.position.x, this.position.y],
-      Sound.Slice
-    );
+    ControllableSound.fromEntity(this, Sound.Slice);
 
     Level.instance.add(this);
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x + 72, this.position.y + 72];
   }
 
   tick() {}

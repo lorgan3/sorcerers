@@ -66,7 +66,7 @@ export class Fireball extends Container implements Syncable {
 
     this.addChild(this.sprite);
     Level.instance.particleContainer.addEmitter(this.particles);
-    ControllableSound.fromEntity([x * 6, y * 6], Sound.Fire);
+    ControllableSound.fromEntity(this, Sound.Fire);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -112,6 +112,10 @@ export class Fireball extends Container implements Syncable {
     Level.instance.particleContainer.destroyEmitter(this.particles);
     new Explosion(this.position.x, this.position.y);
     Manager.instance.setTurnState(TurnState.Ending);
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
   }
 
   tick(dt: number) {
