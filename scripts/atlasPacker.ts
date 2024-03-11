@@ -16,7 +16,7 @@ const blocks: SpriteBlock[] = [];
 const DIRECTORY = "./public/atlas/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?
-const MARGIN = 1;
+const MARGIN = 0;
 
 const contents = fs.readdirSync(DIRECTORY);
 const files = contents.filter((file) => file.endsWith(".json"));
@@ -74,6 +74,11 @@ for (let file of files) {
     process.exit(1);
   }
 
+  if (!atlas.frame && !atlas.frames) {
+    console.error(`Invalid atlas for ${file}`);
+    process.exit(1);
+  }
+
   let image: Jimp;
 
   try {
@@ -89,24 +94,59 @@ for (let file of files) {
     }
   }
 
-  Object.entries(atlas.frames).forEach(([name, { frame }]) => {
-    const jimp = new Jimp(frame.w, frame.h).blit(
-      image,
-      0,
-      0,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h
-    );
+  if (atlas.frame) {
+    const animation: string[] = [];
+    const atlasName = atlas.meta.image.split(".")[0];
+    let index = 1;
+    for (let j = 0; j < atlas.meta.size.h; j += atlas.frame.h) {
+      for (let i = 0; i < atlas.meta.size.w; i += atlas.frame.w) {
+        const name = `${atlasName}_${index++}`;
+        animation.push(name);
 
-    blocks.push({
-      name,
-      w: frame.w + MARGIN * 2,
-      h: frame.h + MARGIN * 2,
-      jimp,
+        const jimp = new Jimp(atlas.frame.w, atlas.frame.h).blit(
+          image,
+          0,
+          0,
+          i,
+          j,
+          atlas.frame.w,
+          atlas.frame.h
+        );
+
+        blocks.push({
+          name,
+          w: atlas.frame.w + MARGIN * 2,
+          h: atlas.frame.h + MARGIN * 2,
+          jimp,
+        });
+      }
+    }
+
+    if (atlas.animation) {
+      animations[atlas.animation] = animation;
+    }
+  }
+
+  if (atlas.frames) {
+    Object.entries(atlas.frames).forEach(([name, { frame }]) => {
+      const jimp = new Jimp(frame.w, frame.h).blit(
+        image,
+        0,
+        0,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h
+      );
+
+      blocks.push({
+        name,
+        w: frame.w + MARGIN * 2,
+        h: frame.h + MARGIN * 2,
+        jimp,
+      });
     });
-  });
+  }
 }
 
 blocks.sort((a, b) => b.h - a.h);

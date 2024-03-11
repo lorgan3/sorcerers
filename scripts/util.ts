@@ -16,8 +16,10 @@ export interface Frame {
 }
 
 export interface Atlas {
-  frames: Record<string, Frame>;
+  frames?: Record<string, Frame>;
   animations?: Record<string, string[]>;
+  frame?: { w: number; h: number };
+  animation?: string;
   meta: {
     app: string;
     version: string;
