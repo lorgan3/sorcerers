@@ -42,7 +42,7 @@ export class ImpactDamage implements DamageSource {
           if (isHurtableEntity(entity)) {
             const [x, y] = entity.getCenter();
             this.targets!.add(entity, this.power, {
-              power: this.power / 5,
+              power: this.power / 10,
               direction: this.direction,
             });
           }

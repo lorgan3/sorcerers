@@ -76,6 +76,7 @@ export enum EntityType {
   GateOfBabylon,
   SmallSword,
   Reelseiden,
+  Nephtear,
 }
 
 export enum Priority {

@@ -22,6 +22,7 @@ import { GateOfBabylon } from "./gateOfBabylon";
 import { Level } from "../map/level";
 import { Blink } from "./blink";
 import { Reelseiden } from "./reelseiden";
+import { Nephtear } from "./nephtear";
 
 export interface Spell<TData = any> {
   name: string;
@@ -240,6 +241,21 @@ const REELSEIDEN = spell(Lock, {
   },
 });
 
+const NEPHTEAR = spell(PoweredArcaneCircle, {
+  name: "Nephtear",
+  description: "Ice spike",
+  elements: [Element.Elemental],
+  cost: 20,
+  data: {
+    projectile: Nephtear,
+    xOffset: 7,
+    yOffset: 10.5,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -254,4 +270,5 @@ export const SPELLS: Spell[] = [
   BABYLON,
   BLINK,
   REELSEIDEN,
+  NEPHTEAR,
 ];
