@@ -25,6 +25,7 @@ interface TriggerData {
   yOffset: number;
   turnState: TurnState;
   projectile: ProjectileConstructor;
+  keepSpellSource?: boolean;
 }
 
 export class PoweredArcaneCircle
@@ -87,7 +88,9 @@ export class PoweredArcaneCircle
   tick(dt: number, controller: Controller) {
     if (!controller.isKeyDown(Key.M1)) {
       if (this.visible) {
-        this.character.setSpellSource(this, false);
+        if (!this.spell.data.keepSpellSource) {
+          this.character.setSpellSource(this, false);
+        }
         this.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 

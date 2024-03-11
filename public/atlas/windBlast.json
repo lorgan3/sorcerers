@@ -1,0 +1,16 @@
+{
+  "frame": {
+    "w": 48,
+    "h": 32
+  },
+  "animation": "windBlast",
+  "meta": {
+    "app": "https://github.com/lorgan3/sorcerers",
+    "version": "1.0",
+    "image": "windBlast.png",
+    "size": {
+      "w": 576,
+      "h": 32
+    }
+  }
+}

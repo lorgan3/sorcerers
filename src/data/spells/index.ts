@@ -23,6 +23,7 @@ import { Level } from "../map/level";
 import { Blink } from "./blink";
 import { Reelseiden } from "./reelseiden";
 import { Nephtear } from "./nephtear";
+import { WindBlast } from "./windBlast";
 
 export interface Spell<TData = any> {
   name: string;
@@ -256,6 +257,22 @@ const NEPHTEAR = spell(PoweredArcaneCircle, {
   },
 });
 
+const WIND_BLAST = spell(PoweredArcaneCircle, {
+  name: "Airblast",
+  description: "Mmph mph-mph mmmmph!",
+  elements: [Element.Life],
+  cost: 10,
+  data: {
+    projectile: WindBlast,
+    xOffset: 7,
+    yOffset: 10.5,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+    keepSpellSource: true,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -271,4 +288,5 @@ export const SPELLS: Spell[] = [
   BLINK,
   REELSEIDEN,
   NEPHTEAR,
+  WIND_BLAST,
 ];

@@ -28,6 +28,7 @@ export enum Sound {
   FireWork = "fireworkSnd",
   Sparkle = "sparkleSnd",
   Slice = "sliceSnd",
+  Air = "airSnd",
 }
 
 interface SoundData {
@@ -96,6 +97,7 @@ addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers1", 0.5);
 addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers2", 0.5);
 addSoundData(Sound.Sparkle, "141256__autistic-lucario__magic-sound-loop", 0.4);
 addSoundData(Sound.Slice, "109423__black-snow__sword-slice-14");
+addSoundData(Sound.Air, "31473__dkristian__air_blast_001", 0.6);
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
