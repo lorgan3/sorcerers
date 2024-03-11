@@ -18,6 +18,8 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { GenericDamage } from "../damage/genericDamage";
 import { TargetList } from "../damage/targetList";
+import { Manager } from "../network/manager";
+import { Element } from "./types";
 
 const TOOLS = [
   {
@@ -92,7 +94,11 @@ export class Reelseiden extends Container implements Spawnable {
               ey - y - tool.offset
             )
           ) {
-            targetList.add(entity, 20);
+            targetList.add(
+              entity,
+              20 *
+                (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3)
+            );
             return;
           }
         }
