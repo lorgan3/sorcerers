@@ -37,6 +37,7 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Items](https://opengameart.org/content/16x16-assorted-rpg-icons): Shade
 - [Castle map decorations](https://alcoholism.itch.io/dark-castle-tileset): alcoholism
 - [Swords](https://opengameart.org/content/squire-job-set): SCaydi
+- [Bomb](https://surfacetoash.itch.io/kaboom-explosives-asset-pack): SurfaceToAsh
 
 ### Sounds
 
@@ -65,3 +66,5 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Sparkle](https://freesound.org/people/Autistic%20Lucario/sounds/141256/): Ryan Smith
 - [Slice](https://freesound.org/people/Black%20Snow/sounds/109423/): Black Snow
 - [Air](https://freesound.org/people/dkristian/sounds/31473/): dkristian
+- [Launch](https://freesound.org/people/LeMudCrab/sounds/163458/): LeMudCrab
+- [Beep](https://freesound.org/people/Rudmer_Rotteveel/sounds/536422/): Rudmer_Rotteveel

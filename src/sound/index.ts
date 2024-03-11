@@ -29,6 +29,8 @@ export enum Sound {
   Sparkle = "sparkleSnd",
   Slice = "sliceSnd",
   Air = "airSnd",
+  Launch = "launchSnd",
+  Beep = "beepSnd",
 }
 
 interface SoundData {
@@ -98,6 +100,11 @@ addSoundData(Sound.FireWork, "588199__el_boss__firework-whistlers2", 0.5);
 addSoundData(Sound.Sparkle, "141256__autistic-lucario__magic-sound-loop", 0.4);
 addSoundData(Sound.Slice, "109423__black-snow__sword-slice-14");
 addSoundData(Sound.Air, "31473__dkristian__air_blast_001", 0.6);
+addSoundData(Sound.Launch, "163458__lemudcrab__grenade-launcher");
+addSoundData(
+  Sound.Beep,
+  "536422__rudmer_rotteveel__setting-electronic-timer-1-beep"
+);
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(

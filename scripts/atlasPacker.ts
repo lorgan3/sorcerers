@@ -16,7 +16,7 @@ const blocks: SpriteBlock[] = [];
 const DIRECTORY = "./public/atlas/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?
-const MARGIN = 0;
+const MARGIN = 1;
 
 const contents = fs.readdirSync(DIRECTORY);
 const files = contents.filter((file) => file.endsWith(".json"));

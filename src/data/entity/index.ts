@@ -1,7 +1,9 @@
+import { Bomb } from "../spells/bomb";
 import { Catastravia } from "../spells/catastravia";
 import { CatastraviaMissile } from "../spells/catastraviaMissile";
 import { Fireball } from "../spells/fireball";
 import { GateOfBabylon } from "../spells/gateOfBabylon";
+import { Hairpin } from "../spells/hairpin";
 import { MagicMissile } from "../spells/magicMissile";
 import { Nephtear } from "../spells/nephtear";
 import { Reelseiden } from "../spells/reelseiden";
@@ -38,6 +40,8 @@ export const ENTITIES: Record<
   [EntityType.SmallSword]: SmallSword,
   [EntityType.Reelseiden]: Reelseiden,
   [EntityType.Nephtear]: Nephtear,
+  [EntityType.Bomb]: Bomb,
+  [EntityType.Hairpin]: Hairpin,
 };
 
 interface SpawnRateData {

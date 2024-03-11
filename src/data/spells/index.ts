@@ -24,6 +24,7 @@ import { Blink } from "./blink";
 import { Reelseiden } from "./reelseiden";
 import { Nephtear } from "./nephtear";
 import { WindBlast } from "./windBlast";
+import { Hairpin } from "./hairpin";
 
 export interface Spell<TData = any> {
   name: string;
@@ -273,6 +274,21 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
   },
 });
 
+const HAIRPIN = spell(PoweredArcaneCircle, {
+  name: "Artillery",
+  elements: [Element.Arcane],
+  cost: 20,
+  data: {
+    projectile: Hairpin,
+    xOffset: 7,
+    yOffset: 10.5,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+    keepSpellSource: true,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -289,4 +305,5 @@ export const SPELLS: Spell[] = [
   REELSEIDEN,
   NEPHTEAR,
   WIND_BLAST,
+  HAIRPIN,
 ];

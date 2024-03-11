@@ -77,6 +77,8 @@ export enum EntityType {
   SmallSword,
   Reelseiden,
   Nephtear,
+  Hairpin,
+  Bomb,
 }
 
 export enum Priority {

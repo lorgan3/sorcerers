@@ -99,7 +99,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       return;
     }
 
-    if (this.time - this.lastActiveTime > 30) {
+    if (this.time - this.lastActiveTime > 15) {
       this.body.active = 1;
     }
 

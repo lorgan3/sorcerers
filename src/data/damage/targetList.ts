@@ -28,11 +28,10 @@ export class TargetList {
 
   damage(source: DamageSource) {
     for (let target of this.targets) {
-      (Level.instance.entityMap.get(target.entityId) as HurtableEntity).damage(
-        source,
-        target.damage,
-        target.force
-      );
+      const entity = Level.instance.entityMap.get(target.entityId) as
+        | HurtableEntity
+        | undefined;
+      entity?.damage(source, target.damage, target.force);
     }
   }
 
