@@ -16,7 +16,7 @@ import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
 
 export class Bomb extends Container implements Item {
-  private static fuseTime = 60;
+  private static fuseTime = 45;
   private static primeTime = 60;
   private static triggerRange = 96;
 
@@ -37,7 +37,6 @@ export class Bomb extends Container implements Item {
     super();
     this.arcanePower = Manager.instance.getElementValue(Element.Arcane);
     this.fuse = Bomb.fuseTime * (0.5 + Math.random());
-    ControllableSound.fromEntity(this, Sound.Launch);
 
     this.body = new Body(Level.instance.terrain.characterMask, {
       mask: circle3x3,
@@ -46,6 +45,7 @@ export class Bomb extends Container implements Item {
       airFriction: 0.99,
       groundFriction: 0.8,
       roundness: 0.2,
+      bounciness: -0.6,
     });
     this.body.move(x, y);
     this.body.addAngularVelocity(speed, direction);
@@ -87,7 +87,9 @@ export class Bomb extends Container implements Item {
     damage: number,
     force?: Force | undefined
   ): void {
-    this._die(...this.body.precisePosition);
+    if (Server.instance && this.activateTime === -1) {
+      Server.instance.activate(this);
+    }
   }
 
   private onCollide = (x: number, y: number) => {
