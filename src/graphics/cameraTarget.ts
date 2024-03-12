@@ -74,6 +74,7 @@ export class CameraTarget {
       position = this.target.getCenter();
     } else {
       if (
+        this.target &&
         Manager.instance.self?.activeCharacter === this.target &&
         (this.target as Character).body.velocity !== 0
       ) {
