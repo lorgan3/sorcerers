@@ -157,7 +157,7 @@ export class CollisionMask {
     const trow = this.mask[y];
     const xScaled = Math.floor(x / 32);
 
-    const lshift = 32 - (x % 32);
+    const lshift = 31 - (x % 32);
     let bits = 1 << lshift;
 
     return !!(trow[xScaled] & bits);
