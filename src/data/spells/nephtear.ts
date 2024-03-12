@@ -38,6 +38,8 @@ export class Nephtear extends Container implements Spawnable {
     });
     this.body.move(x, y);
     this.body.addAngularVelocity(speed, direction);
+    this.position.set(x * 6, y * 6);
+    ControllableSound.fromEntity(this, Sound.Fire);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -70,7 +72,6 @@ export class Nephtear extends Container implements Spawnable {
 
     this.addChild(this.sprite);
     Level.instance.particleContainer.addEmitter(this.particles);
-    ControllableSound.fromEntity(this, Sound.Fire);
   }
 
   private onCollide = (x: number, y: number) => {

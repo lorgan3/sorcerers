@@ -33,8 +33,6 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
       this._hp = hp;
     }
 
-    this.position.set(x * 6, y * 6);
-
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
     this.sprite = new AnimatedSprite(atlas.animations["spells_manaShield"]);
@@ -66,6 +64,8 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
       mask: rotatedRectangle6x24[index],
     });
     this.body.move(x, y);
+    this.position.set(x * 6, y * 6);
+    ControllableSound.fromEntity(this, Sound.Schwing);
 
     this.shieldArea = Level.instance.terrain.collisionMask.difference(
       this.body.mask,
@@ -87,7 +87,6 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
 
     this.addChild(this.sprite, this.shineEffect);
     this.add();
-    ControllableSound.fromEntity(this, Sound.Schwing);
   }
 
   getCenter(): [number, number] {

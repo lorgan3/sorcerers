@@ -49,6 +49,8 @@ export class Bomb extends Container implements Item {
     });
     this.body.move(x, y);
     this.body.addAngularVelocity(speed, direction);
+    this.position.set(x * 6, y * 6);
+    ControllableSound.fromEntity(this, Sound.Launch);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
