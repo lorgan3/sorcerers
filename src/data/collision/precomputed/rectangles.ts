@@ -63,11 +63,6 @@ export const rotatedRectangle2x40 = rotatedRectangle2x40Canvas.map((canvas) =>
   CollisionMask.fromAlpha(canvas.getContext("2d")!.getImageData(0, 0, 40, 40))
 );
 
-export const rectangle1x200Canvas = createRectangleCanvas(1, 200);
-export const rectangle1x200 = CollisionMask.fromAlpha(
-  rectangle1x200Canvas.getContext("2d")!.getImageData(0, 0, 1, 200)
-);
-
 export const rectangle6x16Canvas = createRectangleCanvas(6, 16);
 export const rectangle6x16 = CollisionMask.fromAlpha(
   rectangle6x16Canvas.getContext("2d")!.getImageData(0, 0, 6, 16)
