@@ -83,7 +83,7 @@ export class Reelseiden extends Container implements Spawnable {
     Level.instance.withNearbyEntities(
       x * 6 + 72,
       y * 6 + 72,
-      40 * 6,
+      28 * 6,
       (entity) => {
         const [ex, ey] = entity.body.position;
         for (let tool of TOOLS) {

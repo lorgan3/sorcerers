@@ -2,7 +2,7 @@ import { AnimatedSprite, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Character } from "../entity/character";
-import { TickingEntity } from "../entity/types";
+import { HurtableEntity, TickingEntity } from "../entity/types";
 import { TurnState } from "../network/types";
 import { Manager } from "../network/manager";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
@@ -86,8 +86,8 @@ export class WindBlast extends Container implements TickingEntity {
       const adjustedDirection =
         this.direction + Math.max(-max, Math.min(max, diff));
 
-      const targetList = new TargetList();
-      Level.instance.withNearbyEntities(x * 6, y * 6, 24 * 6, (entity) => {
+      const entities: HurtableEntity[] = [];
+      Level.instance.withNearbyEntities(x * 6, y * 6, 32 * 6, (entity) => {
         const [ex, ey] = entity.body.position;
 
         if (
@@ -95,15 +95,24 @@ export class WindBlast extends Container implements TickingEntity {
             getIndexFromAngle(this.direction - Math.PI / 2)
           ].collidesWith(entity.body.mask, ex - x, ey - y)
         ) {
-          targetList.add(entity, 0, {
-            direction: adjustedDirection,
-            power:
-              this.power *
-              (0.7 + Manager.instance.getElementValue(Element.Life) * 0.3),
-          });
-          return;
+          entities.push(entity);
         }
       });
+
+      const targetList = new TargetList(
+        entities
+          .sort((a, b) => b.position.y - a.position.y)
+          .map((entity) => ({
+            entityId: entity.id,
+            damage: 0,
+            force: {
+              direction: adjustedDirection,
+              power:
+                this.power *
+                (0.7 + Manager.instance.getElementValue(Element.Life) * 0.3),
+            },
+          }))
+      );
 
       if (targetList.hasEntities()) {
         Level.instance.damage(new GenericDamage(targetList));
