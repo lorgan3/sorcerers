@@ -3,10 +3,6 @@ import { CollisionMask } from "./collisionMask";
 
 interface Config {
   mask: CollisionMask;
-  gravity?: number;
-  friction?: number;
-  bounciness?: number;
-  onCollide?: (x: number, y: number) => void;
 }
 
 export class StaticBody implements PhysicsBody {

@@ -4,6 +4,7 @@ import { CollisionMask } from "./collisionMask";
 const GRAVITY = 0.3;
 const FRICTION = 1;
 const BOUNCINESS = 0;
+const MIN_MOVEMENT = 0.01;
 
 interface Config {
   mask: CollisionMask;
@@ -27,6 +28,7 @@ export class SimpleBody implements PhysicsBody {
   private onCollide?: (x: number, y: number) => void;
 
   public readonly mask: CollisionMask;
+  public active = 1;
 
   constructor(
     private surface: CollisionMask,
@@ -59,16 +61,19 @@ export class SimpleBody implements PhysicsBody {
   addVelocity(x: number, y: number) {
     this.xVelocity += x;
     this.yVelocity += y;
+    this.active = 1;
   }
 
   addAngularVelocity(power: number, direction: number) {
     this.xVelocity += Math.cos(direction) * power;
     this.yVelocity += Math.sin(direction) * power;
+    this.active = 1;
   }
 
   setAngularVelocity(power: number, direction: number) {
     this.xVelocity = Math.cos(direction) * power;
     this.yVelocity = Math.sin(direction) * power;
+    this.active = 1;
   }
 
   move(x: number, y: number) {
@@ -77,6 +82,10 @@ export class SimpleBody implements PhysicsBody {
   }
 
   tick(dt: number) {
+    if (this.active === 0) {
+      return false;
+    }
+
     this.yVelocity += this.gravity * dt;
     const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
     const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
@@ -128,6 +137,16 @@ export class SimpleBody implements PhysicsBody {
       this.onCollide
     ) {
       this.onCollide(xCollision || this.rx, yCollision || this.ry);
+    }
+
+    // If we're on the ground and barely moving, go to sleep.
+    if (
+      Math.abs(this.xVelocity) < MIN_MOVEMENT &&
+      Math.abs(this.yVelocity) < MIN_MOVEMENT
+    ) {
+      this.xVelocity = 0;
+      this.yVelocity = 0;
+      this.active = 0;
     }
 
     return true;
