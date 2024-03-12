@@ -79,6 +79,8 @@ export enum EntityType {
   Nephtear,
   Hairpin,
   Bomb,
+  IceWallSpawner,
+  IceWall,
 }
 
 export enum Priority {

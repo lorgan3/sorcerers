@@ -31,6 +31,7 @@ export enum Sound {
   Air = "airSnd",
   Launch = "launchSnd",
   Beep = "beepSnd",
+  Ice = "iceSnd",
 }
 
 interface SoundData {
@@ -105,6 +106,9 @@ addSoundData(
   Sound.Beep,
   "536422__rudmer_rotteveel__setting-electronic-timer-1-beep"
 );
+addSoundData(Sound.Ice, "452252__kyles__ice-cracks-medium7-brittle_1");
+addSoundData(Sound.Ice, "452252__kyles__ice-cracks-medium7-brittle_2");
+addSoundData(Sound.Ice, "452252__kyles__ice-cracks-medium7-brittle_3");
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
