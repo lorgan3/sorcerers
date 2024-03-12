@@ -21,6 +21,7 @@ interface Config {
   airControl?: number;
   onCollide?: (x: number, y: number) => void;
   roundness?: number;
+  bounciness?: number;
 }
 
 export class Body implements PhysicsBody {
@@ -45,6 +46,7 @@ export class Body implements PhysicsBody {
   private onCollide?: (x: number, y: number) => void;
   private roundness: number;
   private lastRollDirection = 0;
+  private bounciness = 0;
 
   constructor(
     private surface: CollisionMask,
@@ -56,6 +58,7 @@ export class Body implements PhysicsBody {
       airControl = AIR_CONTROL,
       onCollide,
       roundness = 0,
+      bounciness = 0,
     }: Config
   ) {
     this.mask = mask;
@@ -65,6 +68,7 @@ export class Body implements PhysicsBody {
     this.airControl = airControl;
     this.onCollide = onCollide;
     this.roundness = roundness;
+    this.bounciness = bounciness;
   }
 
   serialize() {
@@ -165,12 +169,12 @@ export class Body implements PhysicsBody {
         }
 
         this.jumped = false;
-        this.yVelocity = 0;
+        this.yVelocity *= this.bounciness;
         this.y = alignY(this.y);
         this.rY = this.y;
 
         // Roll off slopes.
-        if (this.roundness) {
+        if (this.roundness && this.yVelocity > -0.5) {
           if (!this.lastRollDirection) {
             if (
               !this.surface.collidesWith(this.mask, this.rX + 1, this.rY + 1)
@@ -215,7 +219,7 @@ export class Body implements PhysicsBody {
           this.onCollide(this.rX, this.rY);
         }
 
-        this.yVelocity = 0;
+        this.yVelocity *= this.bounciness;
         this.y = alignY(this.y); // This isn't accurate but good enough™️
         this.rY = this.y;
       }
@@ -263,7 +267,7 @@ export class Body implements PhysicsBody {
         }
 
         this.x = alignX(this.x);
-        this.xVelocity = 0;
+        this.xVelocity *= this.bounciness;
       }
     }
 
