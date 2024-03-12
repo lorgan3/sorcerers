@@ -41,7 +41,7 @@ export interface Syncable<T = any> extends Spawnable {
 
 export interface Item extends Spawnable, HurtableEntity {
   appear(): void;
-  activate(character: Character): void;
+  activate(character?: Character): void;
   die(): void;
 }
 

@@ -527,13 +527,13 @@ export class Server extends Manager {
     });
   }
 
-  activate(item: Item, character: Character) {
+  activate(item: Item, character?: Character) {
     item.activate(character);
 
     this.broadcast({
       type: MessageType.Activate,
       id: item.id,
-      tId: character.id,
+      tId: character?.id,
     });
   }
 

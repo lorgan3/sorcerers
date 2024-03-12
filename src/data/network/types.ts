@@ -139,7 +139,7 @@ export type Message =
   | {
       type: MessageType.Activate;
       id: number;
-      tId: number;
+      tId?: number;
     }
   | {
       type: MessageType.turnState;

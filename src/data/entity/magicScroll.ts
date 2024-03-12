@@ -65,7 +65,7 @@ export class MagicScroll extends BaseItem {
     this.aoe?.fade();
   }
 
-  activate(character: Character) {
+  activate(character?: Character) {
     super.activate(character);
 
     ControllableSound.fromEntity(this, Sound.Paper);

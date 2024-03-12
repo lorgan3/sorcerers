@@ -279,9 +279,9 @@ export class Client extends Manager {
       case MessageType.Activate:
         {
           const item = Level.instance.entityMap.get(message.id) as Item;
-          const trigger = Level.instance.entityMap.get(
-            message.tId
-          ) as Character;
+          const trigger = message.tId
+            ? (Level.instance.entityMap.get(message.tId) as Character)
+            : undefined;
 
           item.activate(trigger);
         }

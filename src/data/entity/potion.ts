@@ -49,10 +49,13 @@ export class Potion extends BaseItem {
     return new Potion(...data);
   }
 
-  activate(character: Character) {
+  activate(character?: Character) {
     super.activate(character);
 
     ControllableSound.fromEntity(this, Sound.Potion);
-    POTION_DATA[this.potionType].activate(character);
+
+    if (character) {
+      POTION_DATA[this.potionType].activate(character);
+    }
   }
 }
