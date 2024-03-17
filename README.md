@@ -69,3 +69,4 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Launch](https://freesound.org/people/LeMudCrab/sounds/163458/): LeMudCrab
 - [Beep](https://freesound.org/people/Rudmer_Rotteveel/sounds/536422/): Rudmer_Rotteveel
 - [Ice](https://freesound.org/people/kyles/sounds/452252/): kyles
+- [Rumble](https://freesound.org/people/prozaciswack/sounds/82722/): prozaciswack

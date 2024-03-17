@@ -148,6 +148,22 @@ export class Terrain {
     );
   }
 
+  add(
+    x: number,
+    y: number,
+    mask: CollisionMask,
+    fn: (ctx: OffscreenCanvasRenderingContext2D) => void,
+    layerFn?: (ctx: OffscreenCanvasRenderingContext2D) => void
+  ) {
+    this.terrain.update("destination-over", fn);
+    for (let layer of this.layerTextures) {
+      layer.update("destination-over", layerFn ?? fn);
+    }
+
+    this.collisionMask.add(mask, x | 0, y | 0);
+    this.characterMask.add(mask, x | 0, y | 0);
+  }
+
   draw(
     fn: (ctx: OffscreenCanvasRenderingContext2D) => void,
     layerFn?: (ctx: OffscreenCanvasRenderingContext2D) => void

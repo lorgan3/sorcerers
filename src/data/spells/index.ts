@@ -26,6 +26,7 @@ import { Nephtear } from "./nephtear";
 import { WindBlast } from "./windBlast";
 import { Hairpin } from "./hairpin";
 import { IceWallSpawner } from "./iceWallSpawner";
+import { Rock } from "./rock";
 
 export interface Spell<TData = any> {
   name: string;
@@ -304,6 +305,20 @@ const ICE_WALL = spell(ArcaneCircle, {
   },
 });
 
+const ROCK = spell(PoweredArcaneCircle, {
+  name: "Rock",
+  elements: [Element.Life, Element.Elemental],
+  cost: 20,
+  data: {
+    projectile: Rock,
+    xOffset: 0,
+    yOffset: 0,
+    x: 0,
+    y: 0,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -322,4 +337,5 @@ export const SPELLS: Spell[] = [
   WIND_BLAST,
   HAIRPIN,
   ICE_WALL,
+  ROCK,
 ];
