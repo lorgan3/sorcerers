@@ -16,6 +16,7 @@ export class UpdatingTexture {
     fn: (ctx: OffscreenCanvasRenderingContext2D) => void
   ) {
     this.ctx.globalCompositeOperation = mode;
+    this.ctx.beginPath();
     fn(this.ctx);
     this.ctx.fill();
 
