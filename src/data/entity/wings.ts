@@ -13,7 +13,7 @@ export class Wings extends Container {
   private static maxScale = 4;
   private static minScale = 1;
   private static flapThreshHold = 0.8;
-  private static lift = 2;
+  private static lift = 3.5;
 
   private sprite: AnimatedSprite;
   private particles: SimpleParticleEmitter;
@@ -22,7 +22,7 @@ export class Wings extends Container {
 
   constructor(private character: Character) {
     super();
-    this.character.body.gravity = 0.08;
+    this.character.body.gravity = 0.14;
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 

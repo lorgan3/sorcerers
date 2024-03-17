@@ -36,7 +36,7 @@ import { Sound } from "../../sound";
 import { Wings } from "./wings";
 
 // Start bouncing when impact is greater than this value
-const BOUNCE_TRIGGER = 4;
+const BOUNCE_TRIGGER = 3.8;
 
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;

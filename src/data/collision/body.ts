@@ -16,7 +16,8 @@ const JUMP_STRENGTH = 3;
 interface Config {
   mask: CollisionMask;
   gravity?: number;
-  airFriction?: number;
+  airXFriction?: number;
+  airYFriction?: number;
   groundFriction?: number;
   airControl?: number;
   onCollide?: (x: number, y: number) => void;
@@ -40,7 +41,8 @@ export class Body implements PhysicsBody {
 
   public readonly mask: CollisionMask;
   public gravity: number;
-  private airFriction: number;
+  private airXFriction: number;
+  private airYFriction: number;
   private groundFriction: number;
   private airControl: number;
   private onCollide?: (x: number, y: number) => void;
@@ -53,7 +55,8 @@ export class Body implements PhysicsBody {
     {
       mask,
       gravity = GRAVITY,
-      airFriction = AIR_FRICTION,
+      airXFriction = AIR_FRICTION,
+      airYFriction = airXFriction,
       groundFriction = GROUND_FRICTION,
       airControl = AIR_CONTROL,
       onCollide,
@@ -63,7 +66,8 @@ export class Body implements PhysicsBody {
   ) {
     this.mask = mask;
     this.gravity = gravity;
-    this.airFriction = airFriction;
+    this.airXFriction = airXFriction;
+    this.airYFriction = airYFriction;
     this.groundFriction = groundFriction;
     this.airControl = airControl;
     this.onCollide = onCollide;
@@ -200,7 +204,8 @@ export class Body implements PhysicsBody {
 
         this.xVelocity *= Math.pow(this.groundFriction, dt);
       } else {
-        this.xVelocity *= Math.pow(this.airFriction, dt);
+        this.xVelocity *= Math.pow(this.airXFriction, dt);
+        this.yVelocity *= Math.pow(this.airYFriction, dt);
       }
     } else {
       // We're going up. Check if we hit a ceiling.
@@ -224,7 +229,8 @@ export class Body implements PhysicsBody {
         this.rY = this.y;
       }
 
-      this.xVelocity *= Math.pow(this.airFriction, dt);
+      this.xVelocity *= Math.pow(this.airXFriction, dt);
+      this.yVelocity *= Math.pow(this.airYFriction, dt);
     }
 
     this.y += this.yVelocity * dt;
