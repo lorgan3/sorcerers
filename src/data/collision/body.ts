@@ -11,7 +11,7 @@ const AIR_FRICTION = 0.98;
 const MIN_MOVEMENT = 0.01;
 
 const SPEED = 0.08;
-const JUMP_STRENGTH = 3;
+const JUMP_STRENGTH = 3.2;
 
 interface Config {
   mask: CollisionMask;
