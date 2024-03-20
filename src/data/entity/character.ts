@@ -285,6 +285,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         }
 
         if (
+          this._hp > 0 &&
           Level.instance.terrain.killbox.collidesWith(
             this.body.mask,
             this.position.x,
