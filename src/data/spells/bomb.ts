@@ -42,7 +42,7 @@ export class Bomb extends Container implements Item {
       mask: circle3x3,
       onCollide: this.onCollide,
       gravity: 0.1,
-      airFriction: 0.99,
+      airXFriction: 0.99,
       groundFriction: 0.8,
       roundness: 0.2,
       bounciness: -0.6,

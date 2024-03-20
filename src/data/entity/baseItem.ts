@@ -40,7 +40,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
     this.body = new Body(Level.instance.terrain.characterMask, {
       mask: circle9x9,
       gravity: 0.1,
-      airFriction: 0.99,
+      airXFriction: 0.99,
       roundness: 0.3,
     });
     this.body.move(x, y);
