@@ -81,6 +81,7 @@ export enum EntityType {
   Bomb,
   IceWallSpawner,
   IceWall,
+  Rock,
 }
 
 export enum Priority {

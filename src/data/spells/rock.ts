@@ -25,7 +25,7 @@ export class Rock extends Container implements Spawnable {
   private sound?: ControllableSound;
 
   public id = -1;
-  public readonly type = EntityType.Shield;
+  public readonly type = EntityType.Rock;
   public readonly layer = Layer.Background;
 
   constructor(

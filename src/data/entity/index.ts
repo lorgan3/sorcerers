@@ -9,6 +9,7 @@ import { IceWallSpawner } from "../spells/iceWallSpawner";
 import { MagicMissile } from "../spells/magicMissile";
 import { Nephtear } from "../spells/nephtear";
 import { Reelseiden } from "../spells/reelseiden";
+import { Rock } from "../spells/rock";
 import { Shield } from "../spells/shield";
 import { SmallSword } from "../spells/smallSword";
 import { Element } from "../spells/types";
@@ -46,6 +47,7 @@ export const ENTITIES: Record<
   [EntityType.Hairpin]: Hairpin,
   [EntityType.IceWallSpawner]: IceWallSpawner,
   [EntityType.IceWall]: IceWall,
+  [EntityType.Rock]: Rock,
 };
 
 interface SpawnRateData {
