@@ -113,7 +113,10 @@ export class Server extends Manager {
   tick(dt: number, dtMs: number) {
     super.tick(dt, dtMs);
 
-    if (this._turnState === TurnState.Ending) {
+    if (
+      this._turnState === TurnState.Ending &&
+      Level.instance.hasDeathQueue()
+    ) {
       Level.instance.performDeathQueue();
     }
 

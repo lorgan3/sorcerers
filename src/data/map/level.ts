@@ -270,20 +270,23 @@ export class Level {
     this.cameraTarget.shake();
   }
 
+  hasDeathQueue() {
+    return this.deadCharacterQueue.length > 0;
+  }
+
   performDeathQueue() {
-    if (this.deadCharacterQueue.length === 0) {
-      Server.instance.setTurnState(TurnState.Ending);
-      return;
-    }
-
     Server.instance.setTurnState(TurnState.Killing);
-
     const character = this.deadCharacterQueue[0];
+
     Server.instance.highlight(character, () => {
       Server.instance.kill(character);
       this.deadCharacterQueue.shift();
 
-      this.performDeathQueue();
+      if (this.hasDeathQueue()) {
+        this.performDeathQueue();
+      } else {
+        Server.instance.setTurnState(TurnState.Ending);
+      }
     });
   }
 

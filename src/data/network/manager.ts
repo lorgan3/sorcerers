@@ -106,6 +106,10 @@ export abstract class Manager {
         this.time - this.turnLength + TURN_GRACE_PERIOD,
         this.turnStartTime
       );
+
+      if (Level.instance.hasDeathQueue()) {
+        return;
+      }
     }
 
     if (turnState === TurnState.Ending) {
