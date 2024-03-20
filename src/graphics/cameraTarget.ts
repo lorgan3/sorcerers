@@ -16,7 +16,9 @@ export class CameraTarget {
   private static maxSpeed = 50;
   private static damping = 40;
   private static dampingAmount = 0.96;
-  private static acc = 0.2;
+  private static maxAccDist = 600;
+  private static minAccDist = 200;
+  private static accDistMultiplier = 0.001;
 
   static shakeAmount = 10;
   static shakeIntensity = 12;
@@ -37,7 +39,7 @@ export class CameraTarget {
   private followMouse = false;
   private intervalId = -1;
 
-  private speed = CameraTarget.acc;
+  private speed = 0;
   private scale = 1;
   private time = 0;
 
@@ -171,7 +173,13 @@ export class CameraTarget {
     ) {
       this.speed = Math.min(
         CameraTarget.maxSpeed,
-        this.speed + CameraTarget.acc * dt
+        this.speed +
+          Math.max(
+            CameraTarget.minAccDist,
+            Math.min(CameraTarget.maxAccDist, sum)
+          ) *
+            CameraTarget.accDistMultiplier *
+            dt
       );
     } else if (this.speed !== 0) {
       this.speed *= Math.pow(CameraTarget.dampingAmount, dt);
@@ -186,6 +194,7 @@ export class CameraTarget {
     if (this.highlightQueue.length > 0) {
       this.highlightQueue.splice(0, 1, { target, callback });
     } else {
+      this.time = 0;
       this.target = target;
       this.callback = callback;
     }
