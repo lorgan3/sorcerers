@@ -55,6 +55,14 @@ export class Terrain {
     return this.map.layers;
   }
 
+  get width() {
+    return this.map.width;
+  }
+
+  get height() {
+    return this.map.height;
+  }
+
   setLayerVisibility(layer: ComputedLayer, revealed: boolean) {
     this.layerSprites[this.map.layers.indexOf(layer)].alpha = revealed
       ? 0.2

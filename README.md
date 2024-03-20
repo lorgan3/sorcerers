@@ -38,6 +38,7 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Castle map decorations](https://alcoholism.itch.io/dark-castle-tileset): alcoholism
 - [Swords](https://opengameart.org/content/squire-job-set): SCaydi
 - [Bomb](https://surfacetoash.itch.io/kaboom-explosives-asset-pack): SurfaceToAsh
+- [Meteor](https://opengameart.org/content/rock-0): Unnamed
 
 ### Sounds
 

@@ -512,7 +512,7 @@ export class Server extends Manager {
     this._self!.rename(newName);
   }
 
-  focus(target: HurtableEntity, callback?: () => void) {
+  focus(target: Spawnable, callback?: () => void) {
     Level.instance.cameraTarget.setTarget(target, callback);
 
     this.broadcast({

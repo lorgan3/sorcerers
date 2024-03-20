@@ -27,6 +27,7 @@ import { WindBlast } from "./windBlast";
 import { Hairpin } from "./hairpin";
 import { IceWallSpawner } from "./iceWallSpawner";
 import { Rock } from "./rock";
+import { Meteor } from "./meteor";
 
 export interface Spell<TData = any> {
   name: string;
@@ -308,13 +309,24 @@ const ICE_WALL = spell(ArcaneCircle, {
 const ROCK = spell(PoweredArcaneCircle, {
   name: "Rock",
   elements: [Element.Life, Element.Elemental],
-  cost: 20,
+  cost: 30,
   data: {
     projectile: Rock,
     xOffset: 0,
     yOffset: 0,
     x: 0,
     y: 0,
+    turnState: TurnState.Attacked,
+  },
+});
+
+const METEOR = spell(Lock, {
+  name: "Meteor",
+  elements: [Element.Physical, Element.Elemental], // @TODO: be affected by physical element
+  cost: 40,
+  data: {
+    target: Target.Any,
+    projectile: Meteor,
     turnState: TurnState.Attacked,
   },
 });
@@ -338,4 +350,5 @@ export const SPELLS: Spell[] = [
   HAIRPIN,
   ICE_WALL,
   ROCK,
+  METEOR,
 ];

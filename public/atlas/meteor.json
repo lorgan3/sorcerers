@@ -1,0 +1,16 @@
+{
+  "frame": {
+    "w": 32,
+    "h": 32
+  },
+  "animation": "meteor",
+  "meta": {
+    "app": "https://github.com/lorgan3/sorcerers",
+    "version": "1.0",
+    "image": "meteor.png",
+    "size": {
+      "w": 128,
+      "h": 96
+    }
+  }
+}
