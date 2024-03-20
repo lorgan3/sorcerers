@@ -32,11 +32,6 @@ export class IceWallSpawner extends Container implements Spawnable {
       IceWallSpawner.wallCount +
       Math.round(Manager.instance.getElementValue(Element.Elemental) * 3 - 2.5);
 
-    console.log(
-      this.wallCount,
-      Manager.instance.getElementValue(Element.Elemental)
-    );
-
     this.direction = character.direction;
     this._x = x + this.direction * IceWallSpawner.startDistance;
     this._y = y;
