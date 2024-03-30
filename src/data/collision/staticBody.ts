@@ -12,6 +12,8 @@ export class StaticBody implements PhysicsBody {
   private rX = 0;
   private rY = 0;
 
+  public moved = false;
+
   public readonly mask: CollisionMask;
 
   constructor(surface: CollisionMask, { mask }: Config) {
@@ -37,8 +39,14 @@ export class StaticBody implements PhysicsBody {
   move(x: number, y: number) {
     this.x = x;
     this.y = y;
-    this.rX = Math.round(this.x);
-    this.rY = Math.round(this.y);
+    const _rX = Math.round(this.x);
+    const _rY = Math.round(this.y);
+
+    if (_rX !== this.rX || _rY !== this.rY) {
+      this.moved = true;
+      this.rX = _rX;
+      this.rY = _rY;
+    }
   }
 
   tick(dt: number) {

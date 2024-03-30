@@ -25,7 +25,9 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   public readonly type = EntityType.Shield;
 
   private _hp = 40;
-  private shieldArea: CollisionMask;
+  private shieldArea!: CollisionMask;
+  private maskX = 0;
+  private maskY = 0;
 
   constructor(x: number, y: number, private direction: number, hp?: number) {
     super();
@@ -67,11 +69,6 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     this.position.set(x * 6, y * 6);
     ControllableSound.fromEntity(this, Sound.Schwing);
 
-    this.shieldArea = Level.instance.terrain.collisionMask.difference(
-      this.body.mask,
-      ...this.body.position
-    );
-
     // const sprite2 = new Sprite(
     //   Texture.fromBuffer(
     //     rotatedRectangle6x24Canvas[index]
@@ -94,14 +91,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   }
 
   die() {
-    Level.instance.terrain.collisionMask.subtract(
-      this.shieldArea,
-      ...this.body.position
-    );
-    Level.instance.terrain.characterMask.subtract(
-      this.shieldArea,
-      ...this.body.position
-    );
+    this.subtract();
     Level.instance.remove(this);
     ControllableSound.fromEntity(this, Sound.Glass);
   }
@@ -131,16 +121,47 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     Level.instance.bloodEmitter.burst(this, damage, source);
   }
 
-  tick(dt: number) {}
+  tick() {
+    if (this.body.moved) {
+      this.body.moved = false;
+      const [x, y] = this.body.precisePosition;
+      this.position.set(x * 6, y * 6);
+
+      this.subtract();
+      this.add();
+    }
+  }
+
+  private subtract() {
+    Level.instance.terrain.collisionMask.subtract(
+      this.shieldArea,
+      this.maskX,
+      this.maskY
+    );
+    Level.instance.terrain.characterMask.subtract(
+      this.shieldArea,
+      this.maskX,
+      this.maskY
+    );
+  }
 
   private add() {
+    [this.maskX, this.maskY] = this.body.position;
+    this.shieldArea = Level.instance.terrain.collisionMask.difference(
+      this.body.mask,
+      this.maskX,
+      this.maskY
+    );
+
     Level.instance.terrain.collisionMask.add(
       this.body.mask,
-      ...this.body.position
+      this.maskX,
+      this.maskY
     );
     Level.instance.terrain.characterMask.add(
       this.body.mask,
-      ...this.body.position
+      this.maskX,
+      this.maskY
     );
   }
 

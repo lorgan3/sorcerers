@@ -11,6 +11,7 @@ import { probeX } from "../map/utils";
 import { CollisionMask } from "../collision/collisionMask";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
+import { StaticBody } from "../collision/staticBody";
 
 export class Rock extends Container implements Spawnable {
   private static growTime = 100;
@@ -109,27 +110,34 @@ export class Rock extends Container implements Spawnable {
     Level.instance.withNearbyEntities(
       this.position.x,
       this.position.y - 96,
-      30 * 6,
+      40 * 6,
       (entity) => {
         const [ex, ey] = entity.body.position;
         if (
           this.collisionMask.collidesWith(
             entity.body.mask,
             ex - (this._x - 24),
-            ey - (this._y - 48 + 1) - 48 + Math.floor(this.sprite.height)
+            ey - (this._y - 48 + 3) - 48 + Math.floor(this.sprite.height)
           )
         ) {
-          // If you're deep in the rock, push harder so you take damage
-          if (
-            this.collisionMask.collidesWith(
-              entity.body.mask,
-              ex - (this._x - 24),
-              ey - (this._y - 48 + 5) - 48 + Math.floor(this.sprite.height)
-            )
-          ) {
-            entity.body.addVelocity(0, -10 * dt);
+          console.log("collide", entity, entity.body instanceof StaticBody);
+          if (entity.body instanceof StaticBody) {
+            const amount = (dt / Rock.growTime) * this.targetHeight;
+            const [x, y] = entity.body.precisePosition;
+            entity.body.move(x, y - amount);
           } else {
-            entity.body.addVelocity(0, -0.3 * dt);
+            // If you're deep in the rock, push harder so you take damage
+            if (
+              this.collisionMask.collidesWith(
+                entity.body.mask,
+                ex - (this._x - 24),
+                ey - (this._y - 48 + 8) - 48 + Math.floor(this.sprite.height)
+              )
+            ) {
+              entity.body.addVelocity(0, -10 * dt);
+            } else {
+              entity.body.addVelocity(0, -0.5 * dt);
+            }
           }
         }
       }

@@ -114,6 +114,18 @@ export class IceWall extends Container implements HurtableEntity {
 
   tick(dt: number) {
     this.time += dt;
+
+    if (this.body.moved) {
+      this.body.moved = false;
+      const [x, y] = this.body.precisePosition;
+      this.position.set(x * 6, y * 6);
+
+      if (Math.random() > 0.98) {
+        Server.instance.kill(this);
+        return;
+      }
+    }
+
     if (this.time > 15 && Server.instance) {
       this.time = 0;
       Level.instance.withNearbyEntities(...this.getCenter(), 64, (entity) => {
