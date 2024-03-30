@@ -27,16 +27,18 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getAngle } from "../../util/math";
 import { CollisionMask } from "../collision/collisionMask";
+import { StaticBody } from "../collision/staticBody";
 
 export class Meteor extends Container implements Syncable {
   private static bounces = 24;
-  private static explodeInterval = 5;
+  private static explodeInterval = 2;
   private static moveTime = 45;
 
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
-  private bounces = Meteor.bounces;
+  private maxBounces = Meteor.bounces;
+  private bounces = this.maxBounces;
   private textures: Texture<ImageBitmapResource>[];
   private sound?: ControllableSound;
   private bounceTime = 0;
@@ -52,8 +54,6 @@ export class Meteor extends Container implements Syncable {
     private direction: number,
     private character: Character
   ) {
-    console.log("spawn", x, y, time, direction, character);
-
     super();
     character.setSpellSource(this);
 
@@ -115,21 +115,37 @@ export class Meteor extends Container implements Syncable {
     ) {
       this.bounceTime = this.time;
 
-      Level.instance.damage(
-        new ExplosiveDamage(
-          Math.round(this.position.x / 6) + 15,
-          Math.round(this.position.y / 6) + 15,
-          16,
-          2,
-          3 + Manager.instance.getElementValue(Element.Elemental)
-        )
+      const damage = new ExplosiveDamage(
+        Math.round(this.position.x / 6) + 15,
+        Math.round(this.position.y / 6) + 15,
+        16,
+        4,
+        2 + Manager.instance.getElementValue(Element.Elemental) / 2
       );
+      Level.instance.damage(damage);
+
+      const staticEntity = damage
+        .getTargets()
+        .getEntities()
+        .find(
+          (entity) =>
+            entity.body instanceof StaticBody || entity instanceof Character
+        );
+
+      if (staticEntity) {
+        const angle = getAngle(
+          ...staticEntity.getCenter(),
+          ...this.getCenter()
+        );
+        this.body.setAngularVelocity(3, angle);
+        this.body.gravity = 0.1;
+        this.maxBounces /= 2;
+      }
     }
 
-    if (this.bounces === 0) {
+    Server.instance.dynamicUpdate(this);
+    if (this.bounces === 0 || this.maxBounces <= 2) {
       Server.instance.kill(this);
-    } else {
-      Server.instance.dynamicUpdate(this);
     }
   };
 
@@ -157,8 +173,7 @@ export class Meteor extends Container implements Syncable {
       ctx.getImageData(0, 0, 32, 32)
     );
 
-    const x = Math.round(this.position.x / 6);
-    const y = Math.round(this.position.y / 6);
+    const [x, y] = this.body.position;
     Level.instance.terrain.add(
       x,
       y,
@@ -182,7 +197,7 @@ export class Meteor extends Container implements Syncable {
       this.bounceTime &&
       this.time - this.bounceTime > Meteor.explodeInterval + dt
     ) {
-      this.bounces = Meteor.bounces;
+      this.bounces = this.maxBounces;
       this.bounceTime = 0;
     }
 
