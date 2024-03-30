@@ -120,7 +120,6 @@ export class Rock extends Container implements Spawnable {
             ey - (this._y - 48 + 3) - 48 + Math.floor(this.sprite.height)
           )
         ) {
-          console.log("collide", entity, entity.body instanceof StaticBody);
           if (entity.body instanceof StaticBody) {
             const amount = (dt / Rock.growTime) * this.targetHeight;
             const [x, y] = entity.body.precisePosition;

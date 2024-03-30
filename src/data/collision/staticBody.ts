@@ -25,7 +25,7 @@ export class StaticBody implements PhysicsBody {
   }
 
   deserialize(data: any[]) {
-    this.move(data[1], data[2]);
+    this.move(data[0], data[1]);
   }
 
   addVelocity(x: number, y: number) {

@@ -6,14 +6,19 @@ import { CollisionMask } from "../collision/collisionMask";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
 import { getIndexFromAngle } from "../collision/util";
 import { Level } from "../map/level";
-import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
+import {
+  EntityType,
+  HurtableEntity,
+  Priority,
+  Syncable,
+} from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
 import { Server } from "../network/server";
 import { DamageSource } from "../damage/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 
-export class Shield extends Container implements HurtableEntity, Spawnable {
+export class Shield extends Container implements HurtableEntity, Syncable {
   private static spawnSpeed = 0.15;
   private static flickerSpeed = 0.25;
 
@@ -23,9 +28,10 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   public readonly body: StaticBody;
   public id = -1;
   public readonly type = EntityType.Shield;
+  readonly priority = Priority.Dynamic;
 
   private _hp = 40;
-  private shieldArea!: CollisionMask;
+  private shieldArea?: CollisionMask;
   private maskX = 0;
   private maskY = 0;
 
@@ -66,7 +72,7 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
       mask: rotatedRectangle6x24[index],
     });
     this.body.move(x, y);
-    this.position.set(x * 6, y * 6);
+    this.move();
     ControllableSound.fromEntity(this, Sound.Schwing);
 
     // const sprite2 = new Sprite(
@@ -83,7 +89,6 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
     // sprite2.scale.set(6);
 
     this.addChild(this.sprite, this.shineEffect);
-    this.add();
   }
 
   getCenter(): [number, number] {
@@ -122,17 +127,26 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
   }
 
   tick() {
-    if (this.body.moved) {
-      this.body.moved = false;
-      const [x, y] = this.body.precisePosition;
-      this.position.set(x * 6, y * 6);
-
-      this.subtract();
-      this.add();
+    if (this.body.moved && Server.instance) {
+      this.move();
+      Server.instance.dynamicUpdate(this);
     }
   }
 
+  private move() {
+    this.body.moved = false;
+    const [x, y] = this.body.precisePosition;
+    this.position.set(x * 6, y * 6);
+
+    this.subtract();
+    this.add();
+  }
+
   private subtract() {
+    if (!this.shieldArea) {
+      return;
+    }
+
     Level.instance.terrain.collisionMask.subtract(
       this.shieldArea,
       this.maskX,
@@ -163,6 +177,15 @@ export class Shield extends Container implements HurtableEntity, Spawnable {
       this.maskX,
       this.maskY
     );
+  }
+
+  serialize() {
+    return this.body.serialize();
+  }
+
+  deserialize(data: ReturnType<this["serialize"]>) {
+    this.body.deserialize(data);
+    this.move();
   }
 
   serializeCreate() {
