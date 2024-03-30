@@ -173,7 +173,7 @@ export class Meteor extends Container implements Syncable {
   }
 
   getCenter(): [number, number] {
-    return [this.position.x, this.position.y];
+    return [this.position.x + 90, this.position.y + 90];
   }
 
   tick(dt: number) {
@@ -241,7 +241,7 @@ export class Meteor extends Container implements Syncable {
     const maxX = Math.tan(maxAngle) * y;
     const _x = Math.max(0, Math.min(Level.instance.terrain.width, x + maxX));
 
-    const angle = getAngle(_x, -32, x - 32, y - 32);
+    const angle = getAngle(_x, -32, x - 16, y - 16);
     const entity = new Meteor(_x, -32, 0, angle, character);
 
     Server.instance.create(entity);
