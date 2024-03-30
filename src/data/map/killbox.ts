@@ -4,7 +4,7 @@ import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { CollisionMask } from "../collision/collisionMask";
 
 const ANIMATION_SPEED = 0.1;
-const RISE_SPEED = 1;
+const RISE_SPEED = 0.1;
 const SPRITE_OFFSET = 5;
 
 export class Killbox extends Container {
@@ -16,10 +16,10 @@ export class Killbox extends Container {
   private _level: number;
   private newLevel: number;
 
-  constructor(width: number, height: number) {
+  constructor(width: number, private initialHeight: number) {
     super();
-    this.position.y = height - SPRITE_OFFSET;
-    this._level = height;
+    this.position.y = initialHeight - SPRITE_OFFSET;
+    this._level = initialHeight;
     this.newLevel = this._level;
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
@@ -44,7 +44,7 @@ export class Killbox extends Container {
     if (this._level > this.newLevel) {
       this._level = Math.max(this.newLevel, this._level - RISE_SPEED * dt);
       this.position.y = this._level - SPRITE_OFFSET;
-      this.bottom.height = this._level - SPRITE_OFFSET;
+      this.bottom.height = this.initialHeight - this._level - SPRITE_OFFSET;
     }
 
     const index = (this.index + dt * ANIMATION_SPEED) % this.animation.length;

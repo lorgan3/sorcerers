@@ -33,6 +33,7 @@ export enum Sound {
   Beep = "beepSnd",
   Ice = "iceSnd",
   Rumble = "rumbleSnd",
+  Drain = "drainSnd",
 }
 
 interface SoundData {
@@ -111,6 +112,7 @@ addSoundData(Sound.Ice, "452252__kyles__ice-cracks-medium7-brittle_1");
 addSoundData(Sound.Ice, "452252__kyles__ice-cracks-medium7-brittle_2");
 addSoundData(Sound.Ice, "452252__kyles__ice-cracks-medium7-brittle_3");
 addSoundData(Sound.Rumble, "82722__prozaciswack__digging");
+addSoundData(Sound.Drain, "17128__incarnadine__water_go_down_the_hole");
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(

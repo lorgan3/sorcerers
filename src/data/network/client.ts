@@ -17,6 +17,9 @@ import {
   isItem,
 } from "../entity/types";
 import { Element } from "../spells/types";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
+import { filters } from "@pixi/sound";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -294,6 +297,7 @@ export class Client extends Manager {
       case MessageType.Sink:
         if (Level.instance.terrain.killbox.level < message.level) {
           Level.instance.shake();
+          new ControllableSound(Sound.Drain, new filters.StereoFilter(0), {});
         }
 
         Level.instance.terrain.killbox.level = message.level;

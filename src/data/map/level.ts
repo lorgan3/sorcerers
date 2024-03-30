@@ -25,10 +25,13 @@ import { ParticleManager } from "../../graphics/particles";
 import { Character } from "../entity/character";
 import { BloodEmitter } from "../../graphics/particles/bloodEmitter";
 import { CameraTarget } from "../../graphics/cameraTarget";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
+import { filters } from "@pixi/sound";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
-const SINK_AMOUNT = 20;
+const SINK_PERCENT = 0.07;
 
 export class Level {
   private app: Application<HTMLCanvasElement>;
@@ -261,7 +264,8 @@ export class Level {
 
   sink() {
     this.shake();
-    this.terrain.killbox.rise(SINK_AMOUNT);
+    new ControllableSound(Sound.Drain, new filters.StereoFilter(0), {});
+    this.terrain.killbox.rise(this.terrain.height * SINK_PERCENT);
 
     return this.terrain.killbox.level;
   }
