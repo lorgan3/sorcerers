@@ -52,7 +52,7 @@ export class Player {
       this.active--;
     }
 
-    if (this.active >= this.characters.length) {
+    if (this.active >= this.characters.length || this.active < 0) {
       this.active = -1;
     }
 
