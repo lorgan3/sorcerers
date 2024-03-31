@@ -30,15 +30,15 @@ import { CollisionMask } from "../collision/collisionMask";
 import { StaticBody } from "../collision/staticBody";
 
 export class Meteor extends Container implements Syncable {
-  private static bounces = 24;
+  private static bounces = 14;
   private static explodeInterval = 2;
   private static moveTime = 45;
 
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
-  private maxBounces = Meteor.bounces;
-  private bounces = this.maxBounces;
+  private maxBounces: number;
+  private bounces: number;
   private textures: Texture<ImageBitmapResource>[];
   private sound?: ControllableSound;
   private bounceTime = 0;
@@ -56,6 +56,11 @@ export class Meteor extends Container implements Syncable {
   ) {
     super();
     character.setSpellSource(this);
+
+    this.maxBounces =
+      Meteor.bounces +
+      Math.round(Manager.instance.getElementValue(Element.Physical) * 4);
+    this.bounces = this.maxBounces;
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: circle30x30,
@@ -108,16 +113,18 @@ export class Meteor extends Container implements Syncable {
       this.bounces--;
     }
 
+    const done = this.bounces === 0 || this.maxBounces <= 2;
     if (
-      this.bounces === 0 ||
+      done ||
       !this.bounceTime ||
       this.time - this.bounceTime >= Meteor.explodeInterval
     ) {
       this.bounceTime = this.time;
 
+      const [x, y] = this.body.position;
       const damage = new ExplosiveDamage(
-        Math.round(this.position.x / 6) + 15,
-        Math.round(this.position.y / 6) + 15,
+        x + 15,
+        y + 15,
         16,
         4,
         2 + Manager.instance.getElementValue(Element.Elemental) / 2
@@ -137,14 +144,15 @@ export class Meteor extends Container implements Syncable {
           ...staticEntity.getCenter(),
           ...this.getCenter()
         );
-        this.body.setAngularVelocity(3, angle);
-        this.body.gravity = 0.1;
-        this.maxBounces /= 2;
+        this.body.setAngularVelocity(4, angle);
+        this.body.gravity = 0.15;
+        this.body.friction = 0.96;
+        this.maxBounces = Math.floor(this.maxBounces / 2);
       }
     }
 
     Server.instance.dynamicUpdate(this);
-    if (this.bounces === 0 || this.maxBounces <= 2) {
+    if (done) {
       Server.instance.kill(this);
     }
   };

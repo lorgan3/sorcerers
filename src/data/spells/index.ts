@@ -322,7 +322,7 @@ const ROCK = spell(PoweredArcaneCircle, {
 
 const METEOR = spell(Lock, {
   name: "Meteor",
-  elements: [Element.Physical, Element.Elemental], // @TODO: be affected by physical element
+  elements: [Element.Physical, Element.Elemental],
   cost: 40,
   data: {
     target: Target.Any,
