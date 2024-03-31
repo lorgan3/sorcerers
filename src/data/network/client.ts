@@ -295,7 +295,7 @@ export class Client extends Manager {
         break;
 
       case MessageType.Sink:
-        if (Level.instance.terrain.killbox.level < message.level) {
+        if (Level.instance.terrain.killbox.level > message.level) {
           Level.instance.shake();
           new ControllableSound(Sound.Drain, new filters.StereoFilter(0), {});
         }
