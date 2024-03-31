@@ -103,6 +103,8 @@ export class Server extends Manager {
     }
 
     this.syncPlayers();
+    this.activePlayerIndex =
+      Math.floor(Math.random() * this.players.length) - 1;
     this.cycleActivePlayer();
 
     this.time = 0;
@@ -124,7 +126,8 @@ export class Server extends Manager {
       this.time - this.turnStartTime > this.turnLength &&
       this._turnState !== TurnState.Attacked &&
       this._turnState !== TurnState.Killing &&
-      this._turnState !== TurnState.Spawning
+      this._turnState !== TurnState.Spawning &&
+      this._turnState !== TurnState.Finished
     ) {
       this.preCycleActivePlayer();
 
@@ -272,9 +275,15 @@ export class Server extends Manager {
   }
 
   endGame() {
-    if (this.activePlayer?.characters.length) {
+    this._turnState = TurnState.Finished;
+
+    const livingPlayer = this.players.find(
+      (player) => player.characters.length > 0
+    );
+
+    if (livingPlayer) {
       this.addPopup({
-        title: `${this.activePlayer!.name} wins!`,
+        title: `${livingPlayer.name} wins!`,
         duration: 60000,
       });
     } else {
@@ -372,8 +381,8 @@ export class Server extends Manager {
   }
 
   private getNextPlayerIndex() {
-    for (let i = 0; i < this.players.length; i++) {
-      const index = (this.activePlayerIndex + i + 1) % this.players.length;
+    for (let i = 1; i <= this.players.length; i++) {
+      const index = (this.activePlayerIndex + i) % this.players.length;
 
       if (index === this.activePlayerIndex && !this.singlePlayer) {
         continue;
@@ -425,26 +434,26 @@ export class Server extends Manager {
     }
 
     const player = this.players[activePlayerIndex];
-    this.setActiveCharacter(
-      activePlayerIndex,
-      (player.active + 1) % player.characters.length
-    );
-
-    this.focus(player.activeCharacter, () => {
-      this.turnStartTime = this.time;
-      this._turnState = TurnState.Ongoing;
-      this.randomizeElements();
-
-      // Character died in the mean time.
-      if (!this.activePlayer) {
+    const activeCharacterIndex = (player.active + 1) % player.characters.length;
+    const character = player.characters[activeCharacterIndex];
+    this.focus(character, () => {
+      if (character.hp <= 0) {
         this.cycleActivePlayer();
         return;
       }
 
+      this.setActiveCharacter(
+        activePlayerIndex,
+        player.characters.indexOf(character)
+      );
+      this.turnStartTime = this.time;
+      this._turnState = TurnState.Ongoing;
+      this.randomizeElements();
+
       this.broadcast({
         type: MessageType.ActiveCharacter,
         activePlayer: activePlayerIndex,
-        activeCharacter: this.activePlayer.active,
+        activeCharacter: this.activePlayer!.active,
         elements: Object.values(this.elements),
         turnStartTime: this.turnStartTime,
         newMana: player.mana,

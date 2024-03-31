@@ -162,4 +162,5 @@ export enum TurnState {
   Attacked,
   Ending,
   Killing,
+  Finished,
 }
