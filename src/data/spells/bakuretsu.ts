@@ -8,11 +8,12 @@ import { CollisionMask } from "../collision/collisionMask";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
-import { TickingEntity } from "../entity/types";
+import { EntityType, Spawnable } from "../entity/types";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { probeX } from "../map/utils";
+import { Server } from "../network/server";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
 const GROW_TIME = 30;
@@ -21,7 +22,7 @@ const EXPLOSION_START_TIME = IMPACT_START_TIME + 15;
 const SHRINK_START_TIME = EXPLOSION_START_TIME + 25;
 const DONE_TIME = SHRINK_START_TIME + 25;
 
-export class Bakuretsu extends Container implements TickingEntity {
+export class Bakuretsu extends Container implements Spawnable {
   private arcaneCircles: AnimatedSprite[];
   private impact: AnimatedSprite;
   private explosion: AnimatedSprite;
@@ -31,6 +32,9 @@ export class Bakuretsu extends Container implements TickingEntity {
   private rX = 0;
   private rY = 0;
   private choirSnd?: ControllableSound;
+
+  public id = -1;
+  public readonly type = EntityType.Bakuretsu;
 
   constructor(x: number, surface: CollisionMask, private character: Character) {
     super();
@@ -150,14 +154,34 @@ export class Bakuretsu extends Container implements TickingEntity {
     }
   }
 
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
+  }
+
+  serializeCreate() {
+    return [this.rX, this.character.id] as const;
+  }
+
+  static create(data: ReturnType<Bakuretsu["serializeCreate"]>) {
+    return new Bakuretsu(
+      data[0],
+      Level.instance.terrain.collisionMask,
+      Level.instance.entityMap.get(data[1]) as Character
+    );
+  }
+
   static cast(x: number, y: number, character: Character) {
+    if (!Server.instance) {
+      return;
+    }
+
     const entity = new Bakuretsu(
       x,
       Level.instance.terrain.collisionMask,
       character
     );
 
-    Level.instance.add(entity);
+    Server.instance.create(entity);
     return entity;
   }
 }

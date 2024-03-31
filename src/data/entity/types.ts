@@ -83,6 +83,9 @@ export enum EntityType {
   IceWall,
   Rock,
   Meteor,
+  Excalibur,
+  Bakuretsu,
+  WindBlast,
 }
 
 export enum Priority {

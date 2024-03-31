@@ -1,3 +1,4 @@
+import { Bakuretsu } from "../spells/bakuretsu";
 import { Bomb } from "../spells/bomb";
 import { Catastravia } from "../spells/catastravia";
 import { CatastraviaMissile } from "../spells/catastraviaMissile";
@@ -13,7 +14,9 @@ import { Reelseiden } from "../spells/reelseiden";
 import { Rock } from "../spells/rock";
 import { Shield } from "../spells/shield";
 import { SmallSword } from "../spells/smallSword";
+import { Sword } from "../spells/sword";
 import { Element } from "../spells/types";
+import { WindBlast } from "../spells/windBlast";
 import { Zoltraak } from "../spells/zoltraak";
 import { Character } from "./character";
 import { MagicScroll } from "./magicScroll";
@@ -50,6 +53,9 @@ export const ENTITIES: Record<
   [EntityType.IceWall]: IceWall,
   [EntityType.Rock]: Rock,
   [EntityType.Meteor]: Meteor,
+  [EntityType.Excalibur]: Sword,
+  [EntityType.Bakuretsu]: Bakuretsu,
+  [EntityType.WindBlast]: WindBlast,
 };
 
 interface SpawnRateData {

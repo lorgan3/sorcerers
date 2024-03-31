@@ -9,14 +9,15 @@ import { Character } from "../entity/character";
 import { StaticBody } from "../collision/staticBody";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
-import { TickingEntity } from "../entity/types";
+import { EntityType, Priority, Syncable } from "../entity/types";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Server } from "../network/server";
 
 const SHAKE_INTENSITY = 8;
 
-export class Sword extends Container implements TickingEntity {
+export class Sword extends Container implements Syncable {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
   private bounces = 120 * Manager.instance.getElementValue(Element.Physical);
@@ -26,6 +27,10 @@ export class Sword extends Container implements TickingEntity {
   private shakeXOffset = 0;
   private shakeYOffset = 0;
   private fallingSound?: ControllableSound;
+
+  public id = -1;
+  public readonly type = EntityType.Excalibur;
+  public readonly priority = Priority.Low;
 
   constructor(x: number, y: number) {
     super();
@@ -112,10 +117,34 @@ export class Sword extends Container implements TickingEntity {
     Manager.instance.setTurnState(TurnState.Ending);
   }
 
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
+  }
+
+  serialize() {
+    return this.body.serialize();
+  }
+
+  deserialize(data: ReturnType<this["serialize"]>) {
+    this.body.deserialize(data);
+  }
+
+  serializeCreate() {
+    return [...this.body.precisePosition] as const;
+  }
+
+  static create(data: ReturnType<Sword["serializeCreate"]>) {
+    return new Sword(...data);
+  }
+
   static cast(x: number, y: number, character: Character) {
+    if (!Server.instance) {
+      return;
+    }
+
     const entity = new Sword(x, y);
 
-    Level.instance.add(entity);
+    Server.instance.create(entity);
     return entity;
   }
 }

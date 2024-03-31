@@ -2,7 +2,7 @@ import { AnimatedSprite, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Character } from "../entity/character";
-import { HurtableEntity, TickingEntity } from "../entity/types";
+import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { TurnState } from "../network/types";
 import { Manager } from "../network/manager";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
@@ -15,7 +15,7 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { angleDiff } from "../../util/math";
 
-export class WindBlast extends Container implements TickingEntity {
+export class WindBlast extends Container implements Spawnable {
   private static triggerFrame = 4;
 
   private sprite: AnimatedSprite;
@@ -23,6 +23,9 @@ export class WindBlast extends Container implements TickingEntity {
   private rx = 0;
   private ry = 0;
   private triggered = false;
+
+  public id = -1;
+  public readonly type = EntityType.WindBlast;
 
   constructor(
     x: number,
@@ -126,6 +129,30 @@ export class WindBlast extends Container implements TickingEntity {
     Manager.instance.setTurnState(TurnState.Ending);
   }
 
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
+  }
+
+  serializeCreate() {
+    return [
+      this.rx,
+      this.ry,
+      this.power,
+      this.direction,
+      this.character.id,
+    ] as const;
+  }
+
+  static create(data: ReturnType<WindBlast["serializeCreate"]>) {
+    return new WindBlast(
+      data[0],
+      data[1],
+      data[2],
+      data[3],
+      Level.instance.entityMap.get(data[4]) as Character
+    );
+  }
+
   static cast(
     x: number,
     y: number,
@@ -133,9 +160,13 @@ export class WindBlast extends Container implements TickingEntity {
     power: number,
     direction: number
   ) {
+    if (!Server.instance) {
+      return;
+    }
+
     const entity = new WindBlast(x, y, power, direction, character);
 
-    Level.instance.add(entity);
+    Server.instance.create(entity);
     return entity;
   }
 }

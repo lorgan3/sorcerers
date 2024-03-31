@@ -77,7 +77,7 @@ const FIREBALL = spell(PoweredArcaneCircle, {
 });
 
 const ARTHUR_SWORD = spell(ArrowDown, {
-  name: "Arthur's sword",
+  name: "Excalibur",
   description: "Giant sword from the sky",
   elements: [Element.Physical, Element.Arcane],
   cost: 30,
