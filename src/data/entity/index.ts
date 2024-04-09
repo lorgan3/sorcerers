@@ -2,6 +2,7 @@ import { Bakuretsu } from "../spells/bakuretsu";
 import { Bomb } from "../spells/bomb";
 import { Catastravia } from "../spells/catastravia";
 import { CatastraviaMissile } from "../spells/catastraviaMissile";
+import { FireWheel } from "../spells/fireWheel";
 import { Fireball } from "../spells/fireball";
 import { GateOfBabylon } from "../spells/gateOfBabylon";
 import { Hairpin } from "../spells/hairpin";
@@ -56,6 +57,7 @@ export const ENTITIES: Record<
   [EntityType.Excalibur]: Sword,
   [EntityType.Bakuretsu]: Bakuretsu,
   [EntityType.WindBlast]: WindBlast,
+  [EntityType.FireWheel]: FireWheel,
 };
 
 interface SpawnRateData {

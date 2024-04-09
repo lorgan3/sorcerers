@@ -28,6 +28,7 @@ import { Hairpin } from "./hairpin";
 import { IceWallSpawner } from "./iceWallSpawner";
 import { Rock } from "./rock";
 import { Meteor } from "./meteor";
+import { FireWheel } from "./fireWheel";
 
 export interface Spell<TData = any> {
   name: string;
@@ -331,6 +332,21 @@ const METEOR = spell(Lock, {
   },
 });
 
+const FIRE_WHEEL = spell(PoweredArcaneCircle, {
+  name: "Flame wheel",
+  description: "",
+  elements: [Element.Elemental],
+  cost: 20,
+  data: {
+    projectile: FireWheel,
+    xOffset: 14,
+    yOffset: 17.5,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -351,4 +367,5 @@ export const SPELLS: Spell[] = [
   ICE_WALL,
   ROCK,
   METEOR,
+  FIRE_WHEEL,
 ];

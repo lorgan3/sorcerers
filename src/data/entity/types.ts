@@ -86,6 +86,7 @@ export enum EntityType {
   Excalibur,
   Bakuretsu,
   WindBlast,
+  FireWheel,
 }
 
 export enum Priority {

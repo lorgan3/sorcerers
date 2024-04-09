@@ -78,7 +78,7 @@ class ControllableSound {
   }
 
   constructor(
-    private alias: Sound,
+    public readonly alias: Sound,
     private filter: filters.StereoFilter,
     options: PlayOptions
   ) {
@@ -116,7 +116,7 @@ class ControllableSound {
     );
   }
 
-  update(entity: HurtableEntity | [number, number]) {
+  update(entity: Spawnable | [number, number]) {
     if (this.ref) {
       const { volume, pan } = ControllableSound.getSoundOptions(
         ...("getCenter" in entity ? entity.getCenter() : entity)
