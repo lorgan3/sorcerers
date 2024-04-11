@@ -39,6 +39,7 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Swords](https://opengameart.org/content/squire-job-set): SCaydi
 - [Bomb](https://surfacetoash.itch.io/kaboom-explosives-asset-pack): SurfaceToAsh
 - [Meteor](https://opengameart.org/content/rock-0): Unnamed
+- [Lightning](https://sanctumpixel.itch.io/lightning-lines-pixel-art-effect): sanctumpixel
 
 ### Sounds
 
@@ -73,3 +74,5 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Rumble](https://freesound.org/people/prozaciswack/sounds/82722/): prozaciswack
 - [Drain](https://freesound.org/people/Incarnadine/sounds/17128/): Incarnadine
 - [Burn](https://freesound.org/people/magnuswaker/sounds/581078/): magnuswaker
+- [Whip](https://freesound.org/people/SciFiSounds/sounds/529925/): SciFiSounds
+- [Electricity](https://freesound.org/people/SuperSouper/sounds/680996/): SuperSouper

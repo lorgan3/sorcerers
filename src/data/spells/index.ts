@@ -29,6 +29,7 @@ import { IceWallSpawner } from "./iceWallSpawner";
 import { Rock } from "./rock";
 import { Meteor } from "./meteor";
 import { FireWheel } from "./fireWheel";
+import { ChainLightning } from "./chainLightning";
 
 export interface Spell<TData = any> {
   name: string;
@@ -347,6 +348,21 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   },
 });
 
+const LIGHTNING = spell(ArcaneCircle, {
+  name: "Chain lightning",
+  description: "Unlimited power",
+  elements: [Element.Arcane],
+  cost: 10,
+  data: {
+    projectile: ChainLightning,
+    xOffset: 7,
+    yOffset: 10.5,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -368,4 +384,5 @@ export const SPELLS: Spell[] = [
   ROCK,
   METEOR,
   FIRE_WHEEL,
+  LIGHTNING,
 ];

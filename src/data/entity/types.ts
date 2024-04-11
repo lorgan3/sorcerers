@@ -45,9 +45,7 @@ export interface Item extends Spawnable, HurtableEntity {
   die(): void;
 }
 
-export function isHurtableEntity(
-  entity: TickingEntity
-): entity is HurtableEntity {
+export function isHurtableEntity(entity: {}): entity is HurtableEntity {
   return "getCenter" in entity;
 }
 
@@ -87,6 +85,7 @@ export enum EntityType {
   Bakuretsu,
   WindBlast,
   FireWheel,
+  ChainLightning,
 }
 
 export enum Priority {

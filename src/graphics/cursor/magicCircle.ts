@@ -56,10 +56,13 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     this.character.player.mana -= getSpellCost(this.spell);
 
     const [px, py] = this.character.body.precisePosition;
+    const rotation = this.indicator.rotation - Math.PI / 2;
+
     projectile.cast(
       px + x + Math.cos(this.indicator.rotation - Math.PI / 2) * xOffset,
       py + y + Math.sin(this.indicator.rotation - Math.PI / 2) * yOffset,
-      this.character
+      this.character,
+      rotation
     );
 
     Manager.instance.setTurnState(turnState);
