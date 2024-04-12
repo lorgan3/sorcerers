@@ -34,9 +34,11 @@ import { Explosion } from "../../graphics/explosion";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Wings } from "./wings";
+import { SmokePuff } from "../../graphics/smokePuff";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
+const SMOKE_TRIGGER = 2;
 
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
@@ -239,7 +241,18 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.addChild(this.sprite, this.namePlate);
   }
 
-  private onCollide = (x: number, y: number) => {
+  private onCollide = () => {
+    const [x, y] = this.body.position;
+    if (
+      this.body.yVelocity > SMOKE_TRIGGER &&
+      (Level.instance.terrain.collisionMask.collidesWithPoint(x, y + 16) ||
+        Level.instance.terrain.collisionMask.collidesWithPoint(x + 6, y + 16))
+    ) {
+      Level.instance.add(
+        new SmokePuff(this.position.x + 18, this.position.y + 72)
+      );
+    }
+
     if (
       Math.abs(this.body.xVelocity) > BOUNCE_TRIGGER ||
       Math.abs(this.body.yVelocity) > BOUNCE_TRIGGER
