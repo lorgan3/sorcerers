@@ -7,7 +7,10 @@ const OUT_DIRECTORY = "./public/sound/";
 const contents = fs.readdirSync(DIRECTORY);
 const files = contents.filter(
   (file) =>
-    file.endsWith(".mp3") || file.endsWith(".wav") || file.endsWith(".flac")
+    file.endsWith(".mp3") ||
+    file.endsWith(".wav") ||
+    file.endsWith(".flac") ||
+    file.endsWith(".aiff")
 );
 
 for (let file of files) {
