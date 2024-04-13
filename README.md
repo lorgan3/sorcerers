@@ -76,3 +76,5 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Burn](https://freesound.org/people/magnuswaker/sounds/581078/): magnuswaker
 - [Whip](https://freesound.org/people/SciFiSounds/sounds/529925/): SciFiSounds
 - [Electricity](https://freesound.org/people/SuperSouper/sounds/680996/): SuperSouper
+- [Water](https://freesound.org/people/Rweale/sounds/62105/): Rweale
+- [Slime](https://freesound.org/people/Archos/sounds/433832/): Archos

@@ -86,6 +86,7 @@ export enum EntityType {
   WindBlast,
   FireWheel,
   ChainLightning,
+  Acid,
 }
 
 export enum Priority {

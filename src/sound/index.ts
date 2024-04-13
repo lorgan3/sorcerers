@@ -37,6 +37,8 @@ export enum Sound {
   Burn = "burnSnd",
   Whip = "whipSnd",
   Electricity = "electricitySnd",
+  Slime = "slimeSnd",
+  Water = "waterSnd",
 }
 
 interface SoundData {
@@ -119,6 +121,10 @@ addSoundData(Sound.Drain, "17128__incarnadine__water_go_down_the_hole");
 addSoundData(Sound.Burn, "581078__magnuswaker__flame-loop");
 addSoundData(Sound.Whip, "529925__scifisounds__whip-crack");
 addSoundData(Sound.Electricity, "680996__supersouper__electric-shock-1");
+addSoundData(Sound.Water, "62105__rweale__weale_bubble1");
+addSoundData(Sound.Slime, "433832__archos__slime-21_1", 0.6);
+addSoundData(Sound.Slime, "433832__archos__slime-21_2", 0.6);
+addSoundData(Sound.Slime, "433839__archos__slime-28", 0.6);
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(

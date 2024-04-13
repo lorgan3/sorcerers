@@ -11,7 +11,7 @@ interface Config {
   gravity?: number;
   friction?: number;
   bounciness?: number;
-  onCollide?: (x: number, y: number) => void;
+  onCollide?: (x: number, y: number, vx: number, vy: number) => void;
 }
 
 export class SimpleBody implements PhysicsBody {
@@ -25,7 +25,7 @@ export class SimpleBody implements PhysicsBody {
   public gravity: number;
   public friction: number;
   public bounciness: number;
-  private onCollide?: (x: number, y: number) => void;
+  private onCollide?: (x: number, y: number, vx: number, vy: number) => void;
 
   public readonly mask: CollisionMask;
   public active = 1;
@@ -94,6 +94,8 @@ export class SimpleBody implements PhysicsBody {
 
     this.xVelocity *= Math.pow(this.friction, dt);
     this.yVelocity *= Math.pow(this.friction, dt);
+    const vx = this.xVelocity;
+    const vy = this.yVelocity;
 
     let xCollision: number | undefined;
     let yCollision: number | undefined;
@@ -136,11 +138,12 @@ export class SimpleBody implements PhysicsBody {
       (xCollision !== undefined || yCollision !== undefined) &&
       this.onCollide
     ) {
-      this.onCollide(xCollision || this.rx, yCollision || this.ry);
+      this.onCollide(xCollision || this.rx, yCollision || this.ry, vx, vy);
     }
 
     // If we're on the ground and barely moving, go to sleep.
     if (
+      (xCollision || yCollision) &&
       Math.abs(this.xVelocity) < MIN_MOVEMENT &&
       Math.abs(this.yVelocity) < MIN_MOVEMENT
     ) {

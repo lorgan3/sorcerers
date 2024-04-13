@@ -30,6 +30,7 @@ import { Rock } from "./rock";
 import { Meteor } from "./meteor";
 import { FireWheel } from "./fireWheel";
 import { ChainLightning } from "./chainLightning";
+import { Acid } from "./acid";
 
 export interface Spell<TData = any> {
   name: string;
@@ -363,6 +364,21 @@ const LIGHTNING = spell(ArcaneCircle, {
   },
 });
 
+const ACID = spell(PoweredArcaneCircle, {
+  name: "Acid",
+  description: "",
+  elements: [Element.Life],
+  cost: 25,
+  data: {
+    projectile: Acid,
+    xOffset: 15,
+    yOffset: 18.5,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -385,4 +401,5 @@ export const SPELLS: Spell[] = [
   METEOR,
   FIRE_WHEEL,
   LIGHTNING,
+  ACID,
 ];

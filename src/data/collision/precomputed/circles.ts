@@ -8,29 +8,24 @@ const createEllipseCanvas = (dX: number, dY = dX) => {
   ctx.ellipse(dX / 2, dY / 2, dX / 2, dY / 2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  return ctx.getImageData(0, 0, dX, dY);
+  return [
+    canvas,
+    CollisionMask.fromAlpha(ctx.getImageData(0, 0, dX, dY)),
+  ] as const;
 };
 
-export const circle3x3Canvas = createEllipseCanvas(3);
-export const circle3x3 = CollisionMask.fromAlpha(circle3x3Canvas);
+export const [circle3x3Canvas, circle3x3] = createEllipseCanvas(3);
 
-export const circle9x9Canvas = createEllipseCanvas(9);
-export const circle9x9 = CollisionMask.fromAlpha(circle9x9Canvas);
+export const [circle9x9Canvas, circle9x9] = createEllipseCanvas(9);
 
-export const ellipse9x16Canvas = createEllipseCanvas(9, 16);
-export const ellipse9x16 = CollisionMask.fromAlpha(ellipse9x16Canvas);
+export const [ellipse9x16Canvas, ellipse9x16] = createEllipseCanvas(9, 16);
 
-export const circle16x16Canvas = createEllipseCanvas(16);
-export const circle16x16 = CollisionMask.fromAlpha(circle16x16Canvas);
+export const [circle16x16Canvas, circle16x16] = createEllipseCanvas(16);
 
-export const circle24x24Canvas = createEllipseCanvas(24);
-export const circle24x24 = CollisionMask.fromAlpha(circle24x24Canvas);
+export const [circle24x24Canvas, circle24x24] = createEllipseCanvas(24);
 
-export const circle30x30Canvas = createEllipseCanvas(30);
-export const circle30x30 = CollisionMask.fromAlpha(circle30x30Canvas);
+export const [circle30x30Canvas, circle30x30] = createEllipseCanvas(30);
 
-export const circle32x32Canvas = createEllipseCanvas(32);
-export const circle32x32 = CollisionMask.fromAlpha(circle32x32Canvas);
+export const [circle32x32Canvas, circle32x32] = createEllipseCanvas(32);
 
-export const circle64x64Canvas = createEllipseCanvas(64);
-export const circle64x64 = CollisionMask.fromAlpha(circle64x64Canvas);
+export const [circle64x64Canvas, circle64x64] = createEllipseCanvas(64);

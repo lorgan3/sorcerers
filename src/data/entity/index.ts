@@ -1,3 +1,4 @@
+import { Acid } from "../spells/acid";
 import { Bakuretsu } from "../spells/bakuretsu";
 import { Bomb } from "../spells/bomb";
 import { Catastravia } from "../spells/catastravia";
@@ -60,6 +61,7 @@ export const ENTITIES: Record<
   [EntityType.WindBlast]: WindBlast,
   [EntityType.FireWheel]: FireWheel,
   [EntityType.ChainLightning]: ChainLightning,
+  [EntityType.Acid]: Acid,
 };
 
 interface SpawnRateData {

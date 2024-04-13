@@ -9,10 +9,15 @@ import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
+import {
+  circle16x16,
+  circle16x16Canvas,
+} from "../collision/precomputed/circles";
 
 export enum Shape {
   SwordTip,
   SmallSword,
+  Acid,
 }
 
 const SHAPES: Record<
@@ -26,6 +31,7 @@ const SHAPES: Record<
     xOffset: number;
     yOffset: number;
     range: number;
+    power: number;
   }
 > = {
   [Shape.SwordTip]: {
@@ -36,6 +42,7 @@ const SHAPES: Record<
     xOffset: 6.5,
     yOffset: 10,
     range: 80,
+    power: 0.5,
   },
   [Shape.SmallSword]: {
     drawShape: function (ctx) {
@@ -45,6 +52,17 @@ const SHAPES: Record<
     xOffset: 0.5,
     yOffset: 10,
     range: 30,
+    power: 0.1,
+  },
+  [Shape.Acid]: {
+    drawShape: function (ctx) {
+      ctx.drawImage(circle16x16Canvas, this.x, this.y);
+    },
+    mask: circle16x16,
+    xOffset: 8,
+    yOffset: 8,
+    range: 80,
+    power: 0.1,
   },
 };
 
@@ -84,7 +102,7 @@ export class FallDamage implements DamageSource {
         const [x] = entity.getCenter();
         const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;
         this.targets!.add(entity, this.power, {
-          power: 0.5,
+          power: data.power,
           direction,
         });
       }
