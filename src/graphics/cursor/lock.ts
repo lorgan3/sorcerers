@@ -24,6 +24,7 @@ interface TriggerData {
   target: Target;
   projectile: ProjectileConstructor;
   turnState: TurnState;
+  spellSource?: boolean;
 }
 
 export class Lock extends Container implements Cursor<TriggerData> {
@@ -50,10 +51,15 @@ export class Lock extends Container implements Cursor<TriggerData> {
 
     this.addChild(this.indicator);
     Level.instance.uiContainer.addChild(this);
+
+    if (spell.data.spellSource) {
+      this.character.setSpellSource(this);
+    }
   }
 
   remove(): void {
     Level.instance.uiContainer.removeChild(this);
+    this.character.setSpellSource(this, false);
 
     if (this.projectile) {
       Level.instance.remove(this.projectile);
@@ -73,17 +79,29 @@ export class Lock extends Container implements Cursor<TriggerData> {
     this.indicator.play();
   }
 
+  private getPosition(): [number, number] {
+    const position = this.character.player.controller.getMouse();
+
+    switch (this.spell.data.target) {
+      case Target.Solid:
+        return [Math.ceil(position[0] / 6), Math.floor(position[1] / 6)];
+
+      case Target.Free:
+        return [
+          Math.round(position[0] / 6) - 3,
+          Math.round(position[1] / 6) - 8,
+        ];
+    }
+
+    return [Math.round(position[0] / 6), Math.round(position[1] / 6)];
+  }
+
   trigger({ projectile, turnState }: TriggerData) {
     this.character.player.mana -= getSpellCost(this.spell);
 
-    const position = this.character.player.controller.getMouse();
+    const position = this.getPosition();
 
-    projectile.cast(
-      Math.round(position[0] / 6),
-      Math.round(position[1] / 6),
-      this.entity,
-      this.character
-    );
+    projectile.cast(...position, this.entity, this.character);
 
     this.visible = false;
     Manager.instance.setTurnState(turnState);
@@ -95,7 +113,7 @@ export class Lock extends Container implements Cursor<TriggerData> {
     }
 
     this.position.set(...controller.getLocalMouse());
-    const position = controller.getMouse();
+    const position = this.getPosition();
 
     switch (this.spell.data.target) {
       case Target.Any:
@@ -104,18 +122,15 @@ export class Lock extends Container implements Cursor<TriggerData> {
 
       case Target.Solid:
         this.animate(
-          Level.instance.terrain.characterMask.collidesWithPoint(
-            Math.ceil(position[0] / 6),
-            Math.floor(position[1] / 6)
-          )
+          Level.instance.terrain.characterMask.collidesWithPoint(...position)
         );
         break;
 
       case Target.Free:
         this.animate(
-          !Level.instance.terrain.characterMask.collidesWithPoint(
-            Math.ceil(position[0] / 6),
-            Math.floor(position[1] / 6)
+          !Level.instance.terrain.characterMask.collidesWith(
+            this.character.body.mask,
+            ...position
           )
         );
         break;
@@ -123,7 +138,8 @@ export class Lock extends Container implements Cursor<TriggerData> {
       case Target.Entity:
         this.entity = null;
         Level.instance.withNearbyEntities(
-          ...position,
+          position[0] * 6,
+          position[1] * 6,
           20,
           (entity: HurtableEntity) => {
             this.entity = entity;
@@ -137,7 +153,8 @@ export class Lock extends Container implements Cursor<TriggerData> {
       case Target.Character:
         this.entity = null;
         Level.instance.withNearbyEntities(
-          ...position,
+          position[0] * 6,
+          position[1] * 6,
           16,
           (entity: HurtableEntity) => {
             if (entity instanceof Character) {
