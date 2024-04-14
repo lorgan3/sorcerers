@@ -18,6 +18,7 @@ import { Rock } from "../spells/rock";
 import { Shield } from "../spells/shield";
 import { SmallSword } from "../spells/smallSword";
 import { Sword } from "../spells/sword";
+import { Teleport } from "../spells/teleport";
 import { Element } from "../spells/types";
 import { WindBlast } from "../spells/windBlast";
 import { Zoltraak } from "../spells/zoltraak";
@@ -62,6 +63,7 @@ export const ENTITIES: Record<
   [EntityType.FireWheel]: FireWheel,
   [EntityType.ChainLightning]: ChainLightning,
   [EntityType.Acid]: Acid,
+  [EntityType.Teleport]: Teleport,
 };
 
 interface SpawnRateData {

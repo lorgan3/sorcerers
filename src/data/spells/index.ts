@@ -31,6 +31,7 @@ import { Meteor } from "./meteor";
 import { FireWheel } from "./fireWheel";
 import { ChainLightning } from "./chainLightning";
 import { Acid } from "./acid";
+import { Teleport } from "./teleport";
 
 export interface Spell<TData = any> {
   name: string;
@@ -379,6 +380,19 @@ const ACID = spell(PoweredArcaneCircle, {
   },
 });
 
+const TELEPORT = spell(Lock, {
+  name: "Teleport",
+  description: "Houdini yourself out of a sticky situation",
+  elements: [Element.Physical],
+  cost: 20,
+  data: {
+    target: Target.Free,
+    projectile: Teleport,
+    turnState: TurnState.Ending,
+    spellSource: true,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -402,4 +416,5 @@ export const SPELLS: Spell[] = [
   FIRE_WHEEL,
   LIGHTNING,
   ACID,
+  TELEPORT,
 ];

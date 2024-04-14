@@ -39,6 +39,7 @@ export enum Sound {
   Electricity = "electricitySnd",
   Slime = "slimeSnd",
   Water = "waterSnd",
+  Smoke = "smokeSnd",
 }
 
 interface SoundData {
@@ -125,6 +126,7 @@ addSoundData(Sound.Water, "62105__rweale__weale_bubble1");
 addSoundData(Sound.Slime, "433832__archos__slime-21_1", 0.6);
 addSoundData(Sound.Slime, "433832__archos__slime-21_2", 0.6);
 addSoundData(Sound.Slime, "433839__archos__slime-28", 0.6);
+addSoundData(Sound.Smoke, "714257__qubodup__puff-of-smoke");
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
