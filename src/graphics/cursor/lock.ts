@@ -16,6 +16,7 @@ export enum Target {
   Free,
   Entity,
   Character,
+  Ally,
 }
 
 const ANIMATION_SPEED = 0.2;
@@ -158,6 +159,27 @@ export class Lock extends Container implements Cursor<TriggerData> {
           16,
           (entity: HurtableEntity) => {
             if (entity instanceof Character) {
+              this.entity = entity;
+              return true;
+            }
+          }
+        );
+
+        this.animate(!!this.entity);
+        break;
+
+      case Target.Ally:
+        this.entity = null;
+        Level.instance.withNearbyEntities(
+          position[0] * 6,
+          position[1] * 6,
+          16,
+          (entity: HurtableEntity) => {
+            if (
+              entity instanceof Character &&
+              entity !== this.character &&
+              entity.player === this.character.player
+            ) {
               this.entity = entity;
               return true;
             }

@@ -8,5 +8,5 @@ export interface Cursor<D = any> {
 }
 
 export type ProjectileConstructor = {
-  cast: (...data: any) => TickingEntity | undefined;
+  cast: (...data: any) => unknown;
 };

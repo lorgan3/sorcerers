@@ -32,6 +32,7 @@ import { FireWheel } from "./fireWheel";
 import { ChainLightning } from "./chainLightning";
 import { Acid } from "./acid";
 import { Teleport } from "./teleport";
+import { MindControl } from "./mindControl";
 
 export interface Spell<TData = any> {
   name: string;
@@ -393,6 +394,19 @@ const TELEPORT = spell(Lock, {
   },
 });
 
+const MIND_CONTROL = spell(Lock, {
+  name: "Mind control",
+  description: "Swap control with another ally",
+  elements: [Element.Life],
+  cost: 15,
+  data: {
+    target: Target.Ally,
+    projectile: MindControl,
+    turnState: TurnState.Ongoing,
+    spellSource: true,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -417,4 +431,5 @@ export const SPELLS: Spell[] = [
   LIGHTNING,
   ACID,
   TELEPORT,
+  MIND_CONTROL,
 ];

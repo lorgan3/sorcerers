@@ -201,7 +201,6 @@ export abstract class Manager {
     this.activePlayer = this.players[player];
     this.activePlayer.active = character;
     this.activePlayerIndex = player;
-    this.activePlayer.nextTurn();
 
     if (this.cursor) {
       this.cursor.remove();

@@ -442,22 +442,15 @@ export class Server extends Manager {
         return;
       }
 
-      this.setActiveCharacter(
-        activePlayerIndex,
-        player.characters.indexOf(character)
-      );
       this.turnStartTime = this.time;
       this._turnState = TurnState.Ongoing;
       this.randomizeElements();
 
-      this.broadcast({
-        type: MessageType.ActiveCharacter,
-        activePlayer: activePlayerIndex,
-        activeCharacter: this.activePlayer!.active,
-        elements: Object.values(this.elements),
-        turnStartTime: this.turnStartTime,
-        newMana: player.mana,
-      });
+      this.broadcastActiveCharacter(
+        activePlayerIndex,
+        player.characters.indexOf(character)
+      );
+      player.nextTurn();
 
       this.addPopup({
         title: `${this.activePlayer!.name}'s turn`,
@@ -466,6 +459,19 @@ export class Server extends Manager {
           this.activePlayer!.activeCharacter.name
         ),
       });
+    });
+  }
+
+  broadcastActiveCharacter(activePlayer: number, activeCharacter: number) {
+    this.setActiveCharacter(activePlayer, activeCharacter);
+
+    this.broadcast({
+      type: MessageType.ActiveCharacter,
+      activePlayer: activePlayer,
+      activeCharacter: this.activePlayer!.active,
+      elements: Object.values(this.elements),
+      turnStartTime: this.turnStartTime,
+      newMana: this.players[activePlayer].mana,
     });
   }
 

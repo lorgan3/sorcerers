@@ -162,9 +162,12 @@ export class Client extends Manager {
         this.turnStartTime = message.turnStartTime;
         this._turnState = TurnState.Ongoing;
 
-        Level.instance.cameraTarget.setTarget(
-          this.setActiveCharacter(message.activePlayer, message.activeCharacter)
+        const character = this.setActiveCharacter(
+          message.activePlayer,
+          message.activeCharacter
         );
+        character.player.nextTurn();
+        Level.instance.cameraTarget.setTarget(character);
         break;
 
       case MessageType.InputState:
