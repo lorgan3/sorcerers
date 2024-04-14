@@ -73,7 +73,6 @@ export class ChainLightning extends Container implements Spawnable {
 
       const distance = getDistance(x, y, ...coords);
       const direction = getAngle(x, y, ...coords);
-      console.log([x, y], coords, distance);
 
       Level.instance.add(new Lightning(x, y, distance, direction));
 
