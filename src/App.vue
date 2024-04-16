@@ -16,11 +16,18 @@ import MainMenu from "./components/MainMenu.vue";
 
   --small-radius: 3px;
   --big-radius: 6px;
+  --stroke-length: 43.425px;
 }
 
 @property --pulse {
   syntax: "<number>";
   initial-value: 1;
+  inherits: false;
+}
+
+@property --dash-offset {
+  syntax: "<number>";
+  initial-value: 0;
   inherits: false;
 }
 
@@ -108,6 +115,18 @@ button {
 
   100% {
     --pulse: 1;
+  }
+}
+
+@keyframes rotateBorder {
+  0% {
+    stroke-dashoffset: calc(var(--dash-offset, 0) * var(--stroke-length));
+  }
+
+  100% {
+    stroke-dashoffset: calc(
+      (var(--dash-offset, 0) * var(--stroke-length)) + var(--stroke-length) * 2
+    );
   }
 }
 

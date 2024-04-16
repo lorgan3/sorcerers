@@ -10,6 +10,7 @@ import { HurtableEntity } from "../entity/types";
 import { MagicScroll } from "../entity/magicScroll";
 
 const TURN_GRACE_PERIOD = 3000;
+const CACHE_TIME = 30;
 
 export abstract class Manager {
   private static _instance: Manager;
@@ -27,13 +28,16 @@ export abstract class Manager {
   protected elements = Object.fromEntries(
     Object.values(Element).map((element, i) => [element, i / 2])
   ) as Record<Element, number>;
+  private cachedElementValues: Partial<
+    Record<Element, { value: number; time: number }>
+  > = {};
 
   protected turnStartTime = 0;
   protected turnLength = 45 * 1000;
   protected gameLength = 10 * 60 * 1000;
   protected _turnState = TurnState.Ongoing;
 
-  private cursor: Cursor | null = null;
+  protected cursor: Cursor | null = null;
   private popups: Popup[] = [];
 
   constructor(public readonly peer: Peer) {
@@ -229,6 +233,11 @@ export abstract class Manager {
   }
 
   getElementValue(element: Element) {
+    const cached = this.cachedElementValues[element];
+    if (cached && cached.time + CACHE_TIME > this.time) {
+      return cached.value;
+    }
+
     if (!!this.activePlayer) {
       let buffed = false;
       Level.instance.withNearbyEntities(
@@ -247,10 +256,14 @@ export abstract class Manager {
       );
 
       if (buffed) {
-        return Math.min(1.75, this.elements[element] * 2);
+        const value = Math.min(1.75, this.elements[element] * 2);
+        this.cachedElementValues[element] = { value, time: this.time };
+        return value;
       }
     }
 
-    return this.elements[element];
+    const value = this.elements[element];
+    this.cachedElementValues[element] = { value, time: this.time };
+    return value;
   }
 }

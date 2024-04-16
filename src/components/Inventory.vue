@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { SPELLS, Spell } from "../data/spells";
 import { Manager } from "../data/network/manager";
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { Server } from "../data/network/server";
 import { Client } from "../data/network/client";
-import { ELEMENT_MAP } from "../graphics/elements";
+import { ELEMENT_MAP, ELEMENT_COLOR_MAP } from "../graphics/elements";
 import { Message, MessageType } from "../data/network/types";
+import { Element } from "../data/spells/types";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -16,16 +17,28 @@ const SLOTS = 30;
 
 const previewSpell = ref(Manager.instance?.selectedSpell);
 const previewMultiplier = ref(1);
+const availableList = ref<boolean[]>([]);
 
 const poll = () => {
   if (props.isOpen) {
     previewMultiplier.value = previewSpell.value?.costMultiplier?.() || 1;
+
+    const mana = Manager.instance.self.mana;
+    availableList.value = SPELLS.map(
+      (spell) => (spell.costMultiplier?.() || 1) * spell.cost <= mana
+    );
   }
 };
 
 let id = -1;
 onMounted(() => (id = window.setInterval(poll, 1000)));
 onBeforeUnmount(() => window.clearInterval(id));
+
+watch(
+  () => props.isOpen,
+  () => poll(),
+  { immediate: true }
+);
 
 const handleClick = (spell?: Spell) => {
   if (spell) {
@@ -65,6 +78,11 @@ const onMouseEnter = (spell?: Spell) => {
     previewMultiplier.value = spell.costMultiplier?.() || 1;
   }
 };
+
+const getElementFilter = (element: Element) =>
+  `brightness(${
+    0.1 + Math.min(1, Manager.instance.getElementValue(element) / 1.3)
+  })`;
 </script>
 
 <template>
@@ -76,7 +94,7 @@ const onMouseEnter = (spell?: Spell) => {
             v-for="i in SLOTS"
             :class="{
               slot: true,
-              selected: SPELLS[i - 1] === Manager.instance?.selectedSpell,
+              locked: !availableList[i - 1],
             }"
             @click="handleClick(SPELLS[i - 1])"
             @mouseenter="onMouseEnter(SPELLS[i - 1])"
@@ -84,6 +102,47 @@ const onMouseEnter = (spell?: Spell) => {
             <span v-if="SPELLS[i - 1]" class="placeholder">{{
               SPELLS[i - 1].name.slice(0, 1)
             }}</span>
+            <svg
+              width="50px"
+              height="50px"
+              :class="{
+                border: true,
+                animated: SPELLS[i - 1] === Manager.instance?.selectedSpell,
+              }"
+              v-if="SPELLS[i - 1]"
+            >
+              <rect
+                :style="{
+                  '--dash-offset': 0,
+                  stroke: ELEMENT_COLOR_MAP[SPELLS[i - 1].elements[0]],
+                  filter: getElementFilter(SPELLS[i - 1].elements[0]),
+                }"
+                x="2px"
+                y="2px"
+                width="46px"
+                height="46px"
+                rx="3px"
+                ry="3px"
+              ></rect>
+              <rect
+                :style="{
+                  '--dash-offset': 1,
+                  stroke:
+                    ELEMENT_COLOR_MAP[
+                      SPELLS[i - 1].elements[1] || SPELLS[i - 1].elements[0]
+                    ],
+                  filter: getElementFilter(
+                    SPELLS[i - 1].elements[1] || SPELLS[i - 1].elements[0]
+                  ),
+                }"
+                x="2px"
+                y="2px"
+                width="46px"
+                height="46px"
+                rx="3px"
+                ry="3px"
+              ></rect>
+            </svg>
           </div>
         </div>
         <div v-if="previewSpell" class="spell">
@@ -161,15 +220,16 @@ const onMouseEnter = (spell?: Spell) => {
       padding: 6px;
 
       .slot {
-        border: 2px solid var(--primary);
         border-radius: var(--small-radius);
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
+        box-shadow: 0 0 10px -2px inset var(--highlight);
 
-        &.selected {
-          box-shadow: 0 0 10px inset var(--highlight);
+        &.locked {
+          opacity: 0.5;
         }
 
         &:hover {
@@ -181,6 +241,29 @@ const onMouseEnter = (spell?: Spell) => {
           font-family: "Eternal";
           font-size: 42px;
           margin-top: 6px;
+        }
+
+        .border {
+          position: absolute;
+
+          rect {
+            fill: none;
+            stroke: #000;
+            stroke-width: 3px;
+            stroke-dasharray: var(--stroke-length), var(--stroke-length);
+            stroke-dashoffset: calc(
+              var(--dash-offset, 0) * var(--stroke-length)
+            );
+          }
+
+          &.animated {
+            rect {
+              --stroke-length: calc(43.425px * 2);
+              stroke-dasharray: calc(var(--stroke-length) / 2),
+                calc(var(--stroke-length) * 3 / 2);
+              animation: rotateBorder 2s linear infinite;
+            }
+          }
         }
       }
     }
