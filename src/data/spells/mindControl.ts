@@ -1,4 +1,5 @@
 import { Character } from "../entity/character";
+import { Level } from "../map/level";
 import { Server } from "../network/server";
 
 export class MindControl {
@@ -11,5 +12,6 @@ export class MindControl {
       Server.instance.players.indexOf(character.player),
       character.player.characters.indexOf(character)
     );
+    Level.instance.cameraTarget.setTarget(character);
   }
 }
