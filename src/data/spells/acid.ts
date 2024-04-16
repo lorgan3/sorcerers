@@ -112,7 +112,7 @@ export class Acid extends Container implements Spawnable {
   }
 
   getCenter(): [number, number] {
-    return [this.position.x + 45, this.position.y + 45];
+    return [this.position.x + 30, this.position.y + 30];
   }
 
   tick(dt: number) {
