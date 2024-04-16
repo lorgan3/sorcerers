@@ -18,9 +18,9 @@ export const ELEMENT_ATLAS_MAP: Record<Element, string> = {
   [Element.Life]: "icons_life",
 };
 
-export const ELEMENT_COLOR_MAP: Record<Element, number> = {
-  [Element.Physical]: 0x604f80,
-  [Element.Arcane]: 0xd70032,
-  [Element.Elemental]: 0x005fe8,
-  [Element.Life]: 0x009600,
+export const ELEMENT_COLOR_MAP: Record<Element, string> = {
+  [Element.Physical]: "#604f80",
+  [Element.Arcane]: "#d70032",
+  [Element.Elemental]: "#005fe8",
+  [Element.Life]: "#009600",
 };
