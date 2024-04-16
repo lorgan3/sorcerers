@@ -194,4 +194,10 @@ export class Lock extends Container implements Cursor<TriggerData> {
       this.trigger(this.spell.data);
     }
   }
+
+  serialize() {
+    return null;
+  }
+
+  deserialize(): void {}
 }

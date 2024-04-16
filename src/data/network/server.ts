@@ -165,6 +165,7 @@ export class Server extends Manager {
       const data: Message = {
         type: MessageType.ActiveUpdate,
         data: this.activePlayer!.activeCharacter.serialize(),
+        cursor: this.cursor?.serialize() || null,
         entities: Level.instance.syncables[Priority.High].map((entity) =>
           entity.serialize()
         ),

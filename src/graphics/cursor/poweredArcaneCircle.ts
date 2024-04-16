@@ -145,4 +145,13 @@ export class PoweredArcaneCircle
     const [x, y] = controller.getMouse();
     this.indicator.rotation = Math.atan2(y - y2, x - x2) + Math.PI / 2;
   }
+
+  serialize() {
+    return [this.power, this.powerDirection];
+  }
+
+  deserialize(data: ReturnType<this["serialize"]>): void {
+    this.power = data[0];
+    this.powerDirection = data[1];
+  }
 }

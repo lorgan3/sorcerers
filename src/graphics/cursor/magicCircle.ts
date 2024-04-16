@@ -114,4 +114,10 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
 
     this.indicator.rotation = Math.atan2(y - y2, x - x2) + Math.PI / 2;
   }
+
+  serialize() {
+    return null;
+  }
+
+  deserialize(): void {}
 }

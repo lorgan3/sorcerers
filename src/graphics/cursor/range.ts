@@ -103,4 +103,10 @@ export class Range extends Container implements Cursor<TriggerData> {
   get power() {
     return this._power;
   }
+
+  serialize() {
+    return null;
+  }
+
+  deserialize(): void {}
 }

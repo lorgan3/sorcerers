@@ -42,4 +42,10 @@ export class ApplyCursor implements Cursor<TriggerData> {
       }
     }
   }
+
+  serialize() {
+    return null;
+  }
+
+  deserialize(): void {}
 }

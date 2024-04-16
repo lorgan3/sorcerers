@@ -61,4 +61,10 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
       this.trigger(this.spell.data);
     }
   }
+
+  serialize() {
+    return null;
+  }
+
+  deserialize(): void {}
 }

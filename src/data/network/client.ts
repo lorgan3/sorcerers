@@ -182,6 +182,8 @@ export class Client extends Manager {
           message.data
         );
 
+        this.cursor?.deserialize(message.cursor);
+
         for (let i = 0; i < message.entities.length; i++) {
           Level.instance.syncables[Priority.High][i].deserialize(
             message.entities[i]
