@@ -11,6 +11,7 @@ import { Team } from "../data/team";
 import { Map } from "../data/map";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import Input from "./Input.vue";
+import { Manager } from "../data/network/manager";
 
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
@@ -37,7 +38,7 @@ let promise = ref<Promise<void>>();
 
 const createServer = () =>
   new Promise<void>((resolve) => {
-    Server.instance?.destroy();
+    Manager.instance?.destroy();
 
     key.value = Math.floor(Math.random() * 10000)
       .toString()

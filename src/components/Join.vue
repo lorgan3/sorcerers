@@ -9,6 +9,7 @@ import { MessageType } from "../data/network/types";
 import { Team } from "../data/team";
 import { Map } from "../data/map";
 import Input from "./Input.vue";
+import { Manager } from "../data/network/manager";
 
 const LAST_GAME_KEY = "lastGameKey";
 
@@ -34,7 +35,7 @@ let peer: Peer | null = null;
 const nameValidator = (name: string) => !!name.trim();
 
 const createClient = () => {
-  Client.instance?.destroy();
+  Manager.instance?.destroy();
 
   clientReady.value = false;
   const peer = new Peer();
