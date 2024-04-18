@@ -32,7 +32,7 @@ import { StaticBody } from "../collision/staticBody";
 export class Meteor extends Container implements Syncable {
   private static bounces = 14;
   private static explodeInterval = 2;
-  private static moveTime = 45;
+  private static moveTime = 90;
 
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
@@ -72,7 +72,6 @@ export class Meteor extends Container implements Syncable {
     this.body.move(x, y);
     this.body.addAngularVelocity(3, direction);
     this.position.set(x * 6, y * 6);
-    this.sound = ControllableSound.fromEntity(this, Sound.FireWork);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
     this.textures = atlas.animations["meteor"];
@@ -213,7 +212,12 @@ export class Meteor extends Container implements Syncable {
       this.body.tick(dt);
       const [x, y] = this.body.precisePosition;
       this.position.set(x * 6, y * 6);
-      this.sound?.update([this.position.x, this.position.y]);
+
+      if (this.sound) {
+        this.sound?.update(this);
+      } else {
+        this.sound = ControllableSound.fromEntity(this, Sound.FireWork);
+      }
 
       if (
         Level.instance.terrain.killbox.collidesWith(
