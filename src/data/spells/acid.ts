@@ -3,7 +3,6 @@ import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle9x9 } from "../collision/precomputed/circles";
-import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Character } from "../entity/character";
 
 import { Manager } from "../network/manager";
@@ -78,7 +77,7 @@ export class Acid extends Container implements Spawnable {
 
     if (this.isParent) {
       for (let i = 0; i < Acid.splitAmount; i++) {
-        const direction = -Math.atan2(vy, vx);
+        const direction = Math.atan2(vy, vx) + Math.PI;
         const entity = new Acid(
           x,
           y,
