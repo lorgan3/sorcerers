@@ -22,6 +22,7 @@ interface TriggerData {
   x: number;
   y: number;
   turnState: TurnState;
+  keepSpellSource?: boolean;
 }
 
 export class ArcaneCircle extends Container implements Cursor<TriggerData> {
@@ -76,7 +77,9 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
 
     if (!controller.isKeyDown(Key.M1)) {
       if (this.visible) {
-        this.character.setSpellSource(this, false);
+        if (!this.spell.data.keepSpellSource) {
+          this.character.setSpellSource(this, false);
+        }
         this.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 

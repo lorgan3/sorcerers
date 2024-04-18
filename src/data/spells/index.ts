@@ -33,6 +33,7 @@ import { ChainLightning } from "./chainLightning";
 import { Acid } from "./acid";
 import { Teleport } from "./teleport";
 import { MindControl } from "./mindControl";
+import { Doragate } from "./doragate";
 
 export interface Spell<TData = any> {
   name: string;
@@ -407,6 +408,22 @@ const MIND_CONTROL = spell(Lock, {
   },
 });
 
+const DORAGATE = spell(ArcaneCircle, {
+  name: "Doragate",
+  description: "Rocks to bullets",
+  elements: [Element.Physical],
+  cost: 15,
+  data: {
+    projectile: Doragate,
+    xOffset: 0,
+    yOffset: 0,
+    x: 3,
+    y: 6.5,
+    turnState: TurnState.Attacked,
+    keepSpellSource: true,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -432,4 +449,5 @@ export const SPELLS: Spell[] = [
   ACID,
   TELEPORT,
   MIND_CONTROL,
+  DORAGATE,
 ];

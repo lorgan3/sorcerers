@@ -88,6 +88,7 @@ export enum EntityType {
   ChainLightning,
   Acid,
   Teleport,
+  Doragate,
 }
 
 export enum Priority {
