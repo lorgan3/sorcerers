@@ -5,7 +5,7 @@ import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";
 import { Team } from "../team";
 import { Spell } from "../spells";
-import { MANA_BASE_GAIN, MANA_PER_TURN_GAIN, MAX_MANA } from "./constants";
+import { MANA_BASE_GAIN, MAX_MANA } from "./constants";
 
 export class Player {
   public readonly characters: Character[] = [];
@@ -120,7 +120,7 @@ export class Player {
 
   nextTurn() {
     this.turn++;
-    this.mana += MANA_BASE_GAIN + MANA_PER_TURN_GAIN * this.turn;
+    this.mana += MANA_BASE_GAIN;
     this._controller.resetKeys();
   }
 }

@@ -129,7 +129,7 @@ const BAKURETSU = spell(ArrowDown, {
   name: "Bakuretsu",
   description: "Ekusuuu ploooooooosion",
   elements: [Element.Elemental, Element.Arcane],
-  cost: 40,
+  cost: 70,
   costMultiplier: () =>
     1.4 - Manager.instance.getElementValue(Element.Arcane) * 0.4,
   data: {
@@ -144,7 +144,7 @@ const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
   description: "Ordinary offensive magic",
   elements: [Element.Arcane],
-  cost: 20,
+  cost: 35,
   data: {
     projectile: Zoltraak,
     xOffset: 2,
@@ -159,7 +159,7 @@ const WINGS = spell(ApplyCursor, {
   name: "Digardnacht",
   description: "Wings that grant flight",
   elements: [Element.Life],
-  cost: 20,
+  cost: 15,
   costMultiplier: () =>
     1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   data: {
@@ -172,7 +172,7 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
   name: "Catastravia",
   description: "Holy missile volley",
   elements: [Element.Life, Element.Arcane],
-  cost: 30,
+  cost: 50,
   data: {
     projectile: Catastravia,
     xOffset: 2,
@@ -247,7 +247,7 @@ const REELSEIDEN = spell(Lock, {
   name: "Reelseiden",
   description: "Slash anything anywhere",
   elements: [Element.Physical],
-  cost: 30,
+  cost: 25,
   data: {
     target: Target.Any,
     projectile: Reelseiden,
@@ -336,7 +336,7 @@ const METEOR = spell(Lock, {
   name: "Waldgose",
   description: "Cause a meteor to fall from the sky",
   elements: [Element.Physical, Element.Elemental],
-  cost: 40,
+  cost: 60,
   data: {
     target: Target.Any,
     projectile: Meteor,
@@ -363,7 +363,7 @@ const LIGHTNING = spell(ArcaneCircle, {
   name: "Judradjim",
   description: "Generate chain lightning",
   elements: [Element.Arcane],
-  cost: 10,
+  cost: 25,
   data: {
     projectile: ChainLightning,
     xOffset: 7,
@@ -406,7 +406,7 @@ const MIND_CONTROL = spell(Lock, {
   name: "Auserlese",
   description: "Swap control with another ally",
   elements: [Element.Life],
-  cost: 15,
+  cost: 30,
   data: {
     target: Target.Ally,
     projectile: MindControl,
@@ -419,7 +419,7 @@ const DORAGATE = spell(ArcaneCircle, {
   name: "Doragate",
   description: "Rocks to bullets",
   elements: [Element.Physical],
-  cost: 15,
+  cost: 30,
   data: {
     projectile: Doragate,
     xOffset: 0,
@@ -457,4 +457,4 @@ export const SPELLS: Spell[] = [
   TELEPORT,
   MIND_CONTROL,
   DORAGATE,
-];
+].sort((a, b) => a.cost - b.cost);
