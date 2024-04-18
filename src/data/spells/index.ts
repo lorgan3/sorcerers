@@ -290,7 +290,7 @@ const HAIRPIN = spell(PoweredArcaneCircle, {
   name: "Balterie",
   description: "Launch several bombs that detonate on contact",
   elements: [Element.Arcane],
-  cost: 20,
+  cost: 30,
   data: {
     projectile: Hairpin,
     xOffset: 7,
