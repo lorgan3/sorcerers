@@ -8,12 +8,7 @@ import { Character } from "../entity/character";
 
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
-import {
-  EntityType,
-  HurtableEntity,
-  Priority,
-  Syncable,
-} from "../entity/types";
+import { EntityType, Priority, Syncable } from "../entity/types";
 import { Server } from "../network/server";
 import { Element } from "./types";
 import { Key } from "../controller/controller";
@@ -25,7 +20,7 @@ import { Sound } from "../../sound";
 import { Implosion } from "../../graphics/implosion";
 
 export class MagicMissile extends Container implements Syncable {
-  private static lifetime = 200;
+  private static lifetime = 400;
 
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
