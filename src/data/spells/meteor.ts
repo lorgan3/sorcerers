@@ -125,8 +125,8 @@ export class Meteor extends Container implements Syncable {
         x + 15,
         y + 15,
         16,
-        4,
-        2 + Manager.instance.getElementValue(Element.Elemental) / 2
+        5,
+        4 + Manager.instance.getElementValue(Element.Elemental) / 2
       );
       Level.instance.damage(damage);
 
