@@ -34,12 +34,12 @@ export class Nephtear extends Container implements Spawnable {
       mask: circle3x3,
       onCollide: Server.instance ? this.onCollide : undefined,
       friction: 1,
-      gravity: 0.04,
+      gravity: 0.01,
     });
     this.body.move(x, y);
     this.body.addAngularVelocity(speed, direction);
     this.position.set(x * 6, y * 6);
-    ControllableSound.fromEntity(this, Sound.Fire);
+    ControllableSound.fromEntity(this, Sound.Glass);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
