@@ -59,7 +59,7 @@ const MELEE = spell(ApplyCursor, {
   name: "Melee",
   description: "For less gifted sorcerers",
   elements: [Element.Physical],
-  cost: 5,
+  cost: 0,
   data: {
     applyKeys: [Key.M1],
     apply: (character: Character) => character.melee(),
@@ -68,8 +68,8 @@ const MELEE = spell(ApplyCursor, {
 });
 
 const FIREBALL = spell(PoweredArcaneCircle, {
-  name: "Fireball",
-  description: "Generic fireball",
+  name: "Ignis",
+  description: "Fireball!",
   elements: [Element.Elemental],
   cost: 10,
   data: {
@@ -142,7 +142,7 @@ const BAKURETSU = spell(ArrowDown, {
 
 const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
-  description: "Magical death laser",
+  description: "Ordinary offensive magic",
   elements: [Element.Arcane],
   cost: 20,
   data: {
@@ -156,7 +156,8 @@ const ZOLTRAAK = spell(ArcaneCircle, {
 });
 
 const WINGS = spell(ApplyCursor, {
-  name: "Wings",
+  name: "Digardnacht",
+  description: "Wings that grant flight",
   elements: [Element.Life],
   cost: 20,
   costMultiplier: () =>
@@ -183,8 +184,8 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
 });
 
 const MAGIC_MISSILE = spell(ApplyCursor, {
-  name: "Magic missile",
-  description: "",
+  name: "Vollzanbel",
+  description: "Magic missile",
   elements: [Element.Life],
   cost: 30,
   data: {
@@ -210,6 +211,7 @@ const MAGIC_MISSILE = spell(ApplyCursor, {
 
 const BABYLON = spell(ArrowDown, {
   name: "Gates of babylon",
+  description: "Drop swords from the sky",
   elements: [Element.Physical],
   cost: 30,
   data: {
@@ -221,7 +223,8 @@ const BABYLON = spell(ArrowDown, {
 });
 
 const BLINK = spell(ApplyCursor, {
-  name: "Blink",
+  name: "Jilwer",
+  description: "Blink forwards",
   elements: [Element.Physical],
   cost: 15,
   data: {
@@ -268,8 +271,8 @@ const NEPHTEAR = spell(PoweredArcaneCircle, {
 });
 
 const WIND_BLAST = spell(PoweredArcaneCircle, {
-  name: "Airblast",
-  description: "Mmph mph-mph mmmmph!",
+  name: "Medrozobalt",
+  description: "Create a gust of wind",
   elements: [Element.Life],
   cost: 10,
   data: {
@@ -284,7 +287,8 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
 });
 
 const HAIRPIN = spell(PoweredArcaneCircle, {
-  name: "Artillery",
+  name: "Balterie",
+  description: "Launch several bombs that detonate on contact",
   elements: [Element.Arcane],
   cost: 20,
   data: {
@@ -299,7 +303,8 @@ const HAIRPIN = spell(PoweredArcaneCircle, {
 });
 
 const ICE_WALL = spell(ArcaneCircle, {
-  name: "Ice wall",
+  name: "Jubelade",
+  description: "Create several ice clusters on the ground",
   elements: [Element.Elemental, Element.Physical],
   cost: 20,
   data: {
@@ -313,7 +318,8 @@ const ICE_WALL = spell(ArcaneCircle, {
 });
 
 const ROCK = spell(PoweredArcaneCircle, {
-  name: "Rock",
+  name: "Bargland",
+  description: "Control the earth",
   elements: [Element.Life, Element.Elemental],
   cost: 30,
   data: {
@@ -327,7 +333,8 @@ const ROCK = spell(PoweredArcaneCircle, {
 });
 
 const METEOR = spell(Lock, {
-  name: "Meteor",
+  name: "Waldgose",
+  description: "Cause a meteor to fall from the sky",
   elements: [Element.Physical, Element.Elemental],
   cost: 40,
   data: {
@@ -338,8 +345,8 @@ const METEOR = spell(Lock, {
 });
 
 const FIRE_WHEEL = spell(PoweredArcaneCircle, {
-  name: "Flame wheel",
-  description: "",
+  name: "Daosdorg",
+  description: "Throwable fireball that follows the ground",
   elements: [Element.Elemental],
   cost: 20,
   data: {
@@ -353,8 +360,8 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
 });
 
 const LIGHTNING = spell(ArcaneCircle, {
-  name: "Chain lightning",
-  description: "Unlimited power",
+  name: "Judradjim",
+  description: "Generate chain lightning",
   elements: [Element.Arcane],
   cost: 10,
   data: {
@@ -368,8 +375,8 @@ const LIGHTNING = spell(ArcaneCircle, {
 });
 
 const ACID = spell(PoweredArcaneCircle, {
-  name: "Acid",
-  description: "",
+  name: "Reamstroha",
+  description: "Create a ball of acid",
   elements: [Element.Life],
   cost: 25,
   data: {
@@ -383,7 +390,7 @@ const ACID = spell(PoweredArcaneCircle, {
 });
 
 const TELEPORT = spell(Lock, {
-  name: "Teleport",
+  name: "Fürwehrer",
   description: "Houdini yourself out of a sticky situation",
   elements: [Element.Physical],
   cost: 20,
@@ -396,7 +403,7 @@ const TELEPORT = spell(Lock, {
 });
 
 const MIND_CONTROL = spell(Lock, {
-  name: "Mind control",
+  name: "Auserlese",
   description: "Swap control with another ally",
   elements: [Element.Life],
   cost: 15,
