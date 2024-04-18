@@ -23,8 +23,9 @@ import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { StaticBody } from "../collision/staticBody";
 
-const DAMAGE = 40;
+const DAMAGE = 30;
 const MAX_DISTANCE = 912;
 
 const TOOLS = [
@@ -61,8 +62,7 @@ export class Zoltraak extends Container implements Spawnable {
     this.position.set(x * 6, y * 6);
     this.rotation = angle;
 
-    // const maxI = Math.min(6, Math.ceil(distance / 6 / 24));
-    const maxI = 6;
+    const maxI = Math.min(6, Math.ceil(distance / 6 / 24));
 
     let x2 = x - 24 * Math.cos(angle) - 10;
     let y2 = y - 24 * Math.sin(angle) - 10;
@@ -169,17 +169,15 @@ export class Zoltraak extends Container implements Spawnable {
     targets.sort((a, b) => a.distance - b.distance);
     const targetList = new TargetList();
 
-    let damage = DAMAGE * Manager.instance.getElementValue(Element.Arcane);
+    let damage = DAMAGE + Manager.instance.getElementValue(Element.Arcane) * 8;
     for (let target of targets) {
       targetList.add(target.entity, damage);
 
-      if (target.entity.hp > damage) {
-        const [cx, cy] = target.entity.getCenter();
-
+      if (target.entity.body instanceof StaticBody) {
         Level.instance.damage(new GenericDamage(targetList));
+
+        const [cx, cy] = target.entity.getCenter();
         return getDistance(x, y, cx, cy);
-      } else {
-        damage -= target.entity.hp;
       }
     }
 
