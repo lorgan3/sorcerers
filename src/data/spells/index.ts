@@ -226,7 +226,7 @@ const BLINK = spell(ApplyCursor, {
   name: "Jilwer",
   description: "Blink forwards",
   elements: [Element.Physical],
-  cost: 15,
+  cost: 12,
   data: {
     applyKeys: [Key.M1],
     turnState: TurnState.Attacked,
@@ -259,7 +259,7 @@ const NEPHTEAR = spell(PoweredArcaneCircle, {
   name: "Nephtear",
   description: "Ice spike",
   elements: [Element.Elemental],
-  cost: 20,
+  cost: 14,
   data: {
     projectile: Nephtear,
     xOffset: 7,
