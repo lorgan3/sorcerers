@@ -169,7 +169,10 @@ const getElementFilter = (element: Element) =>
           </div>
           <div class="details">
             <span class="name">
-              <span>{{ previewSpell.name }}</span>
+              <span
+                >{{ previewSpell.name }}
+                <span v-if="previewSpell.stacking">⟳</span></span
+              >
             </span>
             <span class="description">{{ previewSpell.description }}</span>
           </div>
