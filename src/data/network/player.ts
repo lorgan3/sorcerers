@@ -4,8 +4,9 @@ import { Controller } from "../controller/controller";
 import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";
 import { Team } from "../team";
-import { Spell } from "../spells";
+import { Spell, getSpellCost } from "../spells";
 import { MANA_BASE_GAIN, MAX_MANA } from "./constants";
+import { Manager } from "./manager";
 
 export class Player {
   public readonly characters: Character[] = [];
@@ -19,6 +20,7 @@ export class Player {
   private turn = 0;
 
   public selectedSpell: Spell | null = null;
+  public executedSpells: Spell[] = [];
 
   public resolveReady!: () => void;
   public ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
@@ -122,5 +124,13 @@ export class Player {
     this.turn++;
     this.mana += MANA_BASE_GAIN;
     this._controller.resetKeys();
+    this.executedSpells = [];
+  }
+
+  cast(spell: Spell) {
+    this.mana -= getSpellCost(spell);
+    this.executedSpells.push(spell);
+
+    Manager.instance.resetCursor();
   }
 }

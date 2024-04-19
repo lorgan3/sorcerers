@@ -129,10 +129,7 @@ export abstract class Manager {
 
     this._turnState = turnState;
 
-    if (this.cursor) {
-      this.cursor.remove();
-      this.cursor = null;
-    }
+    this.resetCursor();
   }
 
   get self() {
@@ -179,10 +176,7 @@ export abstract class Manager {
     player.selectedSpell = spell;
 
     if (player === this.activePlayer) {
-      if (this.cursor) {
-        this.cursor.remove();
-        this.cursor = null;
-      }
+      this.resetCursor();
 
       if (
         this._turnState === TurnState.Ongoing &&
@@ -206,14 +200,14 @@ export abstract class Manager {
     this.activePlayer.active = character;
     this.activePlayerIndex = player;
 
-    if (this.cursor) {
-      this.cursor.remove();
-      this.cursor = null;
-    }
+    this.resetCursor();
 
     if (
       this.activePlayer.selectedSpell &&
-      this.activePlayer.mana >= getSpellCost(this.activePlayer.selectedSpell)
+      this.activePlayer.mana >= getSpellCost(this.activePlayer.selectedSpell) &&
+      !this.activePlayer.executedSpells.includes(
+        this.activePlayer.selectedSpell
+      )
     ) {
       this.cursor = new this.activePlayer.selectedSpell.cursor(
         this.activePlayer.activeCharacter,
@@ -265,5 +259,12 @@ export abstract class Manager {
     const value = this.elements[element];
     this.cachedElementValues[element] = { value, time: this.time };
     return value;
+  }
+
+  resetCursor() {
+    if (this.cursor) {
+      this.cursor.remove();
+      this.cursor = null;
+    }
   }
 }

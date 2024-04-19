@@ -46,7 +46,7 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ xOffset, yOffset, turnState, projectile }: TriggerData) {
-    this.character.player.mana -= getSpellCost(this.spell);
+    this.character.player.cast(this.spell);
 
     const position = this.character.player.controller.getMouse();
     projectile.cast(position[0] / 6 + xOffset, yOffset, this.character);

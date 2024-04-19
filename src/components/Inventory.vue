@@ -25,7 +25,9 @@ const poll = () => {
 
     const mana = Manager.instance.self.mana;
     availableList.value = SPELLS.map(
-      (spell) => (spell.costMultiplier?.() || 1) * spell.cost <= mana
+      (spell) =>
+        (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
+        !Manager.instance.self.executedSpells.includes(spell)
     );
   }
 };
@@ -41,7 +43,7 @@ watch(
 );
 
 const handleClick = (spell?: Spell) => {
-  if (spell) {
+  if (spell && !Manager.instance.self.executedSpells.includes(spell)) {
     if (Server.instance) {
       Manager.instance.selectSpell(spell);
 

@@ -75,7 +75,6 @@ export class Rock extends Container implements Spawnable {
 
   die() {
     Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
 
     // @TODO this should fade instead
     this.sound?.destroy();

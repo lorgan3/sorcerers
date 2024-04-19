@@ -331,7 +331,10 @@ export class Server extends Manager {
       case MessageType.SelectSpell:
         const spell = SPELLS[message.spell] || null;
 
-        if (player.selectedSpell !== spell) {
+        if (
+          player.selectedSpell !== spell &&
+          !player.executedSpells.includes(spell)
+        ) {
           this.selectSpell(spell, player);
 
           const newMessage: Message = {

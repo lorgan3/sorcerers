@@ -43,6 +43,7 @@ export interface Spell<TData = any> {
   elements: Element[];
   cost: number;
   costMultiplier?: () => number;
+  stacking?: boolean; // True if this spell does not end the turn
 }
 
 function spell<TData>(
@@ -115,13 +116,14 @@ const SHIELD = spell(ArcaneCircle, {
   cost: 10,
   costMultiplier: () =>
     1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+  stacking: true,
   data: {
     projectile: Shield,
     xOffset: 10,
     yOffset: 14,
     x: -8,
     y: -3,
-    turnState: TurnState.Ending,
+    turnState: TurnState.Ongoing,
   },
 });
 
@@ -162,6 +164,7 @@ const WINGS = spell(ApplyCursor, {
   cost: 15,
   costMultiplier: () =>
     1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+  stacking: true,
   data: {
     applyKeys: [Key.Up, Key.W],
     apply: (character: Character) => character.giveWings(),
@@ -322,13 +325,14 @@ const ROCK = spell(PoweredArcaneCircle, {
   description: "Control the earth",
   elements: [Element.Life, Element.Elemental],
   cost: 30,
+  stacking: true,
   data: {
     projectile: Rock,
     xOffset: 0,
     yOffset: 0,
     x: 0,
     y: 0,
-    turnState: TurnState.Attacked,
+    turnState: TurnState.Ongoing,
   },
 });
 
@@ -407,6 +411,7 @@ const MIND_CONTROL = spell(Lock, {
   description: "Swap control with another ally",
   elements: [Element.Life],
   cost: 30,
+  stacking: true,
   data: {
     target: Target.Ally,
     projectile: MindControl,

@@ -49,7 +49,7 @@ export class Range extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ x, y, xOffset, yOffset, turnState, projectile }: TriggerData) {
-    this.character.player.mana -= getSpellCost(this.spell);
+    this.character.player.cast(this.spell);
 
     const [px, py] = this.character.body.precisePosition;
     projectile.cast(

@@ -33,7 +33,6 @@ export class Lock extends Container implements Cursor<TriggerData> {
   private entity: HurtableEntity | null = null;
 
   private indicator: AnimatedSprite;
-  private projectile: DisplayObject | null = null;
 
   constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
@@ -61,10 +60,6 @@ export class Lock extends Container implements Cursor<TriggerData> {
   remove(): void {
     Level.instance.uiContainer.removeChild(this);
     this.character.setSpellSource(this, false);
-
-    if (this.projectile) {
-      Level.instance.remove(this.projectile);
-    }
   }
 
   animate(newLocked: boolean) {
@@ -98,7 +93,7 @@ export class Lock extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ projectile, turnState }: TriggerData) {
-    this.character.player.mana -= getSpellCost(this.spell);
+    this.character.player.cast(this.spell);
 
     const position = this.getPosition();
 

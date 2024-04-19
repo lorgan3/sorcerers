@@ -21,7 +21,7 @@ export class ApplyCursor implements Cursor<TriggerData> {
   remove(): void {}
 
   trigger({ apply, turnState }: TriggerData) {
-    this.character.player.mana -= getSpellCost(this.spell);
+    this.character.player.cast(this.spell);
 
     this.applied = true;
     apply(this.character);
