@@ -30,7 +30,7 @@ const TUTORIAL: TutorialMessage[] = [
       x: "-50%",
       y: "0px",
       value:
-        "Welcome to Sorcerers! This quick tutorial will explain the basic of the game.",
+        "Welcome to Sorcerers! This quick tutorial will explain the basics of the game.",
     },
     actions: [
       {
