@@ -30,7 +30,7 @@ export class StickyBody implements PhysicsBody {
   private stickDirection = -1;
 
   public readonly mask: CollisionMask;
-  public readonly velocity: number;
+  private readonly stickyVelocity: number;
   public gravity: number;
   public friction: number;
 
@@ -39,7 +39,7 @@ export class StickyBody implements PhysicsBody {
     { mask, velocity, friction = FRICTION, gravity = GRAVITY }: Config
   ) {
     this.mask = mask;
-    this.velocity = velocity;
+    this.stickyVelocity = velocity;
     this.friction = friction;
     this.gravity = gravity;
   }
@@ -55,10 +55,10 @@ export class StickyBody implements PhysicsBody {
   }
 
   deserialize(data: any[]) {
+    this.move(data[3], data[4]);
     this.stickDirection = data[0];
     this.xVelocity = data[1];
     this.yVelocity = data[2];
-    this.move(data[3], data[4]);
   }
 
   addVelocity(x: number, y: number) {
@@ -113,7 +113,7 @@ export class StickyBody implements PhysicsBody {
         }
 
         this.y = this.ry;
-        this.yVelocity = -this.velocity;
+        this.yVelocity = -this.stickyVelocity;
         this.xVelocity = 0;
         return true;
       }
@@ -135,7 +135,7 @@ export class StickyBody implements PhysicsBody {
         }
 
         this.x = this.rx;
-        this.xVelocity = (Math.sign(this.xVelocity) || 1) * this.velocity;
+        this.xVelocity = (Math.sign(this.xVelocity) || 1) * this.stickyVelocity;
         this.yVelocity = 0;
         return true;
       }
@@ -186,8 +186,8 @@ export class StickyBody implements PhysicsBody {
           this.y = this.ry;
         }
 
-        this.xVelocity = OFFSETS[newDirection][0] * this.velocity;
-        this.yVelocity = OFFSETS[newDirection][1] * this.velocity;
+        this.xVelocity = OFFSETS[newDirection][0] * this.stickyVelocity;
+        this.yVelocity = OFFSETS[newDirection][1] * this.stickyVelocity;
         dist -= 1;
       } else {
         const [ox, oy] = OFFSETS[this.stickDirection];
@@ -215,8 +215,8 @@ export class StickyBody implements PhysicsBody {
             this.ry = this.y;
           }
 
-          this.xVelocity = OFFSETS[oldDirection][0] * this.velocity;
-          this.yVelocity = OFFSETS[oldDirection][1] * this.velocity;
+          this.xVelocity = OFFSETS[oldDirection][0] * this.stickyVelocity;
+          this.yVelocity = OFFSETS[oldDirection][1] * this.stickyVelocity;
         } else {
           this.x = newX;
           this.y = newY;
@@ -244,5 +244,9 @@ export class StickyBody implements PhysicsBody {
 
   get sticky() {
     return this.stickDirection != -1;
+  }
+
+  get velocity() {
+    return Math.sqrt(this.xVelocity ** 2 + this.yVelocity ** 2);
   }
 }
