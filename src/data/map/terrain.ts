@@ -149,10 +149,12 @@ export class Terrain {
         ctx.moveTo(x, y);
         ctx.ellipse(x, y, r, r, 0, 0, Math.PI * 2);
       },
-      (ctx) => {
-        ctx.moveTo(x, y);
-        ctx.ellipse(x, y, r + 1, r + 1, 0, 0, Math.PI * 2);
-      }
+      r > 4
+        ? (ctx) => {
+            ctx.moveTo(x, y);
+            ctx.ellipse(x - 2, y - 2, r, r - 2, 0, 0, Math.PI * 2);
+          }
+        : undefined
     );
   }
 

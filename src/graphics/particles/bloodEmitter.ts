@@ -6,9 +6,9 @@ import { EntityType, HurtableEntity } from "../../data/entity/types";
 import { DamageSource } from "../../data/damage/types";
 import { Level } from "../../data/map/level";
 
-const TINT_MAP: Partial<Record<EntityType, number>> = {
-  [EntityType.Character]: 0xb91e1e,
-  [EntityType.Shield]: 0x0690ce,
+const TINT_MAP: Partial<Record<EntityType, string>> = {
+  [EntityType.Character]: "#b91e1e",
+  [EntityType.Shield]: "#0690ce",
 };
 
 export class BloodEmitter
@@ -65,6 +65,15 @@ export class BloodEmitter
 
         particle.x += particle.xVelocity * dt;
         particle.y += particle.yVelocity * dt;
+      } else {
+        particle.lifetime = 0;
+        Level.instance.terrain.draw(
+          (ctx) => {
+            ctx.fillStyle = particle.tint.toString();
+            ctx.fillRect((particle.x / 6) | 0, (particle.y / 6) | 0, 1, 1);
+          },
+          () => {}
+        );
       }
     }
   }
@@ -78,7 +87,7 @@ export class BloodEmitter
     y: number,
     xVelocity: number,
     yVelocity: number,
-    tint = 0xb91e1e
+    tint = "#b91e1e"
   ) {
     this.activeParticles++;
     let particle: Particle | undefined;
@@ -101,7 +110,7 @@ export class BloodEmitter
     particle.yVelocity = yVelocity;
     particle.tint = tint;
 
-    particle.lifetime = 30 * (1 + 0.2 * Math.random());
+    particle.lifetime = 500 * (1 + 0.2 * Math.random());
   }
 
   burst(entity: HurtableEntity, damage: number, source?: DamageSource) {

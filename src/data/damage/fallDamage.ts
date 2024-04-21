@@ -20,13 +20,26 @@ export enum Shape {
   Acid,
 }
 
+const r = 14;
+
+const acidGradient = new OffscreenCanvas(r * 2, r * 2);
+const ctx = acidGradient.getContext("2d")!;
+
+const gradient = ctx.createRadialGradient(r, r, r / 2, r, r, r);
+gradient.addColorStop(0, "#18962fe0");
+gradient.addColorStop(1, "#18962f00");
+ctx.arc(r, r, r, 0, 2 * Math.PI);
+ctx.fillStyle = gradient;
+ctx.fill();
+
 const SHAPES: Record<
   Shape,
   {
-    drawShape: (
+    subtract: (
       this: FallDamage,
       ctx: OffscreenCanvasRenderingContext2D
     ) => void;
+    draw?: (this: FallDamage, ctx: OffscreenCanvasRenderingContext2D) => void;
     mask: CollisionMask;
     xOffset: number;
     yOffset: number;
@@ -35,7 +48,7 @@ const SHAPES: Record<
   }
 > = {
   [Shape.SwordTip]: {
-    drawShape: function (ctx) {
+    subtract: function (ctx) {
       ctx.drawImage(swordTipCanvas, this.x, this.y);
     },
     mask: swordTip,
@@ -45,7 +58,7 @@ const SHAPES: Record<
     power: 0.5,
   },
   [Shape.SmallSword]: {
-    drawShape: function (ctx) {
+    subtract: function (ctx) {
       ctx.drawImage(smallSwordTipCanvas, this.x, this.y);
     },
     mask: smallSwordTip,
@@ -55,8 +68,11 @@ const SHAPES: Record<
     power: 0.1,
   },
   [Shape.Acid]: {
-    drawShape: function (ctx) {
+    subtract: function (ctx) {
       ctx.drawImage(circle16x16Canvas, this.x, this.y);
+    },
+    draw: function (ctx) {
+      ctx.drawImage(acidGradient, this.x - r / 2, this.y - r / 2);
     },
     mask: circle16x16,
     xOffset: 8,
@@ -80,8 +96,12 @@ export class FallDamage implements DamageSource {
   damage() {
     const data = SHAPES[this.shape];
 
+    if (data.draw) {
+      Level.instance.terrain.draw((ctx) => data.draw!.call(this, ctx));
+    }
+
     Level.instance.terrain.subtract(this.x, this.y, data.mask, (ctx) =>
-      data.drawShape.call(this, ctx)
+      data.subtract.call(this, ctx)
     );
 
     this.getTargets().damage(this);
