@@ -188,9 +188,9 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
 
 const MAGIC_MISSILE = spell(ApplyCursor, {
   name: "Vollzanbel",
-  description: "Magic missile",
+  description: "Guided missile",
   elements: [Element.Life],
-  cost: 30,
+  cost: 40,
   data: {
     applyKeys: [Key.M1],
     turnState: TurnState.Attacked,

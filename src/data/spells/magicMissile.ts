@@ -102,7 +102,7 @@ export class MagicMissile extends Container implements Syncable {
         y,
         16,
         3,
-        2 + Manager.instance.getElementValue(Element.Elemental)
+        5 + Manager.instance.getElementValue(Element.Elemental)
       )
     );
 
