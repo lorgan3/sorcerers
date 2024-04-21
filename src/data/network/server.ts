@@ -28,6 +28,7 @@ export class Server extends Manager {
   private suddenDeath = false;
 
   private disconnectedPlayers: Player[] = [];
+  private localPlayers: Player[] = [];
 
   private static _serverInstance?: Server;
   static get instance() {
@@ -41,9 +42,6 @@ export class Server extends Manager {
 
     super(peer);
     Server._serverInstance = this;
-
-    this._self = new Player();
-    this.players.push(this._self);
   }
 
   connect(controller: KeyboardController) {
@@ -54,12 +52,9 @@ export class Server extends Manager {
     super.connect(controller);
     controller.isHost = true;
 
-    this._self!.connect(
-      this._self!.name,
-      this._self!.team,
-      this._self!.color,
-      this.controller
-    );
+    for (let player of this.localPlayers) {
+      player.connect(player.name, player.team, player.color, this.controller);
+    }
   }
 
   destroy() {
@@ -72,23 +67,32 @@ export class Server extends Manager {
     }
   }
 
-  join(name: string, team: Team) {
-    this._self!.connect(
-      name,
-      team,
-      this.availableColors.pop()!,
-      this.controller
-    );
+  addPlayer(name: string, team: Team) {
+    const player = new Player();
+    this.players.push(player);
+    this.localPlayers.push(player);
+
+    player.connect(name, team, this.availableColors.pop()!, this.controller);
+
+    if (!this._self) {
+      this._self = player;
+    }
+
+    return player;
   }
 
   async start() {
-    Server.instance.broadcast({
-      type: MessageType.StartGame,
-      map: await Level.instance.terrain.serialize(),
-    });
+    if (this.localPlayers.length !== this.players.length) {
+      Server.instance.broadcast({
+        type: MessageType.StartGame,
+        map: await Level.instance.terrain.serialize(),
+      });
 
-    this._self?.resolveReady();
-    await Promise.all(this.players.map((player) => player.ready));
+      for (let player of this.localPlayers) {
+        player.resolveReady();
+      }
+      await Promise.all(this.players.map((player) => player.ready));
+    }
 
     for (let player of this.players) {
       for (let character of player.team.characters) {
@@ -265,6 +269,24 @@ export class Server extends Manager {
         }
       });
     });
+  }
+
+  kick(player: Player) {
+    const localIndex = this.localPlayers.indexOf(player);
+    if (localIndex === 0) {
+      throw new Error("Cannot kick the host!");
+    }
+
+    if (localIndex > 0) {
+      this.localPlayers.splice(localIndex, 1);
+
+      this.players.splice(this.players.indexOf(player), 1);
+      player.destroy();
+      this.availableColors.push(player.color);
+    } else {
+      // Closing the connection takes care of splicing.
+      player.connection?.close();
+    }
   }
 
   syncDamage(damageSource: DamageSource) {
@@ -475,6 +497,15 @@ export class Server extends Manager {
     });
   }
 
+  setActiveCharacter(playerId: number, characterId: number) {
+    const character = super.setActiveCharacter(playerId, characterId);
+    if (this.localPlayers.includes(this.activePlayer!)) {
+      this._self = this.activePlayer;
+    }
+
+    return character;
+  }
+
   broadcastActiveCharacter(activePlayer: number, activeCharacter: number) {
     this.setActiveCharacter(activePlayer, activeCharacter);
 
@@ -534,10 +565,6 @@ export class Server extends Manager {
 
       entity.die();
     }
-  }
-
-  rename(newName: string) {
-    this._self!.rename(newName);
   }
 
   focus(target: Spawnable, callback?: () => void) {
