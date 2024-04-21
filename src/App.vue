@@ -86,6 +86,16 @@ button {
   color: var(--highlight);
 }
 
+.icon-button {
+  background: none;
+  border: none;
+  margin: -4px 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 18px;
+  vertical-align: middle;
+}
+
 .truncate {
   white-space: nowrap;
   text-overflow: ellipsis;

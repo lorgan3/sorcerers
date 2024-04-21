@@ -1,16 +1,25 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-const { label, modelValue, validator, value, autofocus, disabled, change } =
-  defineProps<{
-    label?: string;
-    modelValue?: string;
-    value?: string;
-    validator?: (value: string) => boolean;
-    autofocus?: boolean;
-    disabled?: boolean;
-    change?: (event: Event) => void;
-  }>();
+const {
+  label,
+  modelValue,
+  validator,
+  value,
+  autofocus,
+  disabled,
+  change,
+  name,
+} = defineProps<{
+  label?: string;
+  modelValue?: string;
+  value?: string;
+  validator?: (value: string) => boolean;
+  autofocus?: boolean;
+  disabled?: boolean;
+  change?: (event: Event) => void;
+  name?: string;
+}>();
 
 const emit = defineEmits<{
   "update:modelValue": [string];
@@ -38,6 +47,7 @@ const handleInput = (event: Event) => {
       :autofocus="autofocus"
       :disabled="disabled"
       @change="change"
+      :name="name"
     />
   </label>
 </template>

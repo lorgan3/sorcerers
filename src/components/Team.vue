@@ -44,7 +44,7 @@ const handleSave = () => {
     >
       <button
         v-if="teams.length > 1"
-        class="close-button"
+        class="icon-button close-button"
         @click="handleRemoveTeam(index)"
       >
         ✖️
@@ -54,6 +54,7 @@ const handleSave = () => {
         label="Name"
         v-model="teams[index].name"
         :validator="(text: string) => !!text.trim()"
+        name="name"
       />
 
       <label class="character-input">
@@ -112,12 +113,6 @@ const handleSave = () => {
       position: absolute;
       right: 5px;
       top: 5px;
-      background: none;
-      border: none;
-      margin: 0;
-      padding: 0;
-      cursor: pointer;
-      font-size: 18px;
     }
   }
 }
