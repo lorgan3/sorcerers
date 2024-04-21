@@ -25,7 +25,8 @@ type Target = [number, number] | HurtableEntity;
 
 export class ChainLightning extends Container implements Spawnable {
   private static chargeTime = 15;
-  private static maxRange = 200;
+  private static maxRange = 220;
+  private static defaultRange = 200;
   private static maxAngle = Math.PI / 4;
   private static maxChains = 5;
 
@@ -161,8 +162,8 @@ export class ChainLightning extends Container implements Spawnable {
 
     if (targets.length === 0) {
       targets.push([
-        checkX + Math.cos(direction) * ChainLightning.maxRange,
-        checkY + Math.sin(direction) * ChainLightning.maxRange,
+        checkX + Math.cos(direction) * ChainLightning.defaultRange,
+        checkY + Math.sin(direction) * ChainLightning.defaultRange,
       ]);
     }
 

@@ -5,7 +5,7 @@ import { ControllableSound } from "../sound/controllableSound";
 import { Sound } from "../sound";
 
 export class Lightning extends AnimatedSprite {
-  private static lengthMultiplier = 80;
+  private static lengthMultiplier = 90;
 
   constructor(x: number, y: number, length: number, direction: number) {
     super(
