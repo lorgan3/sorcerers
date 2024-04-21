@@ -8,7 +8,7 @@ import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 import { Team } from "../team";
 import { COLORS } from "./constants";
-import { SPELLS } from "../spells";
+import { SPELLS, getSpellCost } from "../spells";
 import { DamageSource } from "../damage/types";
 import {
   HurtableEntity,
@@ -491,6 +491,17 @@ export class Server extends Manager {
         player.characters.indexOf(character)
       );
       player.nextTurn();
+
+      if (
+        this.activePlayer &&
+        this.activePlayer.selectedSpell &&
+        this.activePlayer.mana >= getSpellCost(this.activePlayer.selectedSpell)
+      ) {
+        this.cursor = new this.activePlayer.selectedSpell.cursor(
+          this.activePlayer.activeCharacter,
+          this.activePlayer.selectedSpell
+        );
+      }
 
       this.addPopup({
         title: `${this.activePlayer!.name}'s turn`,

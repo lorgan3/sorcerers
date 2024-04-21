@@ -206,19 +206,6 @@ export abstract class Manager {
 
     this.resetCursor();
 
-    if (
-      this.activePlayer.selectedSpell &&
-      this.activePlayer.mana >= getSpellCost(this.activePlayer.selectedSpell) &&
-      !this.activePlayer.executedSpells.includes(
-        this.activePlayer.selectedSpell
-      )
-    ) {
-      this.cursor = new this.activePlayer.selectedSpell.cursor(
-        this.activePlayer.activeCharacter,
-        this.activePlayer.selectedSpell
-      );
-    }
-
     return this.activePlayer.activeCharacter;
   }
 

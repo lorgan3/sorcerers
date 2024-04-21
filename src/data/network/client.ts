@@ -5,7 +5,7 @@ import { Player } from "./player";
 import { Character } from "../entity/character";
 import { Manager } from "./manager";
 import { Team } from "../team";
-import { SPELLS } from "../spells";
+import { SPELLS, getSpellCost } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
@@ -177,6 +177,19 @@ export class Client extends Manager {
           message.activeCharacter
         );
         character.player.nextTurn();
+
+        if (
+          this.activePlayer &&
+          this.activePlayer.selectedSpell &&
+          this.activePlayer.mana >=
+            getSpellCost(this.activePlayer.selectedSpell)
+        ) {
+          this.cursor = new this.activePlayer.selectedSpell.cursor(
+            this.activePlayer.activeCharacter,
+            this.activePlayer.selectedSpell
+          );
+        }
+
         Level.instance.cameraTarget.setTarget(character);
         break;
 
