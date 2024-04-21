@@ -182,6 +182,7 @@ export class Bakuretsu extends Container implements Spawnable {
     );
 
     Server.instance.create(entity);
+    Server.instance.focus(entity);
     return entity;
   }
 }
