@@ -16,6 +16,7 @@
   "dependencies": {
     "@pixi/sound": "5.2.3",
     "firebase": "^10.8.0",
+    "lodash.debounce": "^4.0.8",
     "meta-png": "^1.0.6",
     "peerjs": "^1.5.2",
     "pixi-viewport": "^5.0.2",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@babel/types": "^7.23.9",
     "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/lodash.debounce": "^4.0.9",
     "@vitejs/plugin-vue": "^5.0.4",
     "binpacking": "^0.0.1",
     "fluent-ffmpeg": "^2.1.2",
