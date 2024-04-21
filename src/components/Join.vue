@@ -22,6 +22,10 @@ const settings = get("Settings") || defaults();
 
 const teams = ref(settings.teams);
 const selectedTeam = ref(settings.defaultTeam ?? 0);
+if (!teams.value[selectedTeam.value]) {
+  selectedTeam.value = 0;
+}
+
 const name = ref(settings.name);
 const connecting = ref(false);
 const clientReady = ref(false);
@@ -29,8 +33,6 @@ const clientReady = ref(false);
 const key = ref(sessionStorage.getItem(LAST_GAME_KEY) || "");
 const players = ref<string[]>([]);
 const map = ref("");
-
-let peer: Peer | null = null;
 
 const nameValidator = (name: string) => !!name.trim();
 
@@ -41,7 +43,6 @@ const createClient = () => {
   const peer = new Peer();
 
   peer.on("error", () => {
-    peer.destroy();
     connecting.value = false;
 
     createClient();
@@ -79,32 +80,40 @@ const handleConnect = async () => {
     return;
   }
 
-  Client.instance.onLobbyUpdate(async (message) => {
-    switch (message.type) {
-      case MessageType.LobbyUpdate:
-        players.value = message.players;
-        map.value = message.map;
-        break;
+  Client.instance.onLobbyUpdate(
+    async (message) => {
+      switch (message.type) {
+        case MessageType.LobbyUpdate:
+          players.value = message.players;
+          map.value = message.map;
+          break;
 
-      case MessageType.StartGame:
-        onPlay(
-          await Map.fromConfig({
-            terrain: {
-              data: new Blob([message.map.terrain.data]),
-              mask: message.map.terrain.mask,
-            },
-            background: {
-              data: new Blob([message.map.background.data]),
-            },
-            layers: message.map.layers.map((layer) => ({
-              ...layer,
-              data: new Blob([layer.data]),
-            })),
-          })
-        );
-        break;
+        case MessageType.StartGame:
+          onPlay(
+            await Map.fromConfig({
+              terrain: {
+                data: new Blob([message.map.terrain.data]),
+                mask: message.map.terrain.mask,
+              },
+              background: {
+                data: new Blob([message.map.background.data]),
+              },
+              layers: message.map.layers.map((layer) => ({
+                ...layer,
+                data: new Blob([layer.data]),
+              })),
+            })
+          );
+          break;
+      }
+    },
+    () => {
+      console.log("disconnect");
+      createClient();
+      connecting.value = false;
+      players.value = [];
     }
-  });
+  );
 };
 
 onMounted(() => createClient());

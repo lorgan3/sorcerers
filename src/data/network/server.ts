@@ -44,12 +44,12 @@ export class Server extends Manager {
     Server._serverInstance = this;
   }
 
-  connect(controller: KeyboardController) {
+  connect(controller: KeyboardController, onBack: () => void) {
     if (this.controller) {
       throw new Error("Connecting an already connected server!");
     }
 
-    super.connect(controller);
+    super.connect(controller, onBack);
     controller.isHost = true;
 
     for (let player of this.localPlayers) {
@@ -59,12 +59,15 @@ export class Server extends Manager {
 
   destroy() {
     console.log("Destroying server");
+    super.destroy();
     Server._serverInstance = undefined;
 
     for (let player of this.players) {
       player.connection?.off("data");
       player.connection?.close();
     }
+
+    this.peer.destroy();
   }
 
   addPlayer(name: string, team: Team) {
@@ -182,7 +185,7 @@ export class Server extends Manager {
 
     if (
       this.frames % 3 === 0 &&
-      this.players.indexOf(this.activePlayer!) === 0 &&
+      this.activePlayer! === this._self &&
       this.isControlling()
     ) {
       const pressedKeys = (
@@ -196,7 +199,7 @@ export class Server extends Manager {
     }
   }
 
-  listen() {
+  listen(onUpdate?: () => void) {
     console.log("Server starting", this.peer);
 
     this.peer.on("connection", (connection) => {
@@ -209,6 +212,7 @@ export class Server extends Manager {
       connection.on("open", async () => {
         console.log("open");
         player.reconnect(connection);
+        onUpdate?.();
 
         if (this.started) {
           connection.send({
@@ -267,6 +271,7 @@ export class Server extends Manager {
           this.disconnectedPlayers.push(player);
           player.disconnect();
         }
+        onUpdate?.();
       });
     });
   }

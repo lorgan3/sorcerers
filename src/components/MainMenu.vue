@@ -31,7 +31,7 @@ let selectedMap: Map;
 watch(canvas, (canvas) => {
   if (canvas) {
     container.onComplete(async () => {
-      const controller = await connect(canvas, selectedMap);
+      const controller = await connect(canvas, selectedMap, handleBack);
       controller.addKeyListener(Key.M2, () => {
         inventoryOpen.value = !inventoryOpen.value;
       });

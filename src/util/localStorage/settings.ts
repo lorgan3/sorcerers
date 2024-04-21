@@ -39,7 +39,7 @@ export const defaults = (): Settings => {
   return {
     name: "Player",
     teams: [Team.random()],
-    defaultTeam: -1,
+    defaultTeam: 0,
     tutorialDone: false,
   };
 };

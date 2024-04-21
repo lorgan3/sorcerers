@@ -13,13 +13,14 @@ const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
 
 export abstract class Manager {
-  private static _instance: Manager;
+  private static _instance?: Manager;
   static get instance() {
-    return Manager._instance;
+    return Manager._instance!;
   }
 
   protected _self: Player | null = null;
   protected controller?: KeyboardController;
+  protected onBack?: () => void;
   public players: Player[] = [];
   protected activePlayer: Player | null = null;
   protected activePlayerIndex = -1;
@@ -44,12 +45,15 @@ export abstract class Manager {
     Manager._instance = this;
   }
 
-  connect(controller: KeyboardController) {
+  connect(controller: KeyboardController, onBack: () => void) {
     this.controller = controller;
+    this.onBack = onBack;
     Level.instance.cameraTarget.connect(controller);
   }
 
-  abstract destroy(): void;
+  destroy() {
+    Manager._instance = undefined;
+  }
 
   tick(dt: number, dtMs: number) {
     if (this.cursor) {

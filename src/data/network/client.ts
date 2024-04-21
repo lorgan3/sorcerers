@@ -90,20 +90,28 @@ export class Client extends Manager {
     });
   }
 
-  onLobbyUpdate(fn: (message: Message) => void) {
+  onLobbyUpdate(fn: (message: Message) => void, onClose: () => void) {
     this.connection!.on("data", (data) => fn(data as Message));
+    this.connection!.on("close", onClose);
   }
 
-  connect(controller: KeyboardController) {
+  connect(controller: KeyboardController, onBack: () => void) {
     if (this.controller) {
       throw new Error("Connecting an already connected client!");
     }
 
-    super.connect(controller);
+    super.connect(controller, onBack);
 
     this.connection!.off("data");
     this.connection!.on("data", (data) => {
       this.handleMessage(data as Message);
+    });
+
+    this.connection!.off("close");
+    this.connection!.on("close", () => {
+      console.log("closed");
+      this.destroy();
+      onBack();
     });
 
     this.broadcast({
@@ -113,9 +121,11 @@ export class Client extends Manager {
 
   destroy() {
     console.log("Destroying client");
+    super.destroy();
     Client._clientInstance = undefined;
     this.connection?.off("data");
     this.connection?.close();
+    this.peer.destroy();
   }
 
   private handleMessage(message: Message) {

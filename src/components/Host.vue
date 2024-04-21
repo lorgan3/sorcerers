@@ -12,6 +12,8 @@ import { Map } from "../data/map";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
+import { Player } from "../data/network/player";
+import debounce from "lodash.debounce";
 
 const { onBack, onPlay } = defineProps<{
   onBack: () => void;
@@ -21,9 +23,10 @@ const { onBack, onPlay } = defineProps<{
 const settings = get("Settings") || defaults();
 
 const teams = ref(settings.teams);
-const selectedTeam = ref(settings.defaultTeam);
-const name = ref(settings.name);
 const serverStarting = ref(false);
+const localPlayers = ref<Array<{ name: string; team: number; ref: Player }>>(
+  []
+);
 
 const CUSTOM = "custom";
 const selectedMap = ref(Object.keys(defaultMaps)[0]);
@@ -32,8 +35,7 @@ const customMapString = ref("");
 const customUpload = ref();
 
 const key = ref("");
-const players = ref<string[]>();
-
+const players = ref<string[]>([]);
 let promise = ref<Promise<void>>();
 
 const createServer = () =>
@@ -47,8 +49,6 @@ const createServer = () =>
     const peer = new Peer(PEER_ID_PREFIX + key.value);
 
     peer.on("error", () => {
-      peer.destroy();
-
       createServer().then(resolve);
     });
 
@@ -56,44 +56,60 @@ const createServer = () =>
       peer.off("error");
 
       const server = new Server(peer);
-      server.join(name.value, teams.value[selectedTeam.value] || Team.random());
-      server.listen();
+      const player = server.addPlayer(
+        settings.name,
+        teams.value[settings.defaultTeam] || Team.random()
+      );
+      localPlayers.value.push({
+        name: player.name,
+        team: settings.defaultTeam,
+        ref: player,
+      });
+
+      server.listen(updateLobby);
       resolve();
     });
   });
 
-let timer = -1;
-onMounted(() => {
+onMounted(async () => {
   promise.value = createServer();
 
-  timer = window.setInterval(() => {
-    if (!Server.instance) {
-      return;
-    }
-
-    players.value = Server.instance.players.map((player) => player.name);
-    Server.instance.broadcast({
-      type: MessageType.LobbyUpdate,
-      map: selectedMap.value,
-      players: players.value,
-    });
-  }, 1000);
+  await promise.value;
+  updateLobby();
 });
 
-onUnmounted(() => window.clearInterval(timer));
+const updateLobby = debounce(() => {
+  if (!Server.instance) {
+    return;
+  }
+
+  players.value = Server.instance.players.map((player) => player.name);
+  Server.instance.broadcast({
+    type: MessageType.LobbyUpdate,
+    map: selectedMap.value,
+    players: players.value,
+  });
+}, 200);
 
 const nameValidator = (name: string) => !!name.trim();
 
-const handleChangeName = (event: Event) => {
+const handleChangeName = (event: Event, index: number) => {
   const name = (event.target as HTMLInputElement).value;
 
   if (nameValidator(name)) {
-    Server.instance.rename(name);
+    localPlayers.value[index].ref.rename(name);
+    updateLobby();
   }
+};
+
+const handleChangeTeam = (event: Event, index: number) => {
+  const teamIndex = Number((event.target as HTMLSelectElement).value);
+  localPlayers.value[index].ref.team = teams.value[teamIndex] || Team.random();
 };
 
 const handleSelectMap = (map: string) => {
   selectedMap.value = map;
+  updateLobby();
 };
 
 const handleUploadMap = (event: Event) => {
@@ -136,13 +152,11 @@ const handleStart = async () => {
   serverStarting.value = true;
   set("Settings", {
     ...settings,
-    name: name.value,
-    defaultTeam: selectedTeam.value,
+    name: localPlayers.value[0].name,
+    defaultTeam: localPlayers.value[0].team,
   });
 
   await promise.value;
-
-  window.clearInterval(timer);
 
   if (selectedMap.value === CUSTOM) {
     onPlay(await Map.fromBlob(customMap.value!));
@@ -151,6 +165,34 @@ const handleStart = async () => {
       await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value])
     );
   }
+};
+
+const handleAddLocalPlayer = () => {
+  const player = Server.instance.addPlayer(
+    `${settings.name} (${players.value?.length})`,
+    Team.random()
+  );
+  localPlayers.value.push({
+    name: player.name,
+    team: -1,
+    ref: player,
+  });
+
+  updateLobby();
+};
+
+const handleKick = (index: number) => {
+  const player = Server.instance.players[index];
+  const localPlayerIndex = localPlayers.value.findIndex(
+    (localPlayer) => localPlayer.ref.name === player.name && !player.connection
+  );
+
+  if (localPlayerIndex !== -1) {
+    localPlayers.value.splice(localPlayerIndex, 1);
+  }
+
+  Server.instance.kick(Server.instance.players[index]);
+  updateLobby();
 };
 </script>
 
@@ -163,31 +205,59 @@ const handleStart = async () => {
     </div>
 
     <div class="flex-list flex-list--wide">
-      <h2>Players</h2>
+      <h2>
+        Players
+        <button
+          v-if="players.length < 4"
+          class="icon-button"
+          title="Add local player"
+          @click="handleAddLocalPlayer"
+        >
+          ➕
+        </button>
+      </h2>
       <ul class="players">
-        <li v-for="player in players">{{ player }}</li>
+        <li v-for="(player, index) in players">
+          {{ player }}
+          <button
+            v-if="index > 0"
+            class="icon-button"
+            title="Kick"
+            @click="handleKick(index)"
+          >
+            ✖️
+          </button>
+        </li>
       </ul>
     </div>
 
-    <div class="options flex-list">
+    <div class="options flex-list flex-list--wide">
       <h2>Settings</h2>
-      <Input
-        label="name"
-        v-model="name"
-        :change="handleChangeName"
-        :validator="nameValidator"
-      />
-      <label class="label">
-        Team
-        <select v-model="selectedTeam">
-          <option v-for="(team, index) in teams" :value="index">
-            {{ team.name }}
-          </option>
-        </select>
-        <span class="meta"
-          >({{ teams[selectedTeam]?.characters.join(", ") }})</span
-        >
-      </label>
+      <div class="player-input">
+        <div v-for="(player, index) in localPlayers">
+          <Input
+            label="Player name"
+            v-model="localPlayers[index].name"
+            :change="(event) => handleChangeName(event, index)"
+            :validator="nameValidator"
+          />
+          <label class="label">
+            Player team
+            <select
+              v-model="localPlayers[index].team"
+              @change="(event) => handleChangeTeam(event, index)"
+            >
+              <option value="-1">Random</option>
+              <option v-for="(team, index) in teams" :value="index">
+                {{ team.name }}
+              </option>
+            </select>
+            <span class="meta"
+              >({{ player.ref.team.characters.join(", ") }})</span
+            >
+          </label>
+        </div>
+      </div>
 
       <label class="label">
         Map
@@ -260,6 +330,18 @@ const handleStart = async () => {
     color: var(--primary);
     font-size: 14px;
     font-family: system-ui;
+  }
+
+  .player-input {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 1fr 1fr;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
   }
 }
 

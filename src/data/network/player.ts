@@ -74,6 +74,12 @@ export class Player {
     return this._team;
   }
 
+  set team(value: Team) {
+    if (value.isValid()) {
+      this._team = value;
+    }
+  }
+
   get controller() {
     return this._controller;
   }
