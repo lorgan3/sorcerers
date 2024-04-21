@@ -243,11 +243,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   private onCollide = () => {
     const [x, y] = this.body.position;
-    if (
-      this.body.yVelocity > SMOKE_TRIGGER &&
-      (Level.instance.terrain.collisionMask.collidesWithPoint(x + 1, y + 16) ||
-        Level.instance.terrain.collisionMask.collidesWithPoint(x + 5, y + 16))
-    ) {
+    if (this.body.yVelocity > SMOKE_TRIGGER && this.body.grounded) {
       Level.instance.add(
         new SmokePuff(this.position.x + 18, this.position.y + 72)
       );
