@@ -41,7 +41,7 @@ export abstract class Manager {
   protected cursor: Cursor | null = null;
   private popups: Popup[] = [];
 
-  constructor(public readonly peer: Peer) {
+  constructor(public readonly peer?: Peer) {
     Manager._instance = this;
   }
 

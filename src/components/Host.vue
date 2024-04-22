@@ -138,7 +138,7 @@ const handleBack = () => {
   }
 
   if (Server.instance) {
-    Server.instance.peer.destroy();
+    Server.instance.destroy();
   }
 
   onBack();

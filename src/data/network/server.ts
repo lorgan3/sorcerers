@@ -35,7 +35,7 @@ export class Server extends Manager {
     return Server._serverInstance!;
   }
 
-  constructor(peer: Peer) {
+  constructor(peer?: Peer) {
     if (Server._serverInstance !== undefined) {
       throw new Error("Server already exists!");
     }
@@ -67,7 +67,7 @@ export class Server extends Manager {
       player.connection?.close();
     }
 
-    this.peer.destroy();
+    this.peer?.destroy();
   }
 
   addPlayer(name: string, team: Team) {
@@ -202,7 +202,7 @@ export class Server extends Manager {
   listen(onUpdate?: () => void) {
     console.log("Server starting", this.peer);
 
-    this.peer.on("connection", (connection) => {
+    this.peer?.on("connection", (connection) => {
       let player = this.disconnectedPlayers.pop()!;
       if (!player) {
         player = new Player();

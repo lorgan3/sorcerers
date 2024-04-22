@@ -120,8 +120,7 @@ onMounted(() => createClient());
 
 const handleBack = () => {
   if (Client.instance) {
-    Client.instance.peer.disconnect();
-    Client.instance.peer.destroy();
+    Client.instance.destroy();
   }
 
   onBack();
