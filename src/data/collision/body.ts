@@ -12,6 +12,8 @@ const MIN_MOVEMENT = 0.01;
 
 const SPEED = 0.08;
 const JUMP_STRENGTH = 3.3;
+const JUMP_COOLDOWN = 15;
+const JUMP_CHARGE_TIME = 5;
 
 interface Config {
   mask: CollisionMask;
@@ -37,7 +39,7 @@ export class Body implements PhysicsBody {
   private rY = 0;
 
   private _grounded = false;
-  private jumped = false;
+  private jumpTimer = 0;
 
   public readonly mask: CollisionMask;
   public gravity: number;
@@ -93,13 +95,13 @@ export class Body implements PhysicsBody {
   }
 
   jump() {
-    if (this.jumped || this.yVelocity < 0) {
+    if (this.jumpTimer > 0 || this.yVelocity < 0) {
       return false;
     }
 
     this.yVelocity -= JUMP_STRENGTH;
     this.active = 1;
-    this.jumped = true;
+    this.jumpTimer = JUMP_COOLDOWN;
     return true;
   }
 
@@ -208,6 +210,10 @@ export class Body implements PhysicsBody {
         this.yVelocity *= Math.pow(this.airYFriction, dt);
       }
     } else {
+      if (this.jumpTimer > JUMP_CHARGE_TIME) {
+        this.jumpTimer -= dt;
+      }
+
       // We're going up. Check if we hit a ceiling.
       this.lastRollDirection = 0;
       const ceiled = this.surface.collidesWith(
@@ -281,7 +287,11 @@ export class Body implements PhysicsBody {
     this.rX = alignX(this.x);
 
     // If we're on the ground and barely moving, go to sleep.
-    if (this._grounded && Math.abs(this.xVelocity) < MIN_MOVEMENT) {
+    if (
+      this._grounded &&
+      this.jumpTimer <= 0 &&
+      Math.abs(this.xVelocity) < MIN_MOVEMENT
+    ) {
       this.xVelocity = 0;
       this.yVelocity = 0;
       this.active = 0;
