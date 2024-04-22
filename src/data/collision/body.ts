@@ -155,17 +155,12 @@ export class Body implements PhysicsBody {
       );
 
       if (this._grounded) {
-        if (
-          this.onCollide &&
-          this.yVelocity > this.gravity * COLLISION_TRIGGER
-        ) {
-          this.onCollide(this.rX, this.rY);
-        }
+        let yCopy = this.yVelocity;
 
         // We hit the ground, align with it.
-        while (this.yVelocity * dt > 1) {
-          this.yVelocity /= 2;
-          let v = this.yVelocity * dt;
+        while (yCopy * dt > 1) {
+          yCopy /= 2;
+          let v = yCopy * dt;
 
           if (
             !this.surface.collidesWith(this.mask, this.rX, alignY(this.y + v))
@@ -173,11 +168,18 @@ export class Body implements PhysicsBody {
             this.y += v;
           }
         }
-
-        this.jumped = false;
-        this.yVelocity *= this.bounciness;
         this.y = alignY(this.y);
         this.rY = this.y;
+
+        if (
+          this.onCollide &&
+          this.yVelocity > this.gravity * COLLISION_TRIGGER
+        ) {
+          this.onCollide(this.rX, this.rY);
+        }
+
+        this.jumpTimer -= dt;
+        this.yVelocity *= this.bounciness;
 
         // Roll off slopes.
         if (this.roundness && this.yVelocity > -0.5) {
@@ -223,6 +225,9 @@ export class Body implements PhysicsBody {
       );
 
       if (ceiled) {
+        this.y = alignY(this.y); // This isn't accurate but good enough™️
+        this.rY = this.y;
+
         if (
           this.onCollide &&
           this.yVelocity < -this.gravity * COLLISION_TRIGGER
@@ -231,8 +236,6 @@ export class Body implements PhysicsBody {
         }
 
         this.yVelocity *= this.bounciness;
-        this.y = alignY(this.y); // This isn't accurate but good enough™️
-        this.rY = this.y;
       }
 
       this.xVelocity *= Math.pow(this.airXFriction, dt);
@@ -262,14 +265,12 @@ export class Body implements PhysicsBody {
         this._grounded = true;
         this.xVelocity *= Math.pow(this.groundFriction, dt);
       } else {
-        if (this.onCollide) {
-          this.onCollide(this.rX, this.rY);
-        }
+        let xCopy = this.xVelocity;
 
         // We hit a wall, align with it.
-        while (Math.abs(this.xVelocity * dt) > 1) {
-          this.xVelocity /= 2;
-          let v = this.xVelocity * dt;
+        while (Math.abs(xCopy * dt) > 1) {
+          xCopy /= 2;
+          let v = xCopy * dt;
 
           if (
             !this.surface.collidesWith(this.mask, alignX(this.x + v), this.rY)
@@ -277,8 +278,13 @@ export class Body implements PhysicsBody {
             this.x += v;
           }
         }
-
         this.x = alignX(this.x);
+        this.rX = this.x;
+
+        if (this.onCollide) {
+          this.onCollide(this.rX, this.rY);
+        }
+
         this.xVelocity *= this.bounciness;
       }
     }
