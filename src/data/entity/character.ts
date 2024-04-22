@@ -241,12 +241,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.addChild(this.sprite, this.namePlate);
   }
 
-  private onCollide = () => {
-    const [x, y] = this.body.position;
+  private onCollide = (x: number, y: number) => {
     if (this.body.yVelocity > SMOKE_TRIGGER && this.body.grounded) {
-      Level.instance.add(
-        new SmokePuff(this.position.x + 18, this.position.y + 72)
-      );
+      Level.instance.add(new SmokePuff(x * 6 + 18, y * 6 + 72));
     }
 
     if (
@@ -254,14 +251,13 @@ export class Character extends Container implements HurtableEntity, Syncable {
       Math.abs(this.body.yVelocity) > BOUNCE_TRIGGER
     ) {
       const velocity = this.body.velocity;
-      const [x, y] = this.getCenter();
 
       this.damageSource = new ExplosiveDamage(
-        x / 6 + this.body.xVelocity / 2,
-        y / 6 + this.body.yVelocity / 2,
+        x + 3,
+        y + 8 + this.body.yVelocity,
         velocity > 8 ? 12 : 8,
-        velocity * 0.5,
-        1.5
+        Math.min(2.5, velocity * 0.5),
+        Math.max(1, velocity - 3) ** 2
       );
     }
   };
