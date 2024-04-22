@@ -52,7 +52,7 @@ export class Map {
     this.load = Promise.all([
       Map.createCanvasFromData(this.config.terrain.data),
       Map.createCanvasFromData(this.config.background.data),
-      typeof this.config.terrain.mask === "string"
+      typeof this.config.terrain.mask === "string" && this.config.terrain.mask
         ? Map.createCanvasFromData(this.config.terrain.mask)
         : undefined,
       ...config.layers.map((layer) => Map.createCanvasFromData(layer.data)),

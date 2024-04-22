@@ -4,9 +4,12 @@ import { Map, Layer, Config } from "../data/map";
 import Input from "./Input.vue";
 import { defaultMaps } from "../util/assets";
 import { AssetsContainer } from "../util/assets/assetsContainer";
+import { Server } from "../data/network/server";
+import { Team } from "../data/team";
 
-const { onBack } = defineProps<{
+const { onBack, onTest } = defineProps<{
   onBack: () => void;
+  onTest: (map: Map) => void;
 }>();
 
 const SCALE = 6;
@@ -38,7 +41,7 @@ const handleAddBackground = addImageFactory(background);
 const handleBuild = async () => {
   const map = await Map.fromConfig({
     terrain: { data: terrain.value, mask: mask.value },
-    background: { data: background.value },
+    background: { data: background.value || terrain.value },
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
@@ -51,6 +54,20 @@ const handleBuild = async () => {
   link.download = `${name.value || "map"}.png`;
   link.href = url;
   link.click();
+};
+
+const handleTest = async () => {
+  const map = await Map.fromConfig({
+    terrain: { data: terrain.value, mask: mask.value },
+    background: { data: background.value || terrain.value },
+    layers: layers.value
+      .filter((layer) => !!layer.data)
+      .map((layer) => ({ ...layer })),
+  });
+
+  const server = new Server();
+  server.addPlayer("Test player", Team.random());
+  onTest(map);
 };
 
 const handleLoadCustom = async (event: Event) => {
@@ -217,7 +234,16 @@ const handleEnableMask = () => (addMask.value = true);
         <Input label="Name" autofocus v-model="name" />
       </div>
 
-      <button class="primary" @click="handleBuild">Build</button>
+      <button
+        class="primary"
+        title="Build and save map to file system"
+        @click="handleBuild"
+      >
+        Build
+      </button>
+      <button class="primary" title="Build and test" @click="handleTest">
+        Test
+      </button>
       <button class="secondary" @click="onBack">Back</button>
     </section>
     <section class="preview" ref="preview">

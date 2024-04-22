@@ -60,7 +60,7 @@ const handleCloseInventory = () => {
     <Tutorial />
   </div>
   <div v-else-if="menu === Menu.Builder" class="background">
-    <Builder :onBack="handleBack" />
+    <Builder :onBack="handleBack" :onTest="handlePlay" />
   </div>
   <div v-else class="background background--padded">
     <div class="title-wrapper">

@@ -76,6 +76,7 @@ export class Level {
 
     this.app = new Application({
       resizeTo: window,
+      background: "#fff",
     });
     window.addEventListener("resize", this.resize);
 
