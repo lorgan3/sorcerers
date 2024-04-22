@@ -44,9 +44,9 @@ export class Hairpin extends Container implements Spawnable {
       this.lastSpawn = this.time;
 
       const spread = map(
-        Math.PI / 3,
-        Math.PI / 10,
-        Math.min((this.power - 1) / 3, 1)
+        Math.PI / 8,
+        Math.PI / 12,
+        Math.min((this.power - 1) / 6, 1)
       );
 
       const bomb = new Bomb(
@@ -102,7 +102,7 @@ export class Hairpin extends Container implements Spawnable {
     const [x2, y2] = character.getCenter();
     const direction = Math.atan2(y - y2 / 6, x - x2 / 6);
 
-    const entity = new Hairpin(x, y, direction, 1 + power / 2, character);
+    const entity = new Hairpin(x, y, direction, 1 + power, character);
 
     Server.instance.create(entity);
     return entity;

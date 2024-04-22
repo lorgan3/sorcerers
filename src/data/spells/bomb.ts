@@ -90,6 +90,10 @@ export class Bomb extends Container implements Item {
     if (Server.instance && this.activateTime === -1) {
       Server.instance.activate(this);
     }
+
+    if (force) {
+      this.body.addAngularVelocity(force.power, force.direction);
+    }
   }
 
   private onCollide = (x: number, y: number) => {
@@ -97,7 +101,9 @@ export class Bomb extends Container implements Item {
       Server.instance.dynamicUpdate(this);
     }
 
-    ControllableSound.fromEntity(this, Sound.Land);
+    if (this.body.velocity > 0.5) {
+      ControllableSound.fromEntity(this, Sound.Land);
+    }
   };
 
   private _die(x: number, y: number) {
@@ -107,7 +113,7 @@ export class Bomb extends Container implements Item {
 
     this.hp = 0;
     Level.instance.damage(
-      new ExplosiveDamage(x, y, 16, 1, 1 + this.arcanePower)
+      new ExplosiveDamage(x, y, 16, 2, (1 + this.arcanePower) / 2)
     );
     Server.instance.kill(this);
   }
@@ -129,7 +135,18 @@ export class Bomb extends Container implements Item {
     }
 
     if (this.body.active) {
+      Level.instance.terrain.characterMask.subtract(
+        this.body.mask,
+        ...this.body.position
+      );
+
       this.body.tick(dt);
+
+      Level.instance.terrain.characterMask.add(
+        this.body.mask,
+        ...this.body.position
+      );
+
       const [x, y] = this.body.precisePosition;
       this.position.set(x * 6, y * 6);
 
@@ -164,12 +181,36 @@ export class Bomb extends Container implements Item {
     }
   }
 
+  move(x: number, y: number) {
+    Level.instance.terrain.characterMask.subtract(
+      this.body.mask,
+      ...this.body.position
+    );
+
+    this.body.move(x, y);
+
+    Level.instance.terrain.characterMask.add(
+      this.body.mask,
+      ...this.body.position
+    );
+  }
+
   serialize() {
     return this.body.serialize();
   }
 
   deserialize(data: ReturnType<Bomb["serialize"]>) {
+    Level.instance.terrain.characterMask.subtract(
+      this.body.mask,
+      ...this.body.position
+    );
+
     this.body.deserialize(data);
+
+    Level.instance.terrain.characterMask.add(
+      this.body.mask,
+      ...this.body.position
+    );
   }
 
   serializeCreate() {
