@@ -69,21 +69,29 @@ export class Terrain {
       : 1;
   }
 
-  getSpawnLocations(
-    distance = Math.round(Math.max(this.map.width, this.map.height) / 24),
-    mask = rectangle6x16
-  ) {
+  getSpawnLocations(distance?: number, mask = rectangle6x16) {
+    if (!distance) {
+      distance = Math.round(
+        Math.max(this.map.bbox.width, this.map.bbox.height) / 24
+      );
+    }
+
     const locations: Array<[number, number]> = [];
-    const tester = CollisionMask.forRect(mask.width, mask.height + distance);
+    const tester = CollisionMask.forRect(1, mask.height + distance);
 
     for (
-      let x = Math.round((this.map.width % distance) / 2) + distance;
-      x < this.map.width - distance;
+      let x =
+        Math.round(this.map.bbox.left + (this.map.bbox.width % distance) / 2) +
+        distance;
+      x < this.map.bbox.right - distance;
       x += distance
     ) {
       for (
-        let y = Math.round((this.map.height % distance) / 2) + distance;
-        y < this.map.height - distance;
+        let y =
+          Math.round(
+            this.map.bbox.top + (this.map.bbox.height % distance) / 2
+          ) + distance;
+        y < this.map.bbox.bottom - distance;
         y += distance
       ) {
         // In the ground, skip.
