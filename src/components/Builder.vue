@@ -6,6 +6,8 @@ import { defaultMaps } from "../util/assets";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import { Server } from "../data/network/server";
 import { Team } from "../data/team";
+import BoundingBox from "./BoundingBox.vue";
+import { BBox } from "../data/map/bbox";
 
 const { onBack, onTest } = defineProps<{
   onBack: () => void;
@@ -19,6 +21,7 @@ const background = ref("");
 const layers = ref<Layer[]>([]);
 const addMask = ref(false);
 const preview = ref<HTMLDivElement>();
+const bbox = ref<BBox>(BBox.create(0, 0));
 
 const name = ref("");
 
@@ -31,7 +34,19 @@ const addImageFactory = (ref: Ref) => (event: Event) => {
 
   var reader = new FileReader();
   reader.readAsDataURL(file);
-  reader.onload = () => (ref.value = reader.result as string);
+
+  reader.onload = () => {
+    ref.value = reader.result as string;
+
+    if (bbox.value.isEmpty()) {
+      var image = new Image();
+      image.src = ref.value;
+
+      image.onload = () => {
+        bbox.value = BBox.create(image.width, image.height);
+      };
+    }
+  };
 };
 
 const handleAddTerrain = addImageFactory(terrain);
@@ -45,6 +60,7 @@ const handleBuild = async () => {
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
+    bbox: bbox.value,
   });
 
   const url = URL.createObjectURL(await map.toBlob());
@@ -63,6 +79,7 @@ const handleTest = async () => {
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
+    bbox: bbox.value,
   });
 
   const server = new Server();
@@ -93,6 +110,7 @@ const loadMap = (config: Config, map: string) => {
   terrain.value = config.terrain.data as string;
   background.value = config.background.data as string;
   layers.value = config.layers;
+  bbox.value = BBox.fromJS(config.bbox) || BBox.create(0, 0);
   name.value = map;
 
   if (config.terrain.mask) {
@@ -147,6 +165,10 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
   document.onselectstart = () => false;
   document.addEventListener("mousemove", handleMouseMove);
   document.addEventListener("mouseup", handleMouseUp);
+};
+
+const handleBBoxChange = (newBBox: BBox) => {
+  bbox.value = newBBox;
 };
 
 const handleEnableMask = () => (addMask.value = true);
@@ -217,12 +239,12 @@ const handleEnableMask = () => (addMask.value = true);
 
           <Input
             label="X"
-            :value="layer.x.toString()"
+            :value="layer.x"
             @change="(event: Event) => layer.x = parseInt((event.target as HTMLInputElement).value, 10)"
           />
           <Input
             label="Y"
-            :value="layer.y.toString()"
+            :value="layer.y"
             @change="(event: Event) => layer.y = parseInt((event.target as HTMLInputElement).value, 10)"
           />
           <Input label="Scale" value="6" disabled />
@@ -232,6 +254,14 @@ const handleEnableMask = () => (addMask.value = true);
       <div class="section">
         <h2>Details</h2>
         <Input label="Name" autofocus v-model="name" />
+        <Input label="Spawn area left" v-model="bbox.left" :max="bbox.right" />
+        <Input label="Spawn area top" v-model="bbox.top" :max="bbox.bottom" />
+        <Input label="Spawn area right" v-model="bbox.right" :min="bbox.left" />
+        <Input
+          label="Spawn area bottom"
+          v-model="bbox.bottom"
+          :min="bbox.top"
+        />
       </div>
 
       <button
@@ -288,6 +318,7 @@ const handleEnableMask = () => (addMask.value = true);
           <img :src="(layer.data as string)" />
         </div>
       </template>
+      <BoundingBox :bbox="bbox" :onChange="handleBBoxChange" />
     </section>
   </div>
 </template>
