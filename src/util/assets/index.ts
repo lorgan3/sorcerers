@@ -5,8 +5,9 @@ import { MAP_LOADER } from "./mapLoader";
 import { SOUND_ASSETS } from "../../sound";
 
 export const defaultMaps = {
-  playground: `${import.meta.env.BASE_URL}maps/playground.png`,
-  castle: `${import.meta.env.BASE_URL}maps/castle.png`,
+  Playground: `${import.meta.env.BASE_URL}maps/playground.png`,
+  Castle: `${import.meta.env.BASE_URL}maps/castle.png`,
+  Stadium: `${import.meta.env.BASE_URL}maps/stadium.png`,
 };
 
 export const loadAsMap = (src: string) => ({
