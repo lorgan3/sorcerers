@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="V">
 import { ref } from "vue";
 
 const {
@@ -10,30 +10,37 @@ const {
   disabled,
   change,
   name,
+  min,
 } = defineProps<{
   label?: string;
-  modelValue?: string;
-  value?: string;
-  validator?: (value: string) => boolean;
+  modelValue?: V;
+  value?: V;
+  validator?: (value: V) => boolean;
   autofocus?: boolean;
   disabled?: boolean;
   change?: (event: Event) => void;
   name?: string;
+  min?: number;
+  max?: number;
 }>();
 
 const emit = defineEmits<{
-  "update:modelValue": [string];
+  "update:modelValue": [string | number];
 }>();
 
 const valid = ref(true);
+const isNumeric = typeof (modelValue ?? value) === "number";
 
 const handleInput = (event: Event) => {
-  const value = (event.target as HTMLInputElement).value;
+  const newValue = isNumeric
+    ? (event.target as HTMLInputElement).valueAsNumber
+    : (event.target as HTMLInputElement).value;
+
   if (validator) {
-    valid.value = validator(value);
+    valid.value = validator(newValue as V);
   }
 
-  emit("update:modelValue", value);
+  emit("update:modelValue", newValue);
 };
 </script>
 
@@ -43,11 +50,13 @@ const handleInput = (event: Event) => {
     <input
       :class="{ input: true, 'input--invalid': !valid }"
       @input="handleInput"
-      :value="modelValue || value"
+      :value="modelValue ?? value"
       :autofocus="autofocus"
       :disabled="disabled"
       @change="change"
       :name="name"
+      :type="isNumeric ? 'number' : 'text'"
+      :min="min"
     />
   </label>
 </template>
