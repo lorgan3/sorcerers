@@ -92,8 +92,8 @@ export abstract class Manager {
         if (
           x + 6 >= layer.x &&
           x <= layer.right &&
-          y + 16 >= layer.y &&
-          y <= layer.bottom
+          y + 16 > layer.y &&
+          y < layer.bottom
         ) {
           revealed = true;
           break;
