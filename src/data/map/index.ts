@@ -1,6 +1,6 @@
 import { addMetadata, getMetadata } from "meta-png";
 import { CollisionMask } from "../collision/collisionMask";
-import { base64ToBytes, bytesToBase64 } from "../../util/data";
+import { BBox, PlainBBox } from "./bbox";
 
 export interface Layer {
   data: string | Blob;
@@ -27,12 +27,14 @@ export interface Config {
     data: string | Blob;
   };
   layers: Layer[];
+  bbox: PlainBBox;
 }
 
 const TERRAIN_KEY = "terrain";
 const BACKGROUND_KEY = "background";
 const LAYERS_KEY = "layers";
 const MASK_KEY = "mask";
+const BBOX_KEY = "bbox";
 const VERSION_KEY = "version";
 
 const VERSION = 1;
@@ -45,6 +47,7 @@ export class Map {
   private _layers?: ComputedLayer[];
   private _width = 0;
   private _height = 0;
+  private _bbox?: BBox;
 
   public readonly load: Promise<void>;
 
@@ -89,8 +92,11 @@ export class Map {
         );
       }
 
-      this._width = terrain.width;
-      this._height = terrain.height;
+      this._width = this._collisionMask.width;
+      this._height = this._collisionMask.height;
+
+      this._bbox =
+        BBox.fromJS(config.bbox) || BBox.create(this._width, this._height);
     });
   }
 
@@ -106,6 +112,7 @@ export class Map {
         mask: Map.getMetadata(data, MASK_KEY, "") || undefined,
       },
       layers: JSON.parse(Map.getMetadata(data, LAYERS_KEY, "[]")),
+      bbox: JSON.parse(Map.getMetadata(data, BBOX_KEY, "{}")),
     };
   }
 
@@ -122,7 +129,7 @@ export class Map {
 
   async toConfig(forceMask?: boolean): Promise<Config> {
     const [terrain, background, ...layers] = await Promise.all([
-      this.terrain!.convertToBlob({ type: "image/png" }),
+      this._terrain!.convertToBlob({ type: "image/png" }),
       this._background!.convertToBlob({ type: "image/png" }),
       ...this._layers!.map((layer) =>
         layer.data.convertToBlob({ type: "image/png" })
@@ -134,7 +141,7 @@ export class Map {
         data: terrain,
         mask:
           this.config.terrain.mask || forceMask
-            ? this.collisionMask!.serialize()
+            ? this._collisionMask!.serialize()
             : undefined,
       },
       background: {
@@ -145,6 +152,7 @@ export class Map {
         x: layer.x,
         y: layer.y,
       })),
+      bbox: this._bbox!.toJS(),
     };
   }
 
@@ -198,6 +206,7 @@ export class Map {
     data = addMetadata(data, TERRAIN_KEY, this.config.terrain.data);
     data = addMetadata(data, BACKGROUND_KEY, this.config.background.data);
     data = addMetadata(data, LAYERS_KEY, JSON.stringify(this.config.layers));
+    data = addMetadata(data, BBOX_KEY, JSON.stringify(this.config.bbox));
 
     if (typeof this.config.terrain.mask === "string") {
       data = addMetadata(data, MASK_KEY, this.config.terrain.mask);
@@ -230,6 +239,10 @@ export class Map {
 
   get height() {
     return this._height;
+  }
+
+  get bbox() {
+    return this._bbox!;
   }
 
   public static loadImage(value: string | Blob) {
