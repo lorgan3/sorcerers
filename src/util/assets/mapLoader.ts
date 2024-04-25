@@ -19,7 +19,17 @@ const mapLoader = {
   testParse: (_, resolvedAsset?: ResolvedAsset) =>
     Promise.resolve(resolvedAsset?.loadParser === MAP_LOADER),
 
-  parse: (asset: Blob) => Map.parse(asset),
+  parse: async (asset: Blob, resolvedAsset?: ResolvedAsset) => {
+    try {
+      return await Map.parse(asset);
+    } catch (error) {
+      console.warn(
+        `Error while loading map "${resolvedAsset?.alias?.[0]}"`,
+        error
+      );
+      return null;
+    }
+  },
 } as LoaderParser;
 
 extensions.add(mapLoader);
