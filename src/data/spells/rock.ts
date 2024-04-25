@@ -9,9 +9,8 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { probeX } from "../map/utils";
 import { CollisionMask } from "../collision/collisionMask";
-import { Manager } from "../network/manager";
-import { TurnState } from "../network/types";
 import { StaticBody } from "../collision/staticBody";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
 
 export class Rock extends Container implements Spawnable {
   private static growTime = 100;
@@ -124,7 +123,7 @@ export class Rock extends Container implements Spawnable {
             const [x, y] = entity.body.precisePosition;
             entity.body.move(x, y - amount);
           } else {
-            // If you're deep in the rock, push harder so you take damage
+            // If you're deep in the rock, make some room with an explosion
             if (
               this.collisionMask.collidesWith(
                 entity.body.mask,
@@ -132,10 +131,12 @@ export class Rock extends Container implements Spawnable {
                 ey - (this._y - 48 + 8) - 48 + Math.floor(this.sprite.height)
               )
             ) {
-              entity.body.addVelocity(0, -10 * dt);
-            } else {
-              entity.body.addVelocity(0, -0.5 * dt);
+              Level.instance.damage(
+                new ExplosiveDamage(ex + 3, ey + 3, 8, -2, 1) // Negative power to push the player up
+              );
             }
+
+            entity.body.addVelocity(0, -0.5 * dt);
           }
         }
       }
