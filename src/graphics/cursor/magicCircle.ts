@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container } from "pixi.js";
+import { AnimatedSprite, Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Spell } from "../../data/spells";
@@ -28,12 +28,11 @@ interface TriggerData {
 
 export class ArcaneCircle extends Container implements Cursor<TriggerData> {
   private indicator: AnimatedSprite;
+  private pointer: Sprite;
   private sound?: ControllableSound;
 
   constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
-
-    this.visible = false;
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -43,8 +42,13 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     this.indicator.animationSpeed = ANIMATION_SPEED;
     this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
     this.indicator.play();
+    this.indicator.visible = false;
 
-    this.addChild(this.indicator);
+    this.pointer = new Sprite(atlas.textures["spells_pointer"]);
+    this.pointer.anchor.set(0.4, 0.25);
+    this.pointer.scale.set(2);
+
+    this.addChild(this.indicator, this.pointer);
     Level.instance.uiContainer.addChild(this);
   }
 
@@ -72,17 +76,18 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
   }
 
   tick(dt: number, controller: Controller) {
+    this.pointer.position.set(...controller.getLocalMouse());
+
     const [x2, y2] = this.character.getCenter();
-    this.position.set(x2, y2);
-    this.indicator.position.set(this.character.direction * 20, -20);
+    this.indicator.position.set(x2 + this.character.direction * 20, y2 - 20);
     this.indicator.animationSpeed = this.character.direction * ANIMATION_SPEED;
 
     if (!controller.isKeyDown(Key.M1)) {
-      if (this.visible) {
+      if (this.indicator.visible) {
         if (!this.spell.data.keepSpellSource) {
           this.character.setSpellSource(this, false);
         }
-        this.visible = false;
+        this.indicator.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
         if (Server.instance) {
@@ -93,7 +98,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
       return;
     }
 
-    if (this.visible) {
+    if (this.indicator.visible) {
       if (this.sound) {
         this.sound.update(this.character);
       } else {
@@ -111,13 +116,13 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     const [x, y] = controller.getMouse();
 
     if (this.indicator.scale.x < SCALE_MULTIPLIER) {
-      this.visible = true;
+      this.indicator.visible = true;
       this.indicator.scale.set(
         Math.min(SCALE_MULTIPLIER, this.indicator.scale.x + 0.01 * dt)
       );
     }
 
-    this.indicator.rotation = Math.atan2(y - y2, x - x2) + Math.PI / 2;
+    this.indicator.rotation = Math.atan2(y - y2 + 24, x - x2) + Math.PI / 2;
   }
 
   serialize() {

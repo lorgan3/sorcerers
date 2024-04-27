@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container } from "pixi.js";
+import { AnimatedSprite, Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Spell } from "../../data/spells";
@@ -37,6 +37,7 @@ export class PoweredArcaneCircle
 {
   private indicator: AnimatedSprite;
   private powerMeter: AnimatedSprite;
+  private pointer: Sprite;
 
   private power = 0;
   private powerDirection = 1;
@@ -44,8 +45,6 @@ export class PoweredArcaneCircle
 
   constructor(private character: Character, private spell: Spell<TriggerData>) {
     super();
-
-    this.visible = false;
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -55,13 +54,19 @@ export class PoweredArcaneCircle
     this.indicator.animationSpeed = ANIMATION_SPEED;
     this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
     this.indicator.play();
+    this.indicator.visible = false;
 
     this.powerMeter = new AnimatedSprite(atlas.animations["icons_bar"]);
     this.powerMeter.anchor.set(0.5);
     this.powerMeter.scale.set(2);
     this.powerMeter.position.set(0, 56);
+    this.indicator.visible = false;
 
-    this.addChild(this.indicator, this.powerMeter);
+    this.pointer = new Sprite(atlas.textures["spells_pointer"]);
+    this.pointer.anchor.set(0.4, 0.25);
+    this.pointer.scale.set(2);
+
+    this.addChild(this.indicator, this.powerMeter, this.pointer);
     Level.instance.uiContainer.addChild(this);
   }
 
@@ -90,12 +95,15 @@ export class PoweredArcaneCircle
   }
 
   tick(dt: number, controller: Controller) {
+    this.pointer.position.set(...controller.getLocalMouse());
+
     if (!controller.isKeyDown(Key.M1)) {
-      if (this.visible) {
+      if (this.indicator.visible) {
         if (!this.spell.data.keepSpellSource) {
           this.character.setSpellSource(this, false);
         }
-        this.visible = false;
+        this.powerMeter.visible = false;
+        this.indicator.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
         if (Server.instance) {
@@ -106,7 +114,7 @@ export class PoweredArcaneCircle
       return;
     }
 
-    if (this.visible) {
+    if (this.indicator.visible) {
       if (this.sound) {
         this.sound.update(this.character);
       } else {
@@ -140,14 +148,15 @@ export class PoweredArcaneCircle
     this.character.setSpellSource(this);
 
     if (this.indicator.scale.x < SCALE_MULTIPLIER) {
-      this.visible = true;
+      this.powerMeter.visible = true;
+      this.indicator.visible = true;
       this.indicator.scale.set(
         Math.min(SCALE_MULTIPLIER, this.indicator.scale.x + 0.01 * dt)
       );
     }
 
     const [x, y] = controller.getMouse();
-    this.indicator.rotation = Math.atan2(y - y2, x - x2) + Math.PI / 2;
+    this.indicator.rotation = Math.atan2(y - y2 + 24, x - x2) + Math.PI / 2;
   }
 
   serialize() {
