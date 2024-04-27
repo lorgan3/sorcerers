@@ -59,7 +59,6 @@ export class PoweredArcaneCircle
     this.powerMeter = new AnimatedSprite(atlas.animations["icons_bar"]);
     this.powerMeter.anchor.set(0.5);
     this.powerMeter.scale.set(2);
-    this.powerMeter.position.set(0, 56);
     this.indicator.visible = false;
 
     this.pointer = new Sprite(atlas.textures["spells_pointer"]);
@@ -129,8 +128,8 @@ export class PoweredArcaneCircle
     }
 
     const [x2, y2] = this.character.getCenter();
-    this.position.set(x2, y2);
-    this.indicator.position.set(this.character.direction * 20, -20);
+    this.powerMeter.position.set(x2, y2 + 56);
+    this.indicator.position.set(x2 + this.character.direction * 20, y2 - 20);
     this.indicator.animationSpeed = this.character.direction * ANIMATION_SPEED;
 
     this.power += CHARGE_SPEED * this.powerDirection * dt;
