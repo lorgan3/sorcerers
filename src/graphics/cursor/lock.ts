@@ -33,7 +33,10 @@ interface TriggerState {
   id?: number;
 }
 
-export class Lock extends Container implements Cursor<TriggerData> {
+export class Lock
+  extends Container
+  implements Cursor<TriggerData, TriggerState, boolean>
+{
   private locked = false;
   private entity: HurtableEntity | null = null;
 
@@ -110,8 +113,12 @@ export class Lock extends Container implements Cursor<TriggerData> {
 
   tick(dt: number, controller: Controller) {
     this.position.set(...controller.getLocalMouse());
-    const position = this.getPosition();
 
+    if (!Server.instance) {
+      return;
+    }
+
+    const position = this.getPosition();
     switch (this.spell.data.target) {
       case Target.Any:
         this.animate(true);
@@ -186,7 +193,7 @@ export class Lock extends Container implements Cursor<TriggerData> {
         break;
     }
 
-    if (Server.instance && controller.isKeyDown(Key.M1) && this.locked) {
+    if (controller.isKeyDown(Key.M1) && this.locked) {
       const triggerState: TriggerState = { id: this.entity?.id };
 
       Server.instance.cast(triggerState);
@@ -194,8 +201,10 @@ export class Lock extends Container implements Cursor<TriggerData> {
   }
 
   serialize() {
-    return null;
+    return this.locked;
   }
 
-  deserialize(): void {}
+  deserialize(locked: boolean) {
+    this.animate(locked);
+  }
 }

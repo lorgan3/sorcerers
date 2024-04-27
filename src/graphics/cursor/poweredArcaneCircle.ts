@@ -29,9 +29,11 @@ interface TriggerData {
   keepSpellSource?: boolean;
 }
 
+type State = [number, number];
+
 export class PoweredArcaneCircle
   extends Container
-  implements Cursor<TriggerData>
+  implements Cursor<TriggerData, never, State>
 {
   private indicator: AnimatedSprite;
   private powerMeter: AnimatedSprite;
@@ -149,10 +151,10 @@ export class PoweredArcaneCircle
   }
 
   serialize() {
-    return [this.power, this.powerDirection];
+    return [this.power, this.powerDirection] as State;
   }
 
-  deserialize(data: ReturnType<this["serialize"]>): void {
+  deserialize(data: State): void {
     this.power = data[0];
     this.powerDirection = data[1];
   }
