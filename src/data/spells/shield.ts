@@ -196,14 +196,12 @@ export class Shield extends Container implements HurtableEntity, Syncable {
     return new Shield(...data);
   }
 
-  static cast(x: number, y: number, character: Character) {
+  static cast(x: number, y: number, character: Character, angle: number) {
     if (!Server.instance) {
       return;
     }
 
-    const [cx, cy] = character.body.precisePosition;
-    const angle = Math.PI / 2 + Math.atan2(cy - y - 3, cx - x - 8);
-    const entity = new Shield(x, y, angle);
+    const entity = new Shield(x, y, angle - Math.PI / 2);
 
     Server.instance.create(entity);
     return entity;

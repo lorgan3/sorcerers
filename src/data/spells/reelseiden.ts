@@ -128,15 +128,18 @@ export class Reelseiden extends Container implements Spawnable {
     return new Reelseiden(...data);
   }
 
-  static cast(x: number, y: number, _: null, character: Character) {
+  static cast(
+    x: number,
+    y: number,
+    _: null,
+    character: Character,
+    angle: number
+  ) {
     if (!Server.instance) {
       return;
     }
 
-    const [x2, y2] = character.getCenter();
-    const angle = getAngle(x, y, x2 / 6, y2 / 6);
     const angleIndex = getIndexFromAngle(angle);
-
     const entity = new Reelseiden(x - 12, y - 12, angleIndex);
 
     Server.instance.create(entity);

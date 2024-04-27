@@ -132,13 +132,13 @@ export class Zoltraak extends Container implements Spawnable {
     return new Zoltraak(...data);
   }
 
-  static cast(x: number, y: number, character: Character) {
+  static cast(x: number, y: number, character: Character, rotation: number) {
     if (!Server.instance) {
       return;
     }
 
     const [x2, y2] = character.getCenter();
-    const angle = Math.atan2(y - y2 / 6, x - x2 / 6) + Math.PI / 2;
+    const angle = rotation + Math.PI / 2;
     const angleIndex = getIndexFromAngle(angle);
     const distance = Zoltraak.getDistance(x * 6, y * 6, angle + Math.PI / 2);
 

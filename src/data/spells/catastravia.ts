@@ -128,13 +128,16 @@ export class Catastravia extends Container implements Spawnable {
     );
   }
 
-  static cast(x: number, y: number, character: Character, power: number) {
+  static cast(
+    x: number,
+    y: number,
+    character: Character,
+    power: number,
+    direction: number
+  ) {
     if (!Server.instance) {
       return;
     }
-
-    const [x2, y2] = character.getCenter();
-    const direction = Math.atan2(y - y2 / 6, x - x2 / 6);
 
     const entity = new Catastravia(direction, 50 + 20 * power, character);
 
