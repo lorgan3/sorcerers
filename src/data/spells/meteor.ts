@@ -130,23 +130,25 @@ export class Meteor extends Container implements Syncable {
       );
       Level.instance.damage(damage);
 
-      const staticEntity = damage
-        .getTargets()
-        .getEntities()
-        .find(
-          (entity) =>
-            entity.body instanceof StaticBody || entity instanceof Character
-        );
+      if (Server.instance) {
+        const staticEntity = damage
+          .getTargets()
+          .getEntities()
+          .find(
+            (entity) =>
+              entity.body instanceof StaticBody || entity instanceof Character
+          );
 
-      if (staticEntity) {
-        const angle = getAngle(
-          ...staticEntity.getCenter(),
-          ...this.getCenter()
-        );
-        this.body.setAngularVelocity(4, angle);
-        this.body.gravity = 0.15;
-        this.body.friction = 0.96;
-        this.maxBounces = Math.floor(this.maxBounces / 2);
+        if (staticEntity) {
+          const angle = getAngle(
+            ...staticEntity.getCenter(),
+            ...this.getCenter()
+          );
+          this.body.setAngularVelocity(4, angle);
+          this.body.gravity = 0.15;
+          this.body.friction = 0.96;
+          this.maxBounces = Math.floor(this.maxBounces / 2);
+        }
       }
     }
 
@@ -232,10 +234,12 @@ export class Meteor extends Container implements Syncable {
   }
 
   serialize() {
-    return this.body.serialize();
+    return [this.body.friction, this.body.gravity, ...this.body.serialize()];
   }
 
-  deserialize(data: ReturnType<Meteor["serialize"]>) {
+  deserialize([friction, gravity, ...data]: ReturnType<Meteor["serialize"]>) {
+    this.body.friction = friction;
+    this.body.gravity = gravity;
     this.body.deserialize(data);
   }
 
