@@ -330,6 +330,9 @@ export class Client extends Manager {
 
         Level.instance.terrain.killbox.level = message.level;
         break;
+
+      case MessageType.Cast:
+        this.cast(message.state);
     }
   }
 

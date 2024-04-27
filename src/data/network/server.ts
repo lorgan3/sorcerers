@@ -623,4 +623,13 @@ export class Server extends Manager {
       state: turnState,
     });
   }
+
+  cast(state?: any) {
+    super.cast(state);
+
+    this.broadcast({
+      type: MessageType.Cast,
+      state,
+    });
+  }
 }

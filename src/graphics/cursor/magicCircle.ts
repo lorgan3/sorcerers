@@ -1,7 +1,7 @@
 import { AnimatedSprite, Container } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell, getSpellCost } from "../../data/spells";
+import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 
@@ -11,6 +11,7 @@ import { TurnState } from "../../data/network/types";
 import { Level } from "../../data/map/level";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Server } from "../../data/network/server";
 
 const SCALE_MULTIPLIER = 0.8;
 const ANIMATION_SPEED = -0.4;
@@ -54,7 +55,8 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ projectile, xOffset, yOffset, x, y, turnState }: TriggerData) {
-    this.character.player.cast(this.spell);
+    this.sound?.destroy();
+    this.sound = undefined;
 
     const [px, py] = this.character.body.precisePosition;
     const rotation = this.indicator.rotation - Math.PI / 2;
@@ -83,9 +85,9 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
         this.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
-        this.trigger(this.spell.data);
-        this.sound?.destroy();
-        this.sound = undefined;
+        if (Server.instance) {
+          Server.instance.cast();
+        }
       }
 
       return;

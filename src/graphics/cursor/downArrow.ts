@@ -1,13 +1,14 @@
 import { Container, Sprite } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell, getSpellCost } from "../../data/spells";
+import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
 import { Manager } from "../../data/network/manager";
 import { Cursor, ProjectileConstructor } from "./types";
 import { TurnState } from "../../data/network/types";
+import { Server } from "../../data/network/server";
 
 interface TriggerData {
   xOffset: number;
@@ -46,8 +47,6 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
   }
 
   trigger({ xOffset, yOffset, turnState, projectile }: TriggerData) {
-    this.character.player.cast(this.spell);
-
     const position = this.character.player.controller.getMouse();
     projectile.cast(position[0] / 6 + xOffset, yOffset, this.character);
 
@@ -57,8 +56,8 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
   tick(dt: number, controller: Controller) {
     this.position.set(...controller.getLocalMouse());
 
-    if (controller.isKeyDown(Key.M1)) {
-      this.trigger(this.spell.data);
+    if (Server.instance && controller.isKeyDown(Key.M1)) {
+      Server.instance.cast();
     }
   }
 

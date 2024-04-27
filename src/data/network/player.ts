@@ -136,7 +136,5 @@ export class Player {
   cast(spell: Spell) {
     this.mana -= getSpellCost(spell);
     this.executedSpells.push(spell);
-
-    Manager.instance.resetCursor();
   }
 }

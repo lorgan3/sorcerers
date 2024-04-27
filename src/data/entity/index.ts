@@ -29,7 +29,8 @@ import { Potion } from "./potion";
 import { PotionType } from "./potionData";
 import { EntityType, Item, Spawnable } from "./types";
 
-let id = 0;
+// Starting at 1 because 0 is a falsy value 🤡
+let id = 1;
 
 export const setId = (value: number) => (id = value);
 

@@ -1,7 +1,7 @@
-import { AnimatedSprite, Container, DisplayObject } from "pixi.js";
+import { AnimatedSprite, Container } from "pixi.js";
 
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Spell, getSpellCost } from "../../data/spells";
+import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Level } from "../../data/map/level";
@@ -9,6 +9,7 @@ import { HurtableEntity } from "../../data/entity/types";
 import { Cursor, ProjectileConstructor } from "./types";
 import { Manager } from "../../data/network/manager";
 import { TurnState } from "../../data/network/types";
+import { Server } from "../../data/network/server";
 
 export enum Target {
   Any,
@@ -26,6 +27,10 @@ interface TriggerData {
   projectile: ProjectileConstructor;
   turnState: TurnState;
   spellSource?: boolean;
+}
+
+interface TriggerState {
+  id?: number;
 }
 
 export class Lock extends Container implements Cursor<TriggerData> {
@@ -92,22 +97,18 @@ export class Lock extends Container implements Cursor<TriggerData> {
     return [Math.round(position[0] / 6), Math.round(position[1] / 6)];
   }
 
-  trigger({ projectile, turnState }: TriggerData) {
-    this.character.player.cast(this.spell);
+  trigger({ projectile, turnState }: TriggerData, { id }: TriggerState) {
+    const entity = id
+      ? (Level.instance.entityMap.get(id) as HurtableEntity)
+      : null;
 
     const position = this.getPosition();
+    projectile.cast(...position, entity, this.character);
 
-    projectile.cast(...position, this.entity, this.character);
-
-    this.visible = false;
     Manager.instance.setTurnState(turnState);
   }
 
   tick(dt: number, controller: Controller) {
-    if (!this.visible) {
-      return;
-    }
-
     this.position.set(...controller.getLocalMouse());
     const position = this.getPosition();
 
@@ -185,8 +186,10 @@ export class Lock extends Container implements Cursor<TriggerData> {
         break;
     }
 
-    if (controller.isKeyDown(Key.M1) && this.locked) {
-      this.trigger(this.spell.data);
+    if (Server.instance && controller.isKeyDown(Key.M1) && this.locked) {
+      const triggerState: TriggerState = { id: this.entity?.id };
+
+      Server.instance.cast(triggerState);
     }
   }
 

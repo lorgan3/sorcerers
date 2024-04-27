@@ -25,6 +25,7 @@ export enum MessageType {
   Activate,
   turnState,
   Sink,
+  Cast,
 }
 
 export type Message =
@@ -149,6 +150,10 @@ export type Message =
   | {
       type: MessageType.Sink;
       level: number;
+    }
+  | {
+      type: MessageType.Cast;
+      state: any; // Extra cursor data
     };
 
 export interface Popup {

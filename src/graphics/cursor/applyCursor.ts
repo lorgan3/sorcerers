@@ -1,9 +1,10 @@
-import { Spell, getSpellCost } from "../../data/spells";
+import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Cursor } from "./types";
 import { Manager } from "../../data/network/manager";
 import { TurnState } from "../../data/network/types";
+import { Server } from "../../data/network/server";
 
 interface TriggerData {
   applyKeys: Key[];
@@ -21,8 +22,6 @@ export class ApplyCursor implements Cursor<TriggerData> {
   remove(): void {}
 
   trigger({ apply, turnState }: TriggerData) {
-    this.character.player.cast(this.spell);
-
     this.applied = true;
     apply(this.character);
 
@@ -36,9 +35,11 @@ export class ApplyCursor implements Cursor<TriggerData> {
       return;
     }
 
-    for (let key of this.spell.data.applyKeys) {
-      if (controller.isKeyDown(key)) {
-        this.trigger(this.spell.data);
+    if (Server.instance) {
+      for (let key of this.spell.data.applyKeys) {
+        if (controller.isKeyDown(key)) {
+          Server.instance.cast();
+        }
       }
     }
   }

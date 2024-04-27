@@ -252,6 +252,22 @@ export abstract class Manager {
     return value;
   }
 
+  cast(state: any = {}) {
+    if (!this.activePlayer) {
+      throw new Error("Casting without active player");
+    }
+
+    if (!this.cursor) {
+      throw new Error("Casting without cursor");
+    }
+
+    const spell = this.activePlayer.selectedSpell!;
+    this.cursor.trigger(spell.data, state);
+    this.activePlayer.cast(spell);
+
+    this.resetCursor();
+  }
+
   resetCursor() {
     if (this.cursor) {
       this.cursor.remove();
