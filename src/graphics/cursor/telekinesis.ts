@@ -42,11 +42,12 @@ export class Telekinesis extends Container {
   }
 
   tick() {
+    const controller = this.source.player.controller;
     const position = this.character.getCenter();
 
     this.position.set(...position);
 
-    const mouse = this.character.player.controller.getMouse();
+    const mouse = controller.getMouse();
     this.rotation =
       Math.atan2(position[1] - mouse[1], position[0] - mouse[0]) + Math.PI / 2;
 
@@ -73,11 +74,11 @@ export class Telekinesis extends Container {
     this.arrowBody.scale.x = 2 - this.arrowBody.scale.y / 10;
     this.arrowTip.position.y = SPRITE_SIZE / 2 + distance;
 
-    if (this.character.player.controller.isKeyDown(Key.M1)) {
+    if (controller.isKeyDown(Key.M1)) {
       this.activated = true;
     }
 
-    if (!this.character.player.controller.isKeyDown(Key.M1) && this.activated) {
+    if (!controller.isKeyDown(Key.M1) && this.activated) {
       if (realDistance < MIN_DISTANCE / 2) {
         // Probably a mistake, wait for the mouse to be clicked again.
         this.activated = false;
