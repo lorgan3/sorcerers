@@ -492,15 +492,8 @@ export class Server extends Manager {
       );
       player.nextTurn();
 
-      if (
-        this.activePlayer &&
-        this.activePlayer.selectedSpell &&
-        this.activePlayer.mana >= getSpellCost(this.activePlayer.selectedSpell)
-      ) {
-        this.cursor = new this.activePlayer.selectedSpell.cursor(
-          this.activePlayer.activeCharacter,
-          this.activePlayer.selectedSpell
-        );
+      if (this.activePlayer?.selectedSpell) {
+        this.selectSpell(this.activePlayer?.selectedSpell);
       }
 
       this.addPopup({
