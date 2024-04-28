@@ -10,7 +10,7 @@ import Join from "./Join.vue";
 import Tutorial from "./Tutorial.vue";
 import { Map } from "../data/map";
 import Inventory from "./Inventory.vue";
-import { Key } from "../data/controller/controller";
+import { Controller, Key } from "../data/controller/controller";
 
 enum Menu {
   MainMenu = "Main menu",
@@ -24,6 +24,7 @@ enum Menu {
 const canvas = ref<HTMLDivElement | null>(null);
 const inventoryOpen = ref(false);
 const menu = ref(Menu.MainMenu);
+const controller = ref<Controller>();
 
 const container = new AssetsContainer();
 let selectedMap: Map;
@@ -31,9 +32,10 @@ let selectedMap: Map;
 watch(canvas, (canvas) => {
   if (canvas) {
     container.onComplete(async () => {
-      const controller = await connect(canvas, selectedMap, handleBack);
-      controller.addKeyListener(Key.M2, () => {
+      controller.value = await connect(canvas, selectedMap, handleBack);
+      controller.value.addKeyListener(Key.M2, () => {
         inventoryOpen.value = !inventoryOpen.value;
+        controller.value!.setKey(Key.Inventory, inventoryOpen.value);
       });
     });
   }
@@ -50,6 +52,7 @@ const handleBack = () => {
 
 const handleCloseInventory = () => {
   inventoryOpen.value = false;
+  controller.value!.setKey(Key.Inventory, inventoryOpen.value);
 };
 </script>
 

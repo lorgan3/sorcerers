@@ -36,6 +36,7 @@ export enum Key {
   C = "c",
   M1 = "M1",
   M2 = "M2",
+  Inventory = "Inventory",
 }
 
 export const keys = Object.values(Key);
