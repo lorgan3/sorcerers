@@ -47,6 +47,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     this.pointer = new Sprite(atlas.textures["spells_pointer"]);
     this.pointer.anchor.set(0.4, 0.25);
     this.pointer.scale.set(2);
+    this.pointer.tint = this.character.player.color;
 
     this.addChild(this.indicator, this.pointer);
     Level.instance.uiContainer.addChild(this);
@@ -77,6 +78,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
 
   tick(dt: number, controller: Controller) {
     this.pointer.position.set(...controller.getLocalMouse());
+    this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
 
     const [x2, y2] = this.character.getCenter();
     this.indicator.position.set(x2 + this.character.direction * 20, y2 - 20);

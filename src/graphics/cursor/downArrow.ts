@@ -32,6 +32,7 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
     const indicator = new Sprite(frame);
     indicator.anchor.set(0.5);
     indicator.position.set(-13, 20);
+    indicator.tint = this.character.player.color;
 
     this.addChild(indicator);
     Level.instance.uiContainer.addChild(this);
@@ -55,6 +56,7 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
 
   tick(dt: number, controller: Controller) {
     this.position.set(...controller.getLocalMouse());
+    this.scale.set(2 / Level.instance.viewport.scale.x);
 
     if (Server.instance && controller.isKeyDown(Key.M1)) {
       Server.instance.cast();

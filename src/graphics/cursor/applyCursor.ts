@@ -27,6 +27,7 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
     this.pointer = new Sprite(atlas.textures["spells_pointer"]);
     this.pointer.anchor.set(0.4, 0.25);
     this.pointer.scale.set(2);
+    this.pointer.tint = this.character.player.color;
 
     this.addChild(this.pointer);
     Level.instance.uiContainer.addChild(this);
@@ -47,6 +48,7 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
 
   tick(dt: number, controller: Controller) {
     this.pointer.position.set(...controller.getLocalMouse());
+    this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
 
     if (!this.spell.data.applyKeys || this.applied) {
       return;

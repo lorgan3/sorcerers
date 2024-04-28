@@ -56,6 +56,7 @@ export class Lock
     this.indicator.loop = false;
     this.indicator.anchor.set(0.5);
     this.indicator.position.set(-14, 32);
+    this.indicator.tint = this.character.player.color;
 
     this.addChild(this.indicator);
     Level.instance.uiContainer.addChild(this);
@@ -113,6 +114,7 @@ export class Lock
 
   tick(dt: number, controller: Controller) {
     this.position.set(...controller.getLocalMouse());
+    this.scale.set(2 / Level.instance.viewport.scale.x);
 
     if (!Server.instance) {
       return;

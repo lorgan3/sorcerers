@@ -64,6 +64,7 @@ export class PoweredArcaneCircle
     this.pointer = new Sprite(atlas.textures["spells_pointer"]);
     this.pointer.anchor.set(0.4, 0.25);
     this.pointer.scale.set(2);
+    this.pointer.tint = this.character.player.color;
 
     this.addChild(this.indicator, this.powerMeter, this.pointer);
     Level.instance.uiContainer.addChild(this);
@@ -95,6 +96,7 @@ export class PoweredArcaneCircle
 
   tick(dt: number, controller: Controller) {
     this.pointer.position.set(...controller.getLocalMouse());
+    this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
 
     if (!controller.isKeyDown(Key.M1)) {
       if (this.indicator.visible) {
