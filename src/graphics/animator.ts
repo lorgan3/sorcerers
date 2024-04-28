@@ -31,6 +31,11 @@ export class Animator<K extends string = string, S = any> {
   private onComplete = () => {
     const config = this.animations[this.state!]!;
 
+    // Animation is done but custom duration set.
+    if (config.duration && this.time < this.completeTime) {
+      return;
+    }
+
     if (config.nextState) {
       const nextConfig = this.animations[config.nextState]!;
 
@@ -74,7 +79,7 @@ export class Animator<K extends string = string, S = any> {
 
     const config = this.animations[name]!;
     this.completeTime = config.duration ? this.time + config.duration : 0;
-    if (this.state === name) {
+    if (!force && this.state === name) {
       return;
     }
 
