@@ -102,6 +102,17 @@ export class KeyboardController implements Controller {
     }
   }
 
+  setKey(key: Key, state: boolean) {
+    if (state) {
+      this.pressedKeys |= keyMap[key];
+      this.serverKeys |= keyMap[key];
+      this.eventHandlers.get(key)?.forEach((fn) => fn());
+    } else {
+      this.pressedKeys &= ~keyMap[key];
+      this.serverKeys &= ~keyMap[key];
+    }
+  }
+
   isKeyDown(key?: Key) {
     // Only check keys that were already sent to the server.
     // This introduces some artificial lag but make movement

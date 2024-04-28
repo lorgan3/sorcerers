@@ -7,7 +7,9 @@ export interface Controller {
   deserialize(buffer: [number, number, number]): void;
   destroy(): void;
   resetKeys(): void;
-  // addKeyListener(key: Key, fn: () => void): () => void;
+  setKey(key: Key, state: boolean): void;
+  addKeyListener(key: Key, fn: () => void): () => void;
+  removeKeyListener(key: Key, fn: () => void): void;
 }
 
 export enum Key {
