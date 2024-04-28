@@ -183,6 +183,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   position: absolute;
   bottom: 0;
   left: 0;
+  cursor: url("../assets/pointer.png"), auto;
 
   display: grid;
   grid-template:

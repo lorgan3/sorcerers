@@ -210,6 +210,7 @@ const getElementFilter = (element: Element) =>
     border-radius: var(--small-radius);
     background: var(--background);
     pointer-events: all;
+    cursor: url("../assets/pointer.png"), auto;
 
     overflow-y: auto;
     scrollbar-width: none;
@@ -226,7 +227,6 @@ const getElementFilter = (element: Element) =>
 
       .slot {
         border-radius: var(--small-radius);
-        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;

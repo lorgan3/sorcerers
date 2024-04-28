@@ -187,6 +187,7 @@ export abstract class Manager {
         player.mana >= getSpellCost(spell)
       ) {
         this.cursor = new spell.cursor(player.activeCharacter, spell);
+        Level.instance.setBrowserCursorVisibility(false);
       }
     }
   }
@@ -272,6 +273,7 @@ export abstract class Manager {
     if (this.cursor) {
       this.cursor.remove();
       this.cursor = null;
+      Level.instance.setBrowserCursorVisibility(true);
     }
   }
 }

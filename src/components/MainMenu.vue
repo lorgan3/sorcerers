@@ -101,6 +101,11 @@ const handleCloseInventory = () => {
 <style lang="scss" scoped>
 .render-target {
   display: flex;
+  cursor: url("../assets/pointer.png"), auto;
+
+  &--no-pointer {
+    cursor: none;
+  }
 }
 
 .background {

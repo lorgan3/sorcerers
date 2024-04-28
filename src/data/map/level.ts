@@ -71,7 +71,7 @@ export class Level {
     return Level._instance;
   }
 
-  constructor(target: HTMLElement, map: GameMap) {
+  constructor(private target: HTMLElement, map: GameMap) {
     Level._instance = this;
 
     this.app = new Application({
@@ -304,5 +304,13 @@ export class Level {
       height: this.viewport.worldScreenHeight || 0,
       scale: this.viewport.scale.x,
     };
+  }
+
+  setBrowserCursorVisibility(show: boolean) {
+    if (show) {
+      this.target.classList.remove("render-target--no-pointer");
+    } else {
+      this.target.classList.add("render-target--no-pointer");
+    }
   }
 }
