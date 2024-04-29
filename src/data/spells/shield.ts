@@ -147,11 +147,6 @@ export class Shield extends Container implements HurtableEntity, Syncable {
       return;
     }
 
-    Level.instance.terrain.collisionMask.subtract(
-      this.shieldArea,
-      this.maskX,
-      this.maskY
-    );
     Level.instance.terrain.characterMask.subtract(
       this.shieldArea,
       this.maskX,
@@ -167,11 +162,6 @@ export class Shield extends Container implements HurtableEntity, Syncable {
       this.maskY
     );
 
-    Level.instance.terrain.collisionMask.add(
-      this.body.mask,
-      this.maskX,
-      this.maskY
-    );
     Level.instance.terrain.characterMask.add(
       this.body.mask,
       this.maskX,
