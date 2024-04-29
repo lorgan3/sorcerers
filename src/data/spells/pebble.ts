@@ -12,7 +12,7 @@ import { getRandom } from "../../util/array";
 
 export class Pebble extends Container implements TickingEntity {
   private static riseTime = 40;
-  private static hitBackOff = 5;
+  private static hitBackOff = 3;
   private static collisionTime = 4;
 
   public readonly body: SimpleBody;
@@ -30,7 +30,7 @@ export class Pebble extends Container implements TickingEntity {
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: this.onCollide,
       bounciness: 1,
       friction: 0.98,
       gravity: 0.1,
@@ -61,7 +61,8 @@ export class Pebble extends Container implements TickingEntity {
     if (this.time < Pebble.hitBackOff) {
       return;
     }
-    const damage = new ExplosiveDamage(x, y, 4, 1, 1);
+
+    const damage = new ExplosiveDamage(x, y, 4, 1, 1.7);
     Level.instance.damage(damage);
 
     if (damage.getTargets().hasEntities()) {

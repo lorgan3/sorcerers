@@ -109,7 +109,7 @@ export class Doragate extends Container implements Spawnable {
       i++
     ) {
       const x = Math.floor(cx / 6 - 12 + Math.random() * 25);
-      const y = Math.floor(cy / 6 + 8 - Math.random() * 20);
+      const y = Math.floor(cy / 6 + 6 - Math.random() * 20);
 
       if (!Level.instance.terrain.collisionMask.collidesWith(circle3x3, x, y)) {
         positions.push([x, y]);
