@@ -179,7 +179,7 @@ export class Client extends Manager {
         character.player.nextTurn();
 
         if (this.activePlayer?.selectedSpell) {
-          this.selectSpell(this.activePlayer?.selectedSpell);
+          this.selectSpell(this.activePlayer?.selectedSpell, this.activePlayer);
         }
 
         Level.instance.cameraTarget.setTarget(character);

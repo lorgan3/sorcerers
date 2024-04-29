@@ -493,7 +493,7 @@ export class Server extends Manager {
       player.nextTurn();
 
       if (this.activePlayer?.selectedSpell) {
-        this.selectSpell(this.activePlayer?.selectedSpell);
+        this.selectSpell(this.activePlayer?.selectedSpell, this.activePlayer);
       }
 
       this.addPopup({
