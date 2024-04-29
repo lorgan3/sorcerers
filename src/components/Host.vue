@@ -148,6 +148,7 @@ const handleStart = async () => {
   if (serverStarting.value) {
     return;
   }
+  await promise.value;
 
   serverStarting.value = true;
   set("Settings", {
@@ -155,8 +156,6 @@ const handleStart = async () => {
     name: localPlayers.value[0].name,
     defaultTeam: localPlayers.value[0].team,
   });
-
-  await promise.value;
 
   if (selectedMap.value === CUSTOM) {
     onPlay(await Map.fromBlob(customMap.value!));
