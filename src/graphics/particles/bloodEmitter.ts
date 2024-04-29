@@ -120,14 +120,19 @@ export class BloodEmitter
       source?.x !== undefined ? Math.atan2(source.y! - cy, source.x! - cx) : 0;
     const variance = source?.x !== undefined ? Math.PI / 12 : Math.PI * 2;
 
-    const amount = Math.ceil(Math.sqrt(damage) * 3);
+    const amount = Math.ceil(Math.sqrt(damage) * 4);
     for (let i = 0; i < amount; i++) {
       const speed = 5 + Math.random() * 4;
+      const angle =
+        Math.random() > 0.5
+          ? direction + (Math.random() - 0.5) * variance
+          : Math.random() * Math.PI * 2;
+
       this.spawn(
         cx + (Math.random() - 0.5) * 48,
         cy + (Math.random() - 0.5) * 48,
-        Math.cos(direction + (Math.random() - 0.5) * variance) * speed,
-        Math.sin(direction + (Math.random() - 0.5) * variance) * speed,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
         TINT_MAP[entity.type]
       );
     }
