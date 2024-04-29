@@ -44,6 +44,8 @@ watch(
 
 const handleClick = (spell?: Spell) => {
   if (spell && !Manager.instance.self.executedSpells.includes(spell)) {
+    props.onClose();
+
     if (Server.instance) {
       Manager.instance.selectSpell(spell);
 
@@ -63,8 +65,6 @@ const handleClick = (spell?: Spell) => {
       Client.instance.broadcast(message);
     }
   }
-
-  props.onClose();
 };
 
 const onMouseLeave = (event: Event) => {

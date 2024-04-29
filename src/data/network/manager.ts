@@ -8,6 +8,7 @@ import { Cursor } from "../../graphics/cursor/types";
 import { Element } from "../spells/types";
 import { HurtableEntity } from "../entity/types";
 import { MagicScroll } from "../entity/magicScroll";
+import { Key } from "../controller/controller";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -207,6 +208,10 @@ export abstract class Manager {
 
     this.resetCursor();
 
+    if (this.activePlayer.controller.isKeyDown(Key.Inventory)) {
+      this.activePlayer.activeCharacter.openSpellBook();
+    }
+
     return this.activePlayer.activeCharacter;
   }
 
@@ -216,6 +221,10 @@ export abstract class Manager {
 
   clearActiveCharacter() {
     this.activePlayer = null;
+  }
+
+  getActivePlayer() {
+    return this.activePlayer;
   }
 
   getElementValue(element: Element) {

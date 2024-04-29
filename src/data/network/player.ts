@@ -1,6 +1,6 @@
 import { DataConnection } from "peerjs";
 import { Character } from "../entity/character";
-import { Controller } from "../controller/controller";
+import { Controller, Key } from "../controller/controller";
 import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";
 import { Team } from "../team";
@@ -25,7 +25,9 @@ export class Player {
   public resolveReady!: () => void;
   public ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
 
-  constructor(private _connection?: DataConnection) {}
+  constructor(private _connection?: DataConnection) {
+    this._controller.addKeyListener(Key.Inventory, this.handleOpenInventory);
+  }
 
   connect(name: string, team: Team, color: string, controller?: Controller) {
     this._name = name;
@@ -33,9 +35,26 @@ export class Player {
     this._color = color;
 
     if (controller) {
+      this._controller.removeKeyListener(
+        Key.Inventory,
+        this.handleOpenInventory
+      );
+
       this._controller = controller;
+      controller.addKeyListener(Key.Inventory, this.handleOpenInventory);
     }
   }
+
+  disconnect() {
+    this._connection = undefined;
+    this.ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
+  }
+
+  private handleOpenInventory = () => {
+    if (Manager.instance.getActivePlayer() === this) {
+      this.activeCharacter.openSpellBook();
+    }
+  };
 
   destroy() {
     if (this.characters.length) {
@@ -96,11 +115,6 @@ export class Player {
     return this._connection;
   }
 
-  disconnect() {
-    this._connection = undefined;
-    this.ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
-  }
-
   reconnect(connection: DataConnection) {
     if (this._connection) {
       throw new Error(`Player ${this._name} is still connected!`);
@@ -129,7 +143,11 @@ export class Player {
   nextTurn() {
     this.turn++;
     this.mana += MANA_BASE_GAIN;
+
+    const inventoryWasOpen = this._controller.isKeyDown(Key.Inventory);
+
     this._controller.resetKeys();
+    this._controller.setKey(Key.Inventory, inventoryWasOpen);
     this.executedSpells = [];
   }
 

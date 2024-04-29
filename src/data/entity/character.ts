@@ -42,6 +42,7 @@ const SMOKE_TRIGGER = 2;
 
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
+const PAGE_READ_DURATION = 60;
 
 const MELEE_POWER = 20;
 
@@ -56,6 +57,9 @@ enum AnimationState {
   SpellIdle = "elf_spellIdle",
   SpellDone = "elf_spellDone",
   Swing = "elf_swing",
+  Read = "elf_read",
+  ReadIdle = "elf_readIdle",
+  ReadDone = "elf_readDone",
 }
 
 const ANIMATION_CONFIG: Record<
@@ -131,6 +135,24 @@ const ANIMATION_CONFIG: Record<
 
       return 30;
     },
+  },
+  [AnimationState.Read]: {
+    name: "elf_read",
+    loop: false,
+    speed: 0.15,
+    nextState: AnimationState.ReadIdle,
+  },
+  [AnimationState.ReadIdle]: {
+    name: "elf_readIdle",
+    loop: false,
+    nextState: AnimationState.ReadIdle,
+    duration: PAGE_READ_DURATION,
+    speed: 0.1,
+  },
+  [AnimationState.ReadDone]: {
+    name: "elf_read",
+    loop: false,
+    speed: -0.15,
   },
 };
 
@@ -218,6 +240,21 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
           this.animator.animate(AnimationState.SpellDone);
           Manager.instance.setTurnState(TurnState.Ending);
+        },
+      })
+      .addAnimation(AnimationState.ReadIdle, {
+        ...ANIMATION_CONFIG[AnimationState.ReadIdle],
+        continuous: () => {
+          if (
+            (Manager.instance.getActiveCharacter() !== this ||
+              !this.player.controller.isKeyDown()) &&
+            !this.spellSource
+          ) {
+            this.animator.animate(AnimationState.ReadDone);
+            this.animator.setDefaultAnimation(AnimationState.Idle);
+          }
+
+          return 30;
         },
       });
 
@@ -419,7 +456,26 @@ export class Character extends Container implements HurtableEntity, Syncable {
     } else if (source === this.spellSource) {
       this.spellSource = null;
       this.animator.animate(AnimationState.SpellDone);
-      this.animator.setDefaultAnimation(AnimationState.Idle);
+
+      if (
+        Manager.instance.getActiveCharacter() === this &&
+        this.player.controller.isKeyDown(Key.Inventory)
+      ) {
+        this.animator.setDefaultAnimation(AnimationState.Read);
+      } else {
+        this.animator.setDefaultAnimation(AnimationState.Idle);
+      }
+    }
+  }
+
+  openSpellBook() {
+    if (
+      !this.spellSource &&
+      this.animator.animationState !== AnimationState.Read &&
+      this.animator.animationState !== AnimationState.ReadIdle
+    ) {
+      this.animator.animate(AnimationState.Read);
+      this.animator.setDefaultAnimation(AnimationState.Read);
     }
   }
 
