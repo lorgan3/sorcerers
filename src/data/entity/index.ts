@@ -4,6 +4,7 @@ import { Bomb } from "../spells/bomb";
 import { Catastravia } from "../spells/catastravia";
 import { CatastraviaMissile } from "../spells/catastraviaMissile";
 import { ChainLightning } from "../spells/chainLightning";
+import { Daosdorg } from "../spells/daosdorg";
 import { Doragate } from "../spells/doragate";
 import { FireWheel } from "../spells/fireWheel";
 import { Fireball } from "../spells/fireball";
@@ -67,6 +68,7 @@ export const ENTITIES: Record<
   [EntityType.Acid]: Acid,
   [EntityType.Teleport]: Teleport,
   [EntityType.Doragate]: Doragate,
+  [EntityType.Daosdorg]: Daosdorg,
 };
 
 interface SpawnRateData {

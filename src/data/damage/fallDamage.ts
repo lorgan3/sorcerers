@@ -12,12 +12,15 @@ import { isHurtableEntity } from "../entity/types";
 import {
   circle16x16,
   circle16x16Canvas,
+  circle24x24,
+  circle24x24Canvas,
 } from "../collision/precomputed/circles";
 
 export enum Shape {
   SwordTip,
   SmallSword,
   Acid,
+  Tornado,
 }
 
 const r = 14;
@@ -79,6 +82,16 @@ const SHAPES: Record<
     yOffset: 8,
     range: 80,
     power: 0.1,
+  },
+  [Shape.Tornado]: {
+    subtract: function (ctx) {
+      ctx.drawImage(circle24x24Canvas, this.x, this.y);
+    },
+    mask: circle24x24,
+    xOffset: 12,
+    yOffset: 12,
+    range: 80,
+    power: 1,
   },
 };
 

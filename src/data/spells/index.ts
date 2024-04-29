@@ -34,6 +34,7 @@ import { Acid } from "./acid";
 import { Teleport } from "./teleport";
 import { MindControl } from "./mindControl";
 import { Doragate } from "./doragate";
+import { Daosdorg } from "./daosdorg";
 
 export interface Spell<TData = any> {
   name: string;
@@ -98,8 +99,8 @@ const ARTHUR_SWORD = spell(ArrowDown, {
 });
 
 const TELEKINESIS = spell(Lock, {
-  name: "Telekinesis",
-  description: "Move from a distance",
+  name: "Eisherz",
+  description: "Telekinesis",
   elements: [Element.Arcane],
   cost: 40,
   data: {
@@ -110,8 +111,8 @@ const TELEKINESIS = spell(Lock, {
 });
 
 const SHIELD = spell(ArcaneCircle, {
-  name: "Shield",
-  description: "Contingency plan",
+  name: "Felsenschild",
+  description: "A magical shield capable of stopping most spells",
   elements: [Element.Physical, Element.Life],
   cost: 10,
   costMultiplier: () =>
@@ -349,7 +350,7 @@ const METEOR = spell(Lock, {
 });
 
 const FIRE_WHEEL = spell(PoweredArcaneCircle, {
-  name: "Daosdorg",
+  name: "Flammendorn",
   description: "Throwable fireball that follows the ground",
   elements: [Element.Elemental],
   cost: 20,
@@ -436,6 +437,21 @@ const DORAGATE = spell(ArcaneCircle, {
   },
 });
 
+const DAOSDORG = spell(ArcaneCircle, {
+  name: "Daosdorg",
+  description: "Magic tornado",
+  elements: [Element.Elemental],
+  cost: 35,
+  data: {
+    projectile: Daosdorg,
+    xOffset: 13,
+    yOffset: 15,
+    x: 0,
+    y: -3,
+    turnState: TurnState.Attacked,
+  },
+});
+
 export const SPELLS: Spell[] = [
   MELEE,
   FIREBALL,
@@ -449,7 +465,8 @@ export const SPELLS: Spell[] = [
   MAGIC_MISSILE,
   BABYLON,
   BLINK,
-  REELSEIDEN,
+  // REELSEIDEN,
+  DAOSDORG,
   NEPHTEAR,
   WIND_BLAST,
   HAIRPIN,
