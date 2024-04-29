@@ -73,7 +73,7 @@ export class Animator<K extends string = string, S = any> {
 
   animate(name = this.defaultState!, force = false) {
     const oldConfig = this.animations[this.state!];
-    if (!force && (this.state === name || oldConfig?.blocking)) {
+    if (!force && oldConfig?.blocking) {
       return;
     }
 
