@@ -303,7 +303,7 @@ export class Server extends Manager {
   }
 
   endGame() {
-    this._turnState = TurnState.Finished;
+    this.setTurnState(TurnState.Finished);
 
     const livingPlayer = this.players.find(
       (player) => player.characters.length > 0
@@ -618,11 +618,11 @@ export class Server extends Manager {
   }
 
   cast(state?: any) {
-    super.cast(state);
-
     this.broadcast({
       type: MessageType.Cast,
       state,
     });
+
+    super.cast(state);
   }
 }
