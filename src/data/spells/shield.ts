@@ -47,8 +47,8 @@ export class Shield extends Container implements HurtableEntity, Syncable {
     this.sprite.animationSpeed = Shield.spawnSpeed;
     this.sprite.play();
     this.sprite.scale.set(-1.5, 1.5);
-    this.sprite.anchor.set(0.5);
-    this.sprite.position.set(60, 70);
+    this.sprite.anchor.set(0.6, 0.5);
+    this.sprite.position.set(70, 70);
     this.sprite.rotation = direction - Math.PI / 2;
     this.sprite.loop = false;
 
@@ -57,8 +57,8 @@ export class Shield extends Container implements HurtableEntity, Syncable {
     );
     this.shineEffect.animationSpeed = Shield.flickerSpeed;
     this.shineEffect.scale.set(-1.5, 1.5);
-    this.shineEffect.anchor.set(0.5);
-    this.shineEffect.position.set(60, 70);
+    this.shineEffect.anchor.set(0.6, 0.5);
+    this.shineEffect.position.set(70, 70);
     this.shineEffect.rotation = direction - Math.PI / 2;
     this.shineEffect.loop = false;
     this.shineEffect.visible = false;
@@ -92,7 +92,7 @@ export class Shield extends Container implements HurtableEntity, Syncable {
   }
 
   getCenter(): [number, number] {
-    return [this.position.x + 72, this.position.y + 72];
+    return [this.position.x + 70, this.position.y + 70];
   }
 
   die() {
