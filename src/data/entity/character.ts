@@ -251,10 +251,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
             !this.spellSource
           ) {
             this.animator.animate(AnimationState.ReadDone);
-            this.animator.setDefaultAnimation(AnimationState.Idle);
           }
 
           return 30;
+        },
+        onEnd: () => {
+          this.animator.setDefaultAnimation(AnimationState.Idle);
         },
       });
 
