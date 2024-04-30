@@ -1,0 +1,16 @@
+{
+  "frame": {
+    "w": 80,
+    "h": 64
+  },
+  "animation": "smoke",
+  "meta": {
+    "app": "https://github.com/lorgan3/sorcerers",
+    "version": "1.0",
+    "image": "smoke.png",
+    "size": {
+      "w": 720,
+      "h": 64
+    }
+  }
+}

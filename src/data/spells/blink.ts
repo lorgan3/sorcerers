@@ -9,10 +9,12 @@ import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { Implosion } from "../../graphics/implosion";
 import { TurnState } from "../network/types";
+import { Smoke } from "../../graphics/smoke";
+import { map } from "../../util/math";
 
 export class Blink extends Container implements TickingEntity {
   private static blinkTime = 90;
-  private static particleSpeed = 6;
+  private static particleSpeed = 10;
   private static blinkDistance = 50;
 
   private time = 0;
@@ -32,7 +34,7 @@ export class Blink extends Container implements TickingEntity {
       atlas.animations["spells_sparkle"],
       {
         ...SimpleParticleEmitter.defaultConfig,
-        lifeTime: 30,
+        lifeTime: 17,
         lifeTimeVariance: 1,
         spawnRange: 96,
         spawnFrequency: 0.2,
@@ -42,6 +44,7 @@ export class Blink extends Container implements TickingEntity {
           y: cy,
           xVelocity: x * Blink.particleSpeed,
           yVelocity: y * Blink.particleSpeed,
+          scale: map(1, 2, Math.random()),
         }),
       }
     );
@@ -53,6 +56,8 @@ export class Blink extends Container implements TickingEntity {
 
     if (this.time > Blink.blinkTime) {
       const [cx, cy] = this.character.getCenter();
+      new Smoke(cx, cy, Math.sign(Math.sin(this.direction)) || 1);
+
       const x = Math.round(
         cx / 6 + Math.cos(this.direction) * Blink.blinkDistance
       );
@@ -62,11 +67,11 @@ export class Blink extends Container implements TickingEntity {
 
       Level.instance.damage(
         new ExplosiveDamage(
-          x,
-          y,
-          16,
+          x + 3,
+          y + 4,
+          12,
           3,
-          5 * Manager.instance.getElementValue(Element.Physical)
+          3 * Manager.instance.getElementValue(Element.Physical)
         )
       );
       new Implosion(x * 6, y * 6);

@@ -244,7 +244,7 @@ const BLINK = spell(ApplyCursor, {
   name: "Jilwer",
   description: "Blink forwards",
   elements: [Element.Physical],
-  cost: 12,
+  cost: 16,
   data: {
     applyKeys: [Key.M1],
     turnState: TurnState.Attacked,
