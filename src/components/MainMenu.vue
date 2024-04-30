@@ -11,6 +11,8 @@ import Tutorial from "./Tutorial.vue";
 import { Map } from "../data/map";
 import Inventory from "./Inventory.vue";
 import { Controller, Key } from "../data/controller/controller";
+import Spellbook from "./Spellbook.vue";
+import book from "../assets/book.png";
 
 enum Menu {
   MainMenu = "Main menu",
@@ -19,6 +21,7 @@ enum Menu {
   Join = "Join game",
   Builder = "Builder",
   Game = "Game",
+  Spellbook = "Spellbook",
 }
 
 const canvas = ref<HTMLDivElement | null>(null);
@@ -80,24 +83,34 @@ const handleCloseInventory = () => {
       </h1>
       <h2 v-if="menu !== Menu.MainMenu">/ {{ menu }}</h2>
     </div>
-    <div v-if="menu === Menu.MainMenu" class="mainMenu">
-      <ul class="list flex-list">
-        <li><button class="primary" @click="menu = Menu.Team">Team</button></li>
-        <li>
-          <button class="primary" @click="menu = Menu.Host">Host game</button>
-        </li>
-        <li>
-          <button class="primary" @click="menu = Menu.Join">Join game</button>
-        </li>
-        <li>
-          <button class="primary" @click="menu = Menu.Builder">Builder</button>
-        </li>
-      </ul>
-    </div>
+    <template v-if="menu === Menu.MainMenu">
+      <div v-if="menu === Menu.MainMenu" class="mainMenu">
+        <ul class="list flex-list">
+          <li>
+            <button class="primary" @click="menu = Menu.Team">Team</button>
+          </li>
+          <li>
+            <button class="primary" @click="menu = Menu.Host">Host game</button>
+          </li>
+          <li>
+            <button class="primary" @click="menu = Menu.Join">Join game</button>
+          </li>
+          <li>
+            <button class="primary" @click="menu = Menu.Builder">
+              Builder
+            </button>
+          </li>
+        </ul>
+      </div>
+      <button class="secondary book-link" @click="menu = Menu.Spellbook">
+        <img :src="book" />
+      </button>
+    </template>
 
     <Team v-if="menu === Menu.Team" :onBack="handleBack" />
     <Host v-if="menu === Menu.Host" :onBack="handleBack" :onPlay="handlePlay" />
     <Join v-if="menu === Menu.Join" :onBack="handleBack" :onPlay="handlePlay" />
+    <Spellbook v-if="menu === Menu.Spellbook" :onBack="handleBack" />
   </div>
 </template>
 
@@ -169,6 +182,15 @@ const handleCloseInventory = () => {
         letter-spacing: 1.5px;
       }
     }
+  }
+}
+
+.book-link {
+  padding: 20px 0 15px;
+  width: 70px;
+
+  img {
+    scale: 2;
   }
 }
 </style>
