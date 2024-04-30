@@ -14,6 +14,7 @@ const props = defineProps<{
 }>();
 
 const SLOTS = 30;
+const SPRITES_PER_ROW = 5;
 
 const previewSpell = ref(Manager.instance?.selectedSpell);
 const previewMultiplier = ref(1);
@@ -101,9 +102,14 @@ const getElementFilter = (element: Element) =>
             @click="handleClick(SPELLS[i - 1])"
             @mouseenter="onMouseEnter(SPELLS[i - 1])"
           >
-            <span v-if="SPELLS[i - 1]" class="placeholder">{{
-              SPELLS[i - 1].name.slice(0, 1)
-            }}</span>
+            <div
+              v-if="SPELLS[i - 1]"
+              :style="{
+                '--row': -Math.floor(SPELLS[i - 1].iconId / SPRITES_PER_ROW),
+                '--column': -(SPELLS[i - 1].iconId % SPRITES_PER_ROW),
+              }"
+              class="spell-icon"
+            ></div>
             <svg
               width="50px"
               height="50px"
@@ -246,6 +252,16 @@ const getElementFilter = (element: Element) =>
           font-family: "Eternal";
           font-size: 42px;
           margin-top: 6px;
+        }
+
+        .spell-icon {
+          --size: 48px;
+
+          background: url("../assets/spells.png");
+          background-position: left calc(var(--column, 0) * var(--size)) top
+            calc(var(--row, 0) * var(--size));
+          width: var(--size);
+          height: var(--size);
         }
 
         .border {

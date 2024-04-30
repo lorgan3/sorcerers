@@ -45,6 +45,7 @@ export interface Spell<TData = any> {
   cost: number;
   costMultiplier?: () => number;
   stacking?: boolean; // True if this spell does not end the turn
+  iconId: number;
 }
 
 function spell<TData>(
@@ -67,6 +68,7 @@ const MELEE = spell(ApplyCursor, {
     apply: (character: Character) => character.melee(),
     turnState: TurnState.Ending,
   },
+  iconId: 0,
 });
 
 const FIREBALL = spell(PoweredArcaneCircle, {
@@ -82,6 +84,7 @@ const FIREBALL = spell(PoweredArcaneCircle, {
     y: 6.5,
     turnState: TurnState.Attacked,
   },
+  iconId: 1,
 });
 
 const ARTHUR_SWORD = spell(ArrowDown, {
@@ -96,6 +99,7 @@ const ARTHUR_SWORD = spell(ArrowDown, {
     turnState: TurnState.Attacked,
     spellSource: true,
   },
+  iconId: 12,
 });
 
 const TELEKINESIS = spell(Lock, {
@@ -108,6 +112,7 @@ const TELEKINESIS = spell(Lock, {
     projectile: Telekinesis,
     turnState: TurnState.Ongoing,
   },
+  iconId: 20,
 });
 
 const SHIELD = spell(ArcaneCircle, {
@@ -126,6 +131,7 @@ const SHIELD = spell(ArcaneCircle, {
     y: -3,
     turnState: TurnState.Ongoing,
   },
+  iconId: 2,
 });
 
 const BAKURETSU = spell(ArrowDown, {
@@ -141,6 +147,7 @@ const BAKURETSU = spell(ArrowDown, {
     yOffset: 0,
     turnState: TurnState.Attacked,
   },
+  iconId: 24,
 });
 
 const ZOLTRAAK = spell(ArcaneCircle, {
@@ -156,6 +163,7 @@ const ZOLTRAAK = spell(ArcaneCircle, {
     y: 8,
     turnState: TurnState.Ending,
   },
+  iconId: 18,
 });
 
 const WINGS = spell(ApplyCursor, {
@@ -170,6 +178,7 @@ const WINGS = spell(ApplyCursor, {
     applyKeys: [Key.Up, Key.W],
     apply: (character: Character) => character.giveWings(),
   },
+  iconId: 6,
 });
 
 const CATASTRAVIA = spell(PoweredArcaneCircle, {
@@ -185,6 +194,7 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
     y: 8,
     turnState: TurnState.Attacked,
   },
+  iconId: 22,
 });
 
 const MAGIC_MISSILE = spell(ApplyCursor, {
@@ -211,6 +221,7 @@ const MAGIC_MISSILE = spell(ApplyCursor, {
       );
     },
   },
+  iconId: 21,
 });
 
 const BABYLON = spell(ArrowDown, {
@@ -224,6 +235,7 @@ const BABYLON = spell(ArrowDown, {
     yOffset: 0,
     turnState: TurnState.Attacked,
   },
+  iconId: 13,
 });
 
 const BLINK = spell(ApplyCursor, {
@@ -245,6 +257,7 @@ const BLINK = spell(ApplyCursor, {
       Level.instance.add(new Blink(rotation, character));
     },
   },
+  iconId: 4,
 });
 
 const REELSEIDEN = spell(Lock, {
@@ -257,6 +270,7 @@ const REELSEIDEN = spell(Lock, {
     projectile: Reelseiden,
     turnState: TurnState.Ending,
   },
+  iconId: -1,
 });
 
 const NEPHTEAR = spell(PoweredArcaneCircle, {
@@ -272,6 +286,7 @@ const NEPHTEAR = spell(PoweredArcaneCircle, {
     y: 6.5,
     turnState: TurnState.Attacked,
   },
+  iconId: 5,
 });
 
 const WIND_BLAST = spell(PoweredArcaneCircle, {
@@ -288,6 +303,7 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
     turnState: TurnState.Attacked,
     keepSpellSource: true,
   },
+  iconId: 3,
 });
 
 const HAIRPIN = spell(PoweredArcaneCircle, {
@@ -304,6 +320,7 @@ const HAIRPIN = spell(PoweredArcaneCircle, {
     turnState: TurnState.Attacked,
     keepSpellSource: true,
   },
+  iconId: 14,
 });
 
 const ICE_WALL = spell(ArcaneCircle, {
@@ -319,6 +336,7 @@ const ICE_WALL = spell(ArcaneCircle, {
     y: 6.5,
     turnState: TurnState.Attacked,
   },
+  iconId: 7,
 });
 
 const ROCK = spell(PoweredArcaneCircle, {
@@ -335,6 +353,7 @@ const ROCK = spell(PoweredArcaneCircle, {
     y: 0,
     turnState: TurnState.Ongoing,
   },
+  iconId: 15,
 });
 
 const METEOR = spell(Lock, {
@@ -347,6 +366,7 @@ const METEOR = spell(Lock, {
     projectile: Meteor,
     turnState: TurnState.Attacked,
   },
+  iconId: 23,
 });
 
 const FIRE_WHEEL = spell(PoweredArcaneCircle, {
@@ -362,6 +382,7 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
     y: 6.5,
     turnState: TurnState.Attacked,
   },
+  iconId: 8,
 });
 
 const LIGHTNING = spell(ArcaneCircle, {
@@ -377,6 +398,7 @@ const LIGHTNING = spell(ArcaneCircle, {
     y: 6.5,
     turnState: TurnState.Attacked,
   },
+  iconId: 10,
 });
 
 const ACID = spell(PoweredArcaneCircle, {
@@ -392,6 +414,7 @@ const ACID = spell(PoweredArcaneCircle, {
     y: 6.5,
     turnState: TurnState.Attacked,
   },
+  iconId: 11,
 });
 
 const TELEPORT = spell(Lock, {
@@ -405,6 +428,7 @@ const TELEPORT = spell(Lock, {
     turnState: TurnState.Ending,
     spellSource: true,
   },
+  iconId: 9,
 });
 
 const MIND_CONTROL = spell(Lock, {
@@ -419,6 +443,7 @@ const MIND_CONTROL = spell(Lock, {
     turnState: TurnState.Ongoing,
     spellSource: true,
   },
+  iconId: 16,
 });
 
 const DORAGATE = spell(ArcaneCircle, {
@@ -435,6 +460,7 @@ const DORAGATE = spell(ArcaneCircle, {
     turnState: TurnState.Attacked,
     keepSpellSource: true,
   },
+  iconId: 17,
 });
 
 const DAOSDORG = spell(ArcaneCircle, {
@@ -450,6 +476,7 @@ const DAOSDORG = spell(ArcaneCircle, {
     y: -3,
     turnState: TurnState.Attacked,
   },
+  iconId: 19,
 });
 
 export const SPELLS: Spell[] = [
