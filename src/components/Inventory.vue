@@ -13,7 +13,7 @@ const props = defineProps<{
   onClose: () => void;
 }>();
 
-const SLOTS = 30;
+const SLOTS = 25;
 const SPRITES_PER_ROW = 5;
 
 const previewSpell = ref(Manager.instance?.selectedSpell);
@@ -153,35 +153,37 @@ const getElementFilter = (element: Element) =>
             </svg>
           </div>
         </div>
-        <div v-if="previewSpell" class="spell">
-          <div class="magic">
-            <span
-              v-if="previewSpell.cost"
-              :class="{
-                cost: true,
-                positive: previewMultiplier < 1,
-                negative: previewMultiplier > 1,
-              }"
-              >{{ Math.ceil(previewSpell.cost * previewMultiplier) }}</span
-            >
-            <span class="elements">
-              <img
-                v-for="element in previewSpell.elements"
-                :src="ELEMENT_MAP[element]"
-                :alt="element"
-                :title="element"
-              />
-            </span>
-          </div>
-          <div class="details">
-            <span class="name">
+        <div class="spell">
+          <template v-if="previewSpell">
+            <div class="magic">
               <span
-                >{{ previewSpell.name }}
-                <span v-if="previewSpell.stacking">⟳</span></span
+                v-if="previewSpell.cost"
+                :class="{
+                  cost: true,
+                  positive: previewMultiplier < 1,
+                  negative: previewMultiplier > 1,
+                }"
+                >{{ Math.ceil(previewSpell.cost * previewMultiplier) }}</span
               >
-            </span>
-            <span class="description">{{ previewSpell.description }}</span>
-          </div>
+              <span class="elements">
+                <img
+                  v-for="element in previewSpell.elements"
+                  :src="ELEMENT_MAP[element]"
+                  :alt="element"
+                  :title="element"
+                />
+              </span>
+            </div>
+            <div class="details">
+              <span class="name">
+                <span
+                  >{{ previewSpell.name }}
+                  <span v-if="previewSpell.stacking">⟳</span></span
+                >
+              </span>
+              <span class="description">{{ previewSpell.description }}</span>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -227,7 +229,7 @@ const getElementFilter = (element: Element) =>
     .grid {
       display: grid;
       grid-template-columns: repeat(5, 50px);
-      grid-template-rows: repeat(6, 50px);
+      grid-template-rows: repeat(5, 50px);
       gap: 3px;
       padding: 6px;
 
@@ -297,6 +299,7 @@ const getElementFilter = (element: Element) =>
       padding-top: 0;
       gap: 6px;
       word-wrap: break-word;
+      height: 54px;
 
       .magic {
         display: flex;
