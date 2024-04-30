@@ -112,7 +112,7 @@ export class ExplosiveDamage implements DamageSource {
             const [x, y] = entity.getCenter();
             this.targets!.add(
               entity,
-              (2 + 8 * ((range - distance) / range)) * this.damageMultiplier,
+              (5 + 5 * ((range - distance) / range)) * this.damageMultiplier,
               {
                 power: this.power,
                 direction: Math.atan2(y - this.y * 6, x - this.x * 6),

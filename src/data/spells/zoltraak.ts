@@ -25,7 +25,7 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { StaticBody } from "../collision/staticBody";
 
-const DAMAGE = 30;
+const DAMAGE = 25;
 const MAX_DISTANCE = 912;
 
 const TOOLS = [
@@ -169,7 +169,7 @@ export class Zoltraak extends Container implements Spawnable {
     targets.sort((a, b) => a.distance - b.distance);
     const targetList = new TargetList();
 
-    let damage = DAMAGE + Manager.instance.getElementValue(Element.Arcane) * 8;
+    let damage = DAMAGE + Manager.instance.getElementValue(Element.Arcane) * 6;
     for (let target of targets) {
       targetList.add(target.entity, damage);
 

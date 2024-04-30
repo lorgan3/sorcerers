@@ -6,6 +6,8 @@ import { Level } from "../map/level";
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Manager } from "../network/manager";
+import { Element } from "../spells/types";
 
 export class Wings extends Container {
   private static fullPower = 100;
@@ -23,6 +25,9 @@ export class Wings extends Container {
   constructor(private character: Character) {
     super();
     this.character.body.gravity = 0.14;
+    this._power =
+      Wings.fullPower *
+      (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 

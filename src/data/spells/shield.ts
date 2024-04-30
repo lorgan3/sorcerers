@@ -17,10 +17,13 @@ import { Server } from "../network/server";
 import { DamageSource } from "../damage/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Manager } from "../network/manager";
+import { Element } from "./types";
 
 export class Shield extends Container implements HurtableEntity, Syncable {
   private static spawnSpeed = 0.15;
   private static flickerSpeed = 0.25;
+  private static baseHp = 30;
 
   private sprite: AnimatedSprite;
   private shineEffect: AnimatedSprite;
@@ -30,7 +33,7 @@ export class Shield extends Container implements HurtableEntity, Syncable {
   public readonly type = EntityType.Shield;
   readonly priority = Priority.Dynamic;
 
-  private _hp = 40;
+  private _hp = 0;
   private shieldArea?: CollisionMask;
   private maskX = 0;
   private maskY = 0;
@@ -39,6 +42,9 @@ export class Shield extends Container implements HurtableEntity, Syncable {
     super();
     if (hp) {
       this._hp = hp;
+    } else {
+      this._hp =
+        Shield.baseHp + Manager.instance.getElementValue(Element.Physical) * 6;
     }
 
     const atlas = AssetsContainer.instance.assets!["atlas"];

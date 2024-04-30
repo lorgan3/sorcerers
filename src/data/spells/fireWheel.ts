@@ -18,9 +18,11 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 
 export class FireWheel extends Container implements Syncable {
+  private static baseLifeTime = 450;
+
   public readonly body: StickyBody;
   private sprite: AnimatedSprite;
-  private lifetime = 500;
+  private lifetime = 0;
   private sound?: ControllableSound;
 
   public id = -1;
@@ -30,6 +32,10 @@ export class FireWheel extends Container implements Syncable {
 
   constructor(x: number, y: number, speed: number, private direction: number) {
     super();
+
+    this.lifetime =
+      FireWheel.baseLifeTime *
+      (0.5 + 0.5 * Manager.instance.getElementValue(Element.Arcane));
 
     this.body = new StickyBody(Level.instance.terrain.collisionMask, {
       mask: circle16x16,

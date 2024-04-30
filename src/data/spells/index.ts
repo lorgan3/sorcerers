@@ -105,7 +105,9 @@ const ARTHUR_SWORD = spell(ArrowDown, {
 const TELEKINESIS = spell(Lock, {
   name: "Eisherz",
   description: "Telekinesis",
-  elements: [Element.Arcane],
+  elements: [Element.Physical, Element.Life],
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   cost: 40,
   data: {
     target: Target.Character,
@@ -169,7 +171,7 @@ const ZOLTRAAK = spell(ArcaneCircle, {
 const WINGS = spell(ApplyCursor, {
   name: "Digardnacht",
   description: "Wings that grant flight",
-  elements: [Element.Life],
+  elements: [Element.Physical, Element.Life],
   cost: 15,
   costMultiplier: () =>
     1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
@@ -200,7 +202,7 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
 const MAGIC_MISSILE = spell(ApplyCursor, {
   name: "Vollzanbel",
   description: "Guided missile",
-  elements: [Element.Life],
+  elements: [Element.Arcane, Element.Life],
   cost: 40,
   data: {
     applyKeys: [Key.M1],
@@ -292,8 +294,10 @@ const NEPHTEAR = spell(PoweredArcaneCircle, {
 const WIND_BLAST = spell(PoweredArcaneCircle, {
   name: "Medrozobalt",
   description: "Create a gust of wind",
-  elements: [Element.Life],
+  elements: [Element.Elemental, Element.Life],
   cost: 10,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   data: {
     projectile: WindBlast,
     xOffset: 7,
@@ -344,6 +348,8 @@ const ROCK = spell(PoweredArcaneCircle, {
   description: "Control the earth",
   elements: [Element.Life, Element.Elemental],
   cost: 30,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   stacking: true,
   data: {
     projectile: Rock,
@@ -372,7 +378,7 @@ const METEOR = spell(Lock, {
 const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   name: "Flammendorn",
   description: "Throwable fireball that follows the ground",
-  elements: [Element.Elemental],
+  elements: [Element.Elemental, Element.Arcane],
   cost: 20,
   data: {
     projectile: FireWheel,
@@ -388,7 +394,7 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
 const LIGHTNING = spell(ArcaneCircle, {
   name: "Judradjim",
   description: "Generate chain lightning",
-  elements: [Element.Arcane],
+  elements: [Element.Elemental],
   cost: 25,
   data: {
     projectile: ChainLightning,
@@ -420,8 +426,10 @@ const ACID = spell(PoweredArcaneCircle, {
 const TELEPORT = spell(Lock, {
   name: "Fürwehrer",
   description: "Houdini yourself out of a sticky situation",
-  elements: [Element.Physical],
+  elements: [Element.Life],
   cost: 20,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   data: {
     target: Target.Free,
     projectile: Teleport,
@@ -436,6 +444,8 @@ const MIND_CONTROL = spell(Lock, {
   description: "Swap control with another ally",
   elements: [Element.Life],
   cost: 30,
+  costMultiplier: () =>
+    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   stacking: true,
   data: {
     target: Target.Ally,
@@ -449,7 +459,7 @@ const MIND_CONTROL = spell(Lock, {
 const DORAGATE = spell(ArcaneCircle, {
   name: "Doragate",
   description: "Rocks to bullets",
-  elements: [Element.Physical],
+  elements: [Element.Physical, Element.Arcane],
   cost: 30,
   data: {
     projectile: Doragate,
@@ -466,7 +476,7 @@ const DORAGATE = spell(ArcaneCircle, {
 const DAOSDORG = spell(ArcaneCircle, {
   name: "Daosdorg",
   description: "Magic tornado",
-  elements: [Element.Elemental],
+  elements: [Element.Physical, Element.Arcane],
   cost: 35,
   data: {
     projectile: Daosdorg,

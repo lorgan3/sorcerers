@@ -112,7 +112,8 @@ export class WindBlast extends Container implements Spawnable {
               direction: adjustedDirection,
               power:
                 this.power *
-                (0.7 + Manager.instance.getElementValue(Element.Life) * 0.3),
+                (0.7 +
+                  Manager.instance.getElementValue(Element.Elemental) * 0.3),
             },
           }))
       );

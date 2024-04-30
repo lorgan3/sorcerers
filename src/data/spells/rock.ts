@@ -11,6 +11,8 @@ import { probeX } from "../map/utils";
 import { CollisionMask } from "../collision/collisionMask";
 import { StaticBody } from "../collision/staticBody";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { Manager } from "../network/manager";
+import { Element } from "./types";
 
 export class Rock extends Container implements Spawnable {
   private static growTime = 100;
@@ -132,7 +134,14 @@ export class Rock extends Container implements Spawnable {
               )
             ) {
               Level.instance.damage(
-                new ExplosiveDamage(ex + 3, ey + 3, 8, -2, 1) // Negative power to push the player up
+                new ExplosiveDamage(
+                  ex + 3,
+                  ey + 3,
+                  8,
+                  -2,
+                  0.5 +
+                    Manager.instance.getElementValue(Element.Elemental) * 0.5
+                ) // Negative power to push the player up
               );
             }
 

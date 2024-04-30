@@ -15,22 +15,29 @@ import { rectangle6x16 } from "../collision/precomputed/rectangles";
 import { FallDamage, Shape } from "../damage/fallDamage";
 import { map } from "../../util/math";
 import { StaticBody } from "../collision/staticBody";
+import { Element } from "./types";
 
 export class Daosdorg extends Container implements Spawnable {
+  private static baseLifeTime = 40;
+
   private static damageInterval = 6;
-  private static lifeTime = 50;
 
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
   private lastDamageTime = -Daosdorg.damageInterval;
   private time = 0;
+  private lifeTime = 0;
 
   public id = -1;
   public readonly type = EntityType.Daosdorg;
 
   constructor(x: number, y: number, direction: number) {
     super();
+
+    this.lifeTime =
+      Daosdorg.baseLifeTime *
+      (0.5 + 0.5 * Manager.instance.getElementValue(Element.Arcane));
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: rectangle6x16,
@@ -88,7 +95,12 @@ export class Daosdorg extends Container implements Spawnable {
     }
 
     this.lastDamageTime = this.time;
-    const damage = new FallDamage(x - 9, y - 4, Shape.Tornado, 3);
+    const damage = new FallDamage(
+      x - 9,
+      y - 4,
+      Shape.Tornado,
+      1.8 + Manager.instance.getElementValue(Element.Physical)
+    );
     Level.instance.damage(damage);
 
     if (
@@ -123,11 +135,17 @@ export class Daosdorg extends Container implements Spawnable {
       this.time >= this.lastDamageTime + Daosdorg.damageInterval * 3
     ) {
       this.lastDamageTime = this.time;
-      const damage = new FallDamage(x - 9, y - 4, Shape.Tornado, 3);
+      const damage = new FallDamage(
+        x - 9,
+        y - 4,
+        Shape.Tornado,
+        1.8 + Manager.instance.getElementValue(Element.Physical)
+      );
+
       Level.instance.damage(damage);
     }
 
-    if (this.time >= Daosdorg.lifeTime) {
+    if (this.time >= this.lifeTime) {
       this.die();
     }
   }

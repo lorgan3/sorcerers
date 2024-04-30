@@ -9,6 +9,8 @@ import { Server } from "../network/server";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getRandom } from "../../util/array";
+import { Manager } from "../network/manager";
+import { Element } from "./types";
 
 export class Pebble extends Container implements TickingEntity {
   private static riseTime = 40;
@@ -62,7 +64,13 @@ export class Pebble extends Container implements TickingEntity {
       return;
     }
 
-    const damage = new ExplosiveDamage(x, y, 4, 1, 1.7);
+    const damage = new ExplosiveDamage(
+      x,
+      y,
+      4,
+      1,
+      1 + Manager.instance.getElementValue(Element.Arcane) * 0.5
+    );
     Level.instance.damage(damage);
 
     if (damage.getTargets().hasEntities()) {

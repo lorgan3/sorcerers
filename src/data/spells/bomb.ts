@@ -45,7 +45,7 @@ export class Bomb extends Container implements Item {
       airXFriction: 0.99,
       groundFriction: 0.8,
       roundness: 0.2,
-      bounciness: -0.6,
+      bounciness: -0.4,
     });
     this.body.move(x, y);
     this.body.addAngularVelocity(speed, direction);
@@ -113,7 +113,7 @@ export class Bomb extends Container implements Item {
 
     this.hp = 0;
     Level.instance.damage(
-      new ExplosiveDamage(x, y, 16, 2, (1 + this.arcanePower) / 2)
+      new ExplosiveDamage(x, y, 16, 2, 4 * (0.7 + this.arcanePower * 0.3))
     );
     Server.instance.kill(this);
   }

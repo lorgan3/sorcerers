@@ -91,7 +91,7 @@ const SHAPES: Record<
     xOffset: 12,
     yOffset: 12,
     range: 80,
-    power: 1,
+    power: 0.6,
   },
 };
 
