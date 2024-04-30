@@ -113,13 +113,14 @@ onMounted(() => {});
   }
 
   .spell-icon {
-    --size: 48px;
+    --size: 96px;
 
     background: url("../assets/spells.png");
     background-position: left calc(var(--column, 0) * var(--size)) top
       calc(var(--row, 0) * var(--size));
     width: var(--size);
     height: var(--size);
+    background-size: calc(var(--size) * 5);
   }
 }
 </style>
