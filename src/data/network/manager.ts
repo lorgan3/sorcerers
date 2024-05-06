@@ -157,7 +157,9 @@ export abstract class Manager {
   isControlling() {
     return (
       this._turnState !== TurnState.Killing &&
-      this._turnState !== TurnState.Spawning
+      this._turnState !== TurnState.Spawning &&
+      (this._turnState !== TurnState.Attacked ||
+        !this.activePlayer?.activeCharacter?.isCasting())
     );
   }
 

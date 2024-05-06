@@ -472,6 +472,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
   }
 
+  isCasting() {
+    return !!this.spellSource;
+  }
+
   openSpellBook() {
     if (
       !this.spellSource &&
