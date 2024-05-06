@@ -53,6 +53,7 @@ export type Message =
       activeCharacter: number;
       elements: number[];
       turnStartTime: number;
+      time: number;
       newMana: number;
     }
   | {

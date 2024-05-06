@@ -170,6 +170,7 @@ export class Client extends Manager {
           (key, i) => (this.elements[key as Element] = message.elements[i])
         );
         this.turnStartTime = message.turnStartTime;
+        this.time = message.time;
         this._turnState = TurnState.Ongoing;
 
         const character = this.setActiveCharacter(
@@ -177,6 +178,7 @@ export class Client extends Manager {
           message.activeCharacter
         );
         character.player.nextTurn();
+        character.player.mana = message.newMana;
 
         if (this.activePlayer?.selectedSpell) {
           this.selectSpell(this.activePlayer?.selectedSpell, this.activePlayer);

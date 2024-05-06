@@ -223,13 +223,16 @@ export class Server extends Manager {
           await player.ready;
           this.syncSinglePlayer(player);
 
+          const activePlayerIndex = this.players.indexOf(this.activePlayer!);
           connection.send({
             type: MessageType.ActiveCharacter,
-            activePlayer: this.players.indexOf(this.activePlayer!),
+            activePlayer: activePlayerIndex,
             activeCharacter: this.activePlayer!.active,
             elements: Object.values(this.elements),
             turnStartTime: this.turnStartTime,
-          });
+            time: this.time,
+            newMana: this.players[activePlayerIndex].mana,
+          } as Message);
 
           const spawnables = [...Level.instance.entities].filter(
             isSpawnableEntity
@@ -524,8 +527,9 @@ export class Server extends Manager {
       activeCharacter: this.activePlayer!.active,
       elements: Object.values(this.elements),
       turnStartTime: this.turnStartTime,
+      time: this.time,
       newMana: this.players[activePlayer].mana,
-    });
+    } as Message);
   }
 
   protected addPopup(popup: Popup): void {
