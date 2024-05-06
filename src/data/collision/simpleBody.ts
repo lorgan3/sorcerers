@@ -109,43 +109,55 @@ export class SimpleBody implements PhysicsBody {
       xDiff !== 0 &&
       this.surface.collidesWith(this.mask, alignX(this.x + xDiff), this.ry)
     ) {
-      if (Math.abs(xDiff) >= 1) {
-        const step = Math.sign(xDiff);
-        while (
-          !this.surface.collidesWith(this.mask, alignX(this.x + step), this.ry)
-        ) {
-          this.x += step;
+      xCollision = alignX(this.x + xDiff);
+
+      if (this.bounciness <= 0) {
+        if (Math.abs(xDiff) >= 1) {
+          const step = Math.sign(xDiff);
+          while (
+            !this.surface.collidesWith(
+              this.mask,
+              alignX(this.x + step),
+              this.ry
+            )
+          ) {
+            this.x += step;
+          }
         }
+
+        this.x = alignX(this.x);
+        xDiff = 0;
       }
 
-      xCollision = alignX(this.x + xDiff);
-      this.x = alignX(this.x);
-      if (this.bounciness !== 0) {
-        xDiff = 0;
-        this.xVelocity *= this.bounciness;
-      }
+      this.xVelocity *= this.bounciness;
     }
 
     if (
       yDiff !== 0 &&
       this.surface.collidesWith(this.mask, this.rx, alignY(this.y + yDiff))
     ) {
-      if (Math.abs(yDiff) >= 1) {
-        const step = Math.sign(yDiff);
-        while (
-          !this.surface.collidesWith(this.mask, this.rx, alignY(this.y + step))
-        ) {
-          this.y += step;
-        }
-      }
-
-      this.y = alignY(this.y);
       yCollision = alignY(this.y + yDiff);
-      if (this.bounciness !== 0) {
+
+      if (this.bounciness <= 0) {
+        if (Math.abs(yDiff) >= 1) {
+          const step = Math.sign(yDiff);
+          while (
+            !this.surface.collidesWith(
+              this.mask,
+              this.rx,
+              alignY(this.y + step)
+            )
+          ) {
+            this.y += step;
+          }
+        }
+
+        this.y = alignY(this.y);
         yDiff = 0;
         yAcc = 0;
-        this.yVelocity *= this.bounciness;
       }
+
+      this.yVelocity *= this.bounciness;
     }
 
     this.x += xDiff;
