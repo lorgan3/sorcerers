@@ -27,7 +27,7 @@ export class StickyBody implements PhysicsBody {
   private rx = 0;
   private ry = 0;
 
-  private stickDirection = -1;
+  public stickDirection = -1;
 
   public readonly mask: CollisionMask;
   private readonly stickyVelocity: number;
@@ -84,27 +84,27 @@ export class StickyBody implements PhysicsBody {
 
   tick(dt: number) {
     if (this.stickDirection === -1) {
-      this.yVelocity += this.gravity * dt;
-      const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
-      const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
+      const idt = Math.pow(dt, 2) / 2;
+
+      let yAcc = this.gravity;
+      let yDiff = this.yVelocity * dt + yAcc * idt;
+      let xDiff = this.xVelocity * dt;
+
+      const alignX = xDiff > 0 ? Math.ceil : (x: number) => x | 0;
+      const alignY = yDiff > 0 ? Math.ceil : (y: number) => y | 0;
       this.rx = alignX(this.x);
       this.ry = alignY(this.y);
 
-      this.xVelocity *= Math.pow(this.friction, dt);
-      this.yVelocity *= Math.pow(this.friction, dt);
-
-      const dtXVelocity = this.xVelocity * dt;
-      const dtYVelocity = this.yVelocity * dt;
-
       if (
-        this.xVelocity !== 0 &&
-        this.surface.collidesWithPoint(alignX(this.x + dtXVelocity), this.ry)
+        xDiff !== 0 &&
+        this.surface.collidesWithPoint(alignX(this.x + xDiff), this.ry)
       ) {
-        this.stickDirection = this.xVelocity > 0 ? 0 : 2;
-        for (let i = 0; i < Math.abs(dtXVelocity); i++) {
-          const _x = this.rx + Math.sign(this.xVelocity);
+        this.stickDirection = xDiff > 0 ? 0 : 2;
+        for (let i = 0; i < Math.abs(xDiff); i++) {
+          const _x = this.rx + Math.sign(xDiff);
 
           if (this.surface.collidesWithPoint(_x, this.ry)) {
+            this.x = this.rx;
             break;
           }
 
@@ -119,14 +119,15 @@ export class StickyBody implements PhysicsBody {
       }
 
       if (
-        this.yVelocity !== 0 &&
-        this.surface.collidesWithPoint(this.rx, alignY(this.y + dtYVelocity))
+        yDiff !== 0 &&
+        this.surface.collidesWithPoint(this.rx, alignY(this.y + yDiff))
       ) {
-        this.stickDirection = this.yVelocity > 0 ? 1 : 3;
-        for (let i = 0; i < Math.abs(dtYVelocity); i++) {
-          const _y = this.ry + Math.sign(this.yVelocity);
+        this.stickDirection = yDiff > 0 ? 1 : 3;
+        for (let i = 0; i < Math.abs(yDiff); i++) {
+          const _y = this.ry + Math.sign(yDiff);
 
           if (this.surface.collidesWithPoint(this.rx, _y)) {
+            this.y = this.ry;
             break;
           }
 
@@ -140,18 +141,9 @@ export class StickyBody implements PhysicsBody {
         return true;
       }
 
-      if (
-        this.surface.collidesWithPoint(
-          alignX(this.x + dtXVelocity),
-          alignY(this.y + dtYVelocity)
-        )
-      ) {
-        this.xVelocity /= 2;
-        this.yVelocity /= 2;
-      } else {
-        this.x += dtXVelocity;
-        this.y += dtYVelocity;
-      }
+      this.x += xDiff;
+      this.y += yDiff;
+      this.yVelocity += yAcc * dt;
 
       return true;
     }
@@ -164,11 +156,11 @@ export class StickyBody implements PhysicsBody {
       const newX =
         dist > 1
           ? this.x + Math.sign(this.xVelocity)
-          : this.x + ((this.xVelocity * dt) % 1);
+          : this.x + ((this.xVelocity * dt) % 1 || Math.sign(this.xVelocity));
       const newY =
         dist > 1
           ? this.y + Math.sign(this.yVelocity)
-          : this.y + ((this.yVelocity * dt) % 1);
+          : this.y + ((this.yVelocity * dt) % 1 || Math.sign(this.yVelocity));
 
       if (this.surface.collidesWithPoint(alignX(newX), alignY(newY))) {
         const newDirection = (this.stickDirection + 2) % 4;

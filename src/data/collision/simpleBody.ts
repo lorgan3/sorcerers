@@ -86,14 +86,19 @@ export class SimpleBody implements PhysicsBody {
       return false;
     }
 
-    this.yVelocity += this.gravity * dt;
-    const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
-    const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
+    const idt = Math.pow(dt, 2) / 2;
+    this.xVelocity *= Math.pow(this.friction, dt);
+    this.yVelocity *= Math.pow(this.friction, dt);
+
+    let yAcc = this.gravity;
+    let yDiff = this.yVelocity * dt + yAcc * idt;
+    let xDiff = this.xVelocity * dt;
+
+    const alignX = xDiff > 0 ? Math.ceil : (x: number) => x | 0;
+    const alignY = yDiff > 0 ? Math.ceil : (y: number) => y | 0;
     this.rx = alignX(this.x);
     this.ry = alignY(this.y);
 
-    this.xVelocity *= Math.pow(this.friction, dt);
-    this.yVelocity *= Math.pow(this.friction, dt);
     const vx = this.xVelocity;
     const vy = this.yVelocity;
 
@@ -101,38 +106,51 @@ export class SimpleBody implements PhysicsBody {
     let yCollision: number | undefined;
 
     if (
-      this.xVelocity !== 0 &&
-      this.surface.collidesWith(
-        this.mask,
-        alignX(this.x + this.xVelocity),
-        this.ry
-      )
+      xDiff !== 0 &&
+      this.surface.collidesWith(this.mask, alignX(this.x + xDiff), this.ry)
     ) {
-      xCollision = alignX(this.x + this.xVelocity);
-      this.xVelocity *= this.bounciness;
+      if (Math.abs(xDiff) >= 1) {
+        const step = Math.sign(xDiff);
+        while (
+          !this.surface.collidesWith(this.mask, alignX(this.x + step), this.ry)
+        ) {
+          this.x += step;
+        }
+      }
 
-      if (this.bounciness <= 0) {
-        this.x = this.rx;
+      xCollision = alignX(this.x + xDiff);
+      this.x = alignX(this.x);
+      if (this.bounciness !== 0) {
+        xDiff = 0;
+        this.xVelocity *= this.bounciness;
       }
     }
-    this.x += this.xVelocity * dt;
 
     if (
-      this.yVelocity !== 0 &&
-      this.surface.collidesWith(
-        this.mask,
-        this.rx,
-        alignY(this.y + this.yVelocity)
-      )
+      yDiff !== 0 &&
+      this.surface.collidesWith(this.mask, this.rx, alignY(this.y + yDiff))
     ) {
-      yCollision = alignY(this.y + this.yVelocity);
-      this.yVelocity *= this.bounciness;
+      if (Math.abs(yDiff) >= 1) {
+        const step = Math.sign(yDiff);
+        while (
+          !this.surface.collidesWith(this.mask, this.rx, alignY(this.y + step))
+        ) {
+          this.y += step;
+        }
+      }
 
-      if (this.bounciness <= 0) {
-        this.y = this.ry;
+      this.y = alignY(this.y);
+      yCollision = alignY(this.y + yDiff);
+      if (this.bounciness !== 0) {
+        yDiff = 0;
+        yAcc = 0;
+        this.yVelocity *= this.bounciness;
       }
     }
-    this.y += this.yVelocity * dt;
+
+    this.x += xDiff;
+    this.y += yDiff;
+    this.yVelocity += yAcc * dt;
 
     if (
       (xCollision !== undefined || yCollision !== undefined) &&
@@ -143,7 +161,7 @@ export class SimpleBody implements PhysicsBody {
 
     // If we're on the ground and barely moving, go to sleep.
     if (
-      (xCollision || yCollision) &&
+      (xCollision !== undefined || yCollision !== undefined) &&
       Math.abs(this.xVelocity) < MIN_MOVEMENT &&
       Math.abs(this.yVelocity) < MIN_MOVEMENT
     ) {

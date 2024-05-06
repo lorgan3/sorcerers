@@ -40,6 +40,7 @@ export class Body implements PhysicsBody {
 
   private _grounded = false;
   private jumpTimer = 0;
+  private walkDirection = 0;
 
   public readonly mask: CollisionMask;
   public gravity: number;
@@ -89,9 +90,7 @@ export class Body implements PhysicsBody {
   }
 
   walk(dt: number, direction: 1 | -1) {
-    const amount =
-      SPEED * direction * (this._grounded ? 1 : this.airControl) * dt;
-    this.addVelocity(amount, 0);
+    this.walkDirection = direction;
   }
 
   jump() {
@@ -125,6 +124,8 @@ export class Body implements PhysicsBody {
     const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
     this.rX = alignX(this.x);
     this.rY = alignY(this.y);
+
+    this._grounded = this.surface.collidesWith(this.mask, this.rX, this.rY + 1);
   }
 
   tick(dt: number) {
@@ -132,30 +133,41 @@ export class Body implements PhysicsBody {
       return false;
     }
 
-    this.yVelocity += this.gravity * dt;
-    const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
-    const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
+    const idt = Math.pow(dt, 2) / 2;
+    if (this._grounded) {
+      this.xVelocity *= Math.pow(this.groundFriction, dt);
+    } else {
+      this.xVelocity *= Math.pow(this.airXFriction, dt);
+      this.yVelocity *= Math.pow(this.airYFriction, dt);
+    }
+
+    let yAcc = this.gravity;
+    let yDiff = this.yVelocity * dt + yAcc * idt;
+    let xAcc =
+      this.walkDirection * SPEED * (this._grounded ? 1 : this.airControl) +
+      this.lastRollDirection * this.roundness;
+    let xDiff = this.xVelocity * dt + xAcc * idt;
+    this.walkDirection = 0;
+    this.lastRollDirection = 0;
+
+    const alignX = xDiff > 0 ? Math.ceil : (x: number) => x | 0;
+    const alignY = yDiff > 0 ? Math.ceil : (y: number) => y | 0;
 
     this.rX = alignX(this.x);
     this.rY = alignY(this.y);
 
     this._grounded = false;
 
-    // We're stuck. Just push up and try again.
-    if (this.surface.collidesWith(this.mask, this.rX, this.rY)) {
-      this.x = alignX(this.x) - Math.sign(this.xVelocity);
-    }
-
     // We're falling. Check if we've reached the ground yet.
-    if (this.yVelocity > 0) {
+    if (yDiff > 0) {
       this._grounded = this.surface.collidesWith(
         this.mask,
         this.rX,
-        alignY(this.y + this.yVelocity * dt)
+        alignY(this.y + yDiff)
       );
 
       if (this._grounded) {
-        let yCopy = this.yVelocity;
+        let yCopy = yDiff;
 
         // We hit the ground, align with it.
         while (yCopy * dt > 1) {
@@ -180,36 +192,19 @@ export class Body implements PhysicsBody {
 
         this.jumpTimer -= dt;
         this.yVelocity *= this.bounciness;
+        yAcc *= this.bounciness;
+        yDiff *= this.bounciness;
 
         // Roll off slopes.
-        if (this.roundness && this.yVelocity > -0.5) {
-          if (!this.lastRollDirection) {
-            if (
-              !this.surface.collidesWith(this.mask, this.rX + 1, this.rY + 1)
-            ) {
-              this.lastRollDirection = 1;
-              this.xVelocity += this.roundness * dt;
-            } else if (
-              !this.surface.collidesWith(this.mask, this.rX - 1, this.rY + 1)
-            ) {
-              this.lastRollDirection = -1;
-              this.xVelocity -= this.roundness * dt;
-            }
+        if (this.roundness && yDiff > -0.5) {
+          if (!this.surface.collidesWith(this.mask, this.rX + 1, this.rY + 1)) {
+            this.lastRollDirection = 1;
           } else if (
-            !this.surface.collidesWith(
-              this.mask,
-              this.rX + this.lastRollDirection,
-              this.rY + 1
-            )
+            !this.surface.collidesWith(this.mask, this.rX - 1, this.rY + 1)
           ) {
-            this.xVelocity += this.roundness * this.lastRollDirection * dt;
+            this.lastRollDirection = -1;
           }
         }
-
-        this.xVelocity *= Math.pow(this.groundFriction, dt);
-      } else {
-        this.xVelocity *= Math.pow(this.airXFriction, dt);
-        this.yVelocity *= Math.pow(this.airYFriction, dt);
       }
     } else {
       if (this.jumpTimer > JUMP_CHARGE_TIME) {
@@ -217,11 +212,10 @@ export class Body implements PhysicsBody {
       }
 
       // We're going up. Check if we hit a ceiling.
-      this.lastRollDirection = 0;
       const ceiled = this.surface.collidesWith(
         this.mask,
         this.rX,
-        alignY(this.y + this.yVelocity * dt)
+        alignY(this.y + yDiff)
       );
 
       if (ceiled) {
@@ -236,22 +230,20 @@ export class Body implements PhysicsBody {
         }
 
         this.yVelocity *= this.bounciness;
+        yAcc *= this.bounciness;
+        yDiff *= this.bounciness;
       }
-
-      this.xVelocity *= Math.pow(this.airXFriction, dt);
-      this.yVelocity *= Math.pow(this.airYFriction, dt);
     }
 
-    this.y += this.yVelocity * dt;
+    this.y += yDiff;
+    this.yVelocity += yAcc * dt;
+
     this.rY = alignY(this.y);
-    this.rX = alignX(this.x + this.xVelocity * dt);
+    this.rX = alignX(this.x + xDiff);
 
     // Check if we're going to hit a wall
-    if (
-      this.xVelocity !== 0 &&
-      this.surface.collidesWith(this.mask, this.rX, this.rY)
-    ) {
-      const amount = Math.min(3, Math.ceil(Math.abs(this.xVelocity)));
+    if (xDiff !== 0 && this.surface.collidesWith(this.mask, this.rX, this.rY)) {
+      const amount = Math.min(3, Math.ceil(Math.abs(xDiff)));
 
       // Check if we can walk up steps <= 45 degrees.
       if (
@@ -263,9 +255,8 @@ export class Body implements PhysicsBody {
         this.rY = this.y;
         this.yVelocity = 0;
         this._grounded = true;
-        this.xVelocity *= Math.pow(this.groundFriction, dt);
       } else {
-        let xCopy = this.xVelocity;
+        let xCopy = xDiff;
 
         // We hit a wall, align with it.
         while (Math.abs(xCopy * dt) > 1) {
@@ -286,16 +277,20 @@ export class Body implements PhysicsBody {
         }
 
         this.xVelocity *= this.bounciness;
+        xAcc *= this.bounciness;
+        xDiff *= this.bounciness;
       }
     }
 
-    this.x += this.xVelocity * dt;
+    this.x += xDiff;
+    this.xVelocity += xAcc * dt;
     this.rX = alignX(this.x);
 
     // If we're on the ground and barely moving, go to sleep.
     if (
       this._grounded &&
       this.jumpTimer <= 0 &&
+      this.lastRollDirection === 0 &&
       Math.abs(this.xVelocity) < MIN_MOVEMENT
     ) {
       this.xVelocity = 0;
