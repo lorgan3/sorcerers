@@ -520,7 +520,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
     const [x, y] = this.getCenter();
     new Explosion(x, y);
     Level.instance.shake();
-    Level.instance.damage(new ExplosiveDamage(x / 6, y / 6, 16, 1, 1));
 
     const gibs = createCharacterGibs(...this.body.precisePosition);
     gibs.forEach((gib) =>
@@ -545,6 +544,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
         splat.frame.height
       );
     });
+
+    Level.instance.damage(new ExplosiveDamage(x / 6, y / 6, 16, 1, 1));
   }
 
   giveWings() {
