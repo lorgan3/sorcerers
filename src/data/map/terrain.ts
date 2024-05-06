@@ -160,7 +160,7 @@ export class Terrain {
       r > 4
         ? (ctx) => {
             ctx.moveTo(x, y);
-            ctx.ellipse(x - 2, y - 2, r, r - 2, 0, 0, Math.PI * 2);
+            ctx.ellipse(x, y, r + 2, r + 2, 0, 0, Math.PI * 2);
           }
         : undefined
     );
