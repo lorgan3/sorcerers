@@ -46,7 +46,7 @@ export class NetworkController implements Controller {
     this.mouseY = buffer[2];
 
     this.eventHandlers.forEach((eventHandlers, key) => {
-      if (changedKeys & keyMap[key]) {
+      if (changedKeys & keyMap[key] && this.pressedKeys & keyMap[key]) {
         eventHandlers.forEach((fn) => fn());
       }
     });
