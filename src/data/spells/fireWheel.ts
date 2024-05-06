@@ -27,7 +27,7 @@ export class FireWheel extends Container implements Syncable {
 
   public id = -1;
   public readonly type = EntityType.FireWheel;
-  public readonly priority = Priority.Low;
+  public readonly priority = Priority.High;
   public layer = Layer.Background;
 
   constructor(x: number, y: number, speed: number, private direction: number) {
