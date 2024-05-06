@@ -56,7 +56,7 @@ export abstract class Manager {
     Manager._instance = undefined;
   }
 
-  tick(dt: number, dtMs: number) {
+  tick(dt: number) {
     if (this.cursor) {
       this.cursor.tick(dt, this.activePlayer!.controller);
     }
@@ -73,7 +73,9 @@ export abstract class Manager {
     if (this.frames % 30 === 0) {
       this.checkOverlays();
     }
+  }
 
+  fixedTick(dtMs: number) {
     this.time += dtMs;
     this.frames++;
   }

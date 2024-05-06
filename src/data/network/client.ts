@@ -42,11 +42,11 @@ export class Client extends Manager {
     return !!this.connection;
   }
 
-  tick(dt: number, dtMs: number) {
-    super.tick(dt, dtMs);
+  fixedTick(dtMs: number) {
+    super.fixedTick(dtMs);
 
-    if (this.frames % 3 === 0 && this.connection) {
-      this.connection!.send({
+    if (this.connection) {
+      this.connection.send({
         type: MessageType.InputState,
         data: this.controller!.serialize(),
       });

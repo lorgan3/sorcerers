@@ -119,8 +119,8 @@ export class Server extends Manager {
     this.started = true;
   }
 
-  tick(dt: number, dtMs: number) {
-    super.tick(dt, dtMs);
+  fixedTick(dtMs: number) {
+    super.fixedTick(dtMs);
 
     if (
       this._turnState === TurnState.Ending &&
@@ -153,7 +153,7 @@ export class Server extends Manager {
       }
     }
 
-    if (this.frames % 30 === 0) {
+    if (this.frames % 15 === 0) {
       const data: Message = {
         type: MessageType.EntityUpdate,
         entities: Level.instance.syncables[Priority.Low].map((entity) =>
@@ -165,7 +165,7 @@ export class Server extends Manager {
         player.connection?.send(data);
       }
     } else if (
-      this.frames % 10 === 0 &&
+      this.frames % 3 === 0 &&
       this.activePlayer?.activeCharacter &&
       this.isControlling()
     ) {
@@ -183,11 +183,7 @@ export class Server extends Manager {
       }
     }
 
-    if (
-      this.frames % 3 === 0 &&
-      this.activePlayer! === this._self &&
-      this.isControlling()
-    ) {
+    if (this.activePlayer! === this._self && this.isControlling()) {
       const pressedKeys = (
         this.activePlayer!.controller as KeyboardController
       ).serialize();

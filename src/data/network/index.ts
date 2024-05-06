@@ -7,6 +7,7 @@ import { Manager } from "./manager";
 import { Map } from "../map";
 
 export const PEER_ID_PREFIX = "sorcerers-";
+export const FIXED_INTERVAL = 1000 / 15;
 
 export const connect = async (
   target: HTMLElement,
@@ -17,11 +18,17 @@ export const connect = async (
   const controller = new KeyboardController(level.viewport);
 
   const ticker = (dt: number) => {
-    Manager.instance.tick(dt, Ticker.shared.deltaMS);
+    Manager.instance.tick(dt);
   };
+
+  let fixedTick = window.setInterval(
+    () => Manager.instance.fixedTick(FIXED_INTERVAL),
+    FIXED_INTERVAL
+  );
 
   const handleBack = () => {
     Ticker.shared.remove(ticker, null);
+    window.clearInterval(fixedTick);
     onBack();
   };
 
