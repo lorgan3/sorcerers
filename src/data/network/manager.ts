@@ -174,6 +174,7 @@ export abstract class Manager {
   }
 
   protected addPopup(popup: Popup) {
+    console.log("popup", popup);
     this.popups.push(popup);
   }
 
