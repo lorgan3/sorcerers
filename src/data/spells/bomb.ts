@@ -19,7 +19,7 @@ export class Bomb extends Container implements Item {
   private static fuseTime = 45;
   private static primeTime = 60;
   private static triggerRange = 96;
-  private static minSyncInterval = 5;
+  private static minSyncInterval = 6;
 
   public readonly body: Body;
   private sprite: AnimatedSprite;
@@ -160,6 +160,7 @@ export class Bomb extends Container implements Item {
           Server.instance.dynamicUpdate(this);
           this.lastX = x;
           this.lastY = y;
+          this.lastSync = this.time;
         }
       }
 
