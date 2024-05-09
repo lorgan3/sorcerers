@@ -151,6 +151,7 @@ export class Sword extends Container implements Syncable {
     const entity = new Sword(x, y);
 
     Server.instance.create(entity);
+    Server.instance.focus(entity);
     return entity;
   }
 }

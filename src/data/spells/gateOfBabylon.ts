@@ -109,6 +109,7 @@ export class GateOfBabylon extends Container implements Spawnable {
     const entity = new GateOfBabylon(x, character);
 
     Server.instance.create(entity);
+    Server.instance.focus(entity);
     return entity;
   }
 }
