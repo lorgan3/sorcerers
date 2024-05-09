@@ -19,6 +19,7 @@ export class Bomb extends Container implements Item {
   private static fuseTime = 45;
   private static primeTime = 60;
   private static triggerRange = 96;
+  private static minSyncInterval = 5;
 
   public readonly body: Body;
   private sprite: AnimatedSprite;
@@ -27,6 +28,9 @@ export class Bomb extends Container implements Item {
   private activateTime = -1;
   private arcanePower = 1;
   private fuse = 0;
+  private lastSync = 0;
+  private lastX = 0;
+  private lastY = 0;
 
   public hp = 1;
   public id = -1;
@@ -97,10 +101,6 @@ export class Bomb extends Container implements Item {
   }
 
   private onCollide = (x: number, y: number) => {
-    if (Server.instance) {
-      Server.instance.dynamicUpdate(this);
-    }
-
     if (this.body.velocity > 0.5) {
       ControllableSound.fromEntity(this, Sound.Land);
     }
@@ -150,7 +150,20 @@ export class Bomb extends Container implements Item {
       const [x, y] = this.body.precisePosition;
       this.position.set(x * 6, y * 6);
 
-      if (Server.instance && this.time > Bomb.primeTime) {
+      if (!Server.instance) {
+        return;
+      }
+
+      if (this.time >= this.lastSync + Bomb.minSyncInterval) {
+        const [x, y] = this.body.position;
+        if (x !== this.lastX || y !== this.lastY) {
+          Server.instance.dynamicUpdate(this);
+          this.lastX = x;
+          this.lastY = y;
+        }
+      }
+
+      if (this.time > Bomb.primeTime) {
         if (this.activateTime === -1) {
           Level.instance.withNearbyEntities(
             ...this.getCenter(),
