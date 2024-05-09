@@ -183,7 +183,7 @@ export class Server extends Manager {
       }
     }
 
-    if (this.activePlayer! === this._self && this.isControlling()) {
+    if (this.activePlayer! === this._self) {
       const pressedKeys = (
         this.activePlayer!.controller as KeyboardController
       ).serialize();
@@ -349,7 +349,7 @@ export class Server extends Manager {
       case MessageType.InputState:
         player.controller.deserialize(message.data);
 
-        if (player === this.activePlayer && this.isControlling()) {
+        if (player === this.activePlayer) {
           this.broadcast(message);
         }
         break;

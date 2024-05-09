@@ -189,9 +189,12 @@ export class Client extends Manager {
 
       case MessageType.InputState:
         this.activePlayer?.controller.deserialize(message.data);
-        this.activePlayer?.activeCharacter.control(
-          this.activePlayer.controller
-        );
+
+        if (this.isControlling()) {
+          this.activePlayer?.activeCharacter.control(
+            this.activePlayer.controller
+          );
+        }
         break;
 
       case MessageType.ActiveUpdate:
