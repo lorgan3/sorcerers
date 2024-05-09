@@ -30,18 +30,19 @@ import { CollisionMask } from "../collision/collisionMask";
 import { StaticBody } from "../collision/staticBody";
 
 export class Meteor extends Container implements Syncable {
-  private static bounces = 14;
-  private static explodeInterval = 2;
+  private static bounceDuration = 15;
+  private static explodeInterval = 3;
   private static moveTime = 90;
 
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private particles: ParticleEmitter;
-  private maxBounces: number;
-  private bounces: number;
+  private bounceDuration = 0;
+  private maxBounceDuration: number;
   private textures: Texture<ImageBitmapResource>[];
   private sound?: ControllableSound;
   private bounceTime = 0;
+  private collided = false;
 
   public id = -1;
   public readonly type = EntityType.Meteor;
@@ -57,10 +58,9 @@ export class Meteor extends Container implements Syncable {
     super();
     character.setSpellSource(this);
 
-    this.maxBounces =
-      Meteor.bounces +
-      Math.round(Manager.instance.getElementValue(Element.Physical) * 4);
-    this.bounces = this.maxBounces;
+    this.maxBounceDuration =
+      Meteor.bounceDuration +
+      Math.round(Manager.instance.getElementValue(Element.Physical) * 6);
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
       mask: circle30x30,
@@ -109,52 +109,7 @@ export class Meteor extends Container implements Syncable {
 
   private onCollide = (x: number, y: number) => {
     if (Level.instance.collidesWith(this.body.mask, x, y)) {
-      this.bounces--;
-    }
-
-    const done = this.bounces === 0 || this.maxBounces <= 2;
-    if (
-      done ||
-      !this.bounceTime ||
-      this.time - this.bounceTime >= Meteor.explodeInterval
-    ) {
-      this.bounceTime = this.time;
-
-      const [x, y] = this.body.position;
-      const damage = new ExplosiveDamage(
-        x + 15,
-        y + 15,
-        16,
-        5,
-        4 + Manager.instance.getElementValue(Element.Elemental) / 2
-      );
-      Level.instance.damage(damage);
-
-      if (Server.instance) {
-        const staticEntity = damage
-          .getTargets()
-          .getEntities()
-          .find(
-            (entity) =>
-              entity.body instanceof StaticBody || entity instanceof Character
-          );
-
-        if (staticEntity) {
-          const angle = getAngle(
-            ...staticEntity.getCenter(),
-            ...this.getCenter()
-          );
-          this.body.setAngularVelocity(4, angle);
-          this.body.gravity = 0.15;
-          this.body.friction = 0.96;
-          this.maxBounces = Math.floor(this.maxBounces / 2);
-        }
-      }
-    }
-
-    Server.instance.dynamicUpdate(this);
-    if (done) {
-      Server.instance.kill(this);
+      this.collided = true;
     }
   };
 
@@ -202,13 +157,6 @@ export class Meteor extends Container implements Syncable {
 
   tick(dt: number) {
     this.time += dt;
-    if (
-      this.bounceTime &&
-      this.time - this.bounceTime > Meteor.explodeInterval + dt
-    ) {
-      this.bounces = this.maxBounces;
-      this.bounceTime = 0;
-    }
 
     if (this.time >= Meteor.moveTime) {
       this.body.tick(dt);
@@ -221,7 +169,58 @@ export class Meteor extends Container implements Syncable {
         this.sound = ControllableSound.fromEntity(this, Sound.FireWork);
       }
 
-      if (
+      if (this.collided) {
+        this.collided = false;
+        this.bounceDuration += dt;
+
+        const done =
+          this.bounceDuration >= this.maxBounceDuration ||
+          this.maxBounceDuration < 10;
+        if (
+          done ||
+          !this.bounceTime ||
+          this.time - this.bounceTime >= Meteor.explodeInterval
+        ) {
+          this.bounceTime = this.time;
+
+          const [x, y] = this.body.position;
+          const damage = new ExplosiveDamage(
+            x + 15,
+            y + 15,
+            16,
+            5,
+            4 + Manager.instance.getElementValue(Element.Elemental) / 2
+          );
+          Level.instance.damage(damage);
+
+          if (Server.instance) {
+            const staticEntity = damage
+              .getTargets()
+              .getEntities()
+              .find(
+                (entity) =>
+                  entity.body instanceof StaticBody ||
+                  entity instanceof Character
+              );
+
+            if (staticEntity) {
+              const angle = getAngle(
+                ...staticEntity.getCenter(),
+                ...this.getCenter()
+              );
+              this.body.setAngularVelocity(4, angle);
+              this.body.gravity = 0.15;
+              this.body.friction = 0.97;
+              this.maxBounceDuration /= 1.5;
+            }
+
+            Server.instance.dynamicUpdate(this);
+            if (done) {
+              Server.instance.kill(this);
+            }
+          }
+        }
+      } else if (
         Level.instance.terrain.killbox.collidesWith(
           this.body.mask,
           this.position.x,

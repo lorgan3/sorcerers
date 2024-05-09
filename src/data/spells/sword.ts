@@ -20,9 +20,11 @@ const SHAKE_INTENSITY = 8;
 export class Sword extends Container implements Syncable {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
-  private bounces = 120 * Manager.instance.getElementValue(Element.Physical);
+  private bounceDuration =
+    40 * Manager.instance.getElementValue(Element.Physical) * 2;
   private lastY?: number;
   private lifetime = 150;
+  private collided = false;
 
   private shakeXOffset = 0;
   private shakeYOffset = 0;
@@ -62,52 +64,56 @@ export class Sword extends Container implements Syncable {
   }
 
   private onCollide = (x: number, y: number) => {
-    if (this.lastY && Math.abs(this.lastY - y) < 1) {
-      return;
-    }
-
-    this.bounces--;
-    this.lastY = y;
-    this.shakeXOffset = Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
-    this.shakeYOffset = Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
-
-    const damage = new FallDamage(
-      x,
-      y - 4,
-      Shape.SwordTip,
-      4 * Manager.instance.getElementValue(Element.Arcane)
-    );
-    Level.instance.damage(damage);
-    ControllableSound.fromEntity(
-      [this.position.x, this.position.y],
-      Sound.Step
-    );
-
-    for (let entity of damage.getTargets().getEntities()) {
-      const [x, y] =
-        entity.body instanceof StaticBody ? [0.75, -1.5] : [0.3, 0];
-
-      if (this.position.x + 32 > entity.getCenter()[0]) {
-        this.body.addVelocity(x, y);
-      } else {
-        this.body.addVelocity(x * -1, y);
-      }
-    }
-
-    if (this.bounces <= 0) {
-      this.die();
-    }
+    this.collided = true;
   };
 
   tick(dt: number) {
+    this.lifetime -= dt;
     this.body.tick(dt);
 
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6 + this.shakeXOffset, y * 6 + this.shakeYOffset);
     this.fallingSound?.update([this.position.x, this.position.y]);
 
-    this.lifetime -= dt;
-    if (this.lifetime <= 0) {
+    if (this.collided) {
+      this.collided = false;
+      this.bounceDuration -= dt;
+
+      if (!this.lastY || Math.abs(this.lastY - y) >= 1) {
+        this.lastY = y;
+        this.shakeXOffset =
+          Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
+        this.shakeYOffset =
+          Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
+
+        const damage = new FallDamage(
+          x,
+          y - 4,
+          Shape.SwordTip,
+          4 * Manager.instance.getElementValue(Element.Arcane)
+        );
+        Level.instance.damage(damage);
+        ControllableSound.fromEntity(
+          [this.position.x, this.position.y],
+          Sound.Step
+        );
+
+        for (let entity of damage.getTargets().getEntities()) {
+          const [x, y] =
+            entity.body instanceof StaticBody ? [0.75, -1.5] : [0.3, 0];
+
+          if (this.position.x + 32 > entity.getCenter()[0]) {
+            this.body.addVelocity(x, y);
+          } else {
+            this.body.addVelocity(x * -1, y);
+          }
+        }
+
+        if (this.bounceDuration <= 0) {
+          this.die();
+        }
+      }
+    } else if (this.lifetime <= 0) {
       this.die();
     }
   }
