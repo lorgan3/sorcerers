@@ -441,7 +441,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.hp -= damage;
 
     Level.instance.bloodEmitter.burst(this, damage, source);
-    ControllableSound.fromEntity(this, Sound.Splat);
+    if (damage > 0) {
+      ControllableSound.fromEntity(this, Sound.Splat);
+    }
 
     if (force) {
       this.body.addAngularVelocity(force.power, force.direction);
