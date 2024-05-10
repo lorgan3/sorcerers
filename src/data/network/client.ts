@@ -177,8 +177,8 @@ export class Client extends Manager {
           message.activePlayer,
           message.activeCharacter
         );
-        character.player.nextTurn();
         character.player.mana = message.newMana;
+        character.player.nextTurn();
 
         if (this.activePlayer?.selectedSpell) {
           this.selectSpell(this.activePlayer?.selectedSpell, this.activePlayer);
