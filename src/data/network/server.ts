@@ -479,6 +479,12 @@ export class Server extends Manager {
     const player = this.players[activePlayerIndex];
     const activeCharacterIndex = (player.active + 1) % player.characters.length;
     const character = player.characters[activeCharacterIndex];
+
+    if (!character) {
+      this.cycleActivePlayer();
+      return;
+    }
+
     this.focus(character, () => {
       if (character.hp <= 0) {
         this.cycleActivePlayer();
