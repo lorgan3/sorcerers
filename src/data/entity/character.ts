@@ -401,7 +401,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.sprite.scale.x = 2 * this.lookDirection;
 
     if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
-      this.body.walk(dt, -1);
+      this.body.walk(-1);
 
       if (this.body.grounded) {
         this.animator.animate(AnimationState.Walk);
@@ -413,7 +413,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
 
     if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
-      this.body.walk(dt, 1);
+      this.body.walk(1);
 
       if (this.body.grounded) {
         this.animator.animate(AnimationState.Walk);

@@ -351,6 +351,10 @@ export class Server extends Manager {
 
         if (player === this.activePlayer) {
           this.broadcast(message);
+
+          if (this.isControlling()) {
+            player.activeCharacter.control(this.activePlayer.controller);
+          }
         }
         break;
 

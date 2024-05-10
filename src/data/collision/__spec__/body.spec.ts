@@ -16,7 +16,7 @@ describe("body", () => {
 
     const dt = TARGET_FPS / fps;
     for (let i = 0; i < TARGET_FPS; i += dt) {
-      body.walk(dt, 1);
+      body.walk(1);
       body.tick(dt);
     }
 

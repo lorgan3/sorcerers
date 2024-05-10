@@ -89,7 +89,7 @@ export class Body implements PhysicsBody {
     this.move(data[3], data[4]);
   }
 
-  walk(dt: number, direction: 1 | -1) {
+  walk(direction: 1 | -1) {
     this.walkDirection = direction;
   }
 
