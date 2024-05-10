@@ -153,7 +153,7 @@ export class Server extends Manager {
       }
     }
 
-    if (this.frames % 15 === 0) {
+    if (this.frames % 20 === 0) {
       const data: Message = {
         type: MessageType.EntityUpdate,
         entities: Level.instance.syncables[Priority.Low].map((entity) =>
@@ -165,7 +165,7 @@ export class Server extends Manager {
         player.connection?.send(data);
       }
     } else if (
-      this.frames % 3 === 0 &&
+      this.frames % 4 === 0 &&
       this.activePlayer?.activeCharacter &&
       this.isControlling()
     ) {

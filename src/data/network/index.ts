@@ -7,7 +7,7 @@ import { Manager } from "./manager";
 import { Map } from "../map";
 
 export const PEER_ID_PREFIX = "sorcerers-";
-export const FIXED_INTERVAL = 1000 / 15;
+export const FIXED_INTERVAL = 1000 / 20;
 
 export const connect = async (
   target: HTMLElement,
