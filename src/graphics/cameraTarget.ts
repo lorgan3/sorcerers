@@ -72,13 +72,15 @@ export class CameraTarget {
       }
     }
 
-    if (Manager.instance.self?.activeCharacter?.body.velocity !== 0) {
+    if (
+      Manager.instance.self?.activeCharacter &&
+      Manager.instance.self?.activeCharacter?.body.velocity !== 0
+    ) {
       if (this.target !== Manager.instance.self?.activeCharacter) {
         this.attached = true;
         this.speed = 0;
+        this.target = Manager.instance.self?.activeCharacter;
       }
-
-      this.target = Manager.instance.self?.activeCharacter;
     }
 
     if (this.target && this.attached) {
