@@ -59,7 +59,7 @@ export class PoweredArcaneCircle
     this.powerMeter = new AnimatedSprite(atlas.animations["icons_bar"]);
     this.powerMeter.anchor.set(0.5);
     this.powerMeter.scale.set(2);
-    this.indicator.visible = false;
+    this.powerMeter.visible = false;
 
     this.pointer = new Sprite(atlas.textures["spells_pointer"]);
     this.pointer.anchor.set(0.4, 0.25);
@@ -157,7 +157,7 @@ export class PoweredArcaneCircle
     }
 
     const [x, y] = controller.getMouse();
-    this.indicator.rotation = Math.atan2(y - y2 + 24, x - x2) + Math.PI / 2;
+    this.indicator.rotation = Math.atan2(y - y2, x - x2) + Math.PI / 2;
   }
 
   serialize() {
