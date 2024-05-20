@@ -1,6 +1,6 @@
 import { FederatedPointerEvent, FederatedWheelEvent } from "pixi.js";
 import { Controller, Key, isKey, keyMap } from "./controller";
-import { Viewport } from "pixi-viewport";
+import { Viewport } from "../map/viewport";
 
 export class KeyboardController implements Controller {
   private mouseX = 0;

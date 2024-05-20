@@ -7,7 +7,6 @@ import {
 } from "pixi.js";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
-import { Viewport } from "pixi-viewport";
 import { Server } from "../network/server";
 import { Map as GameMap } from ".";
 import {
@@ -28,6 +27,7 @@ import { CameraTarget } from "../../graphics/cameraTarget";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
+import { Viewport } from "./viewport";
 
 BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
 
@@ -82,13 +82,12 @@ export class Level {
 
     target.appendChild(this.app.view);
 
-    this.viewport = new Viewport({
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
-      worldWidth: map.terrain.width * 6,
-      worldHeight: map.terrain.height * 6,
-      events: this.app.renderer.events,
-    });
+    this.viewport = new Viewport(
+      window.innerWidth,
+      window.innerHeight,
+      map.terrain.width * 6,
+      map.terrain.height * 6
+    );
 
     this.cameraTarget = new CameraTarget(this.viewport);
     this.app.stage.addChild(this.viewport, this.numberContainer);
@@ -298,10 +297,10 @@ export class Level {
   getViewport() {
     const center = this.viewport.center;
     return {
-      x: center.x,
-      y: center.y,
-      width: this.viewport.worldScreenWidth || 0,
-      height: this.viewport.worldScreenHeight || 0,
+      x: center[0],
+      y: center[1],
+      width: this.viewport.worldScreenWidth,
+      height: this.viewport.worldScreenHeight,
       scale: this.viewport.scale.x,
     };
   }

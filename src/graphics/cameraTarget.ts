@@ -1,10 +1,9 @@
-import { Viewport } from "pixi-viewport";
 import { KeyboardController } from "../data/controller/keyboardController";
 import { Key } from "../data/controller/controller";
-import { HurtableEntity, Spawnable } from "../data/entity/types";
+import { Spawnable } from "../data/entity/types";
 import { getDistance } from "../util/math";
 import { Manager } from "../data/network/manager";
-import { Character } from "../data/entity/character";
+import { Viewport } from "../data/map/viewport";
 
 export class CameraTarget {
   private static maxScale = 1.5;
@@ -163,11 +162,12 @@ export class CameraTarget {
     }
 
     const [x, y] = this.controller.getLocalMouse();
-    this.controller.mouseMove(
-      x + (this.position[0] - this.viewport.center.x),
-      y + (this.position[1] - this.viewport.center.y)
-    );
+    const oldCenter = this.viewport.center;
     this.viewport.moveCenter(...this.position);
+    this.controller.mouseMove(
+      x + (this.viewport.center[0] - oldCenter[0]),
+      y + (this.viewport.center[1] - oldCenter[1])
+    );
 
     if (
       (sx * CameraTarget.damping < adx || sy * CameraTarget.damping < ady) &&
@@ -234,12 +234,12 @@ export class CameraTarget {
       );
 
       const oldWidth = this.viewport.width;
-      this.viewport.setZoom(this.scale, true);
+      this.viewport.setZoom(this.scale);
 
       const [x, y] = controller.getLocalMouse();
       const center = this.viewport.center;
-      const dx = x - center.x;
-      const dy = y - center.y;
+      const dx = x - center[0];
+      const dy = y - center[1];
 
       const delta = 1 - oldWidth / this.viewport.width;
       controller.mouseMove(x - dx * delta, y - dy * delta);
@@ -286,19 +286,14 @@ export class CameraTarget {
 
     let shakes = CameraTarget.shakeAmount;
     this.intervalId = window.setInterval(() => {
-      this.viewport!.animate({
-        time: CameraTarget.shakeInterval,
-        position: {
-          x:
-            center.x +
-            Math.random() * CameraTarget.shakeIntensity -
-            CameraTarget.shakeIntensity / 2,
-          y:
-            center.y +
-            Math.random() * CameraTarget.shakeIntensity -
-            CameraTarget.shakeIntensity / 2,
-        },
-      });
+      this.viewport.moveCenter(
+        center[0] +
+          Math.random() * CameraTarget.shakeIntensity -
+          CameraTarget.shakeIntensity / 2,
+        center[1] +
+          Math.random() * CameraTarget.shakeIntensity -
+          CameraTarget.shakeIntensity / 2
+      );
 
       shakes--;
       if (shakes <= 0) {
