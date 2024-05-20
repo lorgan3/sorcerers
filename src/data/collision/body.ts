@@ -144,8 +144,12 @@ export class Body implements PhysicsBody {
     let yAcc = this.gravity;
     let yDiff = this.yVelocity * dt + yAcc * idt;
     let xAcc =
-      this.walkDirection * SPEED * (this._grounded ? 1 : this.airControl) +
-      this.lastRollDirection * this.roundness;
+      this.walkDirection * SPEED * (this._grounded ? 1 : this.airControl);
+
+    if (this.lastRollDirection && Math.abs(this.xVelocity) < 0.5) {
+      xAcc += this.lastRollDirection * this.roundness;
+    }
+
     let xDiff = this.xVelocity * dt + xAcc * idt;
     this.walkDirection = 0;
     this.lastRollDirection = 0;
