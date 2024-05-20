@@ -17,6 +17,7 @@ export const loadAsMap = (src: string) => ({
 
 Assets.addBundle("assets", {
   atlas: `${import.meta.env.BASE_URL}atlas.json`,
+  backgrounds: `${import.meta.env.BASE_URL}backgrounds.json`,
   font: Eternal,
   ...Object.fromEntries(
     Object.entries(defaultMaps).map(([key, value]) => [key, loadAsMap(value)])

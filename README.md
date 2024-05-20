@@ -40,6 +40,7 @@ Check `package.json`, there are also commands available to run tests and check t
 - [Bomb](https://surfacetoash.itch.io/kaboom-explosives-asset-pack): SurfaceToAsh
 - [Meteor](https://opengameart.org/content/rock-0): Unnamed
 - [Lightning](https://sanctumpixel.itch.io/lightning-lines-pixel-art-effect): sanctumpixel
+- [Ocean background](https://opengameart.org/content/ocean-background): KnoblePersona
 
 ### Sounds
 
