@@ -8,7 +8,7 @@ import { Manager } from "./manager";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 import { Team } from "../team";
 import { COLORS } from "./constants";
-import { SPELLS, getSpellCost } from "../spells";
+import { SPELLS } from "../spells";
 import { DamageSource } from "../damage/types";
 import {
   HurtableEntity,
@@ -396,7 +396,7 @@ export class Server extends Manager {
           const [x, y] = character.body.precisePosition;
           return {
             id: character.id,
-            name: character.name,
+            name: character.characterName,
             hp: character.hp,
             x,
             y,
@@ -509,7 +509,7 @@ export class Server extends Manager {
         title: `${this.activePlayer!.name}'s turn`,
         meta: MESSAGES[Math.floor(Math.random() * MESSAGES.length)].replace(
           PLACEHOLDER,
-          this.activePlayer!.activeCharacter.name
+          this.activePlayer!.activeCharacter.characterName
         ),
       });
     });

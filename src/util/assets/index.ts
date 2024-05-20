@@ -1,8 +1,8 @@
-import { Assets } from "@pixi/assets";
 import Eternal from "../../assets/Eternal.ttf";
 import "./mapLoader";
 import { MAP_LOADER } from "./mapLoader";
 import { SOUND_ASSETS } from "../../sound";
+import { Assets } from "pixi.js";
 
 export const defaultMaps = {
   Playground: `${import.meta.env.BASE_URL}maps/playground.png`,

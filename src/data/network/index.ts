@@ -1,4 +1,4 @@
-import { Ticker, UPDATE_PRIORITY } from "pixi.js";
+import { Ticker, TickerCallback, UPDATE_PRIORITY } from "pixi.js";
 
 import { Server } from "./server";
 import { Level } from "../map/level";
@@ -17,8 +17,8 @@ export const connect = async (
   const level = new Level(target, map);
   const controller = new KeyboardController(level.viewport);
 
-  const ticker = (dt: number) => {
-    Manager.instance.tick(dt);
+  const ticker: TickerCallback<null> = (ticker) => {
+    Manager.instance.tick(ticker.deltaTime);
   };
 
   let fixedTick = window.setInterval(

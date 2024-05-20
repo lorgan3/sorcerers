@@ -1,9 +1,4 @@
-import {
-  AnimatedSprite,
-  Container,
-  ImageBitmapResource,
-  Texture,
-} from "pixi.js";
+import { AnimatedSprite, Container, Texture } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
@@ -39,7 +34,7 @@ export class Meteor extends Container implements Syncable {
   private particles: ParticleEmitter;
   private bounceDuration = 0;
   private maxBounceDuration: number;
-  private textures: Texture<ImageBitmapResource>[];
+  private textures: Texture[];
   private sound?: ControllableSound;
   private bounceTime = 0;
   private collided = false;
@@ -123,7 +118,7 @@ export class Meteor extends Container implements Syncable {
     const canvas = new OffscreenCanvas(32, 32);
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(
-      texture.baseTexture.resource.source as ImageBitmap,
+      texture.source.resource as ImageBitmap,
       texture.frame.left,
       texture.frame.top,
       texture.frame.width,

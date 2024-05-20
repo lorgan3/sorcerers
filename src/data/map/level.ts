@@ -1,10 +1,4 @@
-import {
-  Application,
-  BaseTexture,
-  Container,
-  DisplayObject,
-  SCALE_MODES,
-} from "pixi.js";
+import { Application, Container, TextureStyle } from "pixi.js";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Server } from "../network/server";
@@ -29,14 +23,14 @@ import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
 import { Viewport } from "./viewport";
 
-BaseTexture.defaultOptions.scaleMode = SCALE_MODES.NEAREST;
+TextureStyle.defaultOptions.scaleMode = "nearest";
 
 const SINK_PERCENT = 0.07;
 
 export class Level {
-  private app: Application<HTMLCanvasElement>;
+  private app: Application;
   public readonly viewport: Viewport;
-  public followedEntity: DisplayObject | null = null;
+  public followedEntity: Container | null = null;
 
   private defaultLayer = new Container();
   public readonly numberContainer = new DamageNumberContainer();
@@ -74,13 +68,17 @@ export class Level {
   constructor(private target: HTMLElement, map: GameMap) {
     Level._instance = this;
 
-    this.app = new Application({
-      resizeTo: window,
-      background: "#fff",
-    });
-    window.addEventListener("resize", this.resize);
+    this.app = new Application();
 
-    target.appendChild(this.app.view);
+    this.app
+      .init({
+        resizeTo: window,
+        background: "#fff",
+      })
+      .then(() => {
+        target.appendChild(this.app.canvas);
+        window.addEventListener("resize", this.resize);
+      });
 
     this.viewport = new Viewport(
       window.innerWidth,
@@ -167,7 +165,7 @@ export class Level {
   }
 
   add(
-    ...objects: Array<TickingEntity | HurtableEntity | Syncable | DisplayObject>
+    ...objects: Array<TickingEntity | HurtableEntity | Syncable | Container>
   ) {
     for (let object of objects) {
       if ("layer" in object) {
@@ -196,7 +194,7 @@ export class Level {
   }
 
   remove(
-    ...objects: Array<TickingEntity | HurtableEntity | Syncable | DisplayObject>
+    ...objects: Array<TickingEntity | HurtableEntity | Syncable | Container>
   ) {
     for (let object of objects) {
       if ("layer" in object) {

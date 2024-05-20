@@ -54,7 +54,11 @@ export class SmallSword extends Container implements Spawnable {
     const atlas = AssetsContainer.instance.assets!["atlas"];
     const frames = atlas.animations["spells_sword"];
 
-    this.sprite = new TilingSprite(getRandom(frames), frames[0].width, 0);
+    this.sprite = new TilingSprite({
+      texture: getRandom(frames),
+      width: frames[0].width,
+      height: 0,
+    });
     this.sprite.position.set(-7, SmallSword.spriteYOffset - frames[0].height);
     this.sprite.scale.y = -1;
 

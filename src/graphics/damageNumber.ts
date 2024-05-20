@@ -1,11 +1,11 @@
-import { BitmapText, Container, Text } from "pixi.js";
+import { BitmapText, Container, Text, TextStyle } from "pixi.js";
 
 const SPEED = -1;
 const LIFETIME = 100;
 
 enum Color {
-  Damage = "#f00",
-  Heal = "#0f0",
+  Damage = "#ff0000",
+  Heal = "#00ff00",
   Mana = "#2a3cff",
 }
 
@@ -13,12 +13,16 @@ class DamageNumber extends BitmapText {
   lifetime = LIFETIME;
 
   constructor(amount: string, x: number, y: number, color: Color) {
-    super(amount, {
-      fontName: "Eternal",
-      tint: color,
+    super({
+      text: amount,
+      style: {
+        fontFamily: "Eternal",
+        fontSize: 32,
+      },
     });
     this.anchor.set(0.5);
     this.position.set(x, y);
+    this.tint = color;
   }
 }
 

@@ -20,6 +20,6 @@ export class UpdatingTexture {
     fn(this.ctx);
     this.ctx.fill();
 
-    this.texture.update();
+    this.texture.source.update();
   }
 }

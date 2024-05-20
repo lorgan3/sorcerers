@@ -25,15 +25,17 @@ export class Killbox extends Container {
     const atlas = AssetsContainer.instance.assets!["atlas"];
     this.animation = atlas.animations["wave"];
 
-    this.sprite = new TilingSprite(this.animation[0], width, 32);
+    this.sprite = new TilingSprite({
+      texture: this.animation[0],
+      width,
+      height: 32,
+    });
     this.sprite.tint = 0xa449d0;
     this.sprite.scale.y = 0.3;
     this.sprite.alpha = 0.7;
 
     this.bottom = new Graphics();
-    this.bottom.beginFill(0x783fbc, 0.7);
-    this.bottom.drawRect(0, 0, 1, 1);
-    this.bottom.endFill();
+    this.bottom.rect(0, 0, 1, 1).fill({ color: 0x783fbc, alpha: 0.7 });
     this.bottom.width = width;
     this.bottom.position.y = 9.6;
 

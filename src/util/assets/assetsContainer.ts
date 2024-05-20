@@ -17,18 +17,18 @@ export class AssetsContainer {
     getAssets().then((assets) => {
       this.assets = assets;
 
-      BitmapFont.from(
-        "Eternal",
-        {
+      BitmapFont.install({
+        name: "Eternal",
+        style: {
           fontFamily: "Eternal",
           fontSize: 32,
           fill: "#fff",
-          dropShadow: true,
-          dropShadowDistance: 4,
-          dropShadowAngle: 45,
+          dropShadow: {
+            distance: 4,
+            angle: 45,
+          },
         },
-        { chars: BitmapFont.ALPHANUMERIC }
-      );
+      });
 
       if (this.callback) {
         this.callback();

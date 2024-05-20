@@ -14,12 +14,12 @@
     "install": "yarn atlas-packer"
   },
   "dependencies": {
-    "@pixi/sound": "5.2.3",
+    "@pixi/sound": "6.0.0",
     "firebase": "^10.8.0",
     "lodash.debounce": "^4.0.8",
     "meta-png": "^1.0.6",
     "peerjs": "^1.5.2",
-    "pixi.js": "^7.4.0",
+    "pixi.js": "^8.1.4",
     "vue": "^3.4.19"
   },
   "devDependencies": {

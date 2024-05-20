@@ -1,4 +1,4 @@
-import { Container, ImageBitmapResource, Texture, TilingSprite } from "pixi.js";
+import { Container, Texture, TilingSprite } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
 import { Character } from "../entity/character";
@@ -20,7 +20,7 @@ export class Rock extends Container implements Spawnable {
   private static maxHeightDiff = 24;
 
   private sprite: TilingSprite;
-  private texture: Texture<ImageBitmapResource>;
+  private texture: Texture;
   private canvas: OffscreenCanvas;
   private collisionMask: CollisionMask;
   private time = 0;
@@ -45,7 +45,7 @@ export class Rock extends Container implements Spawnable {
     const ctx = this.canvas.getContext("2d")!;
     ctx.scale(this.direction, 1);
     ctx.drawImage(
-      this.texture.baseTexture.resource.source as ImageBitmap,
+      this.texture.source.resource as ImageBitmap,
       this.texture.frame.left,
       this.texture.frame.top,
       this.texture.frame.width,
@@ -59,7 +59,11 @@ export class Rock extends Container implements Spawnable {
       ctx.getImageData(0, 0, 48, 48)
     );
 
-    this.sprite = new TilingSprite(this.texture, this.texture.width, 0);
+    this.sprite = new TilingSprite({
+      texture: this.texture,
+      width: this.texture.width,
+      height: 0,
+    });
     this.sprite.scale.set(6 * direction, 6);
     this.sprite.anchor.set(0.5, 1);
     this.sprite.position.set(0, 23);

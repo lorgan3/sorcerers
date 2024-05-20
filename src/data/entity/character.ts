@@ -187,7 +187,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     public readonly player: Player,
     x: number,
     y: number,
-    public readonly name: string
+    public readonly characterName: string
   ) {
     super();
 
@@ -282,10 +282,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
     sprite2.scale.set(6);
     sprite2.alpha = 0.5;
 
-    this.namePlate = new BitmapText(`${name} ${this._hp}`, {
-      fontName: "Eternal",
-      tint: this.player.color,
+    this.namePlate = new BitmapText({
+      text: `${characterName} ${this._hp}`,
+      style: {
+        fontFamily: "Eternal",
+        fontSize: 32,
+      },
     });
+    this.namePlate.tint = this.player.color;
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(18, -40);
 
@@ -331,7 +335,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.lastReportedHp - this._hp,
         ...this.getCenter()
       );
-      this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
+      this.namePlate.text = `${this.characterName} ${Math.max(
+        0,
+        Math.ceil(this._hp)
+      )}`;
       this.lastReportedHp = this._hp;
     }
 
@@ -551,7 +558,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.lastReportedHp - this._hp,
         ...this.getCenter()
       );
-      this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
+      this.namePlate.text = `${this.characterName} ${Math.max(
+        0,
+        Math.ceil(this._hp)
+      )}`;
       this.lastReportedHp = this._hp;
     }
 
@@ -574,11 +584,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
     Level.instance.bloodEmitter.burst(this, 100);
 
     Level.instance.terrain.draw((ctx) => {
-      const splat =
-        AssetsContainer.instance.assets!["atlas"].textures["elf_splat"];
+      const splat = AssetsContainer.instance.assets!["atlas"].textures[
+        "elf_splat"
+      ] as Texture;
 
       ctx.drawImage(
-        splat.baseTexture.resource.source,
+        splat.source.resource,
         splat.frame.left,
         splat.frame.top,
         splat.frame.width,
@@ -622,7 +633,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     if (diff > 0) {
       Level.instance.numberContainer.heal(diff, ...this.getCenter());
       this.lastReportedHp += diff;
-      this.namePlate.text = `${this.name} ${Math.max(
+      this.namePlate.text = `${this.characterName} ${Math.max(
         0,
         Math.ceil(this.lastReportedHp)
       )}`;

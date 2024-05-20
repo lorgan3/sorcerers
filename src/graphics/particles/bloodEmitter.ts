@@ -69,7 +69,7 @@ export class BloodEmitter
         particle.lifetime = 0;
         Level.instance.terrain.draw(
           (ctx) => {
-            ctx.fillStyle = particle.tint.toString();
+            ctx.fillStyle = particle.color;
             ctx.fillRect((particle.x / 6) | 0, (particle.y / 6) | 0, 1, 1);
           },
           () => {}
@@ -109,6 +109,7 @@ export class BloodEmitter
     particle.xVelocity = xVelocity;
     particle.yVelocity = yVelocity;
     particle.tint = tint;
+    particle.color = tint;
 
     particle.lifetime = 500 * (1 + 0.2 * Math.random());
   }

@@ -1,4 +1,4 @@
-import { DisplayObject } from "pixi.js";
+import { Container } from "pixi.js";
 import { PhysicsBody } from "../collision";
 import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
@@ -9,7 +9,7 @@ export enum Layer {
   Default,
 }
 
-export interface TickingEntity extends DisplayObject {
+export interface TickingEntity extends Container {
   tick(dt: number): void;
 
   layer?: Layer;
