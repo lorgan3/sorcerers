@@ -2488,11 +2488,6 @@ pixelmatch@^4.0.2:
   dependencies:
     pngjs "^3.0.0"
 
-pixi-viewport@^5.0.2:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/pixi-viewport/-/pixi-viewport-5.0.2.tgz#d0065bd28a3c34d5888ce66eff538fa78ef5cd07"
-  integrity sha512-U77KnCTl81xEgxEQRFEuI7MYVySWwCVkA41EnM8KiOYwgVOwdBUa7318O+u61IOnTwnoYLzaihy/kpoONKU13Q==
-
 pixi.js@^7.4.0:
   version "7.4.0"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-7.4.0.tgz#0237a8fb6db0c7ccd6f2a39b68331a2e275a2ee0"
