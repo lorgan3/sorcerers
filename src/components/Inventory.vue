@@ -4,16 +4,30 @@ import { Manager } from "../data/network/manager";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { Server } from "../data/network/server";
 import { Client } from "../data/network/client";
-import { ELEMENT_MAP, ELEMENT_COLOR_MAP } from "../graphics/elements";
+import { ELEMENT_COLOR_MAP } from "../graphics/elements";
 import { Message, MessageType } from "../data/network/types";
 import { Element } from "../data/spells/types";
+import Tooltip from "./Tooltip.vue";
+import SpellDescription from "./SpellDescription.vue";
 
 const props = defineProps<{
   isOpen: boolean;
   onClose: () => void;
 }>();
 
-const SLOTS = 25;
+const { offenseSpells, supportSpells } = SPELLS.reduce(
+  (groups, spell) => {
+    groups[spell.stacking ? "supportSpells" : "offenseSpells"].push(spell);
+    return groups;
+  },
+  { offenseSpells: [] as Spell[], supportSpells: [] as Spell[] }
+);
+
+const sections = {
+  "Support ⟳": supportSpells,
+  Offense: offenseSpells,
+};
+
 const SPRITES_PER_ROW = 5;
 
 const previewSpell = ref(Manager.instance?.selectedSpell);
@@ -25,11 +39,12 @@ const poll = () => {
     previewMultiplier.value = previewSpell.value?.costMultiplier?.() || 1;
 
     const mana = Manager.instance.self.mana;
-    availableList.value = SPELLS.map(
-      (spell) =>
+    availableList.value = [];
+    SPELLS.forEach((spell) => {
+      availableList.value[spell.iconId] =
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
-        !Manager.instance.self.executedSpells.includes(spell)
-    );
+        !Manager.instance.self.executedSpells.includes(spell);
+    });
   }
 };
 
@@ -92,99 +107,72 @@ const getElementFilter = (element: Element) =>
   <div class="clip">
     <div :class="{ wrapper: true, isOpen: props.isOpen }">
       <div class="inventory" @mouseleave="onMouseLeave">
-        <div class="grid">
-          <div
-            v-for="i in SLOTS"
-            :class="{
-              slot: true,
-              locked: !availableList[i - 1],
-            }"
-            @click="handleClick(SPELLS[i - 1])"
-            @mouseenter="onMouseEnter(SPELLS[i - 1])"
-          >
-            <div
-              v-if="SPELLS[i - 1]"
-              :style="{
-                '--row': -Math.floor(SPELLS[i - 1].iconId / SPRITES_PER_ROW),
-                '--column': -(SPELLS[i - 1].iconId % SPRITES_PER_ROW),
-              }"
-              class="spell-icon"
-            ></div>
-            <svg
-              width="50px"
-              height="50px"
-              :class="{
-                border: true,
-                animated: SPELLS[i - 1] === Manager.instance?.selectedSpell,
-              }"
-              v-if="SPELLS[i - 1]"
-            >
-              <rect
-                :style="{
-                  '--dash-offset': 0,
-                  stroke: ELEMENT_COLOR_MAP[SPELLS[i - 1].elements[0]],
-                  filter: getElementFilter(SPELLS[i - 1].elements[0]),
-                }"
-                x="2px"
-                y="2px"
-                width="46px"
-                height="46px"
-                rx="3px"
-                ry="3px"
-              ></rect>
-              <rect
-                :style="{
-                  '--dash-offset': 1,
-                  stroke:
-                    ELEMENT_COLOR_MAP[
-                      SPELLS[i - 1].elements[1] || SPELLS[i - 1].elements[0]
-                    ],
-                  filter: getElementFilter(
-                    SPELLS[i - 1].elements[1] || SPELLS[i - 1].elements[0]
-                  ),
-                }"
-                x="2px"
-                y="2px"
-                width="46px"
-                height="46px"
-                rx="3px"
-                ry="3px"
-              ></rect>
-            </svg>
-          </div>
-        </div>
-        <div class="spell">
-          <template v-if="previewSpell">
-            <div class="magic">
-              <span
-                v-if="previewSpell.cost"
+        <template v-for="(spells, title) in sections">
+          <p class="title">{{ title }}</p>
+          <div class="grid">
+            <Tooltip v-for="spell in spells" direction="center-left">
+              <template v-slot:tooltip>
+                <SpellDescription :spell="spell"
+              /></template>
+              <div
                 :class="{
-                  cost: true,
-                  positive: previewMultiplier < 1,
-                  negative: previewMultiplier > 1,
+                  slot: true,
+                  locked: !availableList[spell.iconId],
                 }"
-                >{{ Math.ceil(previewSpell.cost * previewMultiplier) }}</span
+                @click="handleClick(spell)"
+                @mouseenter="onMouseEnter(spell)"
               >
-              <span class="elements">
-                <img
-                  v-for="element in previewSpell.elements"
-                  :src="ELEMENT_MAP[element]"
-                  :alt="element"
-                  :title="element"
-                />
-              </span>
-            </div>
-            <div class="details">
-              <span class="name">
-                <span
-                  >{{ previewSpell.name }}
-                  <span v-if="previewSpell.stacking">⟳</span></span
+                <div
+                  :style="{
+                    '--row': -Math.floor(spell.iconId / SPRITES_PER_ROW),
+                    '--column': -(spell.iconId % SPRITES_PER_ROW),
+                  }"
+                  class="spell-icon"
+                ></div>
+                <svg
+                  width="50px"
+                  height="50px"
+                  :class="{
+                    border: true,
+                    animated: spell === Manager.instance?.selectedSpell,
+                  }"
                 >
-              </span>
-              <span class="description">{{ previewSpell.description }}</span>
-            </div>
-          </template>
-        </div>
+                  <rect
+                    :style="{
+                      '--dash-offset': 0,
+                      stroke: ELEMENT_COLOR_MAP[spell.elements[0]],
+                      filter: getElementFilter(spell.elements[0]),
+                    }"
+                    x="2px"
+                    y="2px"
+                    width="46px"
+                    height="46px"
+                    rx="3px"
+                    ry="3px"
+                  ></rect>
+                  <rect
+                    :style="{
+                      '--dash-offset': 1,
+                      stroke:
+                        ELEMENT_COLOR_MAP[
+                          spell.elements[1] || spell.elements[0]
+                        ],
+                      filter: getElementFilter(
+                        spell.elements[1] || spell.elements[0]
+                      ),
+                    }"
+                    x="2px"
+                    y="2px"
+                    width="46px"
+                    height="46px"
+                    rx="3px"
+                    ry="3px"
+                  ></rect>
+                </svg>
+              </div>
+            </Tooltip>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -226,12 +214,20 @@ const getElementFilter = (element: Element) =>
       display: none;
     }
 
+    .title {
+      color: var(--highlight);
+      font-family: Eternal;
+      font-size: 24px;
+      padding: 6px;
+      padding-bottom: 0;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 50px);
-      grid-template-rows: repeat(5, 50px);
+      grid-template-columns: repeat(4, 50px);
       gap: 3px;
       padding: 6px;
+      padding-top: 0;
 
       .slot {
         border-radius: var(--small-radius);
@@ -287,76 +283,6 @@ const getElementFilter = (element: Element) =>
               animation: rotateBorder 2s linear infinite;
             }
           }
-        }
-      }
-    }
-
-    .spell {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 6px;
-      padding-top: 0;
-      gap: 6px;
-      word-wrap: break-word;
-      height: 54px;
-
-      .magic {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        background: var(--background-dark);
-        padding: 3px 0;
-        border-radius: var(--big-radius);
-        height: 38px;
-        gap: 6px;
-        width: 60px;
-        justify-content: space-evenly;
-      }
-
-      .elements {
-        display: flex;
-        flex-direction: column;
-
-        img {
-          width: 16px;
-          height: 16px;
-        }
-      }
-
-      .cost {
-        font-family: Eternal;
-        font-size: 36px;
-        margin-bottom: -4px;
-        animation: pulse 3s infinite;
-        color: rgb(42, 60, 255);
-        filter: brightness(var(--pulse, 1));
-        text-shadow: 1px 1px 1px black;
-
-        &.positive {
-          color: rgb(62, 102, 62);
-        }
-
-        &.negative {
-          color: rgb(94, 51, 51);
-        }
-      }
-
-      .details {
-        display: flex;
-        flex-direction: column;
-        width: 0;
-
-        flex: 1;
-
-        .name {
-          font-family: Eternal;
-          font-size: 22px;
-          color: var(--highlight);
-        }
-
-        .description {
-          font-size: 12px;
         }
       }
     }
