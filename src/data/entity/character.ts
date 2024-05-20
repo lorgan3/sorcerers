@@ -256,7 +256,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
           return 30;
         },
         onEnd: () => {
-          if (!player.controller.isKeyDown(Key.Inventory)) {
+          if (
+            Manager.instance.getActiveCharacter() !== this ||
+            !player.controller.isKeyDown(Key.Inventory)
+          ) {
             this.animator.setDefaultAnimation(AnimationState.Idle);
           }
         },
