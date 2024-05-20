@@ -157,6 +157,10 @@ const ANIMATION_CONFIG: Record<
 };
 
 export class Character extends Container implements HurtableEntity, Syncable {
+  private static readonly invulnerableTime = 1;
+  private static readonly damageNumberTime = 90;
+  private static readonly maxInactiveTime = 3;
+
   public readonly body: Body;
   public id = -1;
   public readonly priority = Priority.Low;
@@ -168,7 +172,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private foregroundParticles?: ParticleEmitter;
 
   private _hp = 100;
+  private lastReportedHp = this._hp;
   private time = 0;
+  private lastDamageTime = -1;
+  private lastActiveTime = 0;
   private damageSource: DamageSource | null = null;
   private spellSource: any | null = null;
   private lookDirection = 1;
@@ -312,12 +319,24 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   tick(dt: number) {
     this.time += dt;
-    if (this.time > 3) {
+    if (this.time > this.lastActiveTime + Character.maxInactiveTime) {
       this.body.active = 1;
     }
 
+    if (
+      this.lastReportedHp !== this._hp &&
+      this.time > this.lastDamageTime + Character.damageNumberTime
+    ) {
+      Level.instance.numberContainer.damage(
+        this.lastReportedHp - this._hp,
+        ...this.getCenter()
+      );
+      this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
+      this.lastReportedHp = this._hp;
+    }
+
     if (this.body.active) {
-      this.time = 0;
+      this.lastActiveTime = this.time;
 
       Level.instance.terrain.characterMask.subtract(
         this.body.mask,
@@ -441,7 +460,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   damage(source: DamageSource, damage: number, force?: Force) {
+    if (
+      this.lastDamageTime !== -1 &&
+      this.time <= this.lastDamageTime + Character.invulnerableTime
+    ) {
+      return;
+    }
+
     this.hp -= damage;
+    this.lastDamageTime = this.time;
 
     Level.instance.bloodEmitter.burst(this, damage, source);
     if (damage > 0) {
@@ -519,6 +546,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   die() {
+    if (this._hp !== this.lastReportedHp) {
+      Level.instance.numberContainer.damage(
+        this.lastReportedHp - this._hp,
+        ...this.getCenter()
+      );
+      this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
+      this.lastReportedHp = this._hp;
+    }
+
     Level.instance.terrain.characterMask.subtract(
       this.body.mask,
       ...this.body.position
@@ -585,12 +621,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
     const diff = hp - oldHp;
     if (diff > 0) {
       Level.instance.numberContainer.heal(diff, ...this.getCenter());
-    } else if (diff < 0) {
-      Level.instance.numberContainer.damage(diff, ...this.getCenter());
+      this.lastReportedHp += diff;
+      this.namePlate.text = `${this.name} ${Math.max(
+        0,
+        Math.ceil(this.lastReportedHp)
+      )}`;
     }
 
     this._hp = hp;
-    this.namePlate.text = `${this.name} ${Math.max(0, Math.ceil(this._hp))}`;
     this.body.active = 1;
   }
 
