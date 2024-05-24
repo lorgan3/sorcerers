@@ -12,12 +12,12 @@ export class CameraTarget {
   private static highlightDelay = 90;
   private static continueDelay = 120;
 
-  private static maxSpeed = 50;
-  private static damping = 40;
-  private static dampingAmount = 0.96;
-  private static maxAccDist = 600;
-  private static minAccDist = 200;
-  private static accDistMultiplier = 0.001;
+  private static deadzone = 100;
+  private static maxSpeedFactor = 0.2;
+  private static acceleration = 0.7;
+  private static manualAcceleration = 0.35;
+  private static horizontalMargin = 0;
+  private static verticalMargin = 0;
 
   static shakeAmount = 10;
   static shakeIntensity = 12;
@@ -31,11 +31,10 @@ export class CameraTarget {
     callback?: () => void;
   }> = [];
   private position: [number, number];
+  private lastTargetPosition: [number, number] = [0, 0];
 
   private attached = true;
-  private oldMouse: [number, number] = [0, 0];
   private oldCDown = false;
-  private followMouse = false;
   private intervalId = -1;
 
   private speed = 0;
@@ -54,7 +53,7 @@ export class CameraTarget {
       return;
     }
 
-    let position: [number, number] | undefined;
+    let position: [number, number] = this.lastTargetPosition;
 
     this.time += dt;
     if (this.time >= CameraTarget.highlightDelay && this.callback) {
@@ -75,8 +74,9 @@ export class CameraTarget {
       Manager.instance.self?.activeCharacter &&
       Manager.instance.self?.activeCharacter?.body.velocity !== 0
     ) {
+      this.attached = true;
+
       if (this.target !== Manager.instance.self?.activeCharacter) {
-        this.attached = true;
         this.speed = 0;
         this.target = Manager.instance.self?.activeCharacter;
       }
@@ -84,70 +84,67 @@ export class CameraTarget {
 
     if (this.target && this.attached) {
       position = this.target.getCenter();
-    } else {
-      position = this.controller.getLocalMouse();
+      this.lastTargetPosition = position;
     }
 
     if (this.controller.isLocalKeyDown(Key.C)) {
       position = this.controller.getLocalMouse();
 
       if (!this.oldCDown) {
-        this.oldCDown = true;
-        this.oldMouse = position;
-      }
-
-      if (
-        !this.followMouse &&
-        getDistance(...position, ...this.oldMouse!) > 20
-      ) {
-        this.followMouse = true;
         this.attached = false;
-        this.speed = 0;
+        this.oldCDown = true;
+        this.lastTargetPosition = position;
       }
     } else if (this.oldCDown) {
-      if (!this.followMouse) {
+      this.oldCDown = false;
+
+      if (
+        getDistance(
+          ...this.controller.getLocalMouse(),
+          ...this.lastTargetPosition
+        ) < CameraTarget.deadzone
+      ) {
         this.attached = true;
-        this.speed = 0;
       }
 
-      this.followMouse = false;
-      this.oldCDown = false;
+      this.lastTargetPosition = this.controller.getLocalMouse();
     }
 
-    // Clamp position to world edges
-    position = [
-      Math.round(
-        Math.max(
-          Math.min(
-            position[0],
-            this.viewport.worldWidth -
-              this.viewport.screenWidth / 2 / this.scale
-          ),
-          this.viewport.screenWidth / 2 / this.scale
-        )
-      ),
-      Math.round(
-        Math.max(
-          Math.min(
-            position[1],
-            this.viewport.worldHeight -
-              this.viewport.screenHeight / 2 / this.scale
-          ),
-          this.viewport.screenHeight / 2 / this.scale
-        )
-      ),
-    ];
+    position = this.clamp(position);
 
     const dx = (position[0] - this.position[0]) * this.scale;
     const dy = (position[1] - this.position[1]) * this.scale;
     const adx = Math.abs(dx);
     const ady = Math.abs(dy);
+    const distance = Math.sqrt(dx ** 2 + dy ** 2);
+    const maxSpeed = distance * CameraTarget.maxSpeedFactor;
 
-    const speed = this.speed * dt;
+    if (this.speed === 0 && distance <= CameraTarget.deadzone) {
+      return;
+    }
+
+    const idt = Math.pow(dt, 2) / 2;
+    let speed = this.speed * dt;
+    let acc = 0;
+
+    if (this.speed < maxSpeed) {
+      acc = this.attached
+        ? CameraTarget.acceleration
+        : CameraTarget.manualAcceleration;
+    } else {
+      acc = maxSpeed - this.speed;
+    }
+    speed += acc * idt;
+
+    if (adx === 0 && ady === 0) {
+      this.speed = 0;
+      return;
+    }
+
     const sum = adx + ady;
-
     const sx = sum ? (speed * adx) / sum : 0;
     const sy = sum ? (speed * ady) / sum : 0;
+    this.speed += acc * dt;
 
     if (adx > sx && adx > 1) {
       this.position[0] += Math.sign(dx) * sx;
@@ -161,35 +158,14 @@ export class CameraTarget {
       this.position[1] = position[1];
     }
 
-    const [x, y] = this.controller.getLocalMouse();
     const oldCenter = this.viewport.center;
     this.viewport.moveCenter(...this.position);
+
+    const [x, y] = this.controller.getLocalMouse();
     this.controller.mouseMove(
       x + (this.viewport.center[0] - oldCenter[0]),
       y + (this.viewport.center[1] - oldCenter[1])
     );
-
-    if (
-      (sx * CameraTarget.damping < adx || sy * CameraTarget.damping < ady) &&
-      (this.attached || this.followMouse)
-    ) {
-      this.speed = Math.min(
-        CameraTarget.maxSpeed,
-        this.speed +
-          Math.max(
-            CameraTarget.minAccDist,
-            Math.min(CameraTarget.maxAccDist, sum)
-          ) *
-            CameraTarget.accDistMultiplier *
-            dt
-      );
-    } else if (this.speed !== 0) {
-      this.speed *= Math.pow(CameraTarget.dampingAmount, dt);
-
-      if (Math.abs(this.speed) < 1) {
-        this.speed = 0;
-      }
-    }
   }
 
   setTarget(target: Spawnable, callback?: () => void) {
@@ -244,39 +220,45 @@ export class CameraTarget {
       const delta = 1 - oldWidth / this.viewport.width;
       controller.mouseMove(x - dx * delta, y - dy * delta);
 
-      this.clamp();
+      const oldPosition = this.position;
+      this.position = this.clamp(this.position);
+      const dx2 = this.position[0] - oldPosition[0];
+      const dy2 = this.position[1] - oldPosition[1];
+
+      if (dx2 !== 0 || dy2 !== 0) {
+        this.controller!.mouseMove(x + dx2, y + dy2);
+        this.viewport.moveCenter(...this.position);
+      }
     });
   }
 
-  private clamp() {
-    const oldPosition = [...this.position];
-
-    this.position = [
+  private clamp(position: [number, number]): [number, number] {
+    return [
       Math.max(
         Math.min(
-          this.position[0],
-          this.viewport.worldWidth - this.viewport.screenWidth / 2 / this.scale
+          position[0],
+          this.viewport.worldWidth -
+            (this.viewport.screenWidth + CameraTarget.horizontalMargin) /
+              2 /
+              this.scale
         ),
-        this.viewport.screenWidth / 2 / this.scale
+        (this.viewport.screenWidth + CameraTarget.horizontalMargin) /
+          2 /
+          this.scale
       ),
       Math.max(
         Math.min(
-          this.position[1],
+          position[1],
           this.viewport.worldHeight -
-            this.viewport.screenHeight / 2 / this.scale
+            (this.viewport.screenHeight - CameraTarget.verticalMargin) /
+              2 /
+              this.scale
         ),
-        this.viewport.screenHeight / 2 / this.scale
+        (this.viewport.screenHeight - CameraTarget.verticalMargin) /
+          2 /
+          this.scale
       ),
     ];
-
-    const dx = this.position[0] - oldPosition[0];
-    const dy = this.position[1] - oldPosition[1];
-
-    if (dx !== 0 || dy !== 0) {
-      const [x, y] = this.controller!.getLocalMouse();
-      this.controller!.mouseMove(x + dx, y + dy);
-      this.viewport.moveCenter(...this.position);
-    }
   }
 
   shake() {
