@@ -5,9 +5,7 @@ import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { Manager } from "./manager";
 import { Map } from "../map";
-
-export const PEER_ID_PREFIX = "sorcerers-";
-export const FIXED_INTERVAL = 1000 / 20;
+import { FIXED_INTERVAL } from "./constants";
 
 export const connect = async (
   target: HTMLElement,

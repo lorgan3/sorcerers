@@ -1,3 +1,5 @@
+import { map } from "../../util/math";
+import { FIXED_INTERVAL } from "../network/constants";
 import { Controller, Key, keyMap } from "./controller";
 
 export class NetworkController implements Controller {
@@ -5,6 +7,9 @@ export class NetworkController implements Controller {
 
   private mouseX = 0;
   private mouseY = 0;
+  private previousMouseX = 0;
+  private previousMouseY = 0;
+  private t = 0;
   private eventHandlers = new Map<Key, Set<() => void>>();
 
   destroy() {}
@@ -21,8 +26,11 @@ export class NetworkController implements Controller {
     return [this.mouseX, this.mouseY];
   }
 
-  getLocalMouse() {
-    return this.getMouse();
+  getLocalMouse(): [number, number] {
+    return [
+      map(this.previousMouseX, this.mouseX, this.t),
+      map(this.previousMouseY, this.mouseY, this.t),
+    ];
   }
 
   resetKeys() {
@@ -42,6 +50,9 @@ export class NetworkController implements Controller {
     const changedKeys = this.pressedKeys ^ buffer[0];
 
     this.pressedKeys = buffer[0];
+    this.t = 0;
+    this.previousMouseX = this.mouseX;
+    this.previousMouseY = this.mouseY;
     this.mouseX = buffer[1];
     this.mouseY = buffer[2];
 
@@ -50,6 +61,10 @@ export class NetworkController implements Controller {
         eventHandlers.forEach((fn) => fn());
       }
     });
+  }
+
+  tick(dt: number) {
+    this.t = Math.min(1, this.t + dt / 0.06 / FIXED_INTERVAL);
   }
 
   addKeyListener(key: Key, fn: () => void) {

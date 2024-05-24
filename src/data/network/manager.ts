@@ -9,6 +9,7 @@ import { Element } from "../spells/types";
 import { HurtableEntity } from "../entity/types";
 import { MagicScroll } from "../entity/magicScroll";
 import { Key } from "../controller/controller";
+import { NetworkController } from "../controller/networkController";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -58,6 +59,9 @@ export abstract class Manager {
 
   tick(dt: number) {
     if (this.cursor) {
+      if (this.activePlayer!.controller instanceof NetworkController) {
+        this.activePlayer!.controller.tick(dt);
+      }
       this.cursor.tick(dt, this.activePlayer!.controller);
     }
 

@@ -4,7 +4,7 @@ import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import Peer from "peerjs";
 import { Client } from "../data/network/client";
-import { PEER_ID_PREFIX } from "../data/network";
+import { PEER_ID_PREFIX } from "../data/network/constants";
 import { MessageType } from "../data/network/types";
 import { Team } from "../data/team";
 import { Map } from "../data/map";

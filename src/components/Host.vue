@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import { Server } from "../data/network/server";
-import { PEER_ID_PREFIX } from "../data/network";
+import { PEER_ID_PREFIX } from "../data/network/constants";
 import { MessageType } from "../data/network/types";
 import Peer from "peerjs";
 import { defaultMaps } from "../util/assets/index";
