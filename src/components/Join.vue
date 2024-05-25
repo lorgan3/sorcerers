@@ -103,6 +103,7 @@ const handleConnect = async () => {
                 data: new Blob([layer.data]),
               })),
               bbox: message.map.bbox,
+              parallax: message.map.parallax,
             })
           );
           break;
