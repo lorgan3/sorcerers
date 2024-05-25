@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Ref, ref } from "vue";
 import { Map, Layer, Config } from "../data/map";
+import { CONFIGS } from "../data/map/background";
 import Input from "./Input.vue";
 import { defaultMaps } from "../util/assets";
 import { AssetsContainer } from "../util/assets/assetsContainer";
@@ -22,6 +23,8 @@ const layers = ref<Layer[]>([]);
 const addMask = ref(false);
 const preview = ref<HTMLDivElement>();
 const bbox = ref<BBox>(BBox.create(0, 0));
+const backgroundName = ref("");
+const backgroundOffset = ref(0);
 
 const name = ref("");
 
@@ -61,6 +64,7 @@ const handleBuild = async () => {
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
     bbox: bbox.value,
+    parallax: { name: backgroundName.value, offset: backgroundOffset.value },
   });
 
   const url = URL.createObjectURL(await map.toBlob());
@@ -80,6 +84,7 @@ const handleTest = async () => {
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
     bbox: bbox.value,
+    parallax: { name: backgroundName.value, offset: backgroundOffset.value },
   });
 
   const server = new Server();
@@ -112,6 +117,9 @@ const loadMap = (config: Config, map: string) => {
   layers.value = config.layers;
   bbox.value = BBox.fromJS(config.bbox) || BBox.create(0, 0);
   name.value = map;
+
+  backgroundName.value = config.parallax.name;
+  backgroundOffset.value = config.parallax.offset;
 
   if (config.terrain.mask) {
     mask.value = config.terrain.mask as string;
@@ -190,14 +198,13 @@ const handleEnableMask = () => (addMask.value = true);
           <div v-else class="placeholder">➕ Add image</div>
         </label>
         <button v-if="!addMask" class="secondary" @click="handleEnableMask">
-          Add mask
+          Add wallmask
         </button>
         <label v-else class="inputButton">
           <input hidden type="file" @change="handleAddMask" accept="image/*" />
           <img v-if="mask" :src="mask" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
-        <Input label="Scale" value="6" disabled />
       </div>
 
       <div class="section">
@@ -212,7 +219,23 @@ const handleEnableMask = () => (addMask.value = true);
           <img v-if="background" :src="background" />
           <div v-else class="placeholder">➕ Add image</div>
         </label>
-        <Input label="Scale" value="6" disabled />
+        <label class="input-label">
+          <span class="label"> Parallax background </span>
+          <select
+            v-model="backgroundName"
+            @change="(event) => backgroundName = (event.target as HTMLSelectElement).value"
+          >
+            <option value="">Blank</option>
+            <option v-for="(_, key) in CONFIGS" :value="key">
+              {{ key }}
+            </option>
+          </select>
+        </label>
+        <Input
+          type="number"
+          label="vertical offset"
+          v-model="backgroundOffset"
+        />
       </div>
 
       <div class="section">
@@ -366,6 +389,25 @@ const handleEnableMask = () => (addMask.value = true);
       input {
         flex: 1;
       }
+    }
+
+    .input-label {
+      flex-direction: column;
+
+      .label {
+        font-family: Eternal;
+        font-size: 24px;
+        color: var(--primary);
+        width: auto;
+      }
+    }
+
+    select {
+      background: var(--background);
+      box-shadow: 0 0 10px inset var(--primary);
+      height: 35px;
+      border-radius: var(--small-radius);
+      outline: none;
     }
 
     .inputButton {
