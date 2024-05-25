@@ -35,6 +35,7 @@ export class CameraTarget {
 
   private attached = true;
   private oldCDown = false;
+  private oldMouseDown = false;
   private intervalId = -1;
 
   private speed = 0;
@@ -77,8 +78,8 @@ export class CameraTarget {
       this.attached = true;
 
       if (this.target !== Manager.instance.self?.activeCharacter) {
-        this.speed = 0;
         this.target = Manager.instance.self?.activeCharacter;
+        this.lastTargetPosition = this.controller.getLocalMouse();
       }
     }
 
@@ -107,6 +108,15 @@ export class CameraTarget {
         this.attached = true;
       }
 
+      this.lastTargetPosition = this.controller.getLocalMouse();
+    }
+
+    if (this.controller.isLocalKeyDown(Key.M1)) {
+      this.oldMouseDown = true;
+    } else if (this.oldMouseDown) {
+      this.oldMouseDown = false;
+
+      this.attached = true;
       this.lastTargetPosition = this.controller.getLocalMouse();
     }
 
