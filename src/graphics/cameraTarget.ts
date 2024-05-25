@@ -16,8 +16,6 @@ export class CameraTarget {
   private static maxSpeedFactor = 0.2;
   private static acceleration = 0.7;
   private static manualAcceleration = 0.35;
-  private static horizontalMargin = 0;
-  private static verticalMargin = 0;
 
   static shakeAmount = 10;
   static shakeIntensity = 12;
@@ -247,26 +245,17 @@ export class CameraTarget {
       Math.max(
         Math.min(
           position[0],
-          this.viewport.worldWidth -
-            (this.viewport.screenWidth + CameraTarget.horizontalMargin) /
-              2 /
-              this.scale
+          this.viewport.worldWidth - this.viewport.screenWidth / 2 / this.scale
         ),
-        (this.viewport.screenWidth + CameraTarget.horizontalMargin) /
-          2 /
-          this.scale
+        this.viewport.screenWidth / 2 / this.scale
       ),
       Math.max(
         Math.min(
           position[1],
           this.viewport.worldHeight -
-            (this.viewport.screenHeight - CameraTarget.verticalMargin) /
-              2 /
-              this.scale
+            this.viewport.screenHeight / 2 / this.scale
         ),
-        (this.viewport.screenHeight - CameraTarget.verticalMargin) /
-          2 /
-          this.scale
+        this.viewport.screenHeight / 2 / this.scale
       ),
     ];
   }
