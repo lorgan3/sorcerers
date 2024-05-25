@@ -1,6 +1,7 @@
 import { addMetadata, getMetadata } from "meta-png";
 import { CollisionMask } from "../collision/collisionMask";
 import { BBox, PlainBBox } from "./bbox";
+import { CONFIGS } from "./background";
 
 export interface Layer {
   data: string | Blob;
@@ -18,6 +19,11 @@ export interface ComputedLayer {
   bottom: number;
 }
 
+export interface Parallax {
+  name: string;
+  offset: number;
+}
+
 export interface Config {
   terrain: {
     data: string | Blob;
@@ -28,6 +34,7 @@ export interface Config {
   };
   layers: Layer[];
   bbox: PlainBBox;
+  parallax: Parallax;
 }
 
 const TERRAIN_KEY = "terrain";
@@ -35,6 +42,7 @@ const BACKGROUND_KEY = "background";
 const LAYERS_KEY = "layers";
 const MASK_KEY = "mask";
 const BBOX_KEY = "bbox";
+const PARALLAX_KEY = "parallax";
 const VERSION_KEY = "version";
 
 const VERSION = 1;
@@ -48,6 +56,7 @@ export class Map {
   private _width = 0;
   private _height = 0;
   private _bbox?: BBox;
+  private _parallax?: Parallax;
 
   public readonly load: Promise<void>;
 
@@ -97,6 +106,7 @@ export class Map {
 
       this._bbox =
         BBox.fromJS(config.bbox) || BBox.create(this._width, this._height);
+      this._parallax = config.parallax || { name: "", offset: 0 };
     });
   }
 
@@ -113,6 +123,9 @@ export class Map {
       },
       layers: JSON.parse(Map.getMetadata(data, LAYERS_KEY, "[]")),
       bbox: JSON.parse(Map.getMetadata(data, BBOX_KEY, "{}")),
+      parallax: JSON.parse(
+        Map.getMetadata(data, PARALLAX_KEY, '{ "name": "", "offset": 0 }')
+      ),
     };
   }
 
@@ -153,6 +166,7 @@ export class Map {
         y: layer.y,
       })),
       bbox: this._bbox!.toJS(),
+      parallax: this._parallax!,
     };
   }
 
@@ -183,6 +197,18 @@ export class Map {
     const canvas = new OffscreenCanvas(dw, dh);
     const ctx = canvas.getContext("2d")!;
 
+    if (this.config.parallax.name in CONFIGS) {
+      const gradient = ctx.createLinearGradient(0, 0, 1, dh);
+      CONFIGS[this.config.parallax.name].gradient.forEach(([color, step]) => {
+        gradient.addColorStop(step, color);
+      });
+
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = "#ffffff";
+    }
+    ctx.fillRect(0, 0, dw, dh);
+
     ctx.drawImage(background, 0, 0, dw, dh);
     ctx.drawImage(terrain, 0, 0, dw, dh);
 
@@ -207,6 +233,11 @@ export class Map {
     data = addMetadata(data, BACKGROUND_KEY, this.config.background.data);
     data = addMetadata(data, LAYERS_KEY, JSON.stringify(this.config.layers));
     data = addMetadata(data, BBOX_KEY, JSON.stringify(this.config.bbox));
+    data = addMetadata(
+      data,
+      PARALLAX_KEY,
+      JSON.stringify(this.config.parallax)
+    );
 
     if (typeof this.config.terrain.mask === "string") {
       data = addMetadata(data, MASK_KEY, this.config.terrain.mask);
@@ -243,6 +274,10 @@ export class Map {
 
   get bbox() {
     return this._bbox!;
+  }
+
+  get parallax() {
+    return this._parallax!;
   }
 
   public static loadImage(value: string | Blob) {

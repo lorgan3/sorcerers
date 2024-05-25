@@ -21,6 +21,7 @@ import { CameraTarget } from "../../graphics/cameraTarget";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
+import { Background } from "./background";
 import { Viewport } from "./viewport";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
@@ -47,6 +48,7 @@ export class Level {
   };
 
   public readonly terrain: Terrain;
+  private background?: Background;
   private spawnLocations: Array<[number, number]> = [];
 
   public readonly entities = new Set<TickingEntity>();
@@ -91,6 +93,17 @@ export class Level {
     this.app.stage.addChild(this.viewport, this.numberContainer);
 
     this.terrain = new Terrain(map);
+
+    if (map.parallax.name) {
+      this.background = new Background(
+        this.viewport,
+        0,
+        map.parallax.offset,
+        map.parallax.name
+      );
+      this.viewport.addChild(this.background);
+    }
+
     this.viewport.addChild(
       this.terrain.backgroundSprite,
       this.backgroundParticles,
@@ -129,11 +142,11 @@ export class Level {
   }
 
   tick(dt: number) {
-    this.cameraTarget.tick(dt);
     this.numberContainer.tick(dt);
     this.terrain.killbox.tick(dt);
     this.particleContainer.tick(dt);
     this.backgroundParticles.tick(dt);
+    this.background?.update();
 
     if (Server.instance) {
       for (let entity of this.hurtables) {
@@ -162,6 +175,8 @@ export class Level {
     for (let entity of this.entities) {
       entity.tick(dt);
     }
+
+    this.cameraTarget.tick(dt);
   }
 
   add(
