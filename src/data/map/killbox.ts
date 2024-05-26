@@ -46,7 +46,7 @@ export class Killbox extends Container {
     if (this._level > this.newLevel) {
       this._level = Math.max(this.newLevel, this._level - RISE_SPEED * dt);
       this.position.y = this._level - SPRITE_OFFSET;
-      this.bottom.height = this.initialHeight - this._level - SPRITE_OFFSET;
+      this.bottom.scale.y = this.initialHeight - this._level - SPRITE_OFFSET;
     }
 
     const index = (this.index + dt * ANIMATION_SPEED) % this.animation.length;
