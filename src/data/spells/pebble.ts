@@ -5,16 +5,15 @@ import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { TickingEntity } from "../entity/types";
-import { Server } from "../network/server";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getRandom } from "../../util/array";
 import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { Character } from "../entity/character";
 
 export class Pebble extends Container implements TickingEntity {
   private static riseTime = 40;
-  private static hitBackOff = 3;
   private static collisionTime = 4;
 
   public readonly body: SimpleBody;
@@ -27,7 +26,12 @@ export class Pebble extends Container implements TickingEntity {
   private targetY: number;
   private floatIndex = Math.random() * 20;
 
-  constructor(rx: number, private ry: number, private groundLevel: number) {
+  constructor(
+    rx: number,
+    private ry: number,
+    private groundLevel: number,
+    private character: Character
+  ) {
     super();
 
     this.body = new SimpleBody(Level.instance.terrain.characterMask, {
@@ -60,19 +64,19 @@ export class Pebble extends Container implements TickingEntity {
   }
 
   private onCollide = (x: number, y: number) => {
-    if (this.time < Pebble.hitBackOff) {
-      return;
-    }
-
     const damage = new ExplosiveDamage(
       x,
       y,
       4,
       1,
-      1 + Manager.instance.getElementValue(Element.Arcane) * 0.5
+      1.5 + Manager.instance.getElementValue(Element.Arcane) * 0.7
     );
-    Level.instance.damage(damage);
 
+    if (damage.getTargets().getEntities().includes(this.character)) {
+      return;
+    }
+
+    Level.instance.damage(damage);
     if (damage.getTargets().hasEntities()) {
       Level.instance.remove(this);
     } else {

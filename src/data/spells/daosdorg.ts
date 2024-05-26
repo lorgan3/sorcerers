@@ -139,7 +139,7 @@ export class Daosdorg extends Container implements Spawnable {
         x - 9,
         y - 4,
         Shape.Tornado,
-        1.8 + Manager.instance.getElementValue(Element.Physical)
+        3 + Manager.instance.getElementValue(Element.Physical)
       );
 
       Level.instance.damage(damage);

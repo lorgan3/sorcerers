@@ -16,7 +16,7 @@ export class Doragate extends Container implements Spawnable {
   private static launchInterval = 5;
   private static launchDelay = 100;
   private static launchPower = 6;
-  private static lifetime = 200;
+  private static lifetime = 220;
 
   public id = -1;
   public readonly type = EntityType.Doragate;
@@ -37,7 +37,7 @@ export class Doragate extends Container implements Spawnable {
     this.sound = ControllableSound.fromEntity(character, Sound.Rumble);
 
     this.pebbles = this.positions.map(
-      ([x, y]) => new Pebble(x, y, groundLevel)
+      ([x, y]) => new Pebble(x, y, groundLevel, character)
     );
     Level.instance.add(...this.pebbles);
   }

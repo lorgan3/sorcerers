@@ -66,7 +66,7 @@ export class Nephtear extends Container implements Spawnable {
       }
     );
 
-    // const sprite2 = new Sprite(Texture.fromBuffer(circle3x3Canvas.data, 3, 3));
+    // const sprite2 = new Sprite(Texture.from(circle3x3Canvas));
     // sprite2.anchor.set(0);
     // sprite2.scale.set(6);
 
@@ -84,7 +84,7 @@ export class Nephtear extends Container implements Spawnable {
         x,
         y,
         this.sprite.rotation,
-        18 * (0.7 + Manager.instance.getElementValue(Element.Elemental) * 0.3)
+        25 * (0.7 + Manager.instance.getElementValue(Element.Elemental) * 0.3)
       )
     );
     Server.instance.kill(this);

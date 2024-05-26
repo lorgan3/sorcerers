@@ -91,7 +91,7 @@ const ARTHUR_SWORD = spell(ArrowDown, {
   name: "Excalibur",
   description: "Giant sword from the sky",
   elements: [Element.Physical, Element.Arcane],
-  cost: 30,
+  cost: 35,
   data: {
     projectile: Sword,
     xOffset: -5.5,
@@ -230,7 +230,7 @@ const BABYLON = spell(ArrowDown, {
   name: "Gates of babylon",
   description: "Drop swords from the sky",
   elements: [Element.Physical],
-  cost: 30,
+  cost: 20,
   data: {
     projectile: GateOfBabylon,
     xOffset: -0.5,
@@ -331,7 +331,7 @@ const ICE_WALL = spell(ArcaneCircle, {
   name: "Jubelade",
   description: "Create several ice clusters on the ground",
   elements: [Element.Elemental, Element.Physical],
-  cost: 20,
+  cost: 12,
   data: {
     projectile: IceWallSpawner,
     xOffset: 7,
@@ -443,7 +443,7 @@ const MIND_CONTROL = spell(Lock, {
   name: "Auserlese",
   description: "Swap control with another ally",
   elements: [Element.Life],
-  cost: 30,
+  cost: 20,
   costMultiplier: () =>
     1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
   stacking: true,

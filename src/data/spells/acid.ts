@@ -77,7 +77,9 @@ export class Acid extends Container implements Spawnable {
 
     if (this.isParent) {
       for (let i = 0; i < Acid.splitAmount; i++) {
-        const direction = Math.atan2(vy, vx) + Math.PI;
+        const halfPi = Math.PI / 2;
+        const direction =
+          Math.round((Math.atan2(vy, vx) + Math.PI) / halfPi) * halfPi;
         const entity = new Acid(
           x,
           y,
@@ -97,7 +99,7 @@ export class Acid extends Container implements Spawnable {
         x - 4,
         y - 4,
         Shape.Acid,
-        5 + Manager.instance.getElementValue(Element.Life) * 2
+        8 + Manager.instance.getElementValue(Element.Life) * 3
       )
     );
     Server.instance.kill(this);
