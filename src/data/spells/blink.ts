@@ -56,7 +56,7 @@ export class Blink extends Container implements TickingEntity {
 
     if (this.time > Blink.blinkTime) {
       const [cx, cy] = this.character.getCenter();
-      new Smoke(cx, cy, Math.sign(Math.sin(this.direction)) || 1);
+      new Smoke(cx, cy, -Math.sign(Math.cos(this.direction)) || 1);
 
       const x = Math.round(
         cx / 6 + Math.cos(this.direction) * Blink.blinkDistance
