@@ -8,6 +8,7 @@ import { Map } from "../data/map";
 import Inventory from "./Inventory.vue";
 import { Controller, Key } from "../data/controller/controller";
 import { useRouter } from "vue-router";
+import IngameMenu from "./IngameMenu.vue";
 
 const { selectedMap } = defineProps<{
   selectedMap: Map;
@@ -15,6 +16,7 @@ const { selectedMap } = defineProps<{
 
 const canvas = ref<HTMLDivElement | null>(null);
 const inventoryOpen = ref(false);
+const menuOpen = ref(false);
 const controller = ref<Controller>();
 const router = useRouter();
 
@@ -25,6 +27,10 @@ watch(canvas, (canvas) => {
       controller.value.addKeyListener(Key.M2, () => {
         inventoryOpen.value = !inventoryOpen.value;
         controller.value!.setKey(Key.Inventory, inventoryOpen.value);
+      });
+
+      controller.value.addKeyListener(Key.Escape, () => {
+        menuOpen.value = !menuOpen.value;
       });
     });
   }
@@ -38,6 +44,10 @@ const handleCloseInventory = () => {
   inventoryOpen.value = false;
   controller.value!.setKey(Key.Inventory, inventoryOpen.value);
 };
+
+const handleCancel = () => {
+  menuOpen.value = false;
+};
 </script>
 
 <template>
@@ -45,6 +55,7 @@ const handleCloseInventory = () => {
     <Hud />
     <Inventory :isOpen="inventoryOpen" :onClose="handleCloseInventory" />
     <Tutorial />
+    <IngameMenu v-if="menuOpen" :onCancel="handleCancel" />
   </div>
 </template>
 

@@ -5,7 +5,7 @@ import { Player } from "./player";
 import { Character } from "../entity/character";
 import { Manager } from "./manager";
 import { Team } from "../team";
-import { SPELLS, getSpellCost } from "../spells";
+import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
@@ -111,7 +111,6 @@ export class Client extends Manager {
     this.connection!.on("close", () => {
       console.log("closed");
       this.destroy();
-      onBack();
     });
 
     this.broadcast({

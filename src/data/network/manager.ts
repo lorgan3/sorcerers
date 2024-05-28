@@ -55,6 +55,10 @@ export abstract class Manager {
 
   destroy() {
     Manager._instance = undefined;
+
+    if (this.onBack) {
+      this.onBack();
+    }
   }
 
   tick(dt: number) {

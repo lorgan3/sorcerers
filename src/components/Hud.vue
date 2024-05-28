@@ -151,6 +151,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   pointer-events: none;
   animation: slide-in 0.5s 1;
   font-family: Eternal;
+  box-shadow: 5px 5px 10px #00000069;
 
   &--out {
     animation: slide-out 0.5s 1 forwards;
@@ -201,6 +202,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.5s;
+  box-shadow: 5px 5px 10px #00000069;
 
   &:hover {
     .players {
