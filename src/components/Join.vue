@@ -10,13 +10,15 @@ import { Team } from "../data/team";
 import { Map } from "../data/map";
 import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
+import { useRoute, useRouter } from "vue-router";
 
 const LAST_GAME_KEY = "lastGameKey";
 
-const { onBack, onPlay } = defineProps<{
-  onBack: () => void;
-  onPlay: (map: Map) => void;
+const { onPlay } = defineProps<{
+  onPlay: (key: string, map: Map) => void;
 }>();
+const router = useRouter();
+const route = useRoute();
 
 const settings = get("Settings") || defaults();
 
@@ -30,7 +32,9 @@ const name = ref(settings.name);
 const connecting = ref(false);
 const clientReady = ref(false);
 
-const key = ref(sessionStorage.getItem(LAST_GAME_KEY) || "");
+const key = ref(
+  (route.params.id || sessionStorage.getItem(LAST_GAME_KEY) || "") as string
+);
 const players = ref<string[]>([]);
 const map = ref("");
 
@@ -90,6 +94,7 @@ const handleConnect = async () => {
 
         case MessageType.StartGame:
           onPlay(
+            key.value,
             await Map.fromConfig({
               terrain: {
                 data: new Blob([message.map.terrain.data]),
@@ -125,7 +130,7 @@ const handleBack = () => {
     Client.instance.destroy();
   }
 
-  onBack();
+  router.replace("/");
 };
 </script>
 

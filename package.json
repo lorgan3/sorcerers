@@ -20,7 +20,8 @@
     "meta-png": "^1.0.6",
     "peerjs": "^1.5.4",
     "pixi.js": "^8.1.4",
-    "vue": "^3.4.27"
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.2"
   },
   "devDependencies": {
     "@babel/types": "^7.24.5",

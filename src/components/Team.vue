@@ -4,11 +4,9 @@ import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import { Team } from "../data/team";
 import Input from "./Input.vue";
+import { useRouter } from "vue-router";
 
-const { onBack } = defineProps<{
-  onBack: () => void;
-}>();
-
+const router = useRouter();
 const settings = get("Settings") || defaults();
 
 const teams = ref(settings.teams);
@@ -32,7 +30,7 @@ const handleSave = () => {
     teams: teams.value.filter((team) => team.isValid()) as Team[],
   });
 
-  onBack();
+  router.replace("/");
 };
 </script>
 
@@ -74,7 +72,9 @@ const handleSave = () => {
   <div class="buttons">
     <button @click="handleAddTeam" class="primary">Add team</button>
     <button @click="handleSave" class="primary">Save</button>
-    <button @click="onBack" class="secondary">Back</button>
+    <RouterLink to="/" v-slot="{ navigate }">
+      <button @click="navigate" class="secondary">Back</button>
+    </RouterLink>
   </div>
 </template>
 

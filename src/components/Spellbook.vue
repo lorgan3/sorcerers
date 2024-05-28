@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
 import { Element } from "../data/spells/types";
 import { SPELLS, Spell } from "../data/spells";
 import { ELEMENT_MAP } from "../graphics/elements";
+import { RouterLink } from "vue-router";
 
 const SPRITES_PER_ROW = 5;
 const elements = Object.keys(Element);
-
-const { onBack } = defineProps<{
-  onBack: () => void;
-}>();
 
 const spellsByElement = SPELLS.reduce((all, spell) => {
   const key = spell.elements
@@ -23,8 +19,6 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
   all[key].push(spell);
   return all;
 }, {} as Record<string, Spell[]>);
-
-onMounted(() => {});
 </script>
 
 <template>
@@ -75,7 +69,9 @@ onMounted(() => {});
   </div>
 
   <div>
-    <button @click="onBack" class="secondary">Back</button>
+    <RouterLink to="/" v-slot="{ navigate }">
+      <button @click="navigate" class="secondary">Back</button>
+    </RouterLink>
   </div>
 </template>
 

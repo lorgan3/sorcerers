@@ -9,11 +9,12 @@ import { Server } from "../data/network/server";
 import { Team } from "../data/team";
 import BoundingBox from "./BoundingBox.vue";
 import { BBox } from "../data/map/bbox";
+import { useRouter } from "vue-router";
 
-const { onBack, onTest } = defineProps<{
-  onBack: () => void;
-  onTest: (map: Map) => void;
+const { onPlay } = defineProps<{
+  onPlay: (key: string, map: Map) => void;
 }>();
+const router = useRouter();
 
 const SCALE = 6;
 const terrain = ref("");
@@ -89,7 +90,7 @@ const handleTest = async () => {
 
   const server = new Server();
   server.addPlayer("Test player", Team.random());
-  onTest(map);
+  onPlay("0000", map);
 };
 
 const handleLoadCustom = async (event: Event) => {
@@ -297,7 +298,7 @@ const handleEnableMask = () => (addMask.value = true);
       <button class="primary" title="Build and test" @click="handleTest">
         Test
       </button>
-      <button class="secondary" @click="onBack">Back</button>
+      <button class="secondary" @click="() => router.replace('/')">Back</button>
     </section>
     <section class="preview" ref="preview">
       <div v-if="!terrain && !background" class="description">
@@ -350,6 +351,11 @@ const handleEnableMask = () => (addMask.value = true);
 .builder {
   height: 100vh;
   display: flex;
+
+  box-sizing: border-box;
+  background: url("../assets/parchment.png");
+  image-rendering: pixelated;
+  background-size: 256px;
 
   .controls {
     width: 200px;

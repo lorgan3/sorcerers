@@ -14,11 +14,13 @@ import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
 import { Player } from "../data/network/player";
 import debounce from "lodash.debounce";
+import { useRouter } from "vue-router";
 
-const { onBack, onPlay } = defineProps<{
-  onBack: () => void;
-  onPlay: (map: Map) => void;
+const { onPlay } = defineProps<{
+  onPlay: (key: string, map: Map) => void;
 }>();
+
+const router = useRouter();
 
 const settings = get("Settings") || defaults();
 
@@ -141,7 +143,7 @@ const handleBack = () => {
     Server.instance.destroy();
   }
 
-  onBack();
+  router.replace("/");
 };
 
 const handleStart = async () => {
@@ -158,9 +160,10 @@ const handleStart = async () => {
   });
 
   if (selectedMap.value === CUSTOM) {
-    onPlay(await Map.fromBlob(customMap.value!));
+    onPlay(key.value, await Map.fromBlob(customMap.value!));
   } else {
     onPlay(
+      key.value,
       await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value])
     );
   }
