@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useRoute } from "vue-router";
 import { Manager } from "../data/network/manager";
 
+const route = useRoute();
 const { onCancel } = defineProps<{
   onCancel: () => void;
 }>();
@@ -15,7 +17,20 @@ const handleQuit = () => {
     <p class="text">
       Are you sure you want to quit?
       <span class="buttons">
-        <button class="primary" @click="handleQuit">Main menu</button>
+        <button
+          v-if="route.params.id !== '0000'"
+          class="primary"
+          @click="handleQuit"
+        >
+          Main menu
+        </button>
+        <button
+          v-if="route.params.id === '0000'"
+          class="primary"
+          @click="handleQuit"
+        >
+          Back to builder
+        </button>
         <button class="primary" @click="onCancel">Cancel</button>
       </span>
     </p>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, ref } from "vue";
+import { Ref, onMounted, ref } from "vue";
 import { Map, Layer, Config } from "../data/map";
 import { CONFIGS } from "../data/map/background";
 import Input from "./Input.vue";
@@ -11,8 +11,9 @@ import BoundingBox from "./BoundingBox.vue";
 import { BBox } from "../data/map/bbox";
 import { useRouter } from "vue-router";
 
-const { onPlay } = defineProps<{
-  onPlay: (key: string, map: Map) => void;
+const { onPlay, config } = defineProps<{
+  onPlay: (key: string, map: Map | Config) => void;
+  config?: Config;
 }>();
 const router = useRouter();
 
@@ -28,6 +29,12 @@ const backgroundName = ref("");
 const backgroundOffset = ref(0);
 
 const name = ref("");
+
+onMounted(async () => {
+  if (config) {
+    loadMap(config, "");
+  }
+});
 
 const addImageFactory = (ref: Ref) => (event: Event) => {
   const file = (event.target as HTMLInputElement).files![0];
@@ -78,7 +85,7 @@ const handleBuild = async () => {
 };
 
 const handleTest = async () => {
-  const map = await Map.fromConfig({
+  const config: Config = {
     terrain: { data: terrain.value, mask: mask.value },
     background: { data: background.value || terrain.value },
     layers: layers.value
@@ -86,11 +93,11 @@ const handleTest = async () => {
       .map((layer) => ({ ...layer })),
     bbox: bbox.value,
     parallax: { name: backgroundName.value, offset: backgroundOffset.value },
-  });
+  };
 
   const server = new Server();
   server.addPlayer("Test player", Team.random());
-  onPlay("0000", map);
+  onPlay("0000", config);
 };
 
 const handleLoadCustom = async (event: Event) => {

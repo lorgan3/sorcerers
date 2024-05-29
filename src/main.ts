@@ -8,15 +8,21 @@ import Team from "./components/Team.vue";
 import MainMenu from "./components/MainMenu.vue";
 import Builder from "./components/Builder.vue";
 import Header from "./components/Header.vue";
-import { Map } from "./data/map";
+import { Config, Map } from "./data/map";
 import { AssetsContainer } from "./util/assets/assetsContainer";
 import Game from "./components/Game.vue";
 
 new AssetsContainer();
+let config: Config;
 let selectedMap: Map;
 
-const onPlay = (key: string, map: Map) => {
-  selectedMap = map;
+const onPlay = async (key: string, map: Map | Config) => {
+  if (map instanceof Map) {
+    selectedMap = map;
+  } else {
+    config = map;
+    selectedMap = await Map.fromConfig(map);
+  }
   router.replace(`/game/${key}`);
 };
 
@@ -42,7 +48,14 @@ const routes: RouteRecordRaw[] = [
       { path: "spellbook", component: Spellbook, meta: { name: "Spellbook" } },
     ],
   },
-  { path: "/builder", component: Builder, props: { onPlay } },
+  {
+    path: "/builder",
+    component: Builder,
+    props: () => ({
+      config,
+      onPlay,
+    }),
+  },
   {
     path: "/game/:id",
     component: Game,

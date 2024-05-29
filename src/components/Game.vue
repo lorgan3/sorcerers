@@ -7,7 +7,7 @@ import Tutorial from "./Tutorial.vue";
 import { Map } from "../data/map";
 import Inventory from "./Inventory.vue";
 import { Controller, Key } from "../data/controller/controller";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import IngameMenu from "./IngameMenu.vue";
 
 const { selectedMap } = defineProps<{
@@ -19,6 +19,7 @@ const inventoryOpen = ref(false);
 const menuOpen = ref(false);
 const controller = ref<Controller>();
 const router = useRouter();
+const route = useRoute();
 
 watch(canvas, (canvas) => {
   if (canvas) {
@@ -37,7 +38,11 @@ watch(canvas, (canvas) => {
 });
 
 const handleBack = () => {
-  router.replace("/");
+  if (route.params.id === "0000") {
+    router.replace("/builder");
+  } else {
+    router.replace("/");
+  }
 };
 
 const handleCloseInventory = () => {

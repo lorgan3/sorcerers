@@ -8,7 +8,7 @@ import { MessageType } from "../data/network/types";
 import Peer from "peerjs";
 import { defaultMaps } from "../util/assets/index";
 import { Team } from "../data/team";
-import { Map } from "../data/map";
+import { Config, Map } from "../data/map";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
@@ -17,7 +17,7 @@ import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 
 const { onPlay } = defineProps<{
-  onPlay: (key: string, map: Map) => void;
+  onPlay: (key: string, map: Map | Config) => void;
 }>();
 
 const router = useRouter();
