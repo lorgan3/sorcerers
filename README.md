@@ -28,4 +28,4 @@ Check `package.json`, there are also commands available to run tests and check t
 
 ## Credits
 
-See the [ingame credits](http://localhost:3000/#/credits) or [credits.json](credits.json)
+See the [ingame credits](https://lorgan3.github.io/sorcerers/#/credits) or [credits.json](credits.json)
