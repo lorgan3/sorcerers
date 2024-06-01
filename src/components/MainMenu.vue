@@ -26,6 +26,11 @@ import { RouterLink } from "vue-router";
           <button class="primary" @click="navigate">Builder</button>
         </RouterLink>
       </li>
+      <li>
+        <RouterLink to="/credits" v-slot="{ navigate }">
+          <button class="primary" @click="navigate">Credits</button>
+        </RouterLink>
+      </li>
     </ul>
   </div>
   <RouterLink to="/spellbook" v-slot="{ navigate }">

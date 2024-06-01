@@ -259,4 +259,14 @@ h2 {
 h1 {
   font-size: 48px;
 }
+
+a {
+  color: var(--highlight);
+  font-weight: bold;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
 </style>

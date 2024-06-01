@@ -7,17 +7,22 @@ const route = useRoute();
 <template>
   <div class="background background--padded">
     <div class="title-wrapper">
-      <h1 :class="{ title: true, 'title--big': !route.meta.name }">
-        <span>S</span>
-        <span>o</span>
-        <span>r</span>
-        <span>c</span>
-        <span>e</span>
-        <span>r</span>
-        <span>e</span>
-        <span>r</span>
-        <span>s</span>
-      </h1>
+      <RouterLink to="/" v-slot="{ navigate }">
+        <h1
+          :class="{ title: true, 'title--big': !route.meta.name }"
+          @click="navigate"
+        >
+          <span>S</span>
+          <span>o</span>
+          <span>r</span>
+          <span>c</span>
+          <span>e</span>
+          <span>r</span>
+          <span>e</span>
+          <span>r</span>
+          <span>s</span>
+        </h1>
+      </RouterLink>
       <h2 v-if="!!route.meta.name">/ {{ route.meta.name }}</h2>
     </div>
 
@@ -46,12 +51,17 @@ const route = useRoute();
     align-items: baseline;
     gap: 6px;
 
+    a:hover {
+      text-decoration: none;
+    }
+
     .title {
       font-size: 48px;
       color: var(--primary);
       user-select: none;
       text-shadow: 0 0 0 var(--highlight);
       transition: all 0.3s linear;
+      font-weight: normal;
 
       > * {
         transition: 1s color;

@@ -1,0 +1,526 @@
+[
+  {
+    "section": "Code",
+    "authors": [
+      {
+        "author": "PixiJS team",
+        "items": [
+          {
+            "name": "PixiJS",
+            "link": "https://github.com/pixijs/pixijs"
+          }
+        ]
+      },
+      {
+        "author": "PeerJS team",
+        "items": [
+          {
+            "name": "PeerJS",
+            "link": "https://github.com/peers/peerjs"
+          }
+        ]
+      },
+      {
+        "author": "Thomas Friedrichsmeier",
+        "items": [
+          {
+            "name": "Collision detection",
+            "link": "https://gist.github.com/tfry-git/3f5faa0b1c252dd1e6849da18c16570f"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "section": "Graphics",
+    "authors": [
+      {
+        "author": "bdragon1727",
+        "items": [
+          {
+            "name": "Magic effects, ui",
+            "link": "https://bdragon1727.itch.io/"
+          }
+        ]
+      },
+      {
+        "author": "charmedwheat",
+        "items": [
+          {
+            "name": "Character",
+            "link": "https://charmedwheat.itch.io/king-elf-animation"
+          }
+        ]
+      },
+      {
+        "author": "Ivan Voirol",
+        "items": [
+          {
+            "name": "Cursors",
+            "link": "https://opengameart.org/content/cursor-pack"
+          }
+        ]
+      },
+      {
+        "author": "Shadowfeign/7thSage and Pavel Kutejnikov",
+        "items": [
+          {
+            "name": "Arthur's sword",
+            "link": "https://opengameart.org/content/kutejnikov-daggersword-remix-3d"
+          }
+        ]
+      },
+      {
+        "author": "© 2005-2013 Julien Jorge <julien.jorge@stuff-o-matic.com>",
+        "items": [
+          {
+            "name": "Water/kill box",
+            "link": "https://opengameart.org/content/small-water-waves"
+          }
+        ]
+      },
+      {
+        "author": "pimen",
+        "items": [{ "name": "Magic effects", "link": "https://pimen.itch.io/" }]
+      },
+      {
+        "author": "ansimuz",
+        "items": [
+          { "name": "Magic effects", "link": "https://ansimuz.itch.io/" }
+        ]
+      },
+      {
+        "author": "Jinn",
+        "items": [
+          { "name": "Glyphs", "link": "https://opengameart.org/content/glyphs" }
+        ]
+      },
+      {
+        "author": "Shade",
+        "items": [
+          {
+            "name": "Items",
+            "link": "https://opengameart.org/content/16x16-assorted-rpg-icons"
+          }
+        ]
+      },
+      {
+        "author": "alcoholism",
+        "items": [
+          {
+            "name": "Castle map decorations",
+            "link": "https://alcoholism.itch.io/dark-castle-tileset"
+          }
+        ]
+      },
+      {
+        "author": "SCaydi",
+        "items": [
+          {
+            "name": "Swords",
+            "link": "https://opengameart.org/content/squire-job-set"
+          }
+        ]
+      },
+      {
+        "author": "SurfaceToAsh",
+        "items": [
+          {
+            "name": "Bomb",
+            "link": "https://surfacetoash.itch.io/kaboom-explosives-asset-pack"
+          }
+        ]
+      },
+      {
+        "author": "Unnamed",
+        "items": [
+          { "name": "Meteor", "link": "https://opengameart.org/content/rock-0" }
+        ]
+      },
+      {
+        "author": "sanctumpixel",
+        "items": [
+          {
+            "name": "Lightning",
+            "link": "https://sanctumpixel.itch.io/lightning-lines-pixel-art-effect"
+          }
+        ]
+      },
+      {
+        "author": "KnoblePersona",
+        "items": [
+          {
+            "name": "Ocean background",
+            "link": "https://opengameart.org/content/ocean-background"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "section": "Sounds",
+    "authors": [
+      {
+        "author": "brandondelehoy ",
+        "items": [
+          {
+            "name": "Jump1",
+            "link": "https://freesound.org/people/brandondelehoy/sounds/494797/"
+          },
+          {
+            "name": "Jump2",
+            "link": "https://freesound.org/people/brandondelehoy/sounds/494789/"
+          }
+        ]
+      },
+      {
+        "author": "SoundDesignForYou",
+        "items": [
+          {
+            "name": "Landing1",
+            "link": "https://freesound.org/people/SoundDesignForYou/sounds/646660/"
+          }
+        ]
+      },
+      {
+        "author": "zepurple",
+        "items": [
+          {
+            "name": "Landing2",
+            "link": "https://freesound.org/people/zepurple/sounds/540272/"
+          }
+        ]
+      },
+      {
+        "author": "jtn191",
+        "items": [
+          {
+            "name": "Footsteps",
+            "link": "https://freesound.org/people/jtn191/sounds/514261/"
+          }
+        ]
+      },
+      {
+        "author": "Department64",
+        "items": [
+          {
+            "name": "Melee",
+            "link": "https://freesound.org/people/Department64/sounds/608054/"
+          }
+        ]
+      },
+      {
+        "author": "JordyPorgeyYT",
+        "items": [
+          {
+            "name": "Item spawn1",
+            "link": "https://freesound.org/people/JordyPorgeyYT/sounds/468875/"
+          }
+        ]
+      },
+      {
+        "author": "jarl_fenrir",
+        "items": [
+          {
+            "name": "Item spawn2",
+            "link": "https://freesound.org/people/jarl_fenrir/sounds/563165/"
+          }
+        ]
+      },
+      {
+        "author": "Jamius",
+        "items": [
+          {
+            "name": "Potion drink",
+            "link": "https://freesound.org/people/Jamius/sounds/41529/"
+          }
+        ]
+      },
+      {
+        "author": "AlienXXX",
+        "items": [
+          {
+            "name": "Splat1",
+            "link": "https://freesound.org/people/AlienXXX/sounds/198794/"
+          },
+
+          {
+            "name": "Splat2",
+            "link": "https://freesound.org/people/AlienXXX/sounds/198829/"
+          }
+        ]
+      },
+      {
+        "author": "FoolBoyMedia",
+        "items": [
+          {
+            "name": "Big splat",
+            "link": "https://freesound.org/people/FoolBoyMedia/sounds/237924/"
+          }
+        ]
+      },
+      {
+        "author": "danielpodlovics",
+        "items": [
+          {
+            "name": "Stone",
+            "link": "https://freesound.org/people/danielpodlovics/sounds/530354/"
+          }
+        ]
+      },
+      {
+        "author": "qubodup",
+        "items": [
+          {
+            "name": "Woosh",
+            "link": "https://freesound.org/people/qubodup/sounds/171255/"
+          }
+        ]
+      },
+      {
+        "author": "GOLDTHIS",
+        "items": [
+          {
+            "name": "Choir",
+            "link": "https://freesound.org/people/GOLDTHIS/sounds/685297/"
+          }
+        ]
+      },
+      {
+        "author": "Anomaex",
+        "items": [
+          {
+            "name": "Explosion",
+            "link": "https://freesound.org/people/Anomaex/sounds/490266/"
+          }
+        ]
+      },
+      {
+        "author": "SilverIllusionist",
+        "items": [
+          {
+            "name": "Fire",
+            "link": "https://freesound.org/people/SilverIllusionist/sounds/472688/"
+          }
+        ]
+      },
+      {
+        "author": "EminYILDIRIM",
+        "items": [
+          {
+            "name": "Small explosion1",
+            "link": "https://freesound.org/people/EminYILDIRIM/sounds/541478/"
+          },
+
+          {
+            "name": "Bow",
+            "link": "https://freesound.org/people/EminYILDIRIM/sounds/536085/"
+          },
+
+          {
+            "name": "Crack",
+            "link": "https://freesound.org/people/EminYILDIRIM/sounds/536921/"
+          }
+        ]
+      },
+      {
+        "author": "Za-Games",
+        "items": [
+          {
+            "name": "Small explosion2",
+            "link": "https://freesound.org/people/Za-Games/sounds/539972/"
+          }
+        ]
+      },
+      {
+        "author": "OtisJames",
+        "items": [
+          {
+            "name": "Small explosion3",
+            "link": "https://freesound.org/people/OtisJames/sounds/249613/"
+          }
+        ]
+      },
+      {
+        "author": "Daleonfire",
+        "items": [
+          {
+            "name": "Schwing",
+            "link": "https://freesound.org/people/Daleonfire/sounds/513739/"
+          }
+        ]
+      },
+      {
+        "author": "CaKon",
+        "items": [
+          {
+            "name": "Paper",
+            "link": "https://freesound.org/people/CaKon/sounds/689301/"
+          }
+        ]
+      },
+      {
+        "author": "JPhilipp",
+        "items": [
+          {
+            "name": "Arrow",
+            "link": "https://freesound.org/people/JPhilipp/sounds/119060/"
+          }
+        ]
+      },
+      {
+        "author": "RoganMcDougald",
+        "items": [
+          {
+            "name": "Glass2",
+            "link": "https://freesound.org/people/RoganMcDougald/sounds/260432/"
+          }
+        ]
+      },
+      {
+        "author": "ArcTis",
+        "items": [
+          {
+            "name": "Beam",
+            "link": "https://freesound.org/people/ArcTis/sounds/351222/"
+          }
+        ]
+      },
+      {
+        "author": "el_boss",
+        "items": [
+          {
+            "name": "Fireworks",
+            "link": "https://freesound.org/people/el_boss/sounds/588199/"
+          }
+        ]
+      },
+      {
+        "author": "Ryan Smith",
+        "items": [
+          {
+            "name": "Sparkle",
+            "link": "https://freesound.org/people/Autistic%20Lucario/sounds/141256/"
+          }
+        ]
+      },
+      {
+        "author": "Black Snow",
+        "items": [
+          {
+            "name": "Slice",
+            "link": "https://freesound.org/people/Black%20Snow/sounds/109423/"
+          }
+        ]
+      },
+      {
+        "author": "dkristian",
+        "items": [
+          {
+            "name": "Air",
+            "link": "https://freesound.org/people/dkristian/sounds/31473/"
+          }
+        ]
+      },
+      {
+        "author": "LeMudCrab",
+        "items": [
+          {
+            "name": "Launch",
+            "link": "https://freesound.org/people/LeMudCrab/sounds/163458/"
+          }
+        ]
+      },
+      {
+        "author": "Rudmer_Rotteveel",
+        "items": [
+          {
+            "name": "Beep",
+            "link": "https://freesound.org/people/Rudmer_Rotteveel/sounds/536422/"
+          }
+        ]
+      },
+      {
+        "author": "kyles",
+        "items": [
+          {
+            "name": "Ice",
+            "link": "https://freesound.org/people/kyles/sounds/452252/"
+          }
+        ]
+      },
+      {
+        "author": "prozaciswack",
+        "items": [
+          {
+            "name": "Rumble",
+            "link": "https://freesound.org/people/prozaciswack/sounds/82722/"
+          }
+        ]
+      },
+      {
+        "author": "Incarnadine",
+        "items": [
+          {
+            "name": "Drain",
+            "link": "https://freesound.org/people/Incarnadine/sounds/17128/"
+          }
+        ]
+      },
+      {
+        "author": "magnuswaker",
+        "items": [
+          {
+            "name": "Burn",
+            "link": "https://freesound.org/people/magnuswaker/sounds/581078/"
+          }
+        ]
+      },
+      {
+        "author": "SciFiSounds",
+        "items": [
+          {
+            "name": "Whip",
+            "link": "https://freesound.org/people/SciFiSounds/sounds/529925/"
+          }
+        ]
+      },
+      {
+        "author": "SuperSouper",
+        "items": [
+          {
+            "name": "Electricity",
+            "link": "https://freesound.org/people/SuperSouper/sounds/680996/"
+          }
+        ]
+      },
+      {
+        "author": "Rweale",
+        "items": [
+          {
+            "name": "Water",
+            "link": "https://freesound.org/people/Rweale/sounds/62105/"
+          }
+        ]
+      },
+      {
+        "author": "Archos",
+        "items": [
+          {
+            "name": "Slime",
+            "link": "https://freesound.org/people/Archos/sounds/433832/"
+          }
+        ]
+      },
+      {
+        "author": "Paddy Uglow of CreativeMedia.org.uk",
+        "items": [
+          {
+            "name": "Break",
+            "link": "https://freesound.org/people/BristolStories/sounds/65902/"
+          }
+        ]
+      }
+    ]
+  }
+]

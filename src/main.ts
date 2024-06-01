@@ -11,6 +11,7 @@ import Header from "./components/Header.vue";
 import { Config, Map } from "./data/map";
 import { AssetsContainer } from "./util/assets/assetsContainer";
 import Game from "./components/Game.vue";
+import Credits from "./components/Credits.vue";
 
 new AssetsContainer();
 let config: Config;
@@ -46,6 +47,7 @@ const routes: RouteRecordRaw[] = [
         props: { onPlay },
       },
       { path: "spellbook", component: Spellbook, meta: { name: "Spellbook" } },
+      { path: "credits", component: Credits, meta: { name: "Credits" } },
     ],
   },
   {
