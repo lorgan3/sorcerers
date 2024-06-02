@@ -71,6 +71,7 @@ export class CameraTarget {
 
     if (
       Manager.instance.self?.activeCharacter &&
+      Manager.instance.isControlling() &&
       Manager.instance.self?.activeCharacter?.body.velocity !== 0
     ) {
       this.attached = true;
