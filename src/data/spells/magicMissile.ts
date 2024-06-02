@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container } from "pixi.js";
+import { AnimatedSprite, BitmapText, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
@@ -27,6 +27,7 @@ export class MagicMissile extends Container implements Syncable {
   private lifetime: number;
   private particles: ParticleEmitter;
   private sound?: ControllableSound;
+  private text: BitmapText;
 
   public id = -1;
   public readonly type = EntityType.MagicMissile;
@@ -62,11 +63,22 @@ export class MagicMissile extends Container implements Syncable {
     this.sprite.position.set(8, 8);
     this.sprite.scale.set(2);
 
+    this.text = new BitmapText({
+      text: this.seconds,
+      style: {
+        fontFamily: "Eternal",
+        fontSize: 32,
+      },
+    });
+    this.text.position.set(-30, -40);
+    this.text.tint = this.character.player.color;
+    this.text.visible = false;
+
     // const sprite2 = new Sprite(Texture.fromBuffer(circle3x3Canvas.data, 3, 3));
     // sprite2.anchor.set(0);
     // sprite2.scale.set(6);
 
-    this.addChild(this.sprite);
+    this.addChild(this.sprite, this.text);
 
     this.particles = new SimpleParticleEmitter(
       atlas.animations["spells_sparkle"],
@@ -148,10 +160,19 @@ export class MagicMissile extends Container implements Syncable {
       this.body.gravity = 0.1;
     }
 
+    if (this.seconds < 10) {
+      this.text.text = this.seconds;
+      this.text.visible = true;
+    }
+
     this.lifetime -= dt;
     if (this.lifetime <= 0 && Server.instance) {
       this._die(x, y);
     }
+  }
+
+  private get seconds() {
+    return Math.floor(this.lifetime / 30);
   }
 
   serialize() {
