@@ -7,6 +7,7 @@ import {
 } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Viewport } from "./viewport";
+import { map } from "../../util/math";
 
 export interface ParallaxConfig {
   atlas: string;
@@ -24,7 +25,11 @@ export const CONFIGS: Record<string, ParallaxConfig> = {
   Ocean: {
     atlas: "backgrounds",
     color: "#8fb8ea",
-    gradient: [["#8fb8ea", 0]],
+    gradient: [
+      ["#8fb8ea", 0],
+      ["#8fb8ea", 0.9],
+      ["#5e7eb5", 0.9],
+    ],
     layers: [
       { texture: "ocean_clouds3", speed: 0.1, yOffset: -120 },
       { texture: "ocean_clouds2", speed: 0.2, yOffset: -60 },
@@ -86,6 +91,8 @@ export class Background extends Container {
     for (let i = 0; i < this.config.layers.length; i++) {
       const layer = this.config.layers[i];
       const child = this.children[i + 1];
+      const yOffset =
+        (layer.yOffset || 0) / map(this.viewport.scale.x, 1, layer.speed);
 
       child.position.set(
         (center[0] - x) * (1 - layer.speed) +
@@ -96,7 +103,7 @@ export class Background extends Container {
         (center[1] - y) * (1 - layer.speed) +
           this.offsetY * layer.speed +
           dy +
-          (layer.yOffset || 0) -
+          yOffset -
           child.height / 2
       );
     }
