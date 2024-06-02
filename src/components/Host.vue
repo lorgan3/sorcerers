@@ -15,6 +15,7 @@ import { Manager } from "../data/network/manager";
 import { Player } from "../data/network/player";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
+import TeamInput from "./Team.vue";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config) => void;
@@ -24,11 +25,9 @@ const router = useRouter();
 
 const settings = get("Settings") || defaults();
 
-const teams = ref(settings.teams);
+const team = ref(settings.team || Team.random());
 const serverStarting = ref(false);
-const localPlayers = ref<Array<{ name: string; team: number; ref: Player }>>(
-  []
-);
+const localPlayers = ref<Array<{ name: string; team: Team; ref: Player }>>([]);
 
 const CUSTOM = "custom";
 const selectedMap = ref(Object.keys(defaultMaps)[0]);
@@ -58,13 +57,10 @@ const createServer = () =>
       peer.off("error");
 
       const server = new Server(peer);
-      const player = server.addPlayer(
-        settings.name,
-        teams.value[settings.defaultTeam] || Team.random()
-      );
+      const player = server.addPlayer(settings.name, team.value);
       localPlayers.value.push({
         name: player.name,
-        team: settings.defaultTeam,
+        team: player.team,
         ref: player,
       });
 
@@ -102,11 +98,6 @@ const handleChangeName = (event: Event, index: number) => {
     localPlayers.value[index].ref.rename(name);
     updateLobby();
   }
-};
-
-const handleChangeTeam = (event: Event, index: number) => {
-  const teamIndex = Number((event.target as HTMLSelectElement).value);
-  localPlayers.value[index].ref.team = teams.value[teamIndex] || Team.random();
 };
 
 const handleSelectMap = (map: string) => {
@@ -156,7 +147,7 @@ const handleStart = async () => {
   set("Settings", {
     ...settings,
     name: localPlayers.value[0].name,
-    defaultTeam: localPlayers.value[0].team,
+    team: localPlayers.value[0].team,
   });
 
   if (selectedMap.value === CUSTOM) {
@@ -176,7 +167,7 @@ const handleAddLocalPlayer = () => {
   );
   localPlayers.value.push({
     name: player.name,
-    team: -1,
+    team: Team.random(),
     ref: player,
   });
 
@@ -243,21 +234,7 @@ const handleKick = (index: number) => {
             :change="(event) => handleChangeName(event, index)"
             :validator="nameValidator"
           />
-          <label class="label">
-            Player team
-            <select
-              v-model="localPlayers[index].team"
-              @change="(event) => handleChangeTeam(event, index)"
-            >
-              <option value="-1">Random</option>
-              <option v-for="(team, index) in teams" :value="index">
-                {{ team.name }}
-              </option>
-            </select>
-            <span class="meta"
-              >({{ player.ref.team.characters.join(", ") }})</span
-            >
-          </label>
+          <TeamInput v-model="localPlayers[index].team" />
         </div>
       </div>
 
@@ -312,26 +289,6 @@ const handleKick = (index: number) => {
     display: flex;
     flex-direction: column;
     gap: 6px;
-  }
-
-  select {
-    background: var(--background);
-    box-shadow: 0 0 10px inset var(--primary);
-    height: 35px;
-    border-radius: var(--small-radius);
-    outline: none;
-  }
-
-  .label {
-    font-family: Eternal;
-    font-size: 24px;
-    color: var(--primary);
-  }
-
-  .meta {
-    color: var(--primary);
-    font-size: 14px;
-    font-family: system-ui;
   }
 
   .player-input {

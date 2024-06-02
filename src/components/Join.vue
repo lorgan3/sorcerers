@@ -11,6 +11,7 @@ import { Config, Map } from "../data/map";
 import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
 import { useRoute, useRouter } from "vue-router";
+import TeamInput from "./Team.vue";
 
 const LAST_GAME_KEY = "lastGameKey";
 
@@ -22,12 +23,7 @@ const route = useRoute();
 
 const settings = get("Settings") || defaults();
 
-const teams = ref(settings.teams);
-const selectedTeam = ref(settings.defaultTeam ?? 0);
-if (!teams.value[selectedTeam.value]) {
-  selectedTeam.value = 0;
-}
-
+const team = ref(settings.team || Team.random());
 const name = ref(settings.name);
 const connecting = ref(false);
 const clientReady = ref(false);
@@ -39,6 +35,8 @@ const players = ref<string[]>([]);
 const map = ref("");
 
 const nameValidator = (name: string) => !!name.trim();
+
+const keyValidator = (key: string) => /[0-9]{4}/.test(key);
 
 const createClient = () => {
   Manager.instance?.destroy();
@@ -68,14 +66,14 @@ const handleConnect = async () => {
   set("Settings", {
     ...settings,
     name: name.value,
-    defaultTeam: selectedTeam.value,
+    team: team.value,
   });
 
   try {
     await Client.instance.join(
       PEER_ID_PREFIX + key.value,
       name.value.trim() || "Player",
-      teams.value[selectedTeam.value] || Team.random()
+      team.value
     );
 
     sessionStorage.setItem(LAST_GAME_KEY, key.value);
@@ -156,20 +154,14 @@ const handleBack = () => {
 
     <div v-else class="options flex-list">
       <h2>Settings</h2>
-      <Input label="Room key" v-model="key" autofocus />
-      <Input label="Name" v-model="name" :validator="nameValidator" />
-
-      <label class="label">
-        Team
-        <select v-model="selectedTeam">
-          <option v-for="(team, index) in teams" :value="index">
-            {{ team.name }}
-          </option>
-        </select>
-        <span class="meta"
-          >({{ teams[selectedTeam]?.characters.join(", ") }})</span
-        >
-      </label>
+      <Input
+        label="Room key"
+        v-model="key"
+        autofocus
+        :validator="keyValidator"
+      />
+      <Input label="Player name" v-model="name" :validator="nameValidator" />
+      <TeamInput v-model="team" />
     </div>
   </div>
 
@@ -178,7 +170,9 @@ const handleBack = () => {
       v-if="!players.length"
       @click="handleConnect"
       class="primary"
-      :disabled="!key || !nameValidator(name) || !clientReady"
+      :disabled="
+        !key || !nameValidator(name) || !team.isValid() || !clientReady
+      "
     >
       Connect
     </button>
@@ -203,30 +197,12 @@ const handleBack = () => {
 }
 
 .options {
+  width: 300px;
+
   label {
     display: flex;
     flex-direction: column;
     gap: 6px;
-  }
-
-  select {
-    background: var(--background);
-    box-shadow: 0 0 10px inset var(--primary);
-    height: 35px;
-    border-radius: var(--small-radius);
-    outline: none;
-  }
-
-  .label {
-    font-family: Eternal;
-    font-size: 24px;
-    color: var(--primary);
-  }
-
-  .meta {
-    color: #433e34;
-    font-size: 14px;
-    font-family: system-ui;
   }
 }
 

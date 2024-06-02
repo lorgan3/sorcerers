@@ -7,11 +7,6 @@ import { RouterLink } from "vue-router";
   <div class="mainMenu">
     <ul class="list flex-list">
       <li>
-        <RouterLink to="/team" v-slot="{ navigate }">
-          <button class="primary" @click="navigate">Team</button>
-        </RouterLink>
-      </li>
-      <li>
         <RouterLink to="/host" v-slot="{ navigate }">
           <button class="primary" @click="navigate">Host</button>
         </RouterLink>

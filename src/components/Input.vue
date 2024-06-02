@@ -37,10 +37,23 @@ const handleInput = (event: Event) => {
     : (event.target as HTMLInputElement).value;
 
   if (validator) {
-    valid.value = validator(newValue as V);
+    const result = validator(newValue as V);
+    if (result) {
+      valid.value = true;
+    }
   }
 
   emit("update:modelValue", newValue);
+};
+
+const handleBlur = (event: Event) => {
+  if (validator) {
+    const newValue = isNumeric
+      ? (event.target as HTMLInputElement).valueAsNumber
+      : (event.target as HTMLInputElement).value;
+
+    valid.value = validator(newValue as V);
+  }
 };
 </script>
 
@@ -54,6 +67,7 @@ const handleInput = (event: Event) => {
       :autofocus="autofocus"
       :disabled="disabled"
       @change="change"
+      @blur="handleBlur"
       :name="name"
       :type="isNumeric ? 'number' : 'text'"
       :min="min"

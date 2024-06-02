@@ -1,10 +1,8 @@
 import { Team } from "../../data/team";
-import { assertNumber } from "../number";
 
 export interface Settings {
   name: string;
-  teams: Team[];
-  defaultTeam: number;
+  team: Team;
   tutorialDone: boolean;
 }
 
@@ -13,8 +11,8 @@ export const settingsReviver = <K extends keyof Settings>(
   key: K,
   value: any
 ): any => {
-  if (key === "teams") {
-    return value.map((json: any) => Team.fromJson(json));
+  if (key === "team") {
+    return Team.fromJson(value);
   }
 
   return value;
@@ -24,12 +22,8 @@ export const settingsReplacer = <K extends keyof Settings>(
   key: K,
   value: Settings[K]
 ): any => {
-  if (key === "teams") {
-    return (value as Team[]).map((team) => team.serialize());
-  }
-
-  if (key === "defaultTeam") {
-    return assertNumber(value, -1);
+  if (key === "team") {
+    return (value as Team).serialize();
   }
 
   return value;
@@ -38,8 +32,7 @@ export const settingsReplacer = <K extends keyof Settings>(
 export const defaults = (): Settings => {
   return {
     name: "Player",
-    teams: [Team.random()],
-    defaultTeam: 0,
+    team: Team.random(),
     tutorialDone: false,
   };
 };
