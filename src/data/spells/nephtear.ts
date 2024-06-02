@@ -56,10 +56,12 @@ export class Nephtear extends Container implements Spawnable {
       {
         ...SimpleParticleEmitter.defaultConfig,
         spawnRange: 16,
+        lifeTime: 20,
+        lifeTimeVariance: 1,
         initialize: () => ({
           x: this.position.x + 8,
           y: this.position.y + 8,
-          scale: map(0.5, 2, Math.random()),
+          scale: map(0.5, 1, Math.random()),
           xVelocity: Math.random() - 0.5,
           yVelocity: Math.random() - 0.5,
         }),
