@@ -10,6 +10,7 @@ import { HurtableEntity } from "../entity/types";
 import { MagicScroll } from "../entity/magicScroll";
 import { Key } from "../controller/controller";
 import { NetworkController } from "../controller/networkController";
+import { ActivePointer } from "../../graphics/ActivePointer";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -226,6 +227,12 @@ export abstract class Manager {
 
     if (this.activePlayer.controller.isKeyDown(Key.Inventory)) {
       this.activePlayer.activeCharacter.openSpellBook();
+    }
+
+    if (this.activePlayer === this._self) {
+      Level.instance.add(
+        new ActivePointer(this.activePlayer.activeCharacter, [0, -100])
+      );
     }
 
     return this.activePlayer.activeCharacter;
