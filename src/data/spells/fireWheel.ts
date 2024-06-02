@@ -194,6 +194,7 @@ export class FireWheel extends Container implements Syncable {
     const entity = new FireWheel(x, y, power * 1.5, direction);
 
     Server.instance.create(entity);
+    Server.instance.focus(entity);
     return entity;
   }
 }
