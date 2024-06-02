@@ -43,7 +43,7 @@ const route = useRoute();
 
   &--padded {
     box-shadow: 0 0 10vmin inset var(--primary);
-    padding: 10vmin 15vmin;
+    padding: 7vmin 15vmin;
   }
 
   .title-wrapper {

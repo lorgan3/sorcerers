@@ -33,7 +33,6 @@ const routes: RouteRecordRaw[] = [
     component: Header,
     children: [
       { path: "", component: MainMenu },
-      { path: "team", component: Team, meta: { name: "Team" } },
       {
         path: "host",
         component: Host,
