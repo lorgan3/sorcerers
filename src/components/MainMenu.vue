@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import book from "../assets/book.png";
+import settingsBook from "../assets/settingsBook.png";
 import { RouterLink } from "vue-router";
+import Tooltip from "./Tooltip.vue";
 </script>
 
 <template>
@@ -53,11 +55,22 @@ import { RouterLink } from "vue-router";
       </li>
     </ul>
   </div>
-  <RouterLink to="/spellbook" v-slot="{ navigate }">
-    <button class="secondary book-link" @click="navigate">
-      <img :src="book" />
-    </button>
-  </RouterLink>
+  <div class="spellbooks">
+    <Tooltip text="Spellbook" direction="top-center">
+      <RouterLink to="/spellbook" v-slot="{ navigate }">
+        <button class="secondary book-link" @click="navigate">
+          <img :src="book" />
+        </button>
+      </RouterLink>
+    </Tooltip>
+    <Tooltip text="Settings" direction="top-center">
+      <RouterLink to="/settings" v-slot="{ navigate }">
+        <button class="secondary book-link" @click="navigate">
+          <img :src="settingsBook" />
+        </button>
+      </RouterLink>
+    </Tooltip>
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -79,12 +92,16 @@ import { RouterLink } from "vue-router";
   }
 }
 
-.book-link {
-  padding: 20px 0 15px;
-  width: 70px;
+.spellbooks {
+  display: flex;
 
-  img {
-    scale: 2;
+  .book-link {
+    padding: 20px 0 15px;
+    width: 70px;
+
+    img {
+      scale: 2;
+    }
   }
 }
 

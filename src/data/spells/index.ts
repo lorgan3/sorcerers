@@ -107,7 +107,7 @@ const TELEKINESIS = spell(Lock, {
   description: "Telekinesis",
   elements: [Element.Physical, Element.Life],
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   cost: 40,
   data: {
     target: Target.Character,
@@ -123,7 +123,7 @@ const SHIELD = spell(ArcaneCircle, {
   elements: [Element.Physical, Element.Life],
   cost: 10,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
   data: {
     projectile: Shield,
@@ -142,7 +142,7 @@ const BAKURETSU = spell(ArrowDown, {
   elements: [Element.Elemental, Element.Arcane],
   cost: 70,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Arcane) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Arcane) || 1) * 0.4,
   data: {
     projectile: Bakuretsu,
     xOffset: 0,
@@ -174,7 +174,7 @@ const WINGS = spell(ApplyCursor, {
   elements: [Element.Physical, Element.Life],
   cost: 15,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
   data: {
     applyKeys: [Key.Up, Key.W],
@@ -297,7 +297,7 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
   elements: [Element.Elemental, Element.Life],
   cost: 10,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   data: {
     projectile: WindBlast,
     xOffset: 7,
@@ -349,7 +349,7 @@ const ROCK = spell(PoweredArcaneCircle, {
   elements: [Element.Life, Element.Elemental],
   cost: 30,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
   data: {
     projectile: Rock,
@@ -429,7 +429,7 @@ const TELEPORT = spell(Lock, {
   elements: [Element.Life],
   cost: 20,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   data: {
     target: Target.Free,
     projectile: Teleport,
@@ -445,7 +445,7 @@ const MIND_CONTROL = spell(Lock, {
   elements: [Element.Life],
   cost: 20,
   costMultiplier: () =>
-    1.4 - Manager.instance.getElementValue(Element.Life) * 0.4,
+    1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
   data: {
     target: Target.Ally,

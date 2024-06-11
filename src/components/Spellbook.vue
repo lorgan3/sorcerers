@@ -3,6 +3,8 @@ import { Element } from "../data/spells/types";
 import { SPELLS, Spell } from "../data/spells";
 import { ELEMENT_MAP } from "../graphics/elements";
 import { RouterLink } from "vue-router";
+import Tooltip from "./Tooltip.vue";
+import SpellDescription from "./SpellDescription.vue";
 
 const SPRITES_PER_ROW = 5;
 const elements = Object.keys(Element);
@@ -50,14 +52,18 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
         >
           <!-- {{ spell.name }} -->
 
-          <div
-            :style="{
-              '--row': -Math.floor(spell.iconId / SPRITES_PER_ROW),
-              '--column': -(spell.iconId % SPRITES_PER_ROW),
-            }"
-            class="spell-icon"
-            :title="spell.name"
-          ></div>
+          <Tooltip direction="top-center">
+            <template v-slot:tooltip>
+              <SpellDescription :spell="spell"
+            /></template>
+            <div
+              :style="{
+                '--row': -Math.floor(spell.iconId / SPRITES_PER_ROW),
+                '--column': -(spell.iconId % SPRITES_PER_ROW),
+              }"
+              class="spell-icon"
+            ></div>
+          </Tooltip>
         </div>
         <span class="mana-cost">{{
           spellsByElement[
