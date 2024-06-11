@@ -42,13 +42,20 @@ export enum Sound {
   Smoke = "smokeSnd",
 }
 
+export enum Music {
+  TitleScreen = "titleScreenMusic",
+}
+
 interface SoundData {
-  key: `${Sound}_${string}`;
+  key: `${Sound | Music}_${string}`;
   src: string;
   volume: number;
 }
 
-const SOUND_DATA: Partial<Record<Sound, SoundData[]>> = {};
+const SOUND_DATA: Partial<Record<Sound | Music, SoundData[]>> = {};
+let SFX_VOLUME = 1;
+let MUSIC_VOLUME = 1;
+let LAST_MUSIC: SoundData | undefined;
 
 const addSoundData = (key: Sound, src: string, volume = 1) => {
   if (!(key in SOUND_DATA)) {
@@ -58,6 +65,18 @@ const addSoundData = (key: Sound, src: string, volume = 1) => {
   SOUND_DATA[key]!.push({
     key: `${key}_${SOUND_DATA[key]!.length}`,
     src: `${import.meta.env.BASE_URL}sfx/${src}.mp3`,
+    volume,
+  });
+};
+
+const addMusicData = (key: Music, src: string, volume = 1) => {
+  if (!(key in SOUND_DATA)) {
+    SOUND_DATA[key] = [];
+  }
+
+  SOUND_DATA[key]!.push({
+    key: `${key}_${SOUND_DATA[key]!.length}`,
+    src: `${import.meta.env.BASE_URL}music/${src}.mp3`,
     volume,
   });
 };
@@ -128,6 +147,8 @@ addSoundData(Sound.Slime, "433832__archos__slime-21_2", 0.6);
 addSoundData(Sound.Slime, "433839__archos__slime-28", 0.6);
 addSoundData(Sound.Smoke, "714257__qubodup__puff-of-smoke");
 
+addMusicData(Music.TitleScreen, "Sorcerers Theme Sample");
+
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
     (all, variants) =>
@@ -136,12 +157,25 @@ export const SOUND_ASSETS = Object.fromEntries(
   )
 );
 
-export const getRandomSound = (sound: Sound) =>
-  SOUND_DATA[sound]![Math.floor(SOUND_DATA[sound]!.length * Math.random())];
+export const getRandomSound = (sound: Sound) => {
+  const result =
+    SOUND_DATA[sound]![Math.floor(SOUND_DATA[sound]!.length * Math.random())];
 
-export const fade = (alias: Sound, duration = 0.5) => {
+  return {
+    ...result,
+    volume: result.volume * SFX_VOLUME,
+  };
+};
+
+export const fade = (data: SoundData, duration = 0.5) => {
   return new Promise<void>((resolve) => {
-    const s = sound.find(alias);
+    const s = sound.find(data.key);
+
+    if (!s.isPlaying) {
+      resolve();
+      return;
+    }
+
     const initialVolume = s.volume;
     const step = initialVolume / duration / 20;
 
@@ -155,4 +189,41 @@ export const fade = (alias: Sound, duration = 0.5) => {
       }
     }, 50);
   });
+};
+
+export const setVolume = (sfxVolume: number, musicVolume: number) => {
+  SFX_VOLUME = sfxVolume;
+  MUSIC_VOLUME = musicVolume;
+
+  if (LAST_MUSIC) {
+    const s = sound.find(LAST_MUSIC.key);
+    s.volume = musicVolume;
+  }
+};
+
+export const playMusic = async (music: Music) => {
+  if (LAST_MUSIC) {
+    await fade(LAST_MUSIC);
+  }
+
+  if (MUSIC_VOLUME === 0) {
+    return;
+  }
+
+  const result =
+    SOUND_DATA[music]![Math.floor(SOUND_DATA[music]!.length * Math.random())];
+  LAST_MUSIC = result;
+
+  await sound.play(result.key, {
+    volume: result.volume * MUSIC_VOLUME,
+    loop: true,
+  });
+};
+
+export const stopMusic = async () => {
+  if (LAST_MUSIC) {
+    await fade(LAST_MUSIC);
+  }
+
+  LAST_MUSIC = undefined;
 };
