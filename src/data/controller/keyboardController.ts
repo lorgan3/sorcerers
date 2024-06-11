@@ -13,6 +13,7 @@ export class KeyboardController implements Controller {
   private serverMouseY = 0;
 
   public isHost = false;
+  public isTrusted = false;
 
   private eventHandlers = new Map<Key, Set<() => void>>();
   private scrollEventHandlers = new Set<(event: FederatedWheelEvent) => void>();
@@ -173,8 +174,11 @@ export class KeyboardController implements Controller {
   }
 
   serialize(): [number, number, number] {
-    if (this.isHost) {
+    if (this.isTrusted || this.isHost) {
       this.serverKeys = this.pressedKeys;
+    }
+
+    if (this.isHost) {
       this.serverMouseX = this.mouseX;
       this.serverMouseY = this.mouseY;
     }
@@ -183,7 +187,10 @@ export class KeyboardController implements Controller {
   }
 
   deserialize(buffer: [number, number, number]): void {
-    this.serverKeys = buffer[0];
+    if (!this.isTrusted) {
+      this.serverKeys = buffer[0];
+    }
+
     this.serverMouseX = buffer[1];
     this.serverMouseY = buffer[2];
   }

@@ -4,7 +4,7 @@ import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import { Server } from "../data/network/server";
 import { PEER_ID_PREFIX } from "../data/network/constants";
-import { MessageType } from "../data/network/types";
+import { MessageType, Settings } from "../data/network/types";
 import Peer from "peerjs";
 import { defaultMaps } from "../util/assets/index";
 import { Team } from "../data/team";
@@ -18,7 +18,7 @@ import { useRouter } from "vue-router";
 import TeamInput from "./Team.vue";
 
 const { onPlay } = defineProps<{
-  onPlay: (key: string, map: Map | Config) => void;
+  onPlay: (key: string, map: Map | Config, settings: Settings) => void;
 }>();
 
 const router = useRouter();
@@ -151,11 +151,16 @@ const handleStart = async () => {
   });
 
   if (selectedMap.value === CUSTOM) {
-    onPlay(key.value, await Map.fromBlob(customMap.value!));
+    onPlay(
+      key.value,
+      await Map.fromBlob(customMap.value!),
+      Manager.defaultSettings
+    );
   } else {
     onPlay(
       key.value,
-      await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value])
+      await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value]),
+      Manager.defaultSettings
     );
   }
 };

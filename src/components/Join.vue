@@ -5,8 +5,7 @@ import { defaults } from "../util/localStorage/settings";
 import Peer from "peerjs";
 import { Client } from "../data/network/client";
 import { PEER_ID_PREFIX } from "../data/network/constants";
-import { MessageType } from "../data/network/types";
-import { Team } from "../data/team";
+import { MessageType, Settings } from "../data/network/types";
 import { Config, Map } from "../data/map";
 import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
@@ -16,7 +15,7 @@ import TeamInput from "./Team.vue";
 const LAST_GAME_KEY = "lastGameKey";
 
 const { onPlay } = defineProps<{
-  onPlay: (key: string, map: Map | Config) => void;
+  onPlay: (key: string, map: Map | Config, settings: Settings) => void;
 }>();
 const router = useRouter();
 const route = useRoute();
@@ -91,21 +90,25 @@ const handleConnect = async () => {
           break;
 
         case MessageType.StartGame:
-          onPlay(key.value, {
-            terrain: {
-              data: new Blob([message.map.terrain.data]),
-              mask: message.map.terrain.mask,
+          onPlay(
+            key.value,
+            {
+              terrain: {
+                data: new Blob([message.map.terrain.data]),
+                mask: message.map.terrain.mask,
+              },
+              background: {
+                data: new Blob([message.map.background.data]),
+              },
+              layers: message.map.layers.map((layer) => ({
+                ...layer,
+                data: new Blob([layer.data]),
+              })),
+              bbox: message.map.bbox,
+              parallax: message.map.parallax,
             },
-            background: {
-              data: new Blob([message.map.background.data]),
-            },
-            layers: message.map.layers.map((layer) => ({
-              ...layer,
-              data: new Blob([layer.data]),
-            })),
-            bbox: message.map.bbox,
-            parallax: message.map.parallax,
-          });
+            message.settings
+          );
           break;
       }
     },

@@ -28,6 +28,12 @@ export enum MessageType {
   Cast,
 }
 
+export interface Settings {
+  trustClient: boolean;
+  turnLength: number;
+  gameLength: number;
+}
+
 export type Message =
   | {
       type: MessageType.Initialize;
@@ -106,6 +112,7 @@ export type Message =
   | {
       type: MessageType.StartGame;
       map: Config;
+      settings: Settings;
     }
   | {
       type: MessageType.SelectSpell;

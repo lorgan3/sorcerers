@@ -1,5 +1,5 @@
 import Peer from "peerjs";
-import { MessageType, Message, Popup, TurnState } from "./types";
+import { MessageType, Message, Popup, TurnState, Settings } from "./types";
 import { Player } from "./player";
 import { Character } from "../entity/character";
 import { KeyboardController } from "../controller/keyboardController";
@@ -44,12 +44,16 @@ export class Server extends Manager {
     Server._serverInstance = this;
   }
 
-  connect(controller: KeyboardController, onBack: () => void) {
+  connect(
+    controller: KeyboardController,
+    settings: Settings,
+    onBack: () => void
+  ) {
     if (this.controller) {
       throw new Error("Connecting an already connected server!");
     }
 
-    super.connect(controller, onBack);
+    super.connect(controller, settings, onBack);
     controller.isHost = true;
 
     for (let player of this.localPlayers) {
@@ -89,6 +93,7 @@ export class Server extends Manager {
       Server.instance.broadcast({
         type: MessageType.StartGame,
         map: await Level.instance.terrain.serialize(),
+        settings: this.settings,
       });
 
       for (let player of this.localPlayers) {
@@ -130,7 +135,7 @@ export class Server extends Manager {
     }
 
     if (
-      this.time - this.turnStartTime > this.turnLength &&
+      this.time - this.turnStartTime > this.settings.turnLength &&
       this._turnState !== TurnState.Attacked &&
       this._turnState !== TurnState.Killing &&
       this._turnState !== TurnState.Spawning &&
@@ -138,7 +143,7 @@ export class Server extends Manager {
     ) {
       this.preCycleActivePlayer();
 
-      if (this.time > this.gameLength) {
+      if (this.time > this.settings.gameLength) {
         if (!this.suddenDeath) {
           this.suddenDeath = true;
           this.addPopup({
@@ -214,7 +219,8 @@ export class Server extends Manager {
           connection.send({
             type: MessageType.StartGame,
             map: await Level.instance.terrain.serialize(),
-          });
+            settings: this.settings,
+          } satisfies Message);
 
           await player.ready;
           this.syncSinglePlayer(player);
@@ -254,7 +260,12 @@ export class Server extends Manager {
       });
 
       connection.on("data", (data) => {
-        this.handleMessage(data as Message, player);
+        try {
+          this.handleMessage(data as Message, player);
+        } catch (error) {
+          console.error(`[Client error]`, error);
+          connection.close();
+        }
       });
 
       connection.on("close", () => {
@@ -356,6 +367,18 @@ export class Server extends Manager {
             player.activeCharacter.control(this.activePlayer.controller);
           }
         }
+        break;
+
+      case MessageType.DynamicUpdate:
+        if (!this.settings.trustClient) {
+          throw new Error("Client should not be trusted!");
+        }
+
+        if (this.activePlayer !== player) {
+          return;
+        }
+
+        this.activePlayer.activeCharacter.deserialize(message.data);
         break;
 
       case MessageType.SelectSpell:

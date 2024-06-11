@@ -14,14 +14,15 @@ import { get } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import { setVolume, stopMusic } from "../sound";
 
-const { selectedMap } = defineProps<{
+const { selectedMap, settings: gameSettings } = defineProps<{
   selectedMap: Map;
+  settings: Settings;
 }>();
 
 const canvas = ref<HTMLDivElement | null>(null);
 const inventoryOpen = ref(false);
 const menuOpen = ref(false);
-const controller = ref<Controller>();
+const controller = ref<KeyboardController>();
 const router = useRouter();
 const route = useRoute();
 const settings = defaults(get("Settings"));
@@ -29,7 +30,13 @@ const settings = defaults(get("Settings"));
 watch(canvas, (canvas) => {
   if (canvas) {
     AssetsContainer.instance.onComplete(async () => {
-      controller.value = await connect(canvas, selectedMap, handleBack);
+      controller.value = await connect(
+        canvas,
+        selectedMap,
+        gameSettings,
+        handleBack
+      );
+
       controller.value.addKeyListener(Key.M2, () => {
         inventoryOpen.value = !inventoryOpen.value;
         controller.value!.setKey(Key.Inventory, inventoryOpen.value);

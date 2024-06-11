@@ -1,6 +1,6 @@
 import Peer from "peerjs";
 import { Player } from "./player";
-import { Popup, TurnState } from "./types";
+import { Popup, Settings, TurnState } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { Spell, getSpellCost } from "../spells";
@@ -16,6 +16,12 @@ const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
 
 export abstract class Manager {
+  static defaultSettings: Settings = {
+    turnLength: 45 * 1000,
+    gameLength: 10 * 60 * 1000,
+    trustClient: false,
+  };
+
   private static _instance?: Manager;
   static get instance() {
     return Manager._instance!;
@@ -37,9 +43,9 @@ export abstract class Manager {
   > = {};
 
   protected turnStartTime = 0;
-  protected turnLength = 45 * 1000;
-  protected gameLength = 10 * 60 * 1000;
   protected _turnState = TurnState.Ongoing;
+
+  protected settings = Manager.defaultSettings;
 
   protected cursor: Cursor | null = null;
   private popups: Popup[] = [];
@@ -48,8 +54,18 @@ export abstract class Manager {
     Manager._instance = this;
   }
 
-  connect(controller: KeyboardController, onBack: () => void) {
+  connect(
+    controller: KeyboardController,
+    settings: Settings,
+    onBack: () => void
+  ) {
+    this.settings = settings;
+
     this.controller = controller;
+    if (this.settings.trustClient) {
+      controller.isTrusted = true;
+    }
+
     this.onBack = onBack;
     Level.instance.cameraTarget.connect(controller);
   }
@@ -123,7 +139,7 @@ export abstract class Manager {
 
     if (this._turnState === TurnState.Killing) {
       this.turnStartTime = Math.min(
-        this.time - this.turnLength + TURN_GRACE_PERIOD,
+        this.time - this.settings.turnLength + TURN_GRACE_PERIOD,
         this.turnStartTime
       );
 
@@ -138,7 +154,7 @@ export abstract class Manager {
       }
 
       this.turnStartTime = Math.min(
-        this.time - this.turnLength + TURN_GRACE_PERIOD,
+        this.time - this.settings.turnLength + TURN_GRACE_PERIOD,
         this.turnStartTime
       );
     }
@@ -174,11 +190,15 @@ export abstract class Manager {
 
   getHudData() {
     return {
-      turnTime: Math.max(0, this.turnLength - (this.time - this.turnStartTime)),
-      gameTime: Math.max(0, this.gameLength - this.time),
+      turnTime: Math.max(
+        0,
+        this.settings.turnLength - (this.time - this.turnStartTime)
+      ),
+      gameTime: Math.max(0, this.settings.gameLength - this.time),
       players: this.players,
       activePlayer: this.activePlayer,
       mana: this._self?.mana || 0,
+      following: !Level.instance.cameraTarget.isAttached,
     };
   }
 

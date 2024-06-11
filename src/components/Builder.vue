@@ -10,9 +10,11 @@ import { Team } from "../data/team";
 import BoundingBox from "./BoundingBox.vue";
 import { BBox } from "../data/map/bbox";
 import { useRouter } from "vue-router";
+import { Settings } from "../data/network/types";
+import { Manager } from "../data/network/manager";
 
 const { onPlay, config } = defineProps<{
-  onPlay: (key: string, map: Map | Config) => void;
+  onPlay: (key: string, map: Map | Config, settings: Settings) => void;
   config?: Config;
 }>();
 const router = useRouter();
@@ -97,7 +99,7 @@ const handleTest = async () => {
 
   const server = new Server();
   server.addPlayer("Test player", Team.random());
-  onPlay("0000", config);
+  onPlay("0000", config, Manager.defaultSettings);
 };
 
 const handleLoadCustom = async (event: Event) => {

@@ -6,10 +6,12 @@ import { KeyboardController } from "../controller/keyboardController";
 import { Manager } from "./manager";
 import { Map } from "../map";
 import { FIXED_INTERVAL } from "./constants";
+import { Settings } from "./types";
 
 export const connect = async (
   target: HTMLElement,
   map: Map,
+  settings: Settings,
   onBack: () => void
 ) => {
   const level = new Level(target, map);
@@ -30,7 +32,7 @@ export const connect = async (
     onBack();
   };
 
-  Manager.instance.connect(controller, handleBack);
+  Manager.instance.connect(controller, settings, handleBack);
   await Server.instance?.start();
 
   Ticker.shared.add(ticker, null, UPDATE_PRIORITY.LOW);

@@ -1,5 +1,5 @@
 import Peer, { DataConnection } from "peerjs";
-import { Message, MessageType, TurnState } from "./types";
+import { Message, MessageType, Settings, TurnState } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
 import { Character } from "../entity/character";
@@ -10,6 +10,7 @@ import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
 import {
+  EntityType,
   HurtableEntity,
   Item,
   Priority,
@@ -50,6 +51,21 @@ export class Client extends Manager {
         type: MessageType.InputState,
         data: this.controller!.serialize(),
       });
+
+      if (
+        this.settings.trustClient &&
+        this.activePlayer === this._self &&
+        this.frames % 4 === 0 &&
+        this.activePlayer?.activeCharacter &&
+        this.isControlling()
+      ) {
+        this.broadcast({
+          type: MessageType.DynamicUpdate,
+          kind: EntityType.Character,
+          id: this.activePlayer.activeCharacter.id,
+          data: this.activePlayer.activeCharacter.serialize(),
+        } satisfies Message);
+      }
     }
   }
 
@@ -95,12 +111,16 @@ export class Client extends Manager {
     this.connection!.on("close", onClose);
   }
 
-  connect(controller: KeyboardController, onBack: () => void) {
+  connect(
+    controller: KeyboardController,
+    settings: Settings,
+    onBack: () => void
+  ) {
     if (this.controller) {
       throw new Error("Connecting an already connected client!");
     }
 
-    super.connect(controller, onBack);
+    super.connect(controller, settings, onBack);
 
     this.connection!.off("data");
     this.connection!.on("data", (data) => {
@@ -197,9 +217,11 @@ export class Client extends Manager {
         break;
 
       case MessageType.ActiveUpdate:
-        this.activePlayer?.characters[this.activePlayer.active].deserialize(
-          message.data
-        );
+        if (!this.settings.trustClient || this.activePlayer !== this._self) {
+          this.activePlayer?.characters[this.activePlayer.active].deserialize(
+            message.data
+          );
+        }
 
         this.cursor?.deserialize(message.cursor);
 
@@ -253,6 +275,15 @@ export class Client extends Manager {
 
       case MessageType.EntityUpdate:
         for (let i = 0; i < message.entities.length; i++) {
+          const entity = Level.instance.syncables[Priority.Low][i];
+          if (
+            this.settings.trustClient &&
+            this.activePlayer === this._self &&
+            this.activePlayer?.activeCharacter === entity
+          ) {
+            continue;
+          }
+
           Level.instance.syncables[Priority.Low][i].deserialize(
             message.entities[i]
           );
