@@ -1,7 +1,24 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from "vue-router";
+import { AssetsContainer } from "../util/assets/assetsContainer";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Music, playMusic, setVolume } from "../sound";
+import { defaults } from "../util/localStorage/settings";
+import { get } from "../util/localStorage";
 
 const route = useRoute();
+const settings = defaults(get("Settings"));
+const mounted = ref(false);
+
+onMounted(() => (mounted.value = true));
+onUnmounted(() => (mounted.value = false));
+
+AssetsContainer.instance.onComplete(() => {
+  if (mounted) {
+    setVolume(settings.sfxVolume, settings.musicVolume);
+    playMusic(Music.TitleScreen);
+  }
+});
 </script>
 
 <template>

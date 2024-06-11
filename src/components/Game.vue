@@ -9,6 +9,10 @@ import Inventory from "./Inventory.vue";
 import { Controller, Key } from "../data/controller/controller";
 import { useRoute, useRouter } from "vue-router";
 import IngameMenu from "./IngameMenu.vue";
+import { Settings } from "../data/network/types";
+import { get } from "../util/localStorage";
+import { defaults } from "../util/localStorage/settings";
+import { setVolume, stopMusic } from "../sound";
 
 const { selectedMap } = defineProps<{
   selectedMap: Map;
@@ -20,6 +24,7 @@ const menuOpen = ref(false);
 const controller = ref<Controller>();
 const router = useRouter();
 const route = useRoute();
+const settings = defaults(get("Settings"));
 
 watch(canvas, (canvas) => {
   if (canvas) {
@@ -34,6 +39,9 @@ watch(canvas, (canvas) => {
         menuOpen.value = !menuOpen.value;
       });
     });
+
+    setVolume(settings.sfxVolume, settings.musicVolume);
+    stopMusic();
   }
 });
 

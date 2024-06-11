@@ -12,6 +12,7 @@ import { Config, Map } from "./data/map";
 import { AssetsContainer } from "./util/assets/assetsContainer";
 import Game from "./components/Game.vue";
 import Credits from "./components/Credits.vue";
+import SettingsComponent from "./components/Settings.vue";
 
 new AssetsContainer();
 let config: Config;
@@ -47,6 +48,11 @@ const routes: RouteRecordRaw[] = [
       },
       { path: "spellbook", component: Spellbook, meta: { name: "Spellbook" } },
       { path: "credits", component: Credits, meta: { name: "Credits" } },
+      {
+        path: "settings",
+        component: SettingsComponent,
+        meta: { name: "Settings" },
+      },
     ],
   },
   {

@@ -138,7 +138,7 @@ const TUTORIAL: TutorialMessage[] = [
     ],
   },
 ];
-const settings = get("Settings") || defaults();
+const settings = defaults(get("Settings"));
 const tutorialIndex = ref(0);
 const message = ref<TutorialMessage | undefined>(
   settings.tutorialDone ? undefined : TUTORIAL[tutorialIndex.value]

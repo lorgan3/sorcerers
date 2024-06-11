@@ -4,6 +4,8 @@ export interface Settings {
   name: string;
   team: Team;
   tutorialDone: boolean;
+  sfxVolume: number;
+  musicVolume: number;
 }
 
 // In an ideal world this returns `Settings[K]` but typescript doesn't understand
@@ -29,10 +31,13 @@ export const settingsReplacer = <K extends keyof Settings>(
   return value;
 };
 
-export const defaults = (): Settings => {
+export const defaults = (settings?: Partial<Settings> | null): Settings => {
   return {
     name: "Player",
     team: Team.random(),
     tutorialDone: false,
+    sfxVolume: 1,
+    musicVolume: 0.6,
+    ...settings,
   };
 };

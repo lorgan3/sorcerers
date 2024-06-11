@@ -21,9 +21,9 @@ const { onPlay } = defineProps<{
 const router = useRouter();
 const route = useRoute();
 
-const settings = get("Settings") || defaults();
+const settings = defaults(get("Settings"));
 
-const team = ref(settings.team || Team.random());
+const team = ref(settings.team);
 const name = ref(settings.name);
 const connecting = ref(false);
 const clientReady = ref(false);

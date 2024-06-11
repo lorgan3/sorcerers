@@ -23,9 +23,9 @@ const { onPlay } = defineProps<{
 
 const router = useRouter();
 
-const settings = get("Settings") || defaults();
+const settings = defaults(get("Settings"));
 
-const team = ref(settings.team || Team.random());
+const team = ref(settings.team);
 const serverStarting = ref(false);
 const localPlayers = ref<Array<{ name: string; team: Team; ref: Player }>>([]);
 
