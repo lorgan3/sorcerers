@@ -114,6 +114,17 @@ button {
   width: 100%;
 }
 
+.input-label {
+  flex-direction: column;
+
+  .label {
+    font-family: Eternal;
+    font-size: 24px;
+    color: var(--primary);
+    width: auto;
+  }
+}
+
 @keyframes pulse {
   0% {
     --pulse: 1;

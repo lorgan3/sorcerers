@@ -404,17 +404,6 @@ const handleEnableMask = () => (addMask.value = true);
       }
     }
 
-    .input-label {
-      flex-direction: column;
-
-      .label {
-        font-family: Eternal;
-        font-size: 24px;
-        color: var(--primary);
-        width: auto;
-      }
-    }
-
     select {
       background: var(--background);
       box-shadow: 0 0 10px inset var(--primary);
