@@ -1,6 +1,6 @@
 import { filters, IMediaInstance, PlayOptions, sound } from "@pixi/sound";
 import { getRandomSound, Sound } from ".";
-import { HurtableEntity, Spawnable } from "../data/entity/types";
+import { Spawnable } from "../data/entity/types";
 import { Level } from "../data/map/level";
 
 class ControllableSound {

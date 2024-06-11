@@ -57,7 +57,7 @@ const addSoundData = (key: Sound, src: string, volume = 1) => {
 
   SOUND_DATA[key]!.push({
     key: `${key}_${SOUND_DATA[key]!.length}`,
-    src: `${import.meta.env.BASE_URL}sound/${src}.mp3`,
+    src: `${import.meta.env.BASE_URL}sfx/${src}.mp3`,
     volume,
   });
 };
