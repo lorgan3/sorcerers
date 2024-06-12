@@ -16,6 +16,7 @@ import { Player } from "../data/network/player";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 import TeamInput from "./Team.vue";
+import Tooltip from "./Tooltip.vue";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: Settings) => void;
@@ -34,6 +35,9 @@ const selectedMap = ref(Object.keys(defaultMaps)[0]);
 const customMap = ref<Blob | null>(null);
 const customMapString = ref("");
 const customUpload = ref();
+const gameDuration = ref(settings.gameLength);
+const turnDuration = ref(settings.turnLength);
+const trustClients = ref(settings.trustClient);
 
 const key = ref("");
 const players = ref<string[]>([]);
@@ -148,19 +152,25 @@ const handleStart = async () => {
     ...settings,
     name: localPlayers.value[0].name,
     team: localPlayers.value[0].team,
+    turnLength: turnDuration.value,
+    gameLength: gameDuration.value,
+    trustClient: trustClients.value,
   });
 
+  const serverSettings = {
+    ...Manager.defaultSettings,
+    turnLength: turnDuration.value * 1000,
+    gameLength: gameDuration.value * 60 * 1000,
+    trustClient: trustClients.value,
+  } satisfies Settings;
+
   if (selectedMap.value === CUSTOM) {
-    onPlay(
-      key.value,
-      await Map.fromBlob(customMap.value!),
-      Manager.defaultSettings
-    );
+    onPlay(key.value, await Map.fromBlob(customMap.value!), serverSettings);
   } else {
     onPlay(
       key.value,
       await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value]),
-      Manager.defaultSettings
+      serverSettings
     );
   }
 };
@@ -244,7 +254,7 @@ const handleKick = (index: number) => {
       </div>
 
       <label class="label">
-        Map
+        <h3>Map</h3>
         <ul class="maps">
           <li
             v-for="(url, name) of defaultMaps"
@@ -265,6 +275,29 @@ const handleKick = (index: number) => {
         </ul>
       </label>
       <input type="file" hidden @change="handleUploadMap" ref="customUpload" />
+
+      <div className="settings">
+        <Input
+          label="Turn duration (seconds)"
+          v-model="turnDuration"
+          :min="5"
+        />
+        <Input
+          label="Game duration (minutes)"
+          v-model="gameDuration"
+          :min="0"
+        />
+        <label class="input-label checkbox-label">
+          <input type="checkbox" v-model="trustClients" />
+          <span class="checkmark"></span>
+          <Tooltip
+            text="Hides lag (ping) for players but might allow cheating"
+            direction="center-right"
+          >
+            <span class="label">Active player has control</span>
+          </Tooltip>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -290,6 +323,8 @@ const handleKick = (index: number) => {
 }
 
 .options {
+  gap: 15px;
+
   label {
     display: flex;
     flex-direction: column;
@@ -354,6 +389,79 @@ const handleKick = (index: number) => {
       align-items: center;
       justify-content: center;
       font-variant-caps: unicase;
+    }
+  }
+}
+
+.settings {
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .checkbox-label {
+    flex-direction: row;
+    white-space: nowrap;
+    position: relative;
+    padding-left: 30px;
+    line-height: 25px;
+
+    .label {
+      margin-right: 10px;
+    }
+
+    /* Hide the browser's default checkbox */
+    input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    /* Create a custom checkbox */
+    .checkmark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 25px;
+      width: 25px;
+      background-color: var(--background);
+    }
+
+    /* On mouse-over, add a grey background color */
+    &:hover input ~ .checkmark {
+      background-color: var(--background-dark);
+    }
+
+    /* When the checkbox is checked, add a blue background */
+    input:checked ~ .checkmark {
+      background-color: var(--highlight-background);
+    }
+
+    /* Create the checkmark/indicator (hidden when not checked) */
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+
+    /* Show the checkmark when checked */
+    input:checked ~ .checkmark:after {
+      display: block;
+    }
+
+    /* Style the checkmark/indicator */
+    .checkmark:after {
+      left: 9px;
+      top: 5px;
+      width: 5px;
+      height: 10px;
+      border: solid var(--highlight);
+      border-width: 0 3px 3px 0;
+      -webkit-transform: rotate(45deg);
+      -ms-transform: rotate(45deg);
+      transform: rotate(45deg);
     }
   }
 }
