@@ -177,7 +177,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private time = 0;
   private lastDamageTime = -1;
   private lastActiveTime = 0;
-  private damageSource: DamageSource | null = null;
   private spellSource: any | null = null;
   private lookDirection = 1;
   private wings?: Wings;
@@ -306,15 +305,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       Math.abs(this.body.xVelocity) > BOUNCE_TRIGGER ||
       Math.abs(this.body.yVelocity) > BOUNCE_TRIGGER
     ) {
-      const velocity = this.body.velocity;
-
-      this.damageSource = new ExplosiveDamage(
-        x + 3,
-        y + 8 + this.body.yVelocity,
-        velocity > 8 ? 12 : 8,
-        Math.min(2.5, velocity * 0.5),
-        Math.max(1, velocity - 3) ** 2
-      );
+      Manager.instance.dealFallDamage(x, y, this);
     }
   };
 
@@ -354,11 +345,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
       if (this.body.tick(dt)) {
         const [x, y] = this.body.precisePosition;
         this.position.set(x * 6, y * 6);
-
-        if (this.damageSource) {
-          Server.instance?.damage(this.damageSource);
-          this.damageSource = null;
-        }
 
         if (
           this._hp > 0 &&

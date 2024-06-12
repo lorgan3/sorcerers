@@ -20,6 +20,8 @@ import {
 } from "../entity/types";
 import { Element } from "../spells/types";
 import { getRandomItem } from "../entity";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { DAMAGE_SOURCES } from "../damage";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -29,6 +31,7 @@ export class Server extends Manager {
 
   private disconnectedPlayers: Player[] = [];
   private localPlayers: Player[] = [];
+  private damageQueue: DamageSource[] = [];
 
   private static _serverInstance?: Server;
   static get instance() {
@@ -156,6 +159,11 @@ export class Server extends Manager {
           level: Level.instance.sink(),
         });
       }
+    }
+
+    let damageSource: DamageSource | undefined;
+    while ((damageSource = this.damageQueue.pop())) {
+      this.damage(damageSource);
     }
 
     if (this.frames % 20 === 0) {
@@ -323,6 +331,28 @@ export class Server extends Manager {
     });
   }
 
+  dealFallDamage(x: number, y: number, character: Character) {
+    // Client will notify us when taking damage.
+    if (
+      this.settings.trustClient &&
+      !!character.player.connection &&
+      this.getActiveCharacter() === character
+    ) {
+      return;
+    }
+
+    const velocity = character.body.velocity;
+    this.damageQueue.push(
+      new ExplosiveDamage(
+        x + 3,
+        y + 8 + character.body.yVelocity,
+        velocity > 8 ? 12 : 8,
+        Math.min(2.5, velocity * 0.5),
+        Math.max(1, velocity - 3) ** 2
+      )
+    );
+  }
+
   endGame() {
     this.setTurnState(TurnState.Finished);
 
@@ -390,6 +420,22 @@ export class Server extends Manager {
         }
 
         this.activePlayer.activeCharacter.deserialize(message.data);
+        break;
+
+      case MessageType.SyncDamage:
+        if (!this.settings.trustClient) {
+          throw new Error("Client should not be trusted!");
+        }
+
+        if (this.activePlayer !== player) {
+          return;
+        }
+
+        const damageSource = DAMAGE_SOURCES[message.kind].deserialize(
+          message.data
+        );
+
+        this.damage(damageSource);
         break;
 
       case MessageType.SelectSpell:

@@ -11,6 +11,7 @@ import { MagicScroll } from "../entity/magicScroll";
 import { Key } from "../controller/controller";
 import { NetworkController } from "../controller/networkController";
 import { ActivePointer } from "../../graphics/ActivePointer";
+import { Character } from "../entity/character";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -53,6 +54,8 @@ export abstract class Manager {
   constructor(public readonly peer?: Peer) {
     Manager._instance = this;
   }
+
+  abstract dealFallDamage(x: number, y: number, character: Character): void;
 
   connect(
     controller: KeyboardController,

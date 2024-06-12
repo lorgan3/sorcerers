@@ -21,6 +21,7 @@ import { Element } from "../spells/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -41,6 +42,34 @@ export class Client extends Manager {
 
   get isConnected() {
     return !!this.connection;
+  }
+
+  dealFallDamage(x: number, y: number, character: Character) {
+    if (
+      !this.settings.trustClient ||
+      character.player !== this._self ||
+      this.getActiveCharacter() !== character
+    ) {
+      return;
+    }
+
+    const velocity = character.body.velocity;
+    const damage = new ExplosiveDamage(
+      x + 3,
+      y + 8 + character.body.yVelocity,
+      velocity > 8 ? 12 : 8,
+      Math.min(2.5, velocity * 0.5),
+      Math.max(1, velocity - 3) ** 2
+    );
+
+    // Required to build the target list
+    damage.getTargets();
+
+    this.broadcast({
+      type: MessageType.SyncDamage,
+      kind: damage.type,
+      data: damage.serialize(),
+    });
   }
 
   fixedTick(dtMs: number) {
