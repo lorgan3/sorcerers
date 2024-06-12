@@ -97,7 +97,7 @@ export class Bakuretsu extends Container implements Spawnable {
       if (!this.exploded) {
         this.exploded = true;
         Level.instance.shake();
-        Level.instance.damage(
+        Server.instance?.damage(
           new ExplosiveDamage(
             this.rX,
             this.rY,

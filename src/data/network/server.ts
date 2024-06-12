@@ -304,7 +304,18 @@ export class Server extends Manager {
     }
   }
 
-  syncDamage(damageSource: DamageSource) {
+  damage(damageSource: DamageSource) {
+    if (
+      damageSource
+        .getTargets()
+        .getEntities()
+        .includes(this.getActiveCharacter()!)
+    ) {
+      this.setTurnState(TurnState.Ending);
+    }
+
+    damageSource.damage();
+
     this.broadcast({
       type: MessageType.SyncDamage,
       kind: damageSource.type,

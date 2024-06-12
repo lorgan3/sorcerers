@@ -112,7 +112,7 @@ export class Bomb extends Container implements Item {
     }
 
     this.hp = 0;
-    Level.instance.damage(
+    Server.instance?.damage(
       new ExplosiveDamage(x, y, 16, 2, 4 * (0.7 + this.arcanePower * 0.3))
     );
     Server.instance.kill(this);

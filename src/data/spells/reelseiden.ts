@@ -106,7 +106,7 @@ export class Reelseiden extends Container implements Spawnable {
     );
 
     if (targetList.hasEntities()) {
-      Level.instance.damage(new GenericDamage(targetList));
+      Server.instance?.damage(new GenericDamage(targetList));
     }
 
     ControllableSound.fromEntity(this, Sound.Slice);

@@ -11,6 +11,7 @@ import { getRandom } from "../../util/array";
 import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { Character } from "../entity/character";
+import { Server } from "../network/server";
 
 export class Pebble extends Container implements TickingEntity {
   private static riseTime = 40;
@@ -76,7 +77,7 @@ export class Pebble extends Container implements TickingEntity {
       return;
     }
 
-    Level.instance.damage(damage);
+    Server.instance?.damage(damage);
     if (damage.getTargets().hasEntities()) {
       Level.instance.remove(this);
     } else {

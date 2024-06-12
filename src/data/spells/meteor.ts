@@ -178,17 +178,17 @@ export class Meteor extends Container implements Syncable {
         ) {
           this.bounceTime = this.time;
 
-          const [x, y] = this.body.position;
-          const damage = new ExplosiveDamage(
-            x + 15,
-            y + 15,
-            16,
-            5,
-            5 + Manager.instance.getElementValue(Element.Elemental) / 2
-          );
-          Level.instance.damage(damage);
-
           if (Server.instance) {
+            const [x, y] = this.body.position;
+            const damage = new ExplosiveDamage(
+              x + 15,
+              y + 15,
+              16,
+              5,
+              5 + Manager.instance.getElementValue(Element.Elemental) / 2
+            );
+            Server.instance.damage(damage);
+
             const staticEntity = damage
               .getTargets()
               .getEntities()

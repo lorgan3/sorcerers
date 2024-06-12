@@ -12,6 +12,7 @@ import { getRandom } from "../../util/array";
 import { rectangle1x6 } from "../collision/precomputed/rectangles";
 import { map } from "../../util/math";
 import { SpawnPoint } from "../../graphics/spawnPoint";
+import { Server } from "../network/server";
 
 export class SmallSword extends Container implements Spawnable {
   private static shakeIntensity = 3;
@@ -83,7 +84,7 @@ export class SmallSword extends Container implements Spawnable {
       Math.random() * SmallSword.shakeIntensity - SmallSword.shakeIntensity / 2;
 
     const damage = new FallDamage(x - 1, y - 2, Shape.SmallSword, 8);
-    Level.instance.damage(damage);
+    Server.instance?.damage(damage);
     ControllableSound.fromEntity(
       [this.position.x, this.position.y],
       Sound.Step

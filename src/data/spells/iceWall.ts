@@ -136,7 +136,7 @@ export class IceWall extends Container implements HurtableEntity {
             entity,
             (this.firstCheck ? 4 : 10) * this.physicalPower
           );
-          Level.instance.damage(new GenericDamage(targets));
+          Server.instance.damage(new GenericDamage(targets));
           return;
         }
       });

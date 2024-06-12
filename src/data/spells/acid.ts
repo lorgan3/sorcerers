@@ -94,7 +94,7 @@ export class Acid extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    Level.instance.damage(
+    Server.instance?.damage(
       new FallDamage(
         x - 4,
         y - 4,

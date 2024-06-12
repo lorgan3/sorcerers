@@ -239,24 +239,6 @@ export class Level {
     }
   }
 
-  damage(damageSource: DamageSource) {
-    if (!Server.instance) {
-      return;
-    }
-
-    if (
-      damageSource
-        .getTargets()
-        .getEntities()
-        .includes(Server.instance.getActiveCharacter()!)
-    ) {
-      Server.instance.setTurnState(TurnState.Ending);
-    }
-
-    damageSource.damage();
-    Server.instance.syncDamage(damageSource);
-  }
-
   withNearbyEntities(
     x: number,
     y: number,

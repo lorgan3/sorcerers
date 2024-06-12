@@ -82,7 +82,7 @@ export class Fireball extends Container implements Syncable {
     if (this.bounces === 0 || playerCollision) {
       this._die(x, y);
     } else {
-      Level.instance.damage(
+      Server.instance.damage(
         new ExplosiveDamage(
           x,
           y,
@@ -96,7 +96,7 @@ export class Fireball extends Container implements Syncable {
   };
 
   private _die(x: number, y: number) {
-    Level.instance.damage(
+    Server.instance.damage(
       new ExplosiveDamage(
         x,
         y,

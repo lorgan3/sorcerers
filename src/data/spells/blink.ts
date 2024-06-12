@@ -11,6 +11,7 @@ import { Implosion } from "../../graphics/implosion";
 import { TurnState } from "../network/types";
 import { Smoke } from "../../graphics/smoke";
 import { map } from "../../util/math";
+import { Server } from "../network/server";
 
 export class Blink extends Container implements TickingEntity {
   private static blinkTime = 90;
@@ -65,7 +66,7 @@ export class Blink extends Container implements TickingEntity {
         cy / 6 + Math.sin(this.direction) * Blink.blinkDistance
       );
 
-      Level.instance.damage(
+      Server.instance?.damage(
         new ExplosiveDamage(
           x + 3,
           y + 4,

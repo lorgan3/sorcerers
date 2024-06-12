@@ -35,6 +35,7 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Wings } from "./wings";
 import { SmokePuff } from "../../graphics/smokePuff";
+import { Server } from "../network/server";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
@@ -235,7 +236,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
           const direction =
             this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
           const [cx, cy] = this.getCenter();
-          Level.instance.damage(
+          Server.instance?.damage(
             new ImpactDamage(
               Math.floor(cx / 6) + this.sprite.scale.x * 6.5,
               Math.floor(cy / 6) - 6,
@@ -355,7 +356,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.position.set(x * 6, y * 6);
 
         if (this.damageSource) {
-          Level.instance.damage(this.damageSource);
+          Server.instance?.damage(this.damageSource);
           this.damageSource = null;
         }
 
@@ -367,7 +368,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
             this.position.y
           )
         ) {
-          Level.instance.damage(
+          Server.instance?.damage(
             new GenericDamage(new TargetList().add(this, 999))
           );
         }
@@ -601,7 +602,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       );
     });
 
-    Level.instance.damage(new ExplosiveDamage(x / 6, y / 6, 16, 1, 1));
+    Server.instance?.damage(new ExplosiveDamage(x / 6, y / 6, 16, 1, 1));
   }
 
   giveWings() {

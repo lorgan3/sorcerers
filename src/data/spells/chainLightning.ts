@@ -79,7 +79,7 @@ export class ChainLightning extends Container implements Spawnable {
 
       const target = this.targets[this.index];
       if (isHurtableEntity(target)) {
-        Level.instance.damage(
+        Server.instance?.damage(
           new GenericDamage(
             new TargetList().add(
               target,

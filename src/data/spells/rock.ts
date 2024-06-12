@@ -137,7 +137,7 @@ export class Rock extends Container implements Spawnable {
                 ey - (this._y - 48 + 8) - 48 + Math.floor(this.sprite.height)
               )
             ) {
-              Level.instance.damage(
+              Server.instance?.damage(
                 new ExplosiveDamage(
                   ex + 3,
                   ey + 3,

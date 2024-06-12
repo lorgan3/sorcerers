@@ -108,7 +108,7 @@ export class MagicMissile extends Container implements Syncable {
   };
 
   private _die(x: number, y: number) {
-    Level.instance.damage(
+    Server.instance.damage(
       new ExplosiveDamage(
         x,
         y,
