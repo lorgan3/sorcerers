@@ -16,7 +16,7 @@ export class Player {
   private _team = Team.empty();
   private _color = "";
   private _controller: Controller = new NetworkController();
-  private _mana = 500;
+  private _mana = 0;
   private turn = 0;
 
   public selectedSpell: Spell | null = null;

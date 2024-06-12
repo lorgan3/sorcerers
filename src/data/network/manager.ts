@@ -201,7 +201,6 @@ export abstract class Manager {
       players: this.players,
       activePlayer: this.activePlayer,
       mana: this._self?.mana || 0,
-      following: !Level.instance.cameraTarget.isAttached,
     };
   }
 
