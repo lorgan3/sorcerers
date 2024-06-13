@@ -1,4 +1,5 @@
 import { Team } from "../../data/team";
+import { assertNumber } from "../number";
 
 export interface Settings {
   name: string;
@@ -18,7 +19,23 @@ export const settingsReviver = <K extends keyof Settings>(
   value: any
 ): any => {
   if (key === "team") {
-    return Team.fromJson(value);
+    return Team.fromJson(value, value.length);
+  }
+
+  if (key === "sfxVolume" || key === "musicVolume") {
+    return assertNumber(value, 0, 1);
+  }
+
+  if (key === "gameLength") {
+    return assertNumber(value, 0);
+  }
+
+  if (key === "turnLength") {
+    return assertNumber(value, 5);
+  }
+
+  if (key === "teamSize") {
+    return assertNumber(value, 1, 10);
   }
 
   return value;
