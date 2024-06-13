@@ -11,6 +11,7 @@ const {
   change,
   name,
   min,
+  max,
 } = defineProps<{
   label?: string;
   modelValue?: V;
@@ -71,6 +72,7 @@ const handleBlur = (event: Event) => {
       :name="name"
       :type="isNumeric ? 'number' : 'text'"
       :min="min"
+      :max="max"
     />
   </label>
 </template>
