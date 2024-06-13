@@ -21,6 +21,7 @@ export abstract class Manager {
     turnLength: 45 * 1000,
     gameLength: 10 * 60 * 1000,
     trustClient: false,
+    teamSize: 4,
   };
 
   private static _instance?: Manager;

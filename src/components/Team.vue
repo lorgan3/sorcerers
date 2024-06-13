@@ -34,9 +34,9 @@ const handleChange = (event: Event) => {
       <label class="character-input">
         Characters
         <ul class="character-list">
-          <li v-for="(_, i) in team.characters">
+          <li v-for="i in team.size">
             <Input
-              v-model="team.characters[i]"
+              v-model="team.characters[i - 1]"
               :validator="(text: string) => !!text.trim()"
               :change="handleChange"
             />
