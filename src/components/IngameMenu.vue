@@ -59,6 +59,7 @@ const handleQuit = () => {
     width: 50%;
     border-radius: 8px;
     box-shadow: 5px 5px 10px #00000069;
+    cursor: url("../assets/pointer.png"), auto;
 
     .buttons {
       display: block;
@@ -69,6 +70,7 @@ const handleQuit = () => {
 
       button {
         pointer-events: all;
+        cursor: url("../assets/pointer.png"), auto;
       }
     }
   }
