@@ -106,12 +106,12 @@ export class Server extends Manager {
     }
 
     for (let player of this.players) {
-      for (let character of player.team.characters) {
+      for (let i = 0; i < this.settings.teamSize; i++) {
         player.addCharacter(
           new Character(
             player,
             ...Level.instance.getRandomSpawnLocation(),
-            character
+            player.team.characters[i]
           )
         );
       }
@@ -221,7 +221,6 @@ export class Server extends Manager {
       connection.on("open", async () => {
         console.log("open");
         player.reconnect(connection);
-        onUpdate?.();
 
         if (this.started) {
           connection.send({
@@ -260,6 +259,8 @@ export class Server extends Manager {
             type: MessageType.Sink,
             level: Level.instance.terrain.killbox.level,
           });
+        } else if (onUpdate) {
+          onUpdate();
         }
       });
 
@@ -270,6 +271,10 @@ export class Server extends Manager {
       connection.on("data", (data) => {
         try {
           this.handleMessage(data as Message, player);
+
+          if (!this.started && onUpdate) {
+            onUpdate();
+          }
         } catch (error) {
           console.error(`[Client error]`, error);
           connection.close();
@@ -379,6 +384,11 @@ export class Server extends Manager {
         if (this.started) {
           return;
         }
+        const team = Team.fromJson(message.team, this.settings.teamSize);
+        if (player.joined) {
+          player.rename(message.name, team.isValid() ? team : Team.random());
+          return;
+        }
 
         const color = this.availableColors.pop();
 
@@ -388,14 +398,12 @@ export class Server extends Manager {
           return;
         }
 
-        const team = Team.fromJson(message.team);
         player.connect(
           message.name,
           team.isValid() ? team : Team.random(),
           color
         );
 
-        this.syncPlayers();
         break;
 
       case MessageType.InputState:

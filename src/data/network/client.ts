@@ -193,7 +193,7 @@ export class Client extends Manager {
           }
           player.connect(
             data.name,
-            Team.fromJson(data.team),
+            Team.fromJson(data.team, this.settings.teamSize),
             data.color,
             data.you ? this.controller : undefined
           );

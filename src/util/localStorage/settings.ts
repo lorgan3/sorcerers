@@ -9,6 +9,7 @@ export interface Settings {
   gameLength: number;
   turnLength: number;
   trustClient: boolean;
+  teamSize: number;
 }
 
 // In an ideal world this returns `Settings[K]` but typescript doesn't understand
@@ -35,15 +36,20 @@ export const settingsReplacer = <K extends keyof Settings>(
 };
 
 export const defaults = (settings?: Partial<Settings> | null): Settings => {
+  let team =
+    settings?.team?.setSize(settings.teamSize) ||
+    Team.random(settings?.teamSize);
+
   return {
     name: "Player",
-    team: Team.random(),
     tutorialDone: false,
     sfxVolume: 1,
     musicVolume: 0.6,
     gameLength: 10,
     turnLength: 45,
     trustClient: true,
+    teamSize: 4,
     ...settings,
+    team,
   };
 };

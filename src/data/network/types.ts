@@ -32,6 +32,7 @@ export interface Settings {
   trustClient: boolean;
   turnLength: number;
   gameLength: number;
+  teamSize: number;
 }
 
 export type Message =
@@ -108,6 +109,8 @@ export type Message =
       type: MessageType.LobbyUpdate;
       map: string;
       players: string[];
+      you: number;
+      settings: Settings;
     }
   | {
       type: MessageType.StartGame;

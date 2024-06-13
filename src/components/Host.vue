@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 import { Server } from "../data/network/server";
@@ -35,6 +35,7 @@ const selectedMap = ref(Object.keys(defaultMaps)[0]);
 const customMap = ref<Blob | null>(null);
 const customMapString = ref("");
 const customUpload = ref();
+const teamSize = ref(settings.teamSize);
 const gameDuration = ref(settings.gameLength);
 const turnDuration = ref(settings.turnLength);
 const trustClients = ref(settings.trustClient);
@@ -42,6 +43,21 @@ const trustClients = ref(settings.trustClient);
 const key = ref("");
 const players = ref<string[]>([]);
 let promise = ref<Promise<void>>();
+
+watch(teamSize, async (newSize) => {
+  team.value.setSize(newSize);
+  localPlayers.value.forEach((player) => player.team.setSize(newSize));
+});
+
+const createSettings = () => {
+  return {
+    ...Manager.defaultSettings,
+    turnLength: turnDuration.value * 1000,
+    gameLength: gameDuration.value * 60 * 1000,
+    trustClient: trustClients.value,
+    teamSize: teamSize.value,
+  } satisfies Settings;
+};
 
 const createServer = () =>
   new Promise<void>((resolve) => {
@@ -86,11 +102,18 @@ const updateLobby = debounce(() => {
   }
 
   players.value = Server.instance.players.map((player) => player.name);
-  Server.instance.broadcast({
-    type: MessageType.LobbyUpdate,
-    map: selectedMap.value,
-    players: players.value,
-  });
+
+  for (let i = 0; i < Server.instance.players.length; i++) {
+    const player = Server.instance.players[i];
+
+    player.connection?.send({
+      type: MessageType.LobbyUpdate,
+      map: selectedMap.value,
+      players: players.value,
+      you: i,
+      settings: createSettings(),
+    });
+  }
 }, 200);
 
 const nameValidator = (name: string) => !!name.trim();
@@ -155,22 +178,16 @@ const handleStart = async () => {
     turnLength: turnDuration.value,
     gameLength: gameDuration.value,
     trustClient: trustClients.value,
+    teamSize: teamSize.value,
   });
 
-  const serverSettings = {
-    ...Manager.defaultSettings,
-    turnLength: turnDuration.value * 1000,
-    gameLength: gameDuration.value * 60 * 1000,
-    trustClient: trustClients.value,
-  } satisfies Settings;
-
   if (selectedMap.value === CUSTOM) {
-    onPlay(key.value, await Map.fromBlob(customMap.value!), serverSettings);
+    onPlay(key.value, await Map.fromBlob(customMap.value!), createSettings());
   } else {
     onPlay(
       key.value,
       await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value]),
-      serverSettings
+      createSettings()
     );
   }
 };
@@ -278,14 +295,23 @@ const handleKick = (index: number) => {
 
       <div className="settings">
         <Input
+          label="Team size"
+          v-model="teamSize"
+          :min="1"
+          :max="10"
+          :change="updateLobby"
+        />
+        <Input
           label="Turn duration (seconds)"
           v-model="turnDuration"
           :min="5"
+          :change="updateLobby"
         />
         <Input
           label="Game duration (minutes)"
           v-model="gameDuration"
           :min="0"
+          :change="updateLobby"
         />
         <label class="input-label checkbox-label">
           <input type="checkbox" v-model="trustClients" />

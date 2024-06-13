@@ -11,6 +11,7 @@ import Input from "./Input.vue";
 import { Manager } from "../data/network/manager";
 import { useRoute, useRouter } from "vue-router";
 import TeamInput from "./Team.vue";
+import debounce from "lodash.debounce";
 
 const LAST_GAME_KEY = "lastGameKey";
 
@@ -32,10 +33,13 @@ const key = ref(
 );
 const players = ref<string[]>([]);
 const map = ref("");
+const you = ref(-1);
+const gameDuration = ref(0);
+const turnDuration = ref(0);
 
 const nameValidator = (name: string) => !!name.trim();
-
 const keyValidator = (key: string) => /[0-9]{4}/.test(key);
+const numberFormatter = new Intl.NumberFormat("en");
 
 const createClient = () => {
   Manager.instance?.destroy();
@@ -87,6 +91,11 @@ const handleConnect = async () => {
         case MessageType.LobbyUpdate:
           players.value = message.players;
           map.value = message.map;
+          you.value = message.you;
+          gameDuration.value = message.settings.gameLength / 60 / 1000;
+          turnDuration.value = message.settings.turnLength / 1000;
+
+          team.value.setSize(message.settings.teamSize);
           break;
 
         case MessageType.StartGame:
@@ -121,6 +130,16 @@ const handleConnect = async () => {
   );
 };
 
+const handleChange = debounce(() => {
+  if (nameValidator(name.value) && team.value.isValid()) {
+    Client.instance.broadcast({
+      type: MessageType.Join,
+      name: name.value,
+      team: team.value.serialize(),
+    });
+  }
+}, 500);
+
 onMounted(() => createClient());
 
 const handleBack = () => {
@@ -144,14 +163,35 @@ const handleBack = () => {
       <div class="flex-list flex-list--wide">
         <h2>Players</h2>
         <ul class="players">
-          <li v-for="player in players">{{ player }}</li>
+          <li
+            v-for="(player, i) in players"
+            :class="{ 'player-you': i === you }"
+          >
+            {{ player }}
+          </li>
           <li v-if="!players.length">Connecting...</li>
         </ul>
       </div>
 
-      <div>
-        <h2>Map</h2>
+      <Input
+        label="Player name"
+        v-model="name"
+        :validator="nameValidator"
+        :change="handleChange"
+      />
+      <TeamInput v-model="team" :change="handleChange" />
+
+      <div class="flex-list">
+        <h3>Map</h3>
         {{ map }}
+        <h3>Game duration</h3>
+        {{
+          gameDuration ? `${numberFormatter.format(gameDuration)} minutes` : "-"
+        }}
+        <h3>Turn duration</h3>
+        {{
+          turnDuration ? `${numberFormatter.format(turnDuration)} seconds` : "-"
+        }}
       </div>
     </template>
 
@@ -163,8 +203,6 @@ const handleBack = () => {
         autofocus
         :validator="keyValidator"
       />
-      <Input label="Player name" v-model="name" :validator="nameValidator" />
-      <TeamInput v-model="team" />
     </div>
   </div>
 
@@ -197,6 +235,10 @@ const handleBack = () => {
   background: var(--background);
   box-shadow: 0 0 10px inset var(--primary);
   border-radius: var(--small-radius);
+
+  .player-you {
+    font-weight: bold;
+  }
 }
 
 .options {

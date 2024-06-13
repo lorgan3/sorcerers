@@ -24,6 +24,7 @@ export class Player {
 
   public resolveReady!: () => void;
   public ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
+  private _joined = false;
 
   constructor(private _connection?: DataConnection) {
     this._controller.addKeyListener(Key.Inventory, this.handleOpenInventory);
@@ -33,6 +34,7 @@ export class Player {
     this._name = name;
     this._team = team;
     this._color = color;
+    this._joined = true;
 
     if (controller) {
       this._controller.removeKeyListener(
@@ -107,8 +109,16 @@ export class Player {
     return this._color;
   }
 
-  rename(newName: string) {
+  get joined() {
+    return this._joined;
+  }
+
+  rename(newName: string, newTeam?: Team) {
     this._name = newName;
+
+    if (newTeam) {
+      this._team = newTeam;
+    }
   }
 
   get connection() {
