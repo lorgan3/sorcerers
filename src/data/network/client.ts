@@ -75,7 +75,7 @@ export class Client extends Manager {
   fixedTick(dtMs: number) {
     super.fixedTick(dtMs);
 
-    if (this.connection) {
+    if (this.connection && this.activePlayer === this._self) {
       this.connection.send({
         type: MessageType.InputState,
         data: this.controller!.serialize(),
@@ -83,7 +83,6 @@ export class Client extends Manager {
 
       if (
         this.settings.trustClient &&
-        this.activePlayer === this._self &&
         this.frames % 4 === 0 &&
         this.activePlayer?.activeCharacter &&
         this.isControlling()
