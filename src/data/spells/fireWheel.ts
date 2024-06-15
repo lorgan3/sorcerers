@@ -92,7 +92,7 @@ export class FireWheel extends Container implements Syncable {
         y,
         16,
         3,
-        2 + Manager.instance.getElementValue(Element.Elemental)
+        3 + Manager.instance.getElementValue(Element.Elemental)
       )
     );
     Server.instance.kill(this);

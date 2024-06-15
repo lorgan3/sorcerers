@@ -379,7 +379,7 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   name: "Flammendorn",
   description: "Throwable fireball that follows the ground",
   elements: [Element.Elemental, Element.Arcane],
-  cost: 18,
+  cost: 22,
   data: {
     projectile: FireWheel,
     xOffset: 14,
@@ -411,7 +411,7 @@ const ACID = spell(PoweredArcaneCircle, {
   name: "Reamstroha",
   description: "Create a ball of acid",
   elements: [Element.Life],
-  cost: 22,
+  cost: 18,
   data: {
     projectile: Acid,
     xOffset: 16,
