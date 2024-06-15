@@ -3,6 +3,11 @@ import { ref } from "vue";
 import { get, set } from "../util/localStorage";
 import { defaults } from "../util/localStorage/settings";
 
+const { setHudState, setInventoryState } = defineProps<{
+  setHudState: (open: boolean) => void;
+  setInventoryState: (open: boolean) => void;
+}>();
+
 interface TutorialMessage {
   center?: {
     x: string;
@@ -68,7 +73,10 @@ const TUTORIAL: TutorialMessage[] = [
     actions: [
       {
         label: "Next",
-        fn: () => (message.value = TUTORIAL[++tutorialIndex.value]),
+        fn: () => {
+          message.value = TUTORIAL[++tutorialIndex.value];
+          setHudState(true);
+        },
       },
     ],
   },
@@ -90,7 +98,11 @@ const TUTORIAL: TutorialMessage[] = [
     actions: [
       {
         label: "Next",
-        fn: () => (message.value = TUTORIAL[++tutorialIndex.value]),
+        fn: () => {
+          message.value = TUTORIAL[++tutorialIndex.value];
+          setHudState(false);
+          setInventoryState(true);
+        },
       },
     ],
   },
@@ -100,9 +112,9 @@ const TUTORIAL: TutorialMessage[] = [
       y: "90vh",
     },
     focus: {
-      x: "-170px",
-      y: "-160px",
-      radius: "160px",
+      x: "-150px",
+      y: "-190px",
+      radius: "190px",
     },
     text: {
       x: "-750px",
@@ -138,6 +150,7 @@ const TUTORIAL: TutorialMessage[] = [
     ],
   },
 ];
+
 const settings = defaults(get("Settings"));
 const tutorialIndex = ref(0);
 const message = ref<TutorialMessage | undefined>(

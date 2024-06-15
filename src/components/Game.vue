@@ -22,6 +22,7 @@ const { selectedMap, settings: gameSettings } = defineProps<{
 const canvas = ref<HTMLDivElement | null>(null);
 const inventoryOpen = ref(false);
 const menuOpen = ref(false);
+const forceHudOpen = ref(false);
 const controller = ref<Controller>();
 const router = useRouter();
 const route = useRoute();
@@ -60,21 +61,29 @@ const handleBack = () => {
   }
 };
 
-const handleCloseInventory = () => {
-  inventoryOpen.value = false;
-  controller.value!.setKey(Key.Inventory, inventoryOpen.value);
-};
-
 const handleCancel = () => {
   menuOpen.value = false;
 };
+
+const setInventoryState = (open: boolean) => {
+  inventoryOpen.value = open;
+  controller.value!.setKey(Key.Inventory, inventoryOpen.value);
+};
+
+const setHudState = (open: boolean) => (forceHudOpen.value = open);
 </script>
 
 <template>
   <div class="render-target" ref="canvas">
-    <Hud />
-    <Inventory :isOpen="inventoryOpen" :onClose="handleCloseInventory" />
-    <Tutorial />
+    <Hud :forceOpen="forceHudOpen" />
+    <Inventory
+      :isOpen="inventoryOpen"
+      :onClose="() => setInventoryState(false)"
+    />
+    <Tutorial
+      :setHudState="setHudState"
+      :setInventoryState="setInventoryState"
+    />
     <IngameMenu v-if="menuOpen" :onCancel="handleCancel" />
   </div>
 </template>

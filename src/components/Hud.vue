@@ -16,6 +16,10 @@ const numberFormatter = new Intl.DateTimeFormat("en-GB", {
   second: "2-digit",
 });
 
+const { forceOpen } = defineProps<{
+  forceOpen: boolean;
+}>();
+
 const getElements = () =>
   Object.fromEntries(
     Object.values(Element).map((element) => [
@@ -31,6 +35,7 @@ const mana = ref(0);
 const players = ref<Player[]>([]);
 const activePlayer = ref<Player | null>(null);
 const popup = ref<ActivePopup | null>(null);
+const maxHp = ref(1);
 
 const poll = () => {
   if (!Manager.instance) {
@@ -44,6 +49,15 @@ const poll = () => {
   players.value = data.players;
   activePlayer.value = data.activePlayer;
   mana.value = data.mana;
+
+  maxHp.value = 1;
+  for (let player of data.players) {
+    for (let character of player.characters) {
+      if (character.hp > maxHp.value) {
+        maxHp.value = character.hp;
+      }
+    }
+  }
 
   if (!popup.value) {
     const popped = Manager.instance.popupPop();
@@ -71,23 +85,28 @@ onBeforeUnmount(() => window.clearInterval(id));
     <p class="meta">{{ popup!.meta }}</p>
   </div>
 
-  <div class="hud">
+  <div :class="{ hud: true, 'hud-open': forceOpen }">
     <div class="players">
       <ul>
         <li class="player" v-for="player in players">
           <span :class="{ name: true, active: activePlayer === player }">{{
             player.name
           }}</span>
-          <ul class="characters">
-            <li v-for="character in player.characters">
-              <div
-                class="hp"
-                :style="{
-                  width: `${Math.max(0, Math.ceil(character.hp / 3))}px`,
-                  background: player.color,
-                }"
-              ></div>
-            </li>
+          <ul
+            class="characters"
+            :style="{
+              '--max-hp': maxHp,
+              '--team-size': Manager.instance.teamSize,
+            }"
+          >
+            <li
+              v-for="character in player.characters"
+              class="hp"
+              :style="{
+                '--hp': character.hp,
+                background: player.color,
+              }"
+            ></li>
           </ul>
         </li>
       </ul>
@@ -203,13 +222,6 @@ onBeforeUnmount(() => window.clearInterval(id));
   overflow: hidden;
   transition: all 0.5s;
   box-shadow: 5px 5px 10px #00000069;
-
-  &:hover {
-    .players {
-      grid-template-rows: 1fr;
-    }
-  }
-
   .text {
     display: block;
     margin-bottom: -4px;
@@ -250,8 +262,16 @@ onBeforeUnmount(() => window.clearInterval(id));
           background: rgb(42, 60, 255);
           box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
           border-radius: 4px;
+          width: calc(var(--hp) / var(--max-hp) / var(--team-size) * 100%);
         }
       }
+    }
+  }
+
+  &:hover,
+  &-open {
+    .players {
+      grid-template-rows: 1fr;
     }
   }
 

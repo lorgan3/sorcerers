@@ -182,6 +182,10 @@ export abstract class Manager {
     return this.settings.manaMultiplier;
   }
 
+  get teamSize() {
+    return this.settings.teamSize;
+  }
+
   isEnding() {
     return (
       this._turnState !== TurnState.Ongoing &&

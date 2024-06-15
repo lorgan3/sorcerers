@@ -11,6 +11,7 @@ const settings = defaults(get("Settings"));
 
 const sfxVolume = ref(settings.sfxVolume);
 const musicVolume = ref(settings.musicVolume);
+const showTutorial = ref(!settings.tutorialDone);
 
 const handleBack = () => {
   setVolume(settings.sfxVolume, settings.musicVolume);
@@ -22,6 +23,7 @@ const handleSave = () => {
     ...settings,
     sfxVolume: sfxVolume.value,
     musicVolume: musicVolume.value,
+    tutorialDone: !showTutorial.value,
   });
 
   setVolume(sfxVolume.value, musicVolume.value);
@@ -58,6 +60,12 @@ const handleChangeMusic = () => {
         step="0.01"
         @change="handleChangeMusic"
       />
+    </label>
+
+    <label class="input-label checkbox-label">
+      <input type="checkbox" v-model="showTutorial" />
+      <span class="checkmark"></span>
+      <span class="label">Show tutorial</span>
     </label>
   </div>
 
