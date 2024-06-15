@@ -20,12 +20,13 @@ import { angleDiff, getAngle, getDistance } from "../../util/math";
 import { GenericDamage } from "../damage/genericDamage";
 import { TargetList } from "../damage/targetList";
 import { Element } from "./types";
+import { Shield } from "./shield";
 
 type Target = [number, number] | HurtableEntity;
 
 export class ChainLightning extends Container implements Spawnable {
   private static chargeTime = 15;
-  private static maxRange = 220;
+  private static maxRange = 260;
   private static defaultRange = 200;
   private static maxAngle = Math.PI / 4;
   private static maxChains = 5;
@@ -135,29 +136,39 @@ export class ChainLightning extends Container implements Spawnable {
         checkY,
         ChainLightning.maxRange,
         (entity, distance) => {
-          if (
-            entity !== character &&
-            !targets.includes(entity) &&
-            (i > 0 ||
-              Math.abs(
-                angleDiff(
-                  direction,
-                  getAngle(checkX, checkY, ...entity.getCenter())
-                )
-              ) < ChainLightning.maxAngle)
-          ) {
+          if (entity === character || targets.includes(entity)) {
+            return;
+          }
+
+          if (i > 0) {
             nextTargets.push([distance, entity]);
+            return;
+          }
+
+          const angle = Math.abs(
+            angleDiff(
+              direction,
+              getAngle(checkX, checkY, ...entity.getCenter())
+            )
+          );
+
+          if (angle < ChainLightning.maxAngle) {
+            nextTargets.push([angle, entity]);
           }
         }
       );
-      const nextTarget = nextTargets.sort((a, b) => b[0] - a[0])[0];
 
+      const nextTarget = nextTargets.sort((a, b) => a[0] - b[0])[0];
       if (!nextTarget) {
         break;
       }
 
       [checkX, checkY] = nextTarget[1].getCenter();
       targets.push(nextTarget[1]);
+
+      if (nextTarget[1] instanceof Shield) {
+        break;
+      }
     }
 
     if (targets.length === 0) {
