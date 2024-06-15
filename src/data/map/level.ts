@@ -11,7 +11,6 @@ import {
   TickingEntity,
 } from "../entity/types";
 import { DamageNumberContainer } from "../../graphics/damageNumber";
-import { DamageSource } from "../damage/types";
 import { getId } from "../entity";
 import { TurnState } from "../network/types";
 import { ParticleManager } from "../../graphics/particles";
@@ -23,10 +22,11 @@ import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
 import { Background } from "./background";
 import { Viewport } from "./viewport";
+import { Manager } from "../network/manager";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
-const SINK_PERCENT = 0.07;
+const SINK_PERCENT = 0.14;
 
 export class Level {
   private app: Application;
@@ -260,7 +260,9 @@ export class Level {
   sink() {
     this.shake();
     new ControllableSound(Sound.Drain, new filters.StereoFilter(0), {});
-    this.terrain.killbox.rise(this.terrain.height * SINK_PERCENT);
+    this.terrain.killbox.rise(
+      (this.terrain.height * SINK_PERCENT) / Manager.instance.players.length
+    );
 
     return this.terrain.killbox.level;
   }
