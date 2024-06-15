@@ -24,11 +24,7 @@ export const settingsReviver = <K extends keyof Settings>(
     return Team.fromJson(value, value.length);
   }
 
-  if (
-    key === "sfxVolume" ||
-    key === "musicVolume" ||
-    key === "itemSpawnChance"
-  ) {
+  if (key === "sfxVolume" || key === "musicVolume") {
     return assertNumber(value, 0, 1);
   }
 
@@ -46,6 +42,10 @@ export const settingsReviver = <K extends keyof Settings>(
 
   if (key === "manaMultiplier") {
     return assertNumber(value, 0, 25);
+  }
+
+  if (key === "itemSpawnChance") {
+    return assertNumber(value, 0, 4);
   }
 
   return value;

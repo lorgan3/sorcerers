@@ -330,7 +330,7 @@ const handleKick = (index: number) => {
           label="Item spawn chance (pct)"
           v-model="itemSpawnChance"
           :min="0"
-          :max="100"
+          :max="400"
           :change="updateLobby"
         />
         <label class="input-label checkbox-label">
