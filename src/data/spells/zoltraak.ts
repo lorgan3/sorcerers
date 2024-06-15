@@ -23,9 +23,9 @@ import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { StaticBody } from "../collision/staticBody";
+import { Shield } from "./shield";
 
-const DAMAGE = 25;
+const DAMAGE = 35;
 const MAX_DISTANCE = 912;
 
 const TOOLS = [
@@ -172,7 +172,7 @@ export class Zoltraak extends Container implements Spawnable {
     for (let target of targets) {
       targetList.add(target.entity, damage);
 
-      if (target.entity.body instanceof StaticBody) {
+      if (target.entity instanceof Shield) {
         Server.instance?.damage(new GenericDamage(targetList));
 
         const [cx, cy] = target.entity.getCenter();

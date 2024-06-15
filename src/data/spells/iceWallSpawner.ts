@@ -10,10 +10,10 @@ import { IceWall } from "./iceWall";
 import { Element } from "./types";
 
 export class IceWallSpawner extends Container implements Spawnable {
-  private static wallCount = 4;
+  private static wallCount = 6;
   private static wallDistance = 8;
-  private static maxHeightDiff = 24;
-  private static startDistance = 6;
+  private static maxHeightDiff = 36;
+  private static startDistance = 9;
   private static spawnInterval = 20;
 
   public id = -1;
@@ -54,7 +54,7 @@ export class IceWallSpawner extends Container implements Spawnable {
       const y = probeX(
         Level.instance.terrain.collisionMask,
         this._x,
-        this._y - IceWallSpawner.maxHeightDiff
+        this._y - IceWallSpawner.maxHeightDiff / 2
       );
 
       if (

@@ -75,7 +75,7 @@ const FIREBALL = spell(PoweredArcaneCircle, {
   name: "Ignis",
   description: "Fireball!",
   elements: [Element.Elemental],
-  cost: 10,
+  cost: 6,
   data: {
     projectile: Fireball,
     xOffset: 7,
@@ -91,7 +91,7 @@ const ARTHUR_SWORD = spell(ArrowDown, {
   name: "Excalibur",
   description: "Giant sword from the sky",
   elements: [Element.Physical, Element.Arcane],
-  cost: 35,
+  cost: 30,
   data: {
     projectile: Sword,
     xOffset: -5.5,
@@ -121,7 +121,7 @@ const SHIELD = spell(ArcaneCircle, {
   name: "Felsenschild",
   description: "A magical shield capable of stopping most spells",
   elements: [Element.Physical, Element.Life],
-  cost: 10,
+  cost: 8,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
@@ -156,7 +156,7 @@ const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
   description: "Ordinary offensive magic",
   elements: [Element.Arcane],
-  cost: 35,
+  cost: 40,
   data: {
     projectile: Zoltraak,
     xOffset: 2,
@@ -172,7 +172,7 @@ const WINGS = spell(ApplyCursor, {
   name: "Digardnacht",
   description: "Wings that grant flight",
   elements: [Element.Physical, Element.Life],
-  cost: 15,
+  cost: 12,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
@@ -187,7 +187,7 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
   name: "Catastravia",
   description: "Holy missile volley",
   elements: [Element.Life, Element.Arcane],
-  cost: 50,
+  cost: 36,
   data: {
     projectile: Catastravia,
     xOffset: 2,
@@ -203,7 +203,7 @@ const MAGIC_MISSILE = spell(ApplyCursor, {
   name: "Vollzanbel",
   description: "Guided missile",
   elements: [Element.Arcane, Element.Life],
-  cost: 40,
+  cost: 33,
   data: {
     applyKeys: [Key.M1],
     turnState: TurnState.Attacked,
@@ -230,7 +230,7 @@ const BABYLON = spell(ArrowDown, {
   name: "Gates of babylon",
   description: "Drop swords from the sky",
   elements: [Element.Physical],
-  cost: 20,
+  cost: 16,
   data: {
     projectile: GateOfBabylon,
     xOffset: -0.5,
@@ -244,7 +244,7 @@ const BLINK = spell(ApplyCursor, {
   name: "Jilwer",
   description: "Blink forwards",
   elements: [Element.Physical],
-  cost: 16,
+  cost: 12,
   data: {
     applyKeys: [Key.M1],
     turnState: TurnState.Attacked,
@@ -314,7 +314,7 @@ const HAIRPIN = spell(PoweredArcaneCircle, {
   name: "Balterie",
   description: "Launch several bombs that detonate on contact",
   elements: [Element.Arcane],
-  cost: 30,
+  cost: 28,
   data: {
     projectile: Hairpin,
     xOffset: 7,
@@ -331,7 +331,7 @@ const ICE_WALL = spell(ArcaneCircle, {
   name: "Jubelade",
   description: "Create several ice clusters on the ground",
   elements: [Element.Elemental, Element.Physical],
-  cost: 12,
+  cost: 10,
   data: {
     projectile: IceWallSpawner,
     xOffset: 7,
@@ -347,7 +347,7 @@ const ROCK = spell(PoweredArcaneCircle, {
   name: "Bargland",
   description: "Control the earth",
   elements: [Element.Life, Element.Elemental],
-  cost: 30,
+  cost: 22,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
@@ -366,7 +366,7 @@ const METEOR = spell(Lock, {
   name: "Waldgose",
   description: "Cause a meteor to fall from the sky",
   elements: [Element.Physical, Element.Elemental],
-  cost: 60,
+  cost: 50,
   data: {
     target: Target.Any,
     projectile: Meteor,
@@ -379,7 +379,7 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   name: "Flammendorn",
   description: "Throwable fireball that follows the ground",
   elements: [Element.Elemental, Element.Arcane],
-  cost: 20,
+  cost: 18,
   data: {
     projectile: FireWheel,
     xOffset: 14,
@@ -395,7 +395,7 @@ const LIGHTNING = spell(ArcaneCircle, {
   name: "Judradjim",
   description: "Generate chain lightning",
   elements: [Element.Elemental],
-  cost: 25,
+  cost: 24,
   data: {
     projectile: ChainLightning,
     xOffset: 7,
@@ -411,11 +411,11 @@ const ACID = spell(PoweredArcaneCircle, {
   name: "Reamstroha",
   description: "Create a ball of acid",
   elements: [Element.Life],
-  cost: 25,
+  cost: 22,
   data: {
     projectile: Acid,
-    xOffset: 15,
-    yOffset: 18.5,
+    xOffset: 16,
+    yOffset: 19,
     x: 3,
     y: 7,
     turnState: TurnState.Attacked,
@@ -443,7 +443,7 @@ const MIND_CONTROL = spell(Lock, {
   name: "Auserlese",
   description: "Swap control with another ally",
   elements: [Element.Life],
-  cost: 20,
+  cost: 16,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
@@ -460,7 +460,7 @@ const DORAGATE = spell(ArcaneCircle, {
   name: "Doragate",
   description: "Rocks to bullets",
   elements: [Element.Physical, Element.Arcane],
-  cost: 30,
+  cost: 32,
   data: {
     projectile: Doragate,
     xOffset: 0,
@@ -477,7 +477,7 @@ const DAOSDORG = spell(ArcaneCircle, {
   name: "Daosdorg",
   description: "Magic tornado",
   elements: [Element.Physical, Element.Arcane],
-  cost: 35,
+  cost: 26,
   data: {
     projectile: Daosdorg,
     xOffset: 13,

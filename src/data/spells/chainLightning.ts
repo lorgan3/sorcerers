@@ -84,7 +84,7 @@ export class ChainLightning extends Container implements Spawnable {
           new GenericDamage(
             new TargetList().add(
               target,
-              15 + Manager.instance.getElementValue(Element.Elemental) * 5
+              20 + Manager.instance.getElementValue(Element.Elemental) * 5
             )
           )
         );

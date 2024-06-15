@@ -103,7 +103,7 @@ export class Bakuretsu extends Container implements Spawnable {
             this.rY,
             32,
             6,
-            6 * Manager.instance.getElementValue(Element.Elemental)
+            8 * Manager.instance.getElementValue(Element.Elemental)
           )
         );
         Manager.instance.setTurnState(TurnState.Ending);
@@ -177,7 +177,7 @@ export class Bakuretsu extends Container implements Spawnable {
 
     const entity = new Bakuretsu(
       x,
-      Level.instance.terrain.collisionMask,
+      Level.instance.terrain.characterMask,
       character
     );
 
