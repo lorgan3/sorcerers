@@ -351,8 +351,8 @@ export class Server extends Manager {
       new ExplosiveDamage(
         x + 3,
         y + 8 + character.body.yVelocity,
-        velocity > 8 ? 12 : 8,
-        Math.min(2.5, velocity * 0.5),
+        velocity > 5 ? 12 : 8,
+        Math.min(3, velocity * 0.4),
         Math.max(1, velocity - 3) ** 2
       )
     );

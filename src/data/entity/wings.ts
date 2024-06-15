@@ -11,11 +11,11 @@ import { Element } from "../spells/types";
 
 export class Wings extends Container {
   private static fullPower = 100;
-  private static flapCost = 8;
+  private static flapCost = 6;
   private static maxScale = 4;
   private static minScale = 1;
-  private static flapThreshHold = 0.8;
-  private static lift = 3.5;
+  private static flapThreshHold = 0.2;
+  private static lift = 2.6;
 
   private sprite: AnimatedSprite;
   private particles: SimpleParticleEmitter;
@@ -24,7 +24,7 @@ export class Wings extends Container {
 
   constructor(private character: Character) {
     super();
-    this.character.body.gravity = 0.14;
+    this.character.body.gravity = 0.1;
     this._power =
       Wings.fullPower *
       (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3);
