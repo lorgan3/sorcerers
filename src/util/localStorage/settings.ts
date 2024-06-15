@@ -11,6 +11,8 @@ export interface Settings {
   turnLength: number;
   trustClient: boolean;
   teamSize: number;
+  manaMultiplier: number;
+  itemSpawnChance: number;
 }
 
 // In an ideal world this returns `Settings[K]` but typescript doesn't understand
@@ -22,7 +24,11 @@ export const settingsReviver = <K extends keyof Settings>(
     return Team.fromJson(value, value.length);
   }
 
-  if (key === "sfxVolume" || key === "musicVolume") {
+  if (
+    key === "sfxVolume" ||
+    key === "musicVolume" ||
+    key === "itemSpawnChance"
+  ) {
     return assertNumber(value, 0, 1);
   }
 
@@ -36,6 +42,10 @@ export const settingsReviver = <K extends keyof Settings>(
 
   if (key === "teamSize") {
     return assertNumber(value, 1, 10);
+  }
+
+  if (key === "manaMultiplier") {
+    return assertNumber(value, 0, 25);
   }
 
   return value;
@@ -66,6 +76,8 @@ export const defaults = (settings?: Partial<Settings> | null): Settings => {
     turnLength: 45,
     trustClient: true,
     teamSize: 4,
+    manaMultiplier: 1,
+    itemSpawnChance: 1,
     ...settings,
     team,
   };

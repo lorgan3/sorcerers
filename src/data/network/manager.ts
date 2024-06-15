@@ -22,6 +22,8 @@ export abstract class Manager {
     gameLength: 10 * 60 * 1000,
     trustClient: false,
     teamSize: 4,
+    manaMultiplier: 1,
+    itemSpawnChance: 1,
   };
 
   private static _instance?: Manager;
@@ -176,6 +178,10 @@ export abstract class Manager {
     return this._turnState;
   }
 
+  get manaMultiplier() {
+    return this.settings.manaMultiplier;
+  }
+
   isEnding() {
     return (
       this._turnState !== TurnState.Ongoing &&
@@ -187,6 +193,7 @@ export abstract class Manager {
     return (
       this._turnState !== TurnState.Killing &&
       this._turnState !== TurnState.Spawning &&
+      this._turnState !== TurnState.Rising &&
       (this._turnState !== TurnState.Attacked ||
         !this.activePlayer?.activeCharacter?.isCasting())
     );

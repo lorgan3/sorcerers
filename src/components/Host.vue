@@ -39,6 +39,8 @@ const teamSize = ref(settings.teamSize);
 const gameDuration = ref(settings.gameLength);
 const turnDuration = ref(settings.turnLength);
 const trustClients = ref(settings.trustClient);
+const manaMultiplier = ref(settings.manaMultiplier * 100);
+const itemSpawnChance = ref(settings.itemSpawnChance * 100);
 
 const key = ref("");
 const players = ref<string[]>([]);
@@ -56,6 +58,8 @@ const createSettings = () => {
     gameLength: gameDuration.value * 60 * 1000,
     trustClient: trustClients.value,
     teamSize: teamSize.value,
+    manaMultiplier: manaMultiplier.value / 100,
+    itemSpawnChance: itemSpawnChance.value / 100,
   } satisfies Settings;
 };
 
@@ -179,6 +183,8 @@ const handleStart = async () => {
     gameLength: gameDuration.value,
     trustClient: trustClients.value,
     teamSize: teamSize.value,
+    manaMultiplier: manaMultiplier.value / 100,
+    itemSpawnChance: itemSpawnChance.value / 100,
   });
 
   if (selectedMap.value === CUSTOM) {
@@ -311,6 +317,20 @@ const handleKick = (index: number) => {
           label="Game duration (minutes)"
           v-model="gameDuration"
           :min="0"
+          :change="updateLobby"
+        />
+        <Input
+          label="Mana gain multiplier (pct)"
+          v-model="manaMultiplier"
+          :min="0"
+          :max="2500"
+          :change="updateLobby"
+        />
+        <Input
+          label="Item spawn chance (pct)"
+          v-model="itemSpawnChance"
+          :min="0"
+          :max="100"
           :change="updateLobby"
         />
         <label class="input-label checkbox-label">

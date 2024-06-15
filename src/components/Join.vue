@@ -36,6 +36,8 @@ const map = ref("");
 const you = ref(-1);
 const gameDuration = ref(0);
 const turnDuration = ref(0);
+const manaMultiplier = ref(0);
+const itemSpawnChance = ref(0);
 
 const nameValidator = (name: string) => !!name.trim();
 const keyValidator = (key: string) => /[0-9]{4}/.test(key);
@@ -94,6 +96,8 @@ const handleConnect = async () => {
           you.value = message.you;
           gameDuration.value = message.settings.gameLength / 60 / 1000;
           turnDuration.value = message.settings.turnLength / 1000;
+          manaMultiplier.value = message.settings.manaMultiplier * 100;
+          itemSpawnChance.value = message.settings.itemSpawnChance * 100;
 
           team.value.setSize(message.settings.teamSize);
           break;
@@ -191,6 +195,16 @@ const handleBack = () => {
         <h3>Turn duration</h3>
         {{
           turnDuration ? `${numberFormatter.format(turnDuration)} seconds` : "-"
+        }}
+        <h3>Mana multiplier</h3>
+        {{
+          manaMultiplier ? `${numberFormatter.format(manaMultiplier)} pct` : "-"
+        }}
+        <h3>Item spawn chance</h3>
+        {{
+          itemSpawnChance
+            ? `${numberFormatter.format(itemSpawnChance)} pct`
+            : "-"
         }}
       </div>
     </template>

@@ -33,6 +33,8 @@ export interface Settings {
   turnLength: number;
   gameLength: number;
   teamSize: number;
+  manaMultiplier: number;
+  itemSpawnChance: number;
 }
 
 export type Message =

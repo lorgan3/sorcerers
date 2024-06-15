@@ -549,15 +549,32 @@ export class Server extends Manager {
   private preCycleActivePlayer() {
     this.setTurnState(TurnState.Spawning);
 
-    const item = this.create(
-      getRandomItem(...Level.instance.getRandomSpawnLocation())
-    );
+    let checks = 0;
+    const checkSpawn = () => {
+      checks++;
 
-    this.highlight(item, () => {
-      item.appear();
+      if (checks > this.players.length) {
+        this.cycleActivePlayer();
+        return;
+      }
 
-      this.cycleActivePlayer();
-    });
+      if (Math.random() > this.settings.itemSpawnChance / this.players.length) {
+        checkSpawn();
+        return;
+      }
+
+      const item = this.create(
+        getRandomItem(...Level.instance.getRandomSpawnLocation())
+      );
+
+      this.highlight(item, () => {
+        item.appear();
+
+        checkSpawn();
+      });
+    };
+
+    checkSpawn();
   }
 
   private cycleActivePlayer() {

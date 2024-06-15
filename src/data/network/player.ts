@@ -152,7 +152,7 @@ export class Player {
 
   nextTurn() {
     this.turn++;
-    this.mana += MANA_BASE_GAIN;
+    this.mana += MANA_BASE_GAIN * Manager.instance.manaMultiplier;
 
     const inventoryWasOpen = this._controller.isKeyDown(Key.Inventory);
 

@@ -1,3 +1,4 @@
+import { Manager } from "../network/manager";
 import { Character } from "./character";
 
 export enum PotionType {
@@ -32,14 +33,14 @@ export const POTION_DATA: Record<PotionType, PotionData> = {
     name: "Big mana potion",
     sprite: "items_manaPotion",
     activate: (character) => {
-      character.player.mana += 30;
+      character.player.mana += 30 * Manager.instance.manaMultiplier;
     },
   },
   [PotionType.SmallManaPotion]: {
     name: "Small health potion",
     sprite: "items_smallManaPotion",
     activate: (character) => {
-      character.player.mana += 10;
+      character.player.mana += 10 * Manager.instance.manaMultiplier;
     },
   },
 };
