@@ -142,10 +142,9 @@ export class Server extends Manager {
       this._turnState !== TurnState.Attacked &&
       this._turnState !== TurnState.Killing &&
       this._turnState !== TurnState.Spawning &&
+      this._turnState !== TurnState.Rising &&
       this._turnState !== TurnState.Finished
     ) {
-      this.preCycleActivePlayer();
-
       if (this.time > this.settings.gameLength) {
         if (!this.suddenDeath) {
           this.suddenDeath = true;
@@ -158,6 +157,11 @@ export class Server extends Manager {
           type: MessageType.Sink,
           level: Level.instance.sink(),
         });
+
+        this.setTurnState(TurnState.Rising);
+        window.setTimeout(() => this.preCycleActivePlayer(), 2000);
+      } else {
+        this.preCycleActivePlayer();
       }
     }
 

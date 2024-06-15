@@ -4,7 +4,7 @@ import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { CollisionMask } from "../collision/collisionMask";
 
 const ANIMATION_SPEED = 0.1;
-const RISE_SPEED = 0.1;
+const RISE_SPEED = 0.15;
 const SPRITE_OFFSET = 5;
 
 export class Killbox extends Container {
