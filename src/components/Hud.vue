@@ -265,7 +265,7 @@ onBeforeUnmount(() => window.clearInterval(id));
           box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
           border-radius: 4px;
           width: calc(
-            calc(var(--hp) / var(--max-hp) / var(--team-size) * 100%) -6px
+            calc(var(--hp) / var(--max-hp) / var(--team-size) * 100%) - 6px
           );
           transition: width 0.5s;
         }
