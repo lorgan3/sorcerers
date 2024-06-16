@@ -572,7 +572,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     Level.instance.terrain.draw((ctx) => {
       const splat = AssetsContainer.instance.assets!["atlas"].textures[
-        "elf_splat"
+        "gibs_splat"
       ] as Texture;
 
       ctx.drawImage(

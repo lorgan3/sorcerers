@@ -28,7 +28,7 @@ export class BloodEmitter
 
   private createParticle() {
     const frames =
-      AssetsContainer.instance.assets!["atlas"].animations["elf_blood"];
+      AssetsContainer.instance.assets!["atlas"].animations["gibs_blood"];
     const particle = new Particle([
       frames[Math.floor(Math.random() * frames.length)],
     ]);
