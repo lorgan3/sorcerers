@@ -12,6 +12,7 @@ import { BBox } from "../data/map/bbox";
 import { useRouter } from "vue-router";
 import { Settings } from "../data/network/types";
 import { Manager } from "../data/network/manager";
+import { logEvent } from "../util/firebase";
 
 const { onPlay, config } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: Settings) => void;
@@ -84,6 +85,8 @@ const handleBuild = async () => {
   link.download = `${name.value || "map"}.png`;
   link.href = url;
   link.click();
+
+  logEvent("build_map");
 };
 
 const handleTest = async () => {

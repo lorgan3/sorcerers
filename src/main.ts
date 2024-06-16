@@ -13,6 +13,7 @@ import Game from "./components/Game.vue";
 import Credits from "./components/Credits.vue";
 import { Settings } from "./data/network/types";
 import SettingsComponent from "./components/Settings.vue";
+import "./util/firebase";
 
 new AssetsContainer();
 let config: Config;

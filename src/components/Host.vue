@@ -17,6 +17,7 @@ import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 import TeamInput from "./Team.vue";
 import Tooltip from "./Tooltip.vue";
+import { logEvent } from "../util/firebase";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: Settings) => void;
@@ -196,6 +197,11 @@ const handleStart = async () => {
       createSettings()
     );
   }
+
+  logEvent("host_game", {
+    players: Server.instance.players.length,
+    map: selectedMap.value,
+  });
 };
 
 const handleAddLocalPlayer = () => {

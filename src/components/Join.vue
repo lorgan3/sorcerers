@@ -12,6 +12,7 @@ import { Manager } from "../data/network/manager";
 import { useRoute, useRouter } from "vue-router";
 import TeamInput from "./Team.vue";
 import debounce from "lodash.debounce";
+import { logEvent } from "../util/firebase";
 
 const LAST_GAME_KEY = "lastGameKey";
 
@@ -122,6 +123,8 @@ const handleConnect = async () => {
             },
             message.settings
           );
+
+          logEvent("join_game");
           break;
       }
     },
