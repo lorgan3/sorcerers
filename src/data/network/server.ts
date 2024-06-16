@@ -625,11 +625,11 @@ export class Server extends Manager {
   }
 
   setActiveCharacter(playerId: number, characterId: number) {
-    const character = super.setActiveCharacter(playerId, characterId);
-    if (this.localPlayers.includes(this.activePlayer!)) {
-      this._self = this.activePlayer;
+    if (this.localPlayers.includes(this.players[playerId])) {
+      this._self = this.players[playerId];
     }
 
+    const character = super.setActiveCharacter(playerId, characterId);
     return character;
   }
 
