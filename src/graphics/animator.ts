@@ -23,7 +23,11 @@ export class Animator<K extends string = string, S = any> {
 
   public readonly sprite: AnimatedSprite;
 
-  constructor(private atlas: Record<string, Texture[]>, private self: S) {
+  constructor(
+    private atlas: Record<string, Texture[]>,
+    private self: S,
+    private variant = ""
+  ) {
     this.sprite = new AnimatedSprite([Texture.EMPTY]);
     this.sprite.onComplete = this.onComplete;
   }
@@ -91,7 +95,7 @@ export class Animator<K extends string = string, S = any> {
     this.nextTime = 0;
     this.completeTime = config.duration || 0;
     this.state = name;
-    this.sprite.textures = this.atlas[config.name];
+    this.sprite.textures = this.atlas[config.name + this.variant];
     this.sprite.currentFrame =
       config.speed > 0 ? 0 : this.sprite.totalFrames - 1;
     this.sprite.loop = config.loop;

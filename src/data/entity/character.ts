@@ -36,6 +36,7 @@ import { Sound } from "../../sound";
 import { Wings } from "./wings";
 import { SmokePuff } from "../../graphics/smokePuff";
 import { Server } from "../network/server";
+import { COLORS } from "../network/constants";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
@@ -204,7 +205,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.animator = new Animator<AnimationState>(atlas.animations, this)
+    this.animator = new Animator<AnimationState>(
+      atlas.animations,
+      this,
+      `_${COLORS.indexOf(this.player.color)}`
+    )
       .addAnimations(ANIMATION_CONFIG)
       .addAnimation(AnimationState.SpellIdle, {
         ...ANIMATION_CONFIG[AnimationState.SpellIdle],

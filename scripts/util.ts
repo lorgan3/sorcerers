@@ -38,39 +38,20 @@ export const rotate = (jimp: Jimp, deg: number) => {
     .scale(1 / 3, Jimp.RESIZE_NEAREST_NEIGHBOR);
 };
 
-export const write = async (images: NamedImage[], name: string) => {
-  const actualSize = images[0].image.getWidth();
-  const width = Math.ceil(Math.sqrt(images.length));
-  const out = new Jimp(actualSize * width, actualSize * width);
+export const extract = (jimp: Jimp, colors: number[]) => {
+  const clone = jimp.clone();
 
-  const frames: Record<string, Frame> = {};
-  images.forEach(({ image, name }, i) => {
-    const x = (i % width) * actualSize;
-    const y = Math.floor(i / width) * actualSize;
-    out.blit(image, x, y);
+  for (let x = 0; x < jimp.getWidth(); x++) {
+    for (let y = 0; y < jimp.getHeight(); y++) {
+      const color = jimp.getPixelColor(x, y);
 
-    frames[name] = {
-      frame: { x, y, w: actualSize, h: actualSize },
-    };
-  });
+      if (colors.includes(color)) {
+        jimp.setPixelColor(0x00000000, x, y);
+      } else {
+        clone.setPixelColor(0x00000000, x, y);
+      }
+    }
+  }
 
-  const json: Atlas = {
-    frames,
-    meta: {
-      app: "https://github.com/lorgan3/open-td",
-      version: "1.0",
-      image: `${name}.png`,
-      size: { w: out.getWidth(), h: out.getHeight() },
-    },
-  };
-
-  await out.write(`./public/atlas/${name}.png`);
-
-  await new Promise((resolve) =>
-    fs.writeFile(
-      `./public/atlas/${name}.json`,
-      JSON.stringify(json, undefined, 2),
-      resolve
-    )
-  );
+  return clone;
 };

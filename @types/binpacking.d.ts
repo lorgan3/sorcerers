@@ -14,8 +14,12 @@ declare module "binpacking" {
     right: Resolution;
   }
 
-  // @todo
-  const Packer: any;
+  class Packer {
+    constructor(width: number, height: number);
+
+    // Each block will contain a resolution.
+    public fit(blocks: Block[]): void;
+  }
 
   class GrowingPacker {
     public root: Resolution;

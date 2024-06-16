@@ -1,26 +1,40 @@
 import Jimp from "jimp";
 import { GifUtil } from "gifwrap";
-import { Block, GrowingPacker, Resolution } from "binpacking";
-import fs from "fs";
-import { Atlas, Frame } from "./util";
+import { Block, GrowingPacker, Packer, Resolution } from "binpacking";
+import fs from "fs/promises";
+import { Atlas, Frame, extract } from "./util.ts";
 
 interface SpriteBlock extends Block {
   jimp: Jimp;
   name: string;
   fit?: Resolution;
   animation?: string;
+  overlay?: Jimp;
 }
 
-const ATLASES = ["atlas", "backgrounds"];
+const extractColors: Record<string, { from: number[]; to: string[] }> = {
+  "atlas/elf": {
+    from: [
+      0x7e292cff, 0x7e4547ff, 0x7a272aff, 0x7a3d3fff, 0x7b282eff, 0x732325ff,
+      0x782628ff, 0x722b2dff, 0x772527ff, 0x722c2eff, 0x722225ff, 0x671c1eff,
+      0x6a1e20ff, 0x6e2022ff, 0x6c1f21ff, 0x6b1e20ff, 0x663a38ff, 0x6b1e21ff,
+      0x691d1fff, 0x681c1eff, 0x9c484aff, 0x8e3f41ff, 0x3e0b0cff, 0x934042ff,
+      0x7f2a2dff, 0x712224ff,
+    ],
+    to: ["#fde74c", "#9cc53d", "#5cc0eb", "#e65933"],
+  },
+};
+
+const ATLASES = { atlas: 2048, backgrounds: null };
 const DIRECTORY = "./public/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?
 const MARGIN = 1;
 
-const buildAtlas = async (name: string) => {
+const buildAtlas = async (name: string, resolution: number | null) => {
   const blocks: SpriteBlock[] = [];
 
-  const contents = fs.readdirSync(DIRECTORY + name);
+  const contents = await fs.readdir(DIRECTORY + name);
   const files = contents.filter((file) => file.endsWith(".json"));
   const folders = contents.filter((file) => !file.includes("."));
 
@@ -28,18 +42,19 @@ const buildAtlas = async (name: string) => {
   const animations: Record<string, string[]> = {};
 
   for (let folder of folders) {
-    const files = fs.readdirSync(`${DIRECTORY}${name}/${folder}`);
+    const folderName = `${name}/${folder}`;
+    const files = await fs.readdir(`${DIRECTORY}${folderName}`);
 
     for (let file of files) {
       const frames: Jimp[] = [];
       if (file.toLowerCase().endsWith("gif")) {
-        const gif = await GifUtil.read(`${DIRECTORY}${name}/${folder}/${file}`);
+        const gif = await GifUtil.read(`${DIRECTORY}${folderName}/${file}`);
         frames.push(
           ...gif.frames.map((frame) => GifUtil.shareAsJimp(Jimp, frame))
         );
       } else {
         try {
-          frames.push(await Jimp.read(`${DIRECTORY}${name}/${folder}/${file}`));
+          frames.push(await Jimp.read(`${DIRECTORY}${folderName}/${file}`));
         } catch {
           console.log(`Skipping ${file}`);
         }
@@ -51,19 +66,49 @@ const buildAtlas = async (name: string) => {
       for (let i = 0; i < frames.length; i++) {
         const frame = frames[i];
 
-        blocks.push({
-          name:
-            frames.length > 1
-              ? `${folder}_${fileName}_${i + 1}`
-              : `${folder}_${fileName}`,
+        const block = {
           w: frame.getWidth() + MARGIN * 2,
           h: frame.getHeight() + MARGIN * 2,
-          jimp: frame,
-          ...(!isNaN(Number(parts[1])) && {
-            animation: `${folder}_${parts[0]}`,
-          }),
-          ...(frames.length > 1 && { animation: `${folder}_${fileName}` }),
-        });
+        };
+
+        const config = extractColors[folderName];
+        let overlays: Jimp[] = [];
+        if (config) {
+          const extracted = extract(frame, config.from).grayscale();
+
+          overlays = config.to.map((color) =>
+            extracted
+              .clone()
+              .color([{ apply: "mix" as any, params: [color, 50] }])
+              .brightness(-0.1)
+              .contrast(0.15)
+          );
+        }
+
+        for (let j = 0; j < overlays.length || j < 1; j++) {
+          const overlay = overlays[j];
+          const frameName = [
+            folder,
+            parts[0],
+            overlay ? j : undefined,
+            parts[1],
+          ]
+            .filter((p) => p !== undefined)
+            .join("_");
+
+          blocks.push({
+            ...block,
+            jimp: frame,
+            name: frames.length > 1 ? `${frameName}_${i + 1}` : frameName,
+            ...(!isNaN(Number(parts[1])) && {
+              animation: overlay
+                ? `${folder}_${parts[0]}_${j}`
+                : `${folder}_${parts[0]}`,
+            }),
+            ...(frames.length > 1 && { animation: frameName }),
+            overlay,
+          });
+        }
       }
     }
   }
@@ -73,7 +118,7 @@ const buildAtlas = async (name: string) => {
 
     try {
       atlas = JSON.parse(
-        fs.readFileSync(`${DIRECTORY}${name}/${file}`).toString()
+        (await fs.readFile(`${DIRECTORY}${name}/${file}`)).toString()
       );
     } catch (error) {
       console.error(`Failed to load atlas for ${file}`, error);
@@ -157,13 +202,31 @@ const buildAtlas = async (name: string) => {
 
   blocks.sort((a, b) => b.h - a.h);
 
-  const packer = new GrowingPacker();
-  packer.fit(blocks);
+  let packer;
+  let atlas;
+  if (resolution) {
+    packer = new Packer(resolution, resolution);
+    packer.fit(blocks);
 
-  const atlas = new Jimp(packer.root.w, packer.root.h);
+    atlas = new Jimp(resolution, resolution);
+  } else {
+    packer = new GrowingPacker();
+    packer.fit(blocks);
+
+    atlas = new Jimp(packer.root.w, packer.root.h);
+  }
+
   for (let block of blocks) {
     if (block.fit!.used) {
       atlas.composite(block.jimp, block.fit!.x + MARGIN, block.fit!.y + MARGIN);
+
+      if (block.overlay) {
+        atlas.composite(
+          block.overlay,
+          block.fit!.x + MARGIN,
+          block.fit!.y + MARGIN
+        );
+      }
 
       frames[block.name] = {
         frame: {
@@ -201,14 +264,16 @@ const buildAtlas = async (name: string) => {
       app: "https://github.com/lorgan3/sorcerers",
       version: "1.0",
       image: `${name}.png`,
-      size: { w: packer.root.w, h: packer.root.h },
+      size: { w: atlas.getWidth(), h: atlas.getHeight() },
     },
   };
 
-  await atlas.write(`./public/${name}.png`);
-  fs.writeFileSync(`./public/${name}.json`, JSON.stringify(json, undefined, 2));
+  await Promise.all([
+    atlas.writeAsync(`./public/${name}.png`),
+    fs.writeFile(`./public/${name}.json`, JSON.stringify(json, undefined, 2)),
+  ]);
 };
 
-for (let name of ATLASES) {
-  await buildAtlas(name);
+for (let name in ATLASES) {
+  await buildAtlas(name, ATLASES[name as keyof typeof ATLASES]);
 }
