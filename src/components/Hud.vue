@@ -50,12 +50,14 @@ const poll = () => {
   activePlayer.value = data.activePlayer;
   mana.value = data.mana;
 
-  maxHp.value = 1;
+  maxHp.value = 100;
   for (let player of data.players) {
-    for (let character of player.characters) {
-      if (character.hp > maxHp.value) {
-        maxHp.value = character.hp;
-      }
+    let hp =
+      player.characters.reduce((sum, character) => sum + character.hp, 0) /
+      player.characters.length;
+
+    if (hp > maxHp.value) {
+      maxHp.value = hp;
     }
   }
 
@@ -234,7 +236,7 @@ onBeforeUnmount(() => window.clearInterval(id));
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.3s;
 
-    ul {
+    > ul {
       overflow: hidden;
       grid-row: 1 / span 2;
       display: flex;
@@ -262,7 +264,10 @@ onBeforeUnmount(() => window.clearInterval(id));
           background: rgb(42, 60, 255);
           box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
           border-radius: 4px;
-          width: calc(var(--hp) / var(--max-hp) / var(--team-size) * 100%);
+          width: calc(
+            calc(var(--hp) / var(--max-hp) / var(--team-size) * 100%) -6px
+          );
+          transition: width 0.5s;
         }
       }
     }
