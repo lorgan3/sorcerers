@@ -46,6 +46,17 @@ export class BBox {
     return bbox;
   }
 
+  withScale(scale: number) {
+    const bbox = this.clone();
+
+    bbox.left *= scale;
+    bbox.top *= scale;
+    bbox.right *= scale;
+    bbox.bottom *= scale;
+
+    return bbox;
+  }
+
   toJS(): PlainBBox {
     return {
       left: this.left,

@@ -8,17 +8,14 @@ export class Viewport extends Container {
     public screenWidth: number,
     public screenHeight: number,
     public readonly worldWidth: number,
-    public readonly worldHeight: number
+    public readonly worldHeight: number,
+    public readonly worldScale: number
   ) {
     super();
+
     this.eventMode = "static";
     this.interactiveChildren = false;
-    this.hitArea = new Rectangle(
-      0,
-      0,
-      this.worldScreenWidth * 6,
-      this.worldHeight * 6
-    );
+    this.hitArea = new Rectangle(0, 0, this.worldWidth, this.worldHeight);
 
     this.cx = this.worldWidth / 2;
     this.cy = this.worldHeight / 2;

@@ -25,29 +25,37 @@ export class Terrain {
     this.collisionMask = map.collisionMask;
     this.characterMask = this.collisionMask.clone();
 
-    this.terrain = new UpdatingTexture(map.terrain);
+    this.terrain = new UpdatingTexture(map.terrain, map.scaleMultiplier);
     this.terrainSprite = new Sprite(this.terrain.texture);
-    this.terrainSprite.scale.set(6);
+    this.terrainSprite.scale.set(map.scale);
 
     this.background = Texture.from(map.background);
     this.backgroundSprite = new Sprite(this.background);
-    this.backgroundSprite.scale.set(6);
+    this.backgroundSprite.scale.set(map.scale);
 
     this.layerTextures = [];
     this.layerSprites = [];
     for (let layer of map.layers) {
-      const texture = new UpdatingTexture(layer.data, layer.x, layer.y);
+      const texture = new UpdatingTexture(
+        layer.data,
+        map.scaleMultiplier,
+        layer.x,
+        layer.y
+      );
       this.layerTextures.push(texture);
 
       const sprite = new Sprite(texture.texture);
-      sprite.position.set(layer.x, layer.y);
+      sprite.position.set(
+        layer.x * map.scaleMultiplier,
+        layer.y * map.scaleMultiplier
+      );
       this.layerSprites.push(sprite);
     }
 
     this.killbox = new Killbox(this.background.width, this.background.height);
 
     this.foreground = new Container();
-    this.foreground.scale.set(6);
+    this.foreground.scale.set(map.scale);
     this.foreground.addChild(...this.layerSprites, this.killbox);
   }
 
@@ -61,6 +69,10 @@ export class Terrain {
 
   get height() {
     return this.map.height;
+  }
+
+  get scale() {
+    return this.map.scale;
   }
 
   setLayerVisibility(layer: ComputedLayer, revealed: boolean) {

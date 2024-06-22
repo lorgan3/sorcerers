@@ -85,8 +85,9 @@ export class Level {
     this.viewport = new Viewport(
       window.innerWidth,
       window.innerHeight,
-      map.terrain.width * 6,
-      map.terrain.height * 6
+      map.terrain.width * map.scale,
+      map.terrain.height * map.scale,
+      map.scale
     );
 
     this.cameraTarget = new CameraTarget(this.viewport);

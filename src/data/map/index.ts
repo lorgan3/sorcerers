@@ -35,6 +35,7 @@ export interface Config {
   layers: Layer[];
   bbox: PlainBBox;
   parallax: Parallax;
+  scale: number;
 }
 
 const TERRAIN_KEY = "terrain";
@@ -43,12 +44,15 @@ const LAYERS_KEY = "layers";
 const MASK_KEY = "mask";
 const BBOX_KEY = "bbox";
 const PARALLAX_KEY = "parallax";
+const SCALE_KEY = "scale";
 const VERSION_KEY = "version";
 
 const VERSION = 1;
 const THUMBNAIL_SIZE = 100;
 
 export class Map {
+  public static defaultScale = 6;
+
   private _terrain?: OffscreenCanvas;
   private _background?: OffscreenCanvas;
   private _collisionMask?: CollisionMask;
@@ -57,10 +61,15 @@ export class Map {
   private _height = 0;
   private _bbox?: BBox;
   private _parallax?: Parallax;
+  private _scale = 6;
+  private _scaleMultiplier = 1;
 
   public readonly load: Promise<void>;
 
   private constructor(private config: Config) {
+    this._scale = config.scale;
+    this._scaleMultiplier = Map.defaultScale / config.scale;
+
     this.load = Promise.all([
       Map.createCanvasFromData(this.config.terrain.data),
       Map.createCanvasFromData(this.config.background.data),
@@ -72,16 +81,19 @@ export class Map {
       this._terrain = terrain;
       this._background = background;
       this._layers = layers.map((layer, i) => {
-        const { x, y } = config.layers[i];
-        const r = (layer.width + layer.height) / 2 - 6;
+        const x = config.layers[i].x / this._scaleMultiplier;
+        const y = config.layers[i].y / this._scaleMultiplier;
+        const width = layer.width / this._scaleMultiplier;
+        const height = layer.height / this._scaleMultiplier;
+
         return {
           data: layer,
           x,
           y,
-          cx: x + layer.width / 2,
-          cy: y + layer.height / 2,
-          right: x + layer.width,
-          bottom: y + layer.height,
+          cx: x + width / 2,
+          cy: y + height / 2,
+          right: x + width,
+          bottom: y + height,
         };
       });
 
@@ -92,6 +104,16 @@ export class Map {
       } else if (mask) {
         this._collisionMask = CollisionMask.fromAlpha(
           mask.getContext("2d")!.getImageData(0, 0, mask.width, mask.height)
+        );
+      } else if (this._scaleMultiplier !== 1) {
+        const temp = new OffscreenCanvas(
+          Math.floor(terrain.width / this._scaleMultiplier),
+          Math.floor(terrain.height / this._scaleMultiplier)
+        );
+        const ctx = temp.getContext("2d")!;
+        ctx.drawImage(terrain, 0, 0, temp.width, temp.height);
+        this._collisionMask = CollisionMask.fromAlpha(
+          ctx.getImageData(0, 0, temp.width, temp.height)
         );
       } else {
         this._collisionMask = CollisionMask.fromAlpha(
@@ -126,6 +148,7 @@ export class Map {
       parallax: JSON.parse(
         Map.getMetadata(data, PARALLAX_KEY, '{ "name": "", "offset": 0 }')
       ),
+      scale: parseInt(Map.getMetadata(data, SCALE_KEY, "6"), 10),
     };
   }
 
@@ -167,6 +190,7 @@ export class Map {
       })),
       bbox: this._bbox!.toJS(),
       parallax: this._parallax!,
+      scale: this._scale,
     };
   }
 
@@ -278,6 +302,14 @@ export class Map {
 
   get parallax() {
     return this._parallax!;
+  }
+
+  get scale() {
+    return this._scale;
+  }
+
+  get scaleMultiplier() {
+    return this._scaleMultiplier;
   }
 
   public static loadImage(value: string | Blob) {

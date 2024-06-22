@@ -4,9 +4,10 @@ export class UpdatingTexture {
   private ctx: OffscreenCanvasRenderingContext2D;
   public readonly texture: Texture;
 
-  constructor(canvas: OffscreenCanvas, offsetX = 0, offsetY = 0) {
+  constructor(canvas: OffscreenCanvas, scale = 1, offsetX = 0, offsetY = 0) {
     this.ctx = canvas.getContext("2d")!;
-    this.ctx.translate(-offsetX, -offsetY);
+    this.ctx.translate(-offsetX * scale, -offsetY * scale);
+    this.ctx.scale(scale, scale);
 
     this.texture = Texture.from(canvas);
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, onMounted, ref } from "vue";
+import { Ref, onMounted, ref, watch } from "vue";
 import { Map, Layer, Config } from "../data/map";
 import { CONFIGS } from "../data/map/background";
 import Input from "./Input.vue";
@@ -20,7 +20,6 @@ const { onPlay, config } = defineProps<{
 }>();
 const router = useRouter();
 
-const SCALE = 6;
 const terrain = ref("");
 const mask = ref("");
 const background = ref("");
@@ -30,6 +29,7 @@ const preview = ref<HTMLDivElement>();
 const bbox = ref<BBox>(BBox.create(0, 0));
 const backgroundName = ref("");
 const backgroundOffset = ref(0);
+const scale = ref(6);
 
 const name = ref("");
 
@@ -37,6 +37,10 @@ onMounted(async () => {
   if (config) {
     loadMap(config, "");
   }
+});
+
+watch(scale, (scale, oldScale) => {
+  bbox.value = bbox.value.withScale(scale / oldScale);
 });
 
 const addImageFactory = (ref: Ref) => (event: Event) => {
@@ -76,6 +80,7 @@ const handleBuild = async () => {
       .map((layer) => ({ ...layer })),
     bbox: bbox.value,
     parallax: { name: backgroundName.value, offset: backgroundOffset.value },
+    scale: scale.value,
   });
 
   const url = URL.createObjectURL(await map.toBlob());
@@ -98,11 +103,12 @@ const handleTest = async () => {
       .map((layer) => ({ ...layer })),
     bbox: bbox.value,
     parallax: { name: backgroundName.value, offset: backgroundOffset.value },
+    scale: scale.value,
   };
 
   const server = new Server();
   server.addPlayer("Test player", Team.random());
-  onPlay("0000", config, Manager.defaultSettings);
+  onPlay("0000", config, { ...Manager.defaultSettings, teamSize: 1 });
 };
 
 const handleLoadCustom = async (event: Event) => {
@@ -172,8 +178,8 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
   let startY = event.pageY;
 
   const handleMouseMove = (moveEvent: MouseEvent) => {
-    layer.x = x + Math.round((moveEvent.pageX - startX) / SCALE);
-    layer.y = y + Math.round((moveEvent.pageY - startY) / SCALE);
+    layer.x = x + Math.round((moveEvent.pageX - startX) / scale.value);
+    layer.y = y + Math.round((moveEvent.pageY - startY) / scale.value);
   };
 
   const handleMouseUp = () => {
@@ -193,10 +199,15 @@ const handleBBoxChange = (newBBox: BBox) => {
 };
 
 const handleEnableMask = () => (addMask.value = true);
+
+const handleDisableMask = () => {
+  addMask.value = false;
+  mask.value = "";
+};
 </script>
 
 <template>
-  <div class="builder" :style="{ '--scale': SCALE }">
+  <div class="builder" :style="{ '--scale': scale }">
     <section class="controls flex-list">
       <div class="section">
         <h2>Terrain</h2>
@@ -213,11 +224,19 @@ const handleEnableMask = () => (addMask.value = true);
         <button v-if="!addMask" class="secondary" @click="handleEnableMask">
           Add wallmask
         </button>
-        <label v-else class="inputButton">
-          <input hidden type="file" @change="handleAddMask" accept="image/*" />
-          <img v-if="mask" :src="mask" />
-          <div v-else class="placeholder">➕ Add image</div>
-        </label>
+        <template v-else>
+          <label class="inputButton">
+            <input
+              hidden
+              type="file"
+              @change="handleAddMask"
+              accept="image/*"
+            />
+            <img v-if="mask" :src="mask" />
+            <div v-else class="placeholder">➕ Add image</div>
+          </label>
+          <button class="secondary" @click="handleDisableMask">Clear</button>
+        </template>
       </div>
 
       <div class="section">
@@ -290,6 +309,7 @@ const handleEnableMask = () => (addMask.value = true);
       <div class="section">
         <h2>Details</h2>
         <Input label="Name" autofocus v-model="name" />
+        <Input label="Scale" autofocus v-model="scale" :min="1" />
         <Input label="Spawn area left" v-model="bbox.left" :max="bbox.right" />
         <Input label="Spawn area top" v-model="bbox.top" :max="bbox.bottom" />
         <Input label="Spawn area right" v-model="bbox.right" :min="bbox.left" />
@@ -348,7 +368,7 @@ const handleEnableMask = () => (addMask.value = true);
           v-if="layer.data"
           class="layer"
           @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
-          :style="{ translate: `${layer.x * SCALE}px ${layer.y * SCALE}px` }"
+          :style="{ translate: `${layer.x * scale}px ${layer.y * scale}px` }"
         >
           <span class="meta">Layer {{ i }} ({{ layer.x }}, {{ layer.y }})</span>
           <img :src="(layer.data as string)" />
@@ -448,7 +468,7 @@ const handleEnableMask = () => (addMask.value = true);
     img {
       position: absolute;
       transform-origin: 0 0;
-      scale: 6 6;
+      scale: var(--scale) var(--scale);
       image-rendering: pixelated;
     }
 
@@ -473,8 +493,8 @@ const handleEnableMask = () => (addMask.value = true);
 
       &:hover {
         img {
-          top: -6px;
-          left: -6px;
+          top: calc(var(--scale) * -1px);
+          left: calc(var(--scale) * -1px);
           border: 1px solid rgba(0, 0, 0, 0.6);
         }
 
