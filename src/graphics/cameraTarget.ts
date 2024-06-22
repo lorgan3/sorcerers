@@ -7,6 +7,8 @@ import { Viewport } from "../data/map/viewport";
 
 export class CameraTarget {
   private static maxScale = 1.5;
+  private static minScale = 0.5;
+
   private static zoomSpeed = 0.01;
   private static maxZoomScale = 10;
   private static highlightDelay = 90;
@@ -204,18 +206,16 @@ export class CameraTarget {
   connect(controller: KeyboardController) {
     this.controller = controller;
 
-    controller.addScrollListener((event) => {
-      const zoomDelta =
-        event.deltaY > 0
-          ? Math.min(CameraTarget.maxZoomScale, event.deltaY)
-          : Math.max(-CameraTarget.maxZoomScale, event.deltaY);
+    const zoom = (newScale: number) => {
       const minScale = Math.max(
+        CameraTarget.minScale,
         this.viewport.screenHeight / this.viewport.worldHeight,
         this.viewport.screenWidth / this.viewport.worldWidth
       );
+
       this.scale = Math.min(
         CameraTarget.maxScale,
-        Math.max(minScale, this.scale - zoomDelta * CameraTarget.zoomSpeed)
+        Math.max(minScale, newScale)
       );
 
       const oldWidth = this.viewport.width;
@@ -238,7 +238,18 @@ export class CameraTarget {
         this.controller!.mouseMove(x + dx2, y + dy2);
         this.viewport.moveCenter(...this.position);
       }
+    };
+
+    controller.addScrollListener((event) => {
+      const zoomDelta =
+        event.deltaY > 0
+          ? Math.min(CameraTarget.maxZoomScale, event.deltaY)
+          : Math.max(-CameraTarget.maxZoomScale, event.deltaY);
+
+      zoom(this.scale - zoomDelta * CameraTarget.zoomSpeed);
     });
+
+    zoom(this.scale);
   }
 
   private clamp(position: [number, number]): [number, number] {
