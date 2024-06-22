@@ -40,7 +40,7 @@ export abstract class Manager {
   protected time = 0;
   protected frames = 0;
   protected elements = Object.fromEntries(
-    Object.values(Element).map((element, i) => [element, i / 2])
+    Object.values(Element).map((element) => [element, 1.75])
   ) as Record<Element, number>;
   private cachedElementValues: Partial<
     Record<Element, { value: number; time: number }>
