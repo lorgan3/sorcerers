@@ -18,7 +18,7 @@ import TeamDialog from "../organisms/TeamDialog.vue";
 import { IPlayer } from "../types";
 import GameSettingsComponent from "../organisms/GameSettings.vue";
 import MapSelect from "../organisms/MapSelect.vue";
-import GameSettingsComponent from "../molecules/GameSettings.vue";
+import { COLORS } from "../../data/network/constants";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -228,6 +228,14 @@ const handleSelectMap = (map: Map, name: string) => {
       </h2>
 
       <div class="teams">
+        <TeamDisplay
+          v-if="players.length === 0"
+          :player="{
+            name: settings.name,
+            color: COLORS.at(-1)!,
+            team: settings.team,
+          }"
+        />
         <TeamDisplay
           v-for="(player, index) in players"
           :key="player.color"
