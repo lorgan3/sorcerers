@@ -12,6 +12,7 @@ const {
   name,
   min,
   max,
+  error,
 } = defineProps<{
   label?: string;
   modelValue?: V;
@@ -23,6 +24,7 @@ const {
   name?: string;
   min?: number;
   max?: number;
+  error?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -62,7 +64,7 @@ const handleBlur = (event: Event) => {
   <label class="wrapper">
     <span v-if="label" class="label">{{ label }}</span>
     <input
-      :class="{ input: true, 'input--invalid': !valid }"
+      :class="{ input: true, 'input--invalid': !valid || error }"
       @input="handleInput"
       :value="modelValue ?? value"
       :autofocus="autofocus"

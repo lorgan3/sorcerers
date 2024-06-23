@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import book from "../assets/book.png";
-import settingsBook from "../assets/settingsBook.png";
+import book from "../../assets/book.png";
+import settingsBook from "../../assets/settingsBook.png";
 import { RouterLink } from "vue-router";
-import Tooltip from "./Tooltip.vue";
+import Tooltip from "../atoms/Tooltip.vue";
+import { ref } from "vue";
+import JoinDialog from "../organisms/JoinDialog.vue";
+
+const joinDialogOpen = ref(false);
 </script>
 
 <template>
@@ -14,9 +18,9 @@ import Tooltip from "./Tooltip.vue";
         </RouterLink>
       </li>
       <li>
-        <RouterLink to="/join" v-slot="{ navigate }">
-          <button class="primary" @click="navigate">Join game</button>
-        </RouterLink>
+        <button class="primary" @click="joinDialogOpen = true">
+          Join game
+        </button>
       </li>
       <li>
         <RouterLink to="/builder" v-slot="{ navigate }">
@@ -71,6 +75,10 @@ import Tooltip from "./Tooltip.vue";
       </RouterLink>
     </Tooltip>
   </div>
+  <JoinDialog
+    :open="joinDialogOpen"
+    :onClose="() => (joinDialogOpen = false)"
+  />
 </template>
 
 <style lang="scss" scoped>

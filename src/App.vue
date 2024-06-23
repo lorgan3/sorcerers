@@ -70,6 +70,11 @@ button {
   color: var(--highlight);
 }
 
+.primary:focus-visible {
+  outline: none;
+  border: 4px solid var(--primary);
+}
+
 .secondary {
   background: transparent;
   border: none;

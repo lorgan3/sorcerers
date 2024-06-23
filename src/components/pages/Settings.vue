@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { defaults } from "../util/localStorage/settings";
-import { get, set } from "../util/localStorage";
+import { defaults } from "../../util/localStorage/settings";
+import { get, set } from "../../util/localStorage";
 import { ref } from "vue";
-import { setVolume } from "../sound";
+import { setVolume } from "../../sound";
 
 const router = useRouter();
 

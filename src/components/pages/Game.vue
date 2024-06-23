@@ -1,22 +1,21 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { AssetsContainer } from "../util/assets/assetsContainer";
-import { connect } from "../data/network";
-import Hud from "./Hud.vue";
-import Tutorial from "./Tutorial.vue";
-import { Map } from "../data/map";
-import Inventory from "./Inventory.vue";
-import { Controller, Key } from "../data/controller/controller";
+import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { connect } from "../../data/network";
+import Hud from "../organisms/Hud.vue";
+import Tutorial from "../organisms/Tutorial.vue";
+import { Map } from "../../data/map";
+import Inventory from "../organisms/Inventory.vue";
+import { Controller, Key } from "../../data/controller/controller";
 import { useRoute, useRouter } from "vue-router";
-import IngameMenu from "./IngameMenu.vue";
-import { Settings } from "../data/network/types";
-import { get } from "../util/localStorage";
-import { defaults } from "../util/localStorage/settings";
-import { setVolume, stopMusic } from "../sound";
+import IngameMenu from "../organisms/IngameMenu.vue";
+import { get } from "../../util/localStorage";
+import { GameSettings, defaults } from "../../util/localStorage/settings";
+import { setVolume, stopMusic } from "../../sound";
 
 const { selectedMap, settings: gameSettings } = defineProps<{
   selectedMap: Map;
-  settings: Settings;
+  settings: GameSettings;
 }>();
 
 const canvas = ref<HTMLDivElement | null>(null);
@@ -91,7 +90,7 @@ const setHudState = (open: boolean) => (forceHudOpen.value = open);
 <style lang="scss" scoped>
 .render-target {
   display: flex;
-  cursor: url("../assets/pointer.png"), auto;
+  cursor: url("../../assets/pointer.png"), auto;
 
   &--no-pointer {
     cursor: none;

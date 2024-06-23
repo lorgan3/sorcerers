@@ -5,7 +5,11 @@ type Vertical = "top" | "bottom" | "center";
 type Horizontal = "left" | "right" | "center";
 export type Direction = `${Vertical}-${Horizontal}`;
 
-const props = defineProps<{ text?: string; direction: Direction }>();
+const props = defineProps<{
+  text?: string;
+  direction: Direction;
+  to?: string;
+}>();
 
 const slots = defineSlots<{
   default(): any;
@@ -63,7 +67,7 @@ const handleMouseLeave = (event: MouseEvent) => {
     class="tooltip-wrapper"
   >
     <slot name="default"></slot>
-    <Teleport v-if="isOpen" to="#app">
+    <Teleport v-if="isOpen" :to="$props.to || '#app'">
       <div
         class="tooltip"
         :style="{ left: `${x}px`, top: `${y}px` }"

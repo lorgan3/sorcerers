@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { get, set } from "../util/localStorage";
-import { defaults } from "../util/localStorage/settings";
+import { get, set } from "../../util/localStorage";
+import { defaults } from "../../util/localStorage/settings";
 
 const { setHudState, setInventoryState } = defineProps<{
   setHudState: (open: boolean) => void;

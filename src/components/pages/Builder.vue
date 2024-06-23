@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { Ref, onMounted, ref, watch } from "vue";
-import { Map, Layer, Config } from "../data/map";
-import { CONFIGS } from "../data/map/background";
-import Input from "./Input.vue";
-import { defaultMaps } from "../util/assets";
-import { AssetsContainer } from "../util/assets/assetsContainer";
-import { Server } from "../data/network/server";
-import { Team } from "../data/team";
-import BoundingBox from "./BoundingBox.vue";
-import { BBox } from "../data/map/bbox";
+import { Map, Layer, Config } from "../../data/map";
+import { CONFIGS } from "../../data/map/background";
+import Input from "../atoms/Input.vue";
+import { defaultMaps } from "../../util/assets";
+import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { Server } from "../../data/network/server";
+import { Team } from "../../data/team";
+import BoundingBox from "../molecules/BoundingBox.vue";
+import { BBox } from "../../data/map/bbox";
 import { useRouter } from "vue-router";
-import { Settings } from "../data/network/types";
-import { Manager } from "../data/network/manager";
-import { logEvent } from "../util/firebase";
+import { logEvent } from "../../util/firebase";
+import { GameSettings } from "../../util/localStorage/settings";
+import { defaults } from "../../util/localStorage/settings";
 
 const { onPlay, config } = defineProps<{
-  onPlay: (key: string, map: Map | Config, settings: Settings) => void;
+  onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
   config?: Config;
 }>();
 const router = useRouter();
@@ -108,7 +108,7 @@ const handleTest = async () => {
 
   const server = new Server();
   server.addPlayer("Test player", Team.random());
-  onPlay("0000", config, { ...Manager.defaultSettings, teamSize: 1 });
+  onPlay("0000", config, { ...defaults().gameSettings, teamSize: 1 });
 };
 
 const handleLoadCustom = async (event: Event) => {
@@ -385,7 +385,7 @@ const handleDisableMask = () => {
   display: flex;
 
   box-sizing: border-box;
-  background: url("../assets/parchment.png");
+  background: url("../../assets/parchment.png");
   image-rendering: pixelated;
   background-size: 256px;
 

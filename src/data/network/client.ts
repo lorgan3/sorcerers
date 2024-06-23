@@ -1,5 +1,5 @@
 import Peer, { DataConnection } from "peerjs";
-import { Message, MessageType, Settings, TurnState } from "./types";
+import { Message, MessageType, TurnState } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Player } from "./player";
 import { Character } from "../entity/character";
@@ -22,6 +22,7 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { GameSettings } from "../../util/localStorage/settings";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -141,7 +142,7 @@ export class Client extends Manager {
 
   connect(
     controller: KeyboardController,
-    settings: Settings,
+    settings: GameSettings,
     onBack: () => void
   ) {
     if (this.controller) {

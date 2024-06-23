@@ -1,5 +1,5 @@
 import Peer from "peerjs";
-import { MessageType, Message, Popup, TurnState, Settings } from "./types";
+import { MessageType, Message, Popup, TurnState } from "./types";
 import { Player } from "./player";
 import { Character } from "../entity/character";
 import { KeyboardController } from "../controller/keyboardController";
@@ -22,6 +22,8 @@ import { Element } from "../spells/types";
 import { getRandomItem } from "../entity";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DAMAGE_SOURCES } from "../damage";
+import { GameSettings } from "../../util/localStorage/settings";
+import { minutesToMs, secondsToMs } from "../../util/time";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -49,7 +51,7 @@ export class Server extends Manager {
 
   connect(
     controller: KeyboardController,
-    settings: Settings,
+    settings: GameSettings,
     onBack: () => void
   ) {
     if (this.controller) {
@@ -138,14 +140,14 @@ export class Server extends Manager {
     }
 
     if (
-      this.time - this.turnStartTime > this.settings.turnLength &&
+      this.time - this.turnStartTime > secondsToMs(this.settings.turnLength) &&
       this._turnState !== TurnState.Attacked &&
       this._turnState !== TurnState.Killing &&
       this._turnState !== TurnState.Spawning &&
       this._turnState !== TurnState.Rising &&
       this._turnState !== TurnState.Finished
     ) {
-      if (this.time > this.settings.gameLength) {
+      if (this.time > minutesToMs(this.settings.gameLength)) {
         if (!this.suddenDeath) {
           this.suddenDeath = true;
           this.addPopup({
@@ -219,6 +221,7 @@ export class Server extends Manager {
       let player = this.disconnectedPlayers.pop()!;
       if (!player) {
         player = new Player();
+        player.team.setSize(this.settings.teamSize);
         this.players.push(player);
       }
 
@@ -388,6 +391,7 @@ export class Server extends Manager {
         if (this.started) {
           return;
         }
+
         const team = Team.fromJson(message.team, this.settings.teamSize);
         if (player.joined) {
           player.rename(message.name, team.isValid() ? team : Team.random());
@@ -558,7 +562,10 @@ export class Server extends Manager {
         return;
       }
 
-      if (Math.random() > this.settings.itemSpawnChance / this.players.length) {
+      if (
+        Math.random() * 100 >
+        this.settings.itemSpawnChance / this.players.length
+      ) {
         checkSpawn();
         return;
       }
@@ -743,5 +750,16 @@ export class Server extends Manager {
     });
 
     super.cast(state);
+  }
+
+  get teamSize() {
+    return this.settings.teamSize;
+  }
+
+  set teamSize(newSize: number) {
+    if (this.started) {
+      throw new Error("Team size is locked when game has started");
+    }
+    this.settings.teamSize = newSize;
   }
 }

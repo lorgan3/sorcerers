@@ -6,3 +6,5 @@ export const MANA_PER_TURN_GAIN = 5;
 
 export const PEER_ID_PREFIX = "sorcerers-";
 export const FIXED_INTERVAL = 1000 / 20;
+
+export const LAST_GAME_KEY = "lastGameKey";

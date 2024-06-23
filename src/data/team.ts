@@ -38,6 +38,10 @@ export class Team {
     return this;
   }
 
+  getLimitedCharacters() {
+    return this.characters.slice(0, this.size);
+  }
+
   static random(size = Team.defaultSize) {
     return new Team(new Array(size).fill(null).map(getWord), size);
   }

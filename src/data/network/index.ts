@@ -6,12 +6,14 @@ import { KeyboardController } from "../controller/keyboardController";
 import { Manager } from "./manager";
 import { Map } from "../map";
 import { FIXED_INTERVAL } from "./constants";
-import { Settings } from "./types";
+import Peer from "peerjs";
+import { Client } from "./client";
+import { GameSettings } from "../../util/localStorage/settings";
 
 export const connect = async (
   target: HTMLElement,
   map: Map,
-  settings: Settings,
+  settings: GameSettings,
   onBack: () => void
 ) => {
   const level = new Level(target, map);
@@ -39,3 +41,26 @@ export const connect = async (
 
   return controller;
 };
+
+export const createClient = () =>
+  new Promise<void>((resolve) => {
+    const create = () => {
+      Manager.instance?.destroy();
+
+      const peer = new Peer();
+
+      peer.on("error", () => {
+        peer.destroy();
+        create();
+      });
+
+      peer.once("open", () => {
+        peer.off("error");
+        new Client(peer);
+
+        resolve();
+      });
+    };
+
+    create();
+  });

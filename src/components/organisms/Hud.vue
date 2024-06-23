@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { Manager } from "./../data/network/manager";
-import { Player } from "./../data/network/player";
-import { Popup } from "../data/network/types";
-import { Element } from "../data/spells/types";
-import { ELEMENT_MAP } from "../graphics/elements";
-import { MAX_MANA } from "../data/network/constants";
+import { Manager } from "../../data/network/manager";
+import { Player } from "../../data/network/player";
+import { Popup } from "../../data/network/types";
+import { Element } from "../../data/spells/types";
+import { ELEMENT_MAP } from "../../graphics/elements";
+import { MAX_MANA } from "../../data/network/constants";
 
 interface ActivePopup extends Popup {
   out: boolean;
@@ -205,7 +205,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   position: absolute;
   bottom: 0;
   left: 0;
-  cursor: url("../assets/pointer.png"), auto;
+  cursor: url("../../assets/pointer.png"), auto;
 
   display: grid;
   grid-template:

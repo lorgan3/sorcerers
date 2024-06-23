@@ -1,3 +1,4 @@
+import { GameSettings } from "../../util/localStorage/settings";
 import { DamageSourceType } from "../damage/types";
 import { EntityType } from "../entity/types";
 import { Config } from "../map";
@@ -26,15 +27,6 @@ export enum MessageType {
   turnState,
   Sink,
   Cast,
-}
-
-export interface Settings {
-  trustClient: boolean;
-  turnLength: number;
-  gameLength: number;
-  teamSize: number;
-  manaMultiplier: number;
-  itemSpawnChance: number;
 }
 
 export type Message =
@@ -110,14 +102,14 @@ export type Message =
   | {
       type: MessageType.LobbyUpdate;
       map: string;
-      players: string[];
+      players: Array<{ name: string; characters: string[]; color: string }>;
       you: number;
-      settings: Settings;
+      settings: GameSettings;
     }
   | {
       type: MessageType.StartGame;
       map: Config;
-      settings: Settings;
+      settings: GameSettings;
     }
   | {
       type: MessageType.SelectSpell;

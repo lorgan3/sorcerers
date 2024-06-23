@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Element } from "../data/spells/types";
-import { SPELLS, Spell } from "../data/spells";
-import { ELEMENT_MAP } from "../graphics/elements";
+import { Element } from "../../data/spells/types";
+import { SPELLS, Spell } from "../../data/spells";
+import { ELEMENT_MAP } from "../../graphics/elements";
 import { RouterLink } from "vue-router";
-import Tooltip from "./Tooltip.vue";
-import SpellDescription from "./SpellDescription.vue";
+import Tooltip from "../atoms/Tooltip.vue";
+import SpellDescription from "../molecules/SpellDescription.vue";
 
 const SPRITES_PER_ROW = 5;
 const elements = Object.keys(Element);
@@ -117,7 +117,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
   .spell-icon {
     --size: 96px;
 
-    background: url("../assets/spells.png");
+    background: url("../../assets/spells.png");
     background-position: left calc(var(--column, 0) * var(--size)) top
       calc(var(--row, 0) * var(--size));
     width: var(--size);

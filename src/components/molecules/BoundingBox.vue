@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { BBox } from "../data/map/bbox";
+import { BBox } from "../../data/map/bbox";
 
 const props = defineProps<{
   bbox: BBox;

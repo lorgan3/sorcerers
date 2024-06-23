@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { Spell } from "../data/spells";
-import { ELEMENT_MAP } from "../graphics/elements";
+import { Spell } from "../../data/spells";
+import { ELEMENT_MAP } from "../../graphics/elements";
 
 const { spell } = defineProps<{ spell: Spell }>();
 const previewMultiplier = ref(1);

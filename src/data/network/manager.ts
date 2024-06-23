@@ -1,6 +1,6 @@
 import Peer from "peerjs";
 import { Player } from "./player";
-import { Popup, Settings, TurnState } from "./types";
+import { Popup, TurnState } from "./types";
 import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { Spell, getSpellCost } from "../spells";
@@ -12,20 +12,13 @@ import { Key } from "../controller/controller";
 import { NetworkController } from "../controller/networkController";
 import { ActivePointer } from "../../graphics/ActivePointer";
 import { Character } from "../entity/character";
+import { minutesToMs, secondsToMs } from "../../util/time";
+import { GameSettings, defaults } from "../../util/localStorage/settings";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
 
 export abstract class Manager {
-  static defaultSettings: Settings = {
-    turnLength: 45 * 1000,
-    gameLength: 10 * 60 * 1000,
-    trustClient: false,
-    teamSize: 4,
-    manaMultiplier: 1,
-    itemSpawnChance: 1,
-  };
-
   private static _instance?: Manager;
   static get instance() {
     return Manager._instance!;
@@ -49,7 +42,7 @@ export abstract class Manager {
   protected turnStartTime = 0;
   protected _turnState = TurnState.Ongoing;
 
-  protected settings = Manager.defaultSettings;
+  protected settings = defaults().gameSettings;
 
   protected cursor: Cursor | null = null;
   private popups: Popup[] = [];
@@ -62,7 +55,7 @@ export abstract class Manager {
 
   connect(
     controller: KeyboardController,
-    settings: Settings,
+    settings: GameSettings,
     onBack: () => void
   ) {
     this.settings = settings;
@@ -145,7 +138,7 @@ export abstract class Manager {
 
     if (this._turnState === TurnState.Killing) {
       this.turnStartTime = Math.min(
-        this.time - this.settings.turnLength + TURN_GRACE_PERIOD,
+        this.time - secondsToMs(this.settings.turnLength) + TURN_GRACE_PERIOD,
         this.turnStartTime
       );
 
@@ -160,7 +153,7 @@ export abstract class Manager {
       }
 
       this.turnStartTime = Math.min(
-        this.time - this.settings.turnLength + TURN_GRACE_PERIOD,
+        this.time - secondsToMs(this.settings.turnLength) + TURN_GRACE_PERIOD,
         this.turnStartTime
       );
     }
@@ -179,7 +172,7 @@ export abstract class Manager {
   }
 
   get manaMultiplier() {
-    return this.settings.manaMultiplier;
+    return this.settings.manaMultiplier / 100;
   }
 
   get teamSize() {
@@ -207,9 +200,9 @@ export abstract class Manager {
     return {
       turnTime: Math.max(
         0,
-        this.settings.turnLength - (this.time - this.turnStartTime)
+        secondsToMs(this.settings.turnLength) - (this.time - this.turnStartTime)
       ),
-      gameTime: Math.max(0, this.settings.gameLength - this.time),
+      gameTime: Math.max(0, minutesToMs(this.settings.gameLength) - this.time),
       players: this.players,
       activePlayer: this.activePlayer,
       mana: this._self?.mana || 0,

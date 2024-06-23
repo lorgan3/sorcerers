@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { SPELLS, Spell } from "../data/spells";
-import { Manager } from "../data/network/manager";
+import { SPELLS, Spell } from "../../data/spells";
+import { Manager } from "../../data/network/manager";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { Server } from "../data/network/server";
-import { Client } from "../data/network/client";
-import { ELEMENT_COLOR_MAP } from "../graphics/elements";
-import { Message, MessageType } from "../data/network/types";
-import { Element } from "../data/spells/types";
-import Tooltip from "./Tooltip.vue";
-import SpellDescription from "./SpellDescription.vue";
+import { Server } from "../../data/network/server";
+import { Client } from "../../data/network/client";
+import { ELEMENT_COLOR_MAP } from "../../graphics/elements";
+import { Message, MessageType } from "../../data/network/types";
+import { Element } from "../../data/spells/types";
+import Tooltip from "../atoms/Tooltip.vue";
+import SpellDescription from "../molecules/SpellDescription.vue";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -206,7 +206,7 @@ const getElementFilter = (element: Element) =>
     border-radius: var(--small-radius);
     background: var(--background);
     pointer-events: all;
-    cursor: url("../assets/pointer.png"), auto;
+    cursor: url("../../assets/pointer.png"), auto;
 
     overflow-y: auto;
     scrollbar-width: none;
@@ -255,7 +255,7 @@ const getElementFilter = (element: Element) =>
         .spell-icon {
           --size: 48px;
 
-          background: url("../assets/spells.png");
+          background: url("../../assets/spells.png");
           background-position: left calc(var(--column, 0) * var(--size)) top
             calc(var(--row, 0) * var(--size));
           width: var(--size);

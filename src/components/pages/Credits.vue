@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import credits from "../../credits.json";
+import credits from "../../../credits.json";
 </script>
 
 <template>
