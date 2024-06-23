@@ -35,9 +35,24 @@ const valid = ref(true);
 const isNumeric = typeof (modelValue ?? value) === "number";
 
 const handleInput = (event: Event) => {
-  const newValue = isNumeric
+  let newValue = isNumeric
     ? (event.target as HTMLInputElement).valueAsNumber
     : (event.target as HTMLInputElement).value;
+
+  if (isNumeric) {
+    if (isNaN(newValue as number)) {
+      newValue = (event.target as HTMLInputElement).value;
+      valid.value = false;
+    } else {
+      newValue = Math.max(
+        min ?? Number.NEGATIVE_INFINITY,
+        Math.min(max ?? Number.POSITIVE_INFINITY, newValue as number)
+      );
+
+      (event.target as HTMLInputElement).value = newValue.toString();
+      valid.value = true;
+    }
+  }
 
   if (validator) {
     const result = validator(newValue as V);
