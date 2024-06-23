@@ -6,11 +6,8 @@ import { Server } from "../../data/network/server";
 import { PEER_ID_PREFIX } from "../../data/network/constants";
 import { MessageType } from "../../data/network/types";
 import Peer from "peerjs";
-import { defaultMaps } from "../../util/assets/index";
 import { Team } from "../../data/team";
 import { Config, Map } from "../../data/map";
-import { AssetsContainer } from "../../util/assets/assetsContainer";
-import Input from "../atoms/Input.vue";
 import { Manager } from "../../data/network/manager";
 import { Player } from "../../data/network/player";
 import debounce from "lodash.debounce";
@@ -19,6 +16,8 @@ import { logEvent } from "../../util/firebase";
 import TeamDisplay from "../organisms/TeamDisplay.vue";
 import TeamDialog from "../organisms/TeamDialog.vue";
 import { IPlayer } from "../types";
+import GameSettingsComponent from "../organisms/GameSettings.vue";
+import MapSelect from "../organisms/MapSelect.vue";
 import GameSettingsComponent from "../molecules/GameSettings.vue";
 
 const { onPlay } = defineProps<{
@@ -33,11 +32,10 @@ const team = ref(settings.team);
 const serverStarting = ref(false);
 const localPlayers = ref<string[]>([]);
 
-const CUSTOM = "custom";
-const selectedMap = ref(Object.keys(defaultMaps)[0]);
-const customMap = ref<Blob | null>(null);
-const customMapString = ref("");
-const customUpload = ref();
+const mapContainer: { map: Map | null; name: string } = {
+  map: null,
+  name: "",
+};
 
 const gameSettings = ref({
   ...settings.gameSettings,
@@ -104,7 +102,7 @@ const updateLobby = debounce(() => {
 
     player.connection?.send({
       type: MessageType.LobbyUpdate,
-      map: selectedMap.value,
+      map: mapContainer.name,
       players: players.value.map((player) => ({
         name: player.name,
         characters: player.team.getLimitedCharacters(),
@@ -115,31 +113,6 @@ const updateLobby = debounce(() => {
     });
   }
 }, 200);
-
-const handleSelectMap = (map: string) => {
-  selectedMap.value = map;
-  updateLobby();
-};
-
-const handleUploadMap = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files![0];
-
-  if (!file) {
-    if (customMap.value) {
-      selectedMap.value = CUSTOM;
-    }
-
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => {
-    customMapString.value = reader.result as string;
-    customMap.value = file;
-    selectedMap.value = CUSTOM;
-  };
-};
 
 const handleBack = () => {
   if (serverStarting.value) {
@@ -154,7 +127,7 @@ const handleBack = () => {
 };
 
 const handleStart = async () => {
-  if (serverStarting.value) {
+  if (serverStarting.value || !mapContainer.map) {
     return;
   }
   await promise.value;
@@ -167,19 +140,11 @@ const handleStart = async () => {
     gameSettings: gameSettings.value,
   });
 
-  if (selectedMap.value === CUSTOM) {
-    onPlay(key.value, await Map.fromBlob(customMap.value!), gameSettings.value);
-  } else {
-    onPlay(
-      key.value,
-      await Map.fromConfig(AssetsContainer.instance.assets![selectedMap.value]),
-      gameSettings.value
-    );
-  }
+  onPlay(key.value, mapContainer.map, gameSettings.value);
 
   logEvent("host_game", {
     players: Server.instance.players.length,
-    map: selectedMap.value,
+    map: mapContainer.name,
   });
 };
 
@@ -232,6 +197,13 @@ const handleSaveSettings = (settings: GameSettings) => {
 
   updateLobby();
 };
+
+const handleSelectMap = (map: Map, name: string) => {
+  mapContainer.map = map;
+  mapContainer.name = name;
+
+  updateLobby();
+};
 </script>
 
 <template>
@@ -272,34 +244,11 @@ const handleSaveSettings = (settings: GameSettings) => {
       </div>
     </div>
 
-    <div class="options flex-list flex-list--wide">
-      <h2>Map</h2>
-      <ul class="maps">
-        <li
-          v-for="(url, name) of defaultMaps"
-          :class="{ map: true, selected: selectedMap === name }"
-          @click="handleSelectMap(name)"
-        >
-          <span class="truncate mapName">{{ name }}</span>
-          <img :src="url" />
-        </li>
-        <li
-          :class="{ map: true, selected: selectedMap === CUSTOM }"
-          @click="customUpload.click"
-        >
-          <span class="truncate mapName">Custom</span>
-          <img v-if="customMapString" :src="customMapString" />
-          <div v-else class="placeholder">➕ upload</div>
-        </li>
-      </ul>
-
-      <input type="file" hidden @change="handleUploadMap" ref="customUpload" />
-
-      <GameSettingsComponent
-        :settings="gameSettings"
-        :onEdit="handleSaveSettings"
-      />
-    </div>
+    <MapSelect :onEdit="handleSelectMap" />
+    <GameSettingsComponent
+      :settings="gameSettings"
+      :onEdit="handleSaveSettings"
+    />
   </div>
 
   <div class="buttons">
@@ -319,55 +268,6 @@ const handleSaveSettings = (settings: GameSettings) => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.maps {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-
-  .map {
-    display: flex;
-    flex-direction: column;
-    width: 200px;
-    height: 150px;
-    align-items: center;
-    border: 2px solid var(--primary);
-    border-radius: 5px;
-    overflow: hidden;
-    background: var(--background);
-    cursor: pointer;
-    font-family: system-ui;
-    font-size: 14px;
-
-    .mapName {
-      text-align: center;
-      margin: 3px;
-      width: calc(100% - 6px);
-    }
-
-    img {
-      height: 125px;
-      width: 100%;
-      object-fit: cover;
-      image-rendering: pixelated;
-      border-top: 2px solid var(--primary);
-    }
-
-    &.selected {
-      box-shadow: 0 0 5px var(--primary);
-    }
-
-    .placeholder {
-      border-top: 2px solid var(--primary);
-      display: flex;
-      flex: 1;
-      width: 100%;
-      align-items: center;
-      justify-content: center;
-      font-variant-caps: unicase;
-    }
-  }
 }
 
 .settings {

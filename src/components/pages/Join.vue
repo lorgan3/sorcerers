@@ -13,7 +13,7 @@ import { createClient } from "../../data/network";
 import TeamDisplay from "../organisms/TeamDisplay.vue";
 import TeamDialog from "../organisms/TeamDialog.vue";
 import { IPlayer } from "../types";
-import GameSettingsComponent from "../molecules/GameSettings.vue";
+import GameSettingsComponent from "../organisms/GameSettings.vue";
 import { Team } from "../../data/team";
 
 const { onPlay } = defineProps<{
@@ -179,7 +179,7 @@ const handleSave = (name: string, characters: string[]) => {
         </div>
       </div>
 
-      <GameSettingsComponent :settings="gameSettings" />
+      <GameSettingsComponent :settings="gameSettings" :map="map" />
     </template>
 
     <div v-else class="options flex-list">

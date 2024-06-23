@@ -87,6 +87,7 @@ const handleConnect = async () => {
   .wrapper {
     flex: 1;
   }
+
   .icon {
     display: inline-block;
     transform-origin: 50%;
@@ -99,15 +100,6 @@ const handleConnect = async () => {
 
     &--spinning {
       animation: spin 0.5s linear infinite;
-    }
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
     }
   }
 }

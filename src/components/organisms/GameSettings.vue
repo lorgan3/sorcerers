@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import Dialog from "./Dialog.vue";
+import Dialog from "../molecules/Dialog.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Input from "../atoms/Input.vue";
 import { GameSettings } from "../../util/localStorage/settings";
 
 const { settings, onEdit } = defineProps<{
   settings: GameSettings;
+  map?: string;
   onEdit?: (settings: GameSettings) => void;
 }>();
 
@@ -37,6 +38,10 @@ const numberFormatter = new Intl.NumberFormat("en");
     </h2>
 
     <ul class="grid">
+      <li v-if="map">
+        <h3>Map</h3>
+        {{ map }}
+      </li>
       <li>
         <h3>Game duration</h3>
         {{ `${numberFormatter.format(settings.gameLength)} minutes` }}
