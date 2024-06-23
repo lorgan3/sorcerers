@@ -242,6 +242,7 @@ const handleSelectMap = (map: Map, name: string) => {
           :player="player"
           :onDelete="index !== 0 ? () => handleKick(index) : undefined"
           :onEdit="!player.connection ? handleEditPlayer : undefined"
+          :subTitle="!player.connection ? 'Local player' : ''"
         />
         <TeamDialog
           v-if="editingPlayer"

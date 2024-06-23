@@ -2,8 +2,9 @@
 import { COLORS } from "../../data/network/constants";
 import { IPlayer } from "../types";
 
-const { onDelete, onEdit, player } = defineProps<{
+const { onDelete, onEdit, player, subTitle } = defineProps<{
   player: IPlayer;
+  subTitle?: string;
   onDelete?: (player: IPlayer) => void;
   onEdit?: (IPlayer: IPlayer) => void;
 }>();
@@ -36,6 +37,7 @@ const handleDelete = (event: MouseEvent) => {
         </button>
       </div>
     </div>
+    <span v-if="subTitle" class="sub-title">{{ subTitle }}</span>
     <ul class="characters">
       <li v-for="character in player.team.getLimitedCharacters()">
         {{ character }}
@@ -82,7 +84,7 @@ const handleDelete = (event: MouseEvent) => {
   }
 
   .header {
-    padding: 5px;
+    padding: 5px 5px 0;
     display: flex;
     justify-content: space-between;
     overflow: hidden;
@@ -93,6 +95,13 @@ const handleDelete = (event: MouseEvent) => {
       text-overflow: ellipsis;
       overflow: hidden;
     }
+  }
+
+  .sub-title {
+    padding-left: 5px;
+    font-size: 12px;
+    display: block;
+    position: absolute;
   }
 
   .characters {

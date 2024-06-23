@@ -169,6 +169,7 @@ const handleSave = (name: string, characters: string[]) => {
             :key="player.color"
             :player="player"
             :onEdit="index === you ? handleEditPlayer : undefined"
+            :sub-title="index === you ? 'You' : ''"
           />
           <TeamDialog
             v-if="editingPlayer"
