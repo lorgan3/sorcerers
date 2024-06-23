@@ -93,15 +93,15 @@ export abstract class Manager {
     }
 
     Level.instance.tick(dt);
-
-    if (this.frames % 30 === 0) {
-      this.checkOverlays();
-    }
   }
 
   fixedTick(dtMs: number) {
     this.time += dtMs;
     this.frames++;
+
+    if (this.frames % 10 === 0) {
+      this.checkOverlays();
+    }
   }
 
   checkOverlays() {
