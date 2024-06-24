@@ -2,19 +2,28 @@
 import { defaultMaps, loadAsMap } from "../../util/assets/index";
 import { onMounted, ref } from "vue";
 import { Assets } from "pixi.js";
-import { Map } from "../../data/map";
+import { Config, Map } from "../../data/map";
 
-const { onEdit } = defineProps<{
-  onEdit: (map: Map, name: string) => void;
+const { onEdit, defaultMap } = defineProps<{
+  onEdit: (map: Config, name: string) => void;
+  defaultMap?: keyof typeof defaultMaps;
 }>();
 
-const DEFAULT_MAP = "Playground" as keyof typeof defaultMaps;
 const CUSTOM = "custom";
+const EMPTY = "empty";
 
-const selectedMap = ref<{ map: string; path: string }>({
-  map: DEFAULT_MAP,
-  path: defaultMaps[DEFAULT_MAP],
-});
+const selectedMap = ref<{ map: string; path: string }>(
+  defaultMap
+    ? {
+        map: defaultMap,
+        path: defaultMaps[defaultMap],
+      }
+    : {
+        map: EMPTY,
+        path: "",
+      }
+);
+
 const mapPath = ref("");
 const customUpload = ref<HTMLInputElement>();
 
@@ -23,6 +32,13 @@ const handleChange = (event: Event) => {
 
   if (map === CUSTOM) {
     customUpload.value!.click();
+    selectedMap.value = { map: CUSTOM, path: "" };
+    mapPath.value = "";
+    return;
+  }
+
+  if (map === EMPTY) {
+    selectedMap.value = { map: EMPTY, path: "" };
     mapPath.value = "";
     return;
   }
@@ -32,17 +48,23 @@ const handleChange = (event: Event) => {
   mapPath.value = defaultMaps[defaultMap];
 
   Assets.load(loadAsMap(defaultMaps[defaultMap])).then(async (map) =>
-    onEdit(await Map.fromConfig(map), defaultMap)
+    onEdit(map, defaultMap)
   );
 };
 
 const reset = () => {
-  Assets.load(loadAsMap(defaultMaps[DEFAULT_MAP])).then(async (map) =>
-    onEdit(await Map.fromConfig(map), DEFAULT_MAP)
+  if (!defaultMap) {
+    selectedMap.value = { map: EMPTY, path: "" };
+    mapPath.value = "";
+    return;
+  }
+
+  Assets.load(loadAsMap(defaultMaps[defaultMap])).then(async (map) =>
+    onEdit(map, defaultMap)
   );
 
-  selectedMap.value = { map: DEFAULT_MAP, path: defaultMaps[DEFAULT_MAP] };
-  mapPath.value = defaultMaps[DEFAULT_MAP];
+  selectedMap.value = { map: defaultMap, path: defaultMaps[defaultMap] };
+  mapPath.value = defaultMaps[defaultMap];
 };
 
 const handleUploadMap = (event: Event) => {
@@ -57,7 +79,7 @@ const handleUploadMap = (event: Event) => {
   reader.readAsDataURL(file);
   reader.onload = async () => {
     try {
-      onEdit(await Map.fromBlob(file), "Custom");
+      onEdit(await Map.parse(file), "Custom");
     } catch (error) {
       console.error(error);
       reset();
@@ -73,30 +95,35 @@ onMounted(() => reset());
 </script>
 
 <template>
-  <section class="map-select">
-    <h2>Map</h2>
-    <div class="map-preview">
-      <div class="custom-select">
-        <select @change="handleChange">
-          <option
-            v-for="(path, map) in defaultMaps"
-            :value="map"
-            :selected="selectedMap.path === path"
-          >
-            {{ map }}
-          </option>
-          <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
-            Upload custom map
-          </option>
-        </select>
-      </div>
-      <img v-if="mapPath" :src="mapPath" />
-      <div v-else class="center-wrapper">
-        <span class="icon icon--spinning">߷</span>
-      </div>
+  <section class="map-preview">
+    <div class="custom-select">
+      <select @change="handleChange">
+        <option
+          v-if="!defaultMap"
+          :value="EMPTY"
+          :selected="selectedMap.map === EMPTY"
+        >
+          Select map...
+        </option>
+        <option
+          v-for="(path, map) in defaultMaps"
+          :value="map"
+          :selected="selectedMap.path === path"
+        >
+          {{ map }}
+        </option>
+        <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
+          Upload custom map
+        </option>
+      </select>
+    </div>
+    <img v-if="mapPath" :src="mapPath" />
+    <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
+      <span class="icon icon--spinning">߷</span>
     </div>
     <input
       type="file"
+      accept="image/*"
       hidden
       @change="handleUploadMap"
       @cancel="reset"

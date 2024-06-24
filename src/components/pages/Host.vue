@@ -198,8 +198,8 @@ const handleSaveSettings = (settings: GameSettings) => {
   updateLobby();
 };
 
-const handleSelectMap = (map: Map, name: string) => {
-  mapContainer.map = map;
+const handleSelectMap = async (config: Config, name: string) => {
+  mapContainer.map = await Map.fromConfig(config);
   mapContainer.name = name;
 
   updateLobby();
@@ -253,7 +253,11 @@ const handleSelectMap = (map: Map, name: string) => {
       </div>
     </div>
 
-    <MapSelect :onEdit="handleSelectMap" />
+    <label>
+      <h2>Map</h2>
+      <MapSelect :onEdit="handleSelectMap" defaultMap="Playground" />
+    </label>
+
     <GameSettingsComponent
       :settings="gameSettings"
       :onEdit="handleSaveSettings"

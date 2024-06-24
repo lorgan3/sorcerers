@@ -3,8 +3,6 @@ import { Ref, onMounted, ref, watch } from "vue";
 import { Map, Layer, Config } from "../../data/map";
 import { CONFIGS } from "../../data/map/background";
 import Input from "../atoms/Input.vue";
-import { defaultMaps } from "../../util/assets";
-import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Server } from "../../data/network/server";
 import { Team } from "../../data/team";
 import BoundingBox from "../molecules/BoundingBox.vue";
@@ -13,6 +11,7 @@ import { useRouter } from "vue-router";
 import { logEvent } from "../../util/firebase";
 import { GameSettings } from "../../util/localStorage/settings";
 import { defaults } from "../../util/localStorage/settings";
+import MapSelect from "../organisms/MapSelect.vue";
 
 const { onPlay, config } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -124,10 +123,6 @@ const handleLoadCustom = async (event: Event) => {
   } catch {
     alert(`No map data was found in ${file.name}`);
   }
-};
-
-const handleLoad = (map: string) => {
-  loadMap(AssetsContainer.instance.assets![map], map);
 };
 
 const loadMap = (config: Config, map: string) => {
@@ -341,25 +336,7 @@ const handleDisableMask = () => {
           <br />You can also load a default or custom map to adjust it or see
           how it's made.
         </p>
-        <ul class="map-list">
-          <li v-for="(asset, name) of defaultMaps">
-            <label class="map" @click="handleLoad(name)">
-              <img :src="asset" />
-              <div>{{ name }}</div>
-            </label>
-          </li>
-          <li>
-            <label class="map custom-map">
-              <input
-                type="file"
-                hidden
-                @change="handleLoadCustom"
-                accept="image/*"
-              />
-              <div>➕ Custom map</div>
-            </label>
-          </li>
-        </ul>
+        <MapSelect :onEdit="loadMap" />
       </div>
       <img v-if="background" :src="background" />
       <img v-if="terrain" :src="terrain" />
