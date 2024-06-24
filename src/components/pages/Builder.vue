@@ -297,7 +297,6 @@ const handleDisableMask = () => {
             :value="layer.y"
             @change="(event: Event) => layer.y = parseInt((event.target as HTMLInputElement).value, 10)"
           />
-          <Input label="Scale" value="6" disabled />
         </div>
       </div>
 
