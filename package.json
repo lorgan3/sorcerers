@@ -19,6 +19,7 @@
     "lodash.debounce": "^4.0.8",
     "meta-png": "^1.0.6",
     "peerjs": "^1.5.4",
+    "pixelarticons": "^1.8.1",
     "pixi.js": "^8.1.6",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3"
