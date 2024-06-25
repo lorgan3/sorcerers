@@ -14,20 +14,22 @@ import MapSelect from "../organisms/MapSelect.vue";
 import BuilderSettings, {
   AdvancedSettings,
 } from "../organisms/BuilderSettings.vue";
+import ImageInput from "../molecules/ImageInput.vue";
+import IconButton from "../atoms/IconButton.vue";
+import plus from "pixelarticons/svg/plus.svg";
 
 const { onPlay, config } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
   config?: Config;
 }>();
 const router = useRouter();
-
-const terrain = ref("");
-const mask = ref("");
-const background = ref("");
-const layers = ref<Layer[]>([]);
 const preview = ref<HTMLDivElement>();
 
 const name = ref("");
+const terrain = ref({ data: "", visible: false });
+const mask = ref({ data: "", visible: false });
+const background = ref({ data: "", visible: false });
+const layers = ref<Array<Layer & { visible: boolean }>>([]);
 
 const settingsOpen = ref(false);
 const advancedSettings = ref<AdvancedSettings>({
@@ -48,43 +50,41 @@ watch(
   () => advancedSettings.value.customMask,
   (useMask) => {
     if (!useMask) {
-      mask.value = "";
+      mask.value = { data: "", visible: false };
     }
   }
 );
 
-const addImageFactory = (ref: Ref) => (event: Event) => {
-  const file = (event.target as HTMLInputElement).files![0];
-
-  if (!file) {
-    return;
-  }
-
-  var reader = new FileReader();
-  reader.readAsDataURL(file);
-
-  reader.onload = () => {
-    ref.value = reader.result as string;
+const addImageFactory =
+  (ref: Ref, visible = true) =>
+  (_: File, data: string) => {
+    ref.value = { data, visible };
 
     if (advancedSettings.value.bbox.isEmpty()) {
       var image = new Image();
-      image.src = ref.value;
+      image.src = data;
 
       image.onload = () => {
         advancedSettings.value.bbox = BBox.create(image.width, image.height);
       };
     }
   };
-};
 
 const handleAddTerrain = addImageFactory(terrain);
-const handleAddMask = addImageFactory(mask);
+const handleSetTerrainVisibility = (visible: boolean) =>
+  (terrain.value.visible = visible);
+const handleAddMask = addImageFactory(mask, false);
+const handleSetMaskVisibility = (visible: boolean) =>
+  (mask.value.visible = visible);
+
 const handleAddBackground = addImageFactory(background);
+const handleSetBackgroundVisibility = (visible: boolean) =>
+  (background.value.visible = visible);
 
 const handleBuild = async () => {
   const map = await Map.fromConfig({
-    terrain: { data: terrain.value, mask: mask.value },
-    background: { data: background.value || terrain.value },
+    terrain: { data: terrain.value.data, mask: mask.value.data },
+    background: { data: background.value.data || terrain.value.data },
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
@@ -109,8 +109,8 @@ const handleBuild = async () => {
 
 const handleTest = async () => {
   const config: Config = {
-    terrain: { data: terrain.value, mask: mask.value },
-    background: { data: background.value || terrain.value },
+    terrain: { data: terrain.value.data, mask: mask.value.data },
+    background: { data: background.value.data || terrain.value.data },
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
@@ -128,9 +128,9 @@ const handleTest = async () => {
 };
 
 const loadMap = (config: Config, map: string) => {
-  terrain.value = config.terrain.data as string;
-  background.value = config.background.data as string;
-  layers.value = config.layers;
+  terrain.value = { data: config.terrain.data as string, visible: true };
+  background.value = { data: config.background.data as string, visible: true };
+  layers.value = config.layers.map((layer) => ({ ...layer, visible: true }));
   advancedSettings.value = {
     bbox: BBox.fromJS(config.bbox) || BBox.create(0, 0),
     scale: config.scale,
@@ -141,9 +141,9 @@ const loadMap = (config: Config, map: string) => {
   name.value = map;
 
   if (config.terrain.mask) {
-    mask.value = config.terrain.mask as string;
+    mask.value = { data: config.terrain.mask as string, visible: true };
   } else {
-    mask.value = "";
+    mask.value = { data: "", visible: false };
   }
 };
 
@@ -152,22 +152,15 @@ const handleAddLayer = () =>
     data: "",
     x: Math.round(preview.value!.scrollLeft / 6),
     y: Math.round(preview.value!.scrollTop / 6),
+    visible: true,
   });
 
 const handleRemoveLayer = (index: number) => {
   layers.value = layers.value.filter((_, i) => i !== index);
 };
 
-const handleAddLayerImage = (event: Event, layer: Layer) => {
-  const file = (event.target as HTMLInputElement).files![0];
-
-  if (!file) {
-    return;
-  }
-
-  var reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => (layer.data = reader.result as string);
+const handleSetLayerVisibility = (visible: boolean, index: number) => {
+  layers.value[index].visible = visible;
 };
 
 const handleMouseDown = (event: MouseEvent, layer: Layer) => {
@@ -205,65 +198,47 @@ const handleBBoxChange = (newBBox: BBox) => {
     <section class="controls flex-list">
       <Input label="Name" autofocus v-model="name" />
       <div class="section">
-        <label class="inputButton">
-          <input
-            hidden
-            type="file"
-            @change="handleAddTerrain"
-            accept="image/*"
-          />
-          <img v-if="terrain" :src="terrain" />
-          <div v-else class="placeholder">➕ Add terrain</div>
-        </label>
-        <template v-if="advancedSettings.customMask">
-          <label class="inputButton">
-            <input
-              hidden
-              type="file"
-              @change="handleAddMask"
-              accept="image/*"
-            />
-            <img v-if="mask" :src="mask" />
-            <div v-else class="placeholder">➕ Add wallmask</div>
-          </label>
-        </template>
-        <label class="inputButton">
-          <input
-            hidden
-            type="file"
-            @change="handleAddBackground"
-            accept="image/*"
-          />
-          <img v-if="background" :src="background" />
-          <div v-else class="placeholder">➕ Add background</div>
-        </label>
+        <ImageInput
+          name="Terrain"
+          :onAdd="handleAddTerrain"
+          v-model="terrain.data"
+          :onToggleVisibility="handleSetTerrainVisibility"
+          clearable
+        />
+        <ImageInput
+          v-if="advancedSettings.customMask"
+          name="Mask"
+          :onAdd="handleAddMask"
+          v-model="mask.data"
+          :onToggleVisibility="handleSetMaskVisibility"
+          clearable
+        />
+        <ImageInput
+          name="Background"
+          :onAdd="handleAddBackground"
+          v-model="background.data"
+          :onToggleVisibility="handleSetBackgroundVisibility"
+          clearable
+        />
       </div>
 
       <div class="section">
         <h2>
           Overlays
-          <button class="icon-button" title="Add layer" @click="handleAddLayer">
-            ➕
-          </button>
+          <IconButton
+            title="Add layer"
+            :onClick="handleAddLayer"
+            :icon="plus"
+          />
         </h2>
-
         <div v-for="(layer, i) in layers" class="section">
-          <h3 class="layer-title" :key="i">
-            Layer {{ i }}
-            <button class="close-button" @click="() => handleRemoveLayer(i)">
-              ✖️
-            </button>
-          </h3>
-          <label class="inputButton">
-            <input
-              hidden
-              type="file"
-              @change="(event) => handleAddLayerImage(event, layer)"
-              accept="image/*"
-            />
-            <img v-if="layer.data" :src="(layer.data as string)" />
-            <div v-else class="placeholder">➕ Add layer</div>
-          </label>
+          <ImageInput
+            :name="`Layer ${i}`"
+            :onClear="() => handleRemoveLayer(i)"
+            v-model="(layer.data as string)"
+            :onToggleVisibility="(visible: boolean) => handleSetLayerVisibility(visible, i)"
+            clearable
+          />
         </div>
       </div>
 
@@ -291,7 +266,7 @@ const handleBBoxChange = (newBBox: BBox) => {
       <button class="secondary" @click="() => router.replace('/')">Back</button>
     </section>
     <section class="preview" ref="preview">
-      <div v-if="!terrain && !background" class="description">
+      <div v-if="!terrain.data && !background.data" class="description">
         <p>
           Build your own map by drawing a terrain and background image. All
           opaque pixels on the terrain will be used as collision map for the
@@ -301,11 +276,12 @@ const handleBBoxChange = (newBBox: BBox) => {
         </p>
         <MapSelect :onEdit="loadMap" />
       </div>
-      <img v-if="background" :src="background" />
-      <img v-if="terrain" :src="terrain" />
+      <img v-if="background.visible" :src="background.data" />
+      <img v-if="terrain.visible" :src="terrain.data" />
+      <img v-if="mask.visible" :src="mask.data" />
       <template v-for="(layer, i) in layers">
         <div
-          v-if="layer.data"
+          v-if="layer.visible"
           class="layer"
           @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
           :style="{
@@ -332,11 +308,12 @@ const handleBBoxChange = (newBBox: BBox) => {
   background: url("../../assets/parchment.png");
   image-rendering: pixelated;
   background-size: 256px;
+  z-index: 1;
 
   .controls {
     width: 200px;
-    border: 4px solid var(--primary);
-    border-radius: var(--big-radius);
+    border-right: 4px solid var(--primary);
+    box-shadow: 5px 0 10px #00000069;
     padding: 10px;
     overflow-y: auto;
 
