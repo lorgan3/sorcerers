@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import IconButton from "../atoms/IconButton.vue";
+import close from "pixelarticons/svg/close.svg";
 
 const props = defineProps<{
   open: boolean;
@@ -58,9 +60,7 @@ watch(
     >
       <div class="title">
         <h2>{{ props.title }}</h2>
-        <button class="icon-button" title="Close" @click="props.onClose">
-          ✖️
-        </button>
+        <IconButton title="Close" :onClick="$props.onClose" :icon="close" />
       </div>
       <div class="scroller">
         <slot name="default"></slot>
@@ -113,12 +113,13 @@ dialog {
 
     &--ingame,
     &--ingame button {
-      cursor: url("../assets/pointer.png"), auto;
+      cursor: url("../../assets/pointer.png"), auto;
     }
 
     .title {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 10px;
       margin-right: -10px;
 

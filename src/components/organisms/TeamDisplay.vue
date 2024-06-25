@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { COLORS } from "../../data/network/constants";
+import IconButton from "../atoms/IconButton.vue";
 import { IPlayer } from "../types";
+import close from "pixelarticons/svg/close.svg";
 
 const { onDelete, onEdit, player, subTitle } = defineProps<{
   player: IPlayer;
@@ -11,7 +13,7 @@ const { onDelete, onEdit, player, subTitle } = defineProps<{
 
 const offset = COLORS.length - COLORS.indexOf(player.color) - 1;
 
-const handleDelete = (event: MouseEvent) => {
+const handleDelete = (event: Event) => {
   event.stopPropagation();
   onDelete!(player);
 };
@@ -27,14 +29,12 @@ const handleDelete = (event: MouseEvent) => {
     <div class="header">
       <h2 class="player-name">{{ player.name }}</h2>
       <div class="buttons">
-        <button
+        <IconButton
           v-if="onDelete"
-          class="icon-button"
           title="Remove player"
-          @click="handleDelete"
-        >
-          ✖️
-        </button>
+          :onClick="handleDelete"
+          :icon="close"
+        />
       </div>
     </div>
     <span v-if="subTitle" class="sub-title">{{ subTitle }}</span>

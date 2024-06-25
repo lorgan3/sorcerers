@@ -4,6 +4,8 @@ import Dialog from "../molecules/Dialog.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Input from "../atoms/Input.vue";
 import { GameSettings } from "../../util/localStorage/settings";
+import IconButton from "../atoms/IconButton.vue";
+import edit from "pixelarticons/svg/edit.svg";
 
 const { settings, onEdit } = defineProps<{
   settings: GameSettings;
@@ -27,14 +29,12 @@ const numberFormatter = new Intl.NumberFormat("en");
   <section class="game-settings">
     <h2>
       Settings
-      <button
+      <IconButton
         v-if="onEdit"
-        class="icon-button"
         title="Edit settings"
-        @click="isEditing = true"
-      >
-        ➕
-      </button>
+        :onClick="() => (isEditing = true)"
+        :icon="edit"
+      />
     </h2>
 
     <ul class="grid">

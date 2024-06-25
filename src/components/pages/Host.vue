@@ -19,6 +19,8 @@ import { IPlayer } from "../types";
 import GameSettingsComponent from "../organisms/GameSettings.vue";
 import MapSelect from "../organisms/MapSelect.vue";
 import { COLORS } from "../../data/network/constants";
+import IconButton from "../atoms/IconButton.vue";
+import plus from "pixelarticons/svg/plus.svg";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -217,14 +219,12 @@ const handleSelectMap = async (config: Config, name: string) => {
     <div class="flex-list flex-list--wide">
       <h2>
         Players
-        <button
+        <IconButton
           v-if="players.length < 4"
-          class="icon-button"
           title="Add local player"
-          @click="handleAddLocalPlayer"
-        >
-          ➕
-        </button>
+          :onClick="handleAddLocalPlayer"
+          :icon="plus"
+        />
       </h2>
 
       <div class="teams">
