@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Ref, onMounted, ref, watch } from "vue";
 import { Map, Layer, Config } from "../../data/map";
-import { CONFIGS } from "../../data/map/background";
 import Input from "../atoms/Input.vue";
 import { Server } from "../../data/network/server";
 import { Team } from "../../data/team";
@@ -12,6 +11,9 @@ import { logEvent } from "../../util/firebase";
 import { GameSettings } from "../../util/localStorage/settings";
 import { defaults } from "../../util/localStorage/settings";
 import MapSelect from "../organisms/MapSelect.vue";
+import BuilderSettings, {
+  AdvancedSettings,
+} from "../organisms/BuilderSettings.vue";
 
 const { onPlay, config } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -23,14 +25,18 @@ const terrain = ref("");
 const mask = ref("");
 const background = ref("");
 const layers = ref<Layer[]>([]);
-const addMask = ref(false);
 const preview = ref<HTMLDivElement>();
-const bbox = ref<BBox>(BBox.create(0, 0));
-const backgroundName = ref("");
-const backgroundOffset = ref(0);
-const scale = ref(6);
 
 const name = ref("");
+
+const settingsOpen = ref(false);
+const advancedSettings = ref<AdvancedSettings>({
+  scale: 6,
+  bbox: BBox.create(0, 0),
+  customMask: false,
+  parallaxName: "",
+  parallaxOffset: 0,
+});
 
 onMounted(async () => {
   if (config) {
@@ -38,9 +44,14 @@ onMounted(async () => {
   }
 });
 
-watch(scale, (scale, oldScale) => {
-  bbox.value = bbox.value.withScale(scale / oldScale);
-});
+watch(
+  () => advancedSettings.value.customMask,
+  (useMask) => {
+    if (!useMask) {
+      mask.value = "";
+    }
+  }
+);
 
 const addImageFactory = (ref: Ref) => (event: Event) => {
   const file = (event.target as HTMLInputElement).files![0];
@@ -55,12 +66,12 @@ const addImageFactory = (ref: Ref) => (event: Event) => {
   reader.onload = () => {
     ref.value = reader.result as string;
 
-    if (bbox.value.isEmpty()) {
+    if (advancedSettings.value.bbox.isEmpty()) {
       var image = new Image();
       image.src = ref.value;
 
       image.onload = () => {
-        bbox.value = BBox.create(image.width, image.height);
+        advancedSettings.value.bbox = BBox.create(image.width, image.height);
       };
     }
   };
@@ -77,9 +88,12 @@ const handleBuild = async () => {
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
-    bbox: bbox.value,
-    parallax: { name: backgroundName.value, offset: backgroundOffset.value },
-    scale: scale.value,
+    bbox: advancedSettings.value.bbox,
+    parallax: {
+      name: advancedSettings.value.parallaxName,
+      offset: advancedSettings.value.parallaxOffset,
+    },
+    scale: advancedSettings.value.scale,
   });
 
   const url = URL.createObjectURL(await map.toBlob());
@@ -100,9 +114,12 @@ const handleTest = async () => {
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
-    bbox: bbox.value,
-    parallax: { name: backgroundName.value, offset: backgroundOffset.value },
-    scale: scale.value,
+    bbox: advancedSettings.value.bbox,
+    parallax: {
+      name: advancedSettings.value.parallaxName,
+      offset: advancedSettings.value.parallaxOffset,
+    },
+    scale: advancedSettings.value.scale,
   };
 
   const server = new Server();
@@ -110,34 +127,21 @@ const handleTest = async () => {
   onPlay("0000", config, { ...defaults().gameSettings, teamSize: 1 });
 };
 
-const handleLoadCustom = async (event: Event) => {
-  const file = (event.target as HTMLInputElement).files![0];
-
-  if (!file) {
-    return;
-  }
-
-  try {
-    const config = await Map.parse(file);
-    loadMap(config, file.name.split(".").slice(0, -1).join(""));
-  } catch {
-    alert(`No map data was found in ${file.name}`);
-  }
-};
-
 const loadMap = (config: Config, map: string) => {
   terrain.value = config.terrain.data as string;
   background.value = config.background.data as string;
   layers.value = config.layers;
-  bbox.value = BBox.fromJS(config.bbox) || BBox.create(0, 0);
+  advancedSettings.value = {
+    bbox: BBox.fromJS(config.bbox) || BBox.create(0, 0),
+    scale: config.scale,
+    customMask: !!config.terrain.mask,
+    parallaxName: config.parallax.name,
+    parallaxOffset: config.parallax.offset,
+  };
   name.value = map;
-
-  backgroundName.value = config.parallax.name;
-  backgroundOffset.value = config.parallax.offset;
 
   if (config.terrain.mask) {
     mask.value = config.terrain.mask as string;
-    addMask.value = true;
   } else {
     mask.value = "";
   }
@@ -151,7 +155,7 @@ const handleAddLayer = () =>
   });
 
 const handleRemoveLayer = (index: number) => {
-  layers.value = [...layers.value.splice(index, 0)];
+  layers.value = layers.value.filter((_, i) => i !== index);
 };
 
 const handleAddLayerImage = (event: Event, layer: Layer) => {
@@ -173,8 +177,10 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
   let startY = event.pageY;
 
   const handleMouseMove = (moveEvent: MouseEvent) => {
-    layer.x = x + Math.round((moveEvent.pageX - startX) / scale.value);
-    layer.y = y + Math.round((moveEvent.pageY - startY) / scale.value);
+    layer.x =
+      x + Math.round((moveEvent.pageX - startX) / advancedSettings.value.scale);
+    layer.y =
+      y + Math.round((moveEvent.pageY - startY) / advancedSettings.value.scale);
   };
 
   const handleMouseUp = () => {
@@ -190,22 +196,15 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
 };
 
 const handleBBoxChange = (newBBox: BBox) => {
-  bbox.value = newBBox;
-};
-
-const handleEnableMask = () => (addMask.value = true);
-
-const handleDisableMask = () => {
-  addMask.value = false;
-  mask.value = "";
+  advancedSettings.value.bbox = newBBox;
 };
 </script>
 
 <template>
-  <div class="builder" :style="{ '--scale': scale }">
+  <div class="builder" :style="{ '--scale': advancedSettings.scale }">
     <section class="controls flex-list">
+      <Input label="Name" autofocus v-model="name" />
       <div class="section">
-        <h2>Terrain</h2>
         <label class="inputButton">
           <input
             hidden
@@ -214,12 +213,9 @@ const handleDisableMask = () => {
             accept="image/*"
           />
           <img v-if="terrain" :src="terrain" />
-          <div v-else class="placeholder">➕ Add image</div>
+          <div v-else class="placeholder">➕ Add terrain</div>
         </label>
-        <button v-if="!addMask" class="secondary" @click="handleEnableMask">
-          Add wallmask
-        </button>
-        <template v-else>
+        <template v-if="advancedSettings.customMask">
           <label class="inputButton">
             <input
               hidden
@@ -228,14 +224,9 @@ const handleDisableMask = () => {
               accept="image/*"
             />
             <img v-if="mask" :src="mask" />
-            <div v-else class="placeholder">➕ Add image</div>
+            <div v-else class="placeholder">➕ Add wallmask</div>
           </label>
-          <button class="secondary" @click="handleDisableMask">Clear</button>
         </template>
-      </div>
-
-      <div class="section">
-        <h2>Background</h2>
         <label class="inputButton">
           <input
             hidden
@@ -244,33 +235,20 @@ const handleDisableMask = () => {
             accept="image/*"
           />
           <img v-if="background" :src="background" />
-          <div v-else class="placeholder">➕ Add image</div>
+          <div v-else class="placeholder">➕ Add background</div>
         </label>
-        <label class="input-label">
-          <span class="label"> Parallax background </span>
-          <select
-            v-model="backgroundName"
-            @change="(event) => backgroundName = (event.target as HTMLSelectElement).value"
-          >
-            <option value="">Blank</option>
-            <option v-for="(_, key) in CONFIGS" :value="key">
-              {{ key }}
-            </option>
-          </select>
-        </label>
-        <Input
-          type="number"
-          label="vertical offset"
-          v-model="backgroundOffset"
-        />
       </div>
 
       <div class="section">
-        <h2>Overlays</h2>
-        <button class="secondary" @click="handleAddLayer">Add layer</button>
+        <h2>
+          Overlays
+          <button class="icon-button" title="Add layer" @click="handleAddLayer">
+            ➕
+          </button>
+        </h2>
 
         <div v-for="(layer, i) in layers" class="section">
-          <h3 class="layer-title">
+          <h3 class="layer-title" :key="i">
             Layer {{ i }}
             <button class="close-button" @click="() => handleRemoveLayer(i)">
               ✖️
@@ -284,33 +262,19 @@ const handleDisableMask = () => {
               accept="image/*"
             />
             <img v-if="layer.data" :src="(layer.data as string)" />
-            <div v-else class="placeholder">➕ Add image</div>
+            <div v-else class="placeholder">➕ Add layer</div>
           </label>
-
-          <Input
-            label="X"
-            :value="layer.x"
-            @change="(event: Event) => layer.x = parseInt((event.target as HTMLInputElement).value, 10)"
-          />
-          <Input
-            label="Y"
-            :value="layer.y"
-            @change="(event: Event) => layer.y = parseInt((event.target as HTMLInputElement).value, 10)"
-          />
         </div>
       </div>
 
       <div class="section">
-        <h2>Details</h2>
-        <Input label="Name" autofocus v-model="name" />
-        <Input label="Scale" autofocus v-model="scale" :min="1" />
-        <Input label="Spawn area left" v-model="bbox.left" :max="bbox.right" />
-        <Input label="Spawn area top" v-model="bbox.top" :max="bbox.bottom" />
-        <Input label="Spawn area right" v-model="bbox.right" :min="bbox.left" />
-        <Input
-          label="Spawn area bottom"
-          v-model="bbox.bottom"
-          :min="bbox.top"
+        <button class="secondary" @click="settingsOpen = true">
+          Adv. settings
+        </button>
+        <BuilderSettings
+          v-if="settingsOpen"
+          :settings="advancedSettings"
+          :onClose="() => (settingsOpen = false)"
         />
       </div>
 
@@ -344,13 +308,17 @@ const handleDisableMask = () => {
           v-if="layer.data"
           class="layer"
           @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
-          :style="{ translate: `${layer.x * scale}px ${layer.y * scale}px` }"
+          :style="{
+            translate: `${layer.x * advancedSettings.scale}px ${
+              layer.y * advancedSettings.scale
+            }px`,
+          }"
         >
           <span class="meta">Layer {{ i }} ({{ layer.x }}, {{ layer.y }})</span>
           <img :src="(layer.data as string)" />
         </div>
       </template>
-      <BoundingBox :bbox="bbox" :onChange="handleBBoxChange" />
+      <BoundingBox :bbox="advancedSettings.bbox" :onChange="handleBBoxChange" />
     </section>
   </div>
 </template>
@@ -392,27 +360,6 @@ const handleDisableMask = () => {
       }
     }
 
-    label {
-      display: flex;
-      gap: 3px;
-
-      span {
-        width: 80px;
-      }
-
-      input {
-        flex: 1;
-      }
-    }
-
-    select {
-      background: var(--background);
-      box-shadow: 0 0 10px inset var(--primary);
-      height: 35px;
-      border-radius: var(--small-radius);
-      outline: none;
-    }
-
     .inputButton {
       .placeholder {
         width: 100%;
@@ -432,6 +379,10 @@ const handleDisableMask = () => {
         object-fit: cover;
         box-shadow: 0 0 10px inset var(--primary);
         border-radius: var(--small-radius);
+
+        &:hover {
+          object-fit: contain;
+        }
       }
     }
   }
@@ -484,55 +435,6 @@ const handleDisableMask = () => {
       position: absolute;
       padding: 20px;
       max-width: 600px;
-
-      .map-list {
-        display: flex;
-        gap: 12px;
-        margin: 12px 12px 12px 0;
-      }
-
-      .map {
-        position: relative;
-        box-shadow: 0 0 10px inset var(--primary);
-        border-radius: var(--small-radius);
-        background: var(--background);
-        width: 200px;
-        height: 100px;
-        display: block;
-        cursor: pointer;
-
-        div {
-          position: relative;
-          background: rgba(255, 255, 255, 0.6);
-          width: 100%;
-          padding: 3px;
-          box-sizing: border-box;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          text-align: center;
-        }
-
-        img {
-          position: absolute;
-          left: 0;
-          top: 0;
-          scale: 1 1;
-
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-
-      .custom-map {
-        display: flex;
-        align-items: center;
-
-        div {
-          background-color: transparent;
-        }
-      }
     }
   }
 }

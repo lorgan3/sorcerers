@@ -79,7 +79,10 @@ const handleUploadMap = (event: Event) => {
   reader.readAsDataURL(file);
   reader.onload = async () => {
     try {
-      onEdit(await Map.parse(file), "Custom");
+      onEdit(
+        await Map.parse(file),
+        `${file.name.split(".").slice(0, -1).join(".")} (Custom)`
+      );
     } catch (error) {
       console.error(error);
       reset();
