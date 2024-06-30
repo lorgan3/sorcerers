@@ -120,13 +120,14 @@ export class Server extends Manager {
       }
     }
 
+    this.time = 0;
+    this.singlePlayer = this.players.length === 1;
+
     this.syncPlayers();
     this.activePlayerIndex =
       Math.floor(Math.random() * this.players.length) - 1;
     this.cycleActivePlayer();
 
-    this.time = 0;
-    this.singlePlayer = this.players.length === 1;
     this.started = true;
   }
 
@@ -514,6 +515,8 @@ export class Server extends Manager {
     const options = this.players.filter(
       (player) => player.characters.length > 0
     );
+
+    console.log(this.singlePlayer);
 
     if ((options.length === 1 && !this.singlePlayer) || options.length === 0) {
       return null;
