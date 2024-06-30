@@ -40,6 +40,7 @@ export enum Sound {
   Slime = "slimeSnd",
   Water = "waterSnd",
   Smoke = "smokeSnd",
+  Tada = "tadaSnd",
 }
 
 export enum Music {
@@ -146,6 +147,7 @@ addSoundData(Sound.Slime, "433832__archos__slime-21_1", 0.6);
 addSoundData(Sound.Slime, "433832__archos__slime-21_2", 0.6);
 addSoundData(Sound.Slime, "433839__archos__slime-28", 0.6);
 addSoundData(Sound.Smoke, "714257__qubodup__puff-of-smoke");
+addSoundData(Sound.Tada, "397353__plasterbrain__tada-fanfare-g");
 
 addMusicData(Music.TitleScreen, "Sorcerers Theme Sample");
 

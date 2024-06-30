@@ -1,8 +1,8 @@
 import fs from "fs";
 import ffmpeg from "fluent-ffmpeg";
 
-const DIRECTORY = "./public/sound/original/";
-const OUT_DIRECTORY = "./public/sound/";
+const DIRECTORY = "./public/sfx/original/";
+const OUT_DIRECTORY = "./public/sfx/";
 
 const contents = fs.readdirSync(DIRECTORY);
 const files = contents.filter(
