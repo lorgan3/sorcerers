@@ -374,14 +374,16 @@ export class Server extends Manager {
   endGame() {
     this.setTurnState(TurnState.Finished);
 
-    this.stats = getAccumulatedStats(
-      this.players.map((player) => player.stats)
-    );
+    window.setTimeout(() => {
+      this.stats = getAccumulatedStats(
+        this.players.map((player) => player.stats)
+      );
 
-    this.broadcast({
-      type: MessageType.EndGame,
-      stats: this.stats.map((stat) => stat.serialize()),
-    });
+      this.broadcast({
+        type: MessageType.EndGame,
+        stats: this.stats.map((stat) => stat.serialize()),
+      });
+    }, 2000);
   }
 
   private handleMessage(message: Message, player: Player) {
