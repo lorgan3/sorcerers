@@ -11,6 +11,7 @@ import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Player } from "../network/player";
 
 const DEFAULT_POWER = 5;
 const DEFAULT_DAMAGE_MULTIPLIER = 5;
@@ -50,6 +51,8 @@ export class ExplosiveDamage implements DamageSource {
   }
 
   public readonly type = DamageSourceType.Explosive;
+
+  public cause: Player | null = null;
 
   constructor(
     public readonly x: number,

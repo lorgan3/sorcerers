@@ -5,9 +5,12 @@ import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Player } from "../network/player";
 
 export class ImpactDamage implements DamageSource {
   public readonly type = DamageSourceType.Impact;
+
+  public cause: Player | null = null;
 
   constructor(
     public readonly x: number,

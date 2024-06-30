@@ -15,6 +15,7 @@ import {
   circle24x24,
   circle24x24Canvas,
 } from "../collision/precomputed/circles";
+import { Player } from "../network/player";
 
 export enum Shape {
   SwordTip,
@@ -97,6 +98,8 @@ const SHAPES: Record<
 
 export class FallDamage implements DamageSource {
   public readonly type = DamageSourceType.Falling;
+
+  public cause: Player | null = null;
 
   constructor(
     public readonly x: number,

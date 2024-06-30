@@ -1,8 +1,11 @@
+import { Player } from "../network/player";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 
 export class GenericDamage implements DamageSource {
   public readonly type = DamageSourceType.Generic;
+
+  public cause: Player | null = null;
 
   constructor(public targets: TargetList) {}
 
