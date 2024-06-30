@@ -7,6 +7,7 @@ import { Team } from "../team";
 import { Spell, getSpellCost } from "../spells";
 import { MANA_BASE_GAIN, MAX_MANA } from "./constants";
 import { Manager } from "./manager";
+import { Stats } from "./stats";
 
 export class Player {
   public readonly characters: Character[] = [];
@@ -25,6 +26,8 @@ export class Player {
   public resolveReady!: () => void;
   public ready = new Promise<void>((resolve) => (this.resolveReady = resolve));
   private _joined = false;
+
+  public readonly stats = new Stats(this);
 
   constructor(private _connection?: DataConnection) {
     this._controller.addKeyListener(Key.Inventory, this.handleOpenInventory);
@@ -164,5 +167,7 @@ export class Player {
   cast(spell: Spell) {
     this.mana -= getSpellCost(spell);
     this.executedSpells.push(spell);
+
+    this.stats.registerCast(spell);
   }
 }

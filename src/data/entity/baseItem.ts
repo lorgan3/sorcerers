@@ -142,8 +142,12 @@ export abstract class BaseItem extends Container implements Syncable, Item {
     Level.instance.remove(this);
   }
 
-  activate(_?: Character) {
+  activate(character?: Character) {
     this.activateTime = this.time;
+
+    if (character) {
+      character.player.stats.registerItem(this);
+    }
   }
 
   get activated() {
