@@ -2,6 +2,7 @@
 import { ref, watch } from "vue";
 import { Spell } from "../../data/spells";
 import { ELEMENT_MAP } from "../../graphics/elements";
+import scaleIcon from "pixelarticons/svg/scale.svg";
 
 const { spell } = defineProps<{ spell: Spell }>();
 const previewMultiplier = ref(1);
@@ -17,24 +18,29 @@ watch(
 
 <template>
   <div class="spell">
-    <div class="magic">
-      <span
-        v-if="spell.cost"
-        :class="{
-          cost: true,
-          positive: previewMultiplier < 1,
-          negative: previewMultiplier > 1,
-        }"
-        >{{ Math.ceil(spell.cost * previewMultiplier) }}</span
-      >
-      <span class="elements">
-        <img
-          v-for="element in spell.elements"
-          :src="ELEMENT_MAP[element]"
-          :alt="element"
-          :title="element"
-        />
-      </span>
+    <div class="top">
+      <div class="magic">
+        <span
+          v-if="spell.cost"
+          :class="{
+            cost: true,
+            positive: previewMultiplier < 1,
+            negative: previewMultiplier > 1,
+          }"
+          >{{ Math.ceil(spell.cost * previewMultiplier) }}</span
+        >
+        <span class="elements">
+          <img
+            v-for="element in spell.elements"
+            :src="ELEMENT_MAP[element]"
+            :alt="element"
+            :title="element"
+          />
+        </span>
+      </div>
+      <div class="range">
+        <img class="icon" :src="scaleIcon" /> {{ spell.range || "∞" }}
+      </div>
     </div>
     <div class="details">
       <span class="name">
@@ -50,31 +56,50 @@ watch(
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 6px;
   padding: 6px;
   width: 250px;
+  gap: 6px;
+  height: 42px;
 
-  .magic {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 3px 0;
-    height: 38px;
-    gap: 6px;
-    width: 60px;
-    justify-content: space-evenly;
-  }
-
-  .elements {
+  .top {
     display: flex;
     flex-direction: column;
-    background: var(--background);
-    padding: 3px;
-    border-radius: var(--small-radius);
+    align-items: center;
 
-    img {
-      width: 16px;
-      height: 16px;
+    .magic {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 3px 0;
+      gap: 6px;
+      // width: 60px;
+      justify-content: space-evenly;
+    }
+
+    .elements {
+      display: flex;
+      flex-direction: row;
+      background: var(--background);
+      padding: 3px;
+      border-radius: var(--small-radius);
+
+      img {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .range {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    .icon {
+      width: 14px;
+      height: 14px;
+      filter: invert(1);
     }
   }
 
