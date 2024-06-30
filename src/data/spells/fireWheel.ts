@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container } from "pixi.js";
+import { AnimatedSprite, BitmapText, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
@@ -22,6 +22,7 @@ export class FireWheel extends Container implements Syncable {
 
   public readonly body: StickyBody;
   private sprite: AnimatedSprite;
+  private text: BitmapText;
   private lifetime = 0;
   private sound?: ControllableSound;
 
@@ -30,7 +31,13 @@ export class FireWheel extends Container implements Syncable {
   public readonly priority = Priority.High;
   public layer = Layer.Background;
 
-  constructor(x: number, y: number, speed: number, private direction: number) {
+  constructor(
+    x: number,
+    y: number,
+    speed: number,
+    private direction: number,
+    private character: Character
+  ) {
     super();
 
     this.lifetime =
@@ -55,6 +62,17 @@ export class FireWheel extends Container implements Syncable {
     this.sprite.anchor.set(0.5);
     this.sprite.position.set(3);
 
+    this.text = new BitmapText({
+      text: this.seconds,
+      style: {
+        fontFamily: "Eternal",
+        fontSize: 32,
+      },
+    });
+    this.text.position.set(-40, -40);
+    this.text.tint = this.character.player.color;
+    this.text.visible = false;
+
     // const canvas = new OffscreenCanvas(1, 1);
     // const ctx = canvas.getContext("2d")!;
 
@@ -72,7 +90,7 @@ export class FireWheel extends Container implements Syncable {
     // sprite2.alpha = 0.5;
     // sprite2.position.set(-48);
 
-    this.addChild(this.sprite);
+    this.addChild(this.sprite, this.text);
 
     // When spawning in a wall
     if (
@@ -94,7 +112,7 @@ export class FireWheel extends Container implements Syncable {
         3,
         3 + Manager.instance.getElementValue(Element.Elemental)
       ),
-      Server.instance.getActivePlayer()
+      this.character.player
     );
     Server.instance.kill(this);
   }
@@ -131,11 +149,16 @@ export class FireWheel extends Container implements Syncable {
       }
     }
 
+    if (this.seconds < 10) {
+      this.text.text = this.seconds;
+      this.text.visible = true;
+    }
+
+    this.lifetime -= dt;
     if (!Server.instance) {
       return;
     }
 
-    this.lifetime -= dt;
     if (
       this.lifetime <= 0 ||
       Level.instance.terrain.killbox.collidesWith(
@@ -161,6 +184,10 @@ export class FireWheel extends Container implements Syncable {
     );
   }
 
+  private get seconds() {
+    return Math.floor(this.lifetime / 30);
+  }
+
   serialize() {
     return this.body.serialize();
   }
@@ -174,11 +201,18 @@ export class FireWheel extends Container implements Syncable {
       ...this.body.precisePosition,
       this.body.velocity,
       this.direction,
+      this.character.id,
     ] as const;
   }
 
   static create(data: ReturnType<FireWheel["serializeCreate"]>) {
-    return new FireWheel(...data);
+    return new FireWheel(
+      data[0],
+      data[1],
+      data[2],
+      data[3],
+      Level.instance.entityMap.get(data[4]) as Character
+    );
   }
 
   static cast(
@@ -192,7 +226,7 @@ export class FireWheel extends Container implements Syncable {
       return;
     }
 
-    const entity = new FireWheel(x, y, power * 1.5, direction);
+    const entity = new FireWheel(x, y, power * 1.5, direction, character);
 
     Server.instance.create(entity);
     Server.instance.focus(entity);
