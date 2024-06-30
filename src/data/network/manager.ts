@@ -14,6 +14,7 @@ import { ActivePointer } from "../../graphics/ActivePointer";
 import { Character } from "../entity/character";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
+import { AccumulatedStat } from "./accumulatedStat";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -46,6 +47,7 @@ export abstract class Manager {
 
   protected cursor: Cursor | null = null;
   private popups: Popup[] = [];
+  protected stats: AccumulatedStat<unknown>[] | null = null;
 
   constructor(public readonly peer?: Peer) {
     Manager._instance = this;
@@ -206,6 +208,7 @@ export abstract class Manager {
       players: this.players,
       activePlayer: this.activePlayer,
       mana: this._self?.mana || 0,
+      stats: this.stats,
     };
   }
 
@@ -275,6 +278,10 @@ export abstract class Manager {
 
   getActivePlayer() {
     return this.activePlayer;
+  }
+
+  getTime() {
+    return this.time;
   }
 
   getElementValue(element: Element) {
