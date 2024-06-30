@@ -518,8 +518,6 @@ export class Server extends Manager {
       (player) => player.characters.length > 0
     );
 
-    console.log(this.singlePlayer);
-
     if ((options.length === 1 && !this.singlePlayer) || options.length === 0) {
       return null;
     }
