@@ -162,6 +162,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private static readonly invulnerableTime = 1;
   private static readonly damageNumberTime = 90;
   private static readonly maxInactiveTime = 3;
+  private static readonly damageAttributionTime = 120;
 
   public readonly body: Body;
   public id = -1;
@@ -177,6 +178,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private lastReportedHp = this._hp;
   private time = 0;
   private lastDamageTime = -1;
+  private _lastDamageDealer: Player | null = null;
   private lastActiveTime = 0;
   private spellSource: any | null = null;
   private lookDirection = 1;
@@ -247,7 +249,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
               direction,
               MELEE_POWER *
                 (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3)
-            )
+            ),
+            this.player
           );
 
           this.animator.animate(AnimationState.SpellDone);
@@ -361,6 +364,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ) {
           Server.instance?.damage(
             new GenericDamage(new TargetList().add(this, 999))
+            // this.lastDamageDealer
           );
         }
       }
@@ -466,8 +470,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
       return;
     }
 
+    this.player.stats.registerDamage(source, this, damage, force);
+
     this.hp -= damage;
     this.lastDamageTime = this.time;
+    this._lastDamageDealer = source.cause;
 
     Level.instance.bloodEmitter.burst(this, damage, source);
     if (damage > 0) {
@@ -593,7 +600,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
       );
     });
 
-    Server.instance?.damage(new ExplosiveDamage(x / 6, y / 6, 16, 1, 1));
+    Server.instance?.damage(
+      new ExplosiveDamage(x / 6, y / 6, 16, 1, 1),
+      this.player
+    );
   }
 
   giveWings() {
@@ -637,5 +647,13 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   get direction() {
     return this.lookDirection;
+  }
+
+  get lastDamageDealer() {
+    if (this.time > this.lastDamageTime + Character.damageAttributionTime) {
+      return null;
+    }
+
+    return this._lastDamageDealer;
   }
 }

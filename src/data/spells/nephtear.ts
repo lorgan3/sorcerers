@@ -87,7 +87,8 @@ export class Nephtear extends Container implements Spawnable {
         y,
         this.sprite.rotation,
         30 * (0.7 + Manager.instance.getElementValue(Element.Elemental) * 0.3)
-      )
+      ),
+      Server.instance.getActivePlayer()
     );
     Server.instance.kill(this);
   }

@@ -93,7 +93,8 @@ export class FireWheel extends Container implements Syncable {
         16,
         3,
         3 + Manager.instance.getElementValue(Element.Elemental)
-      )
+      ),
+      Server.instance.getActivePlayer()
     );
     Server.instance.kill(this);
   }

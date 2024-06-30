@@ -92,7 +92,7 @@ export class Sword extends Container implements Syncable {
           Shape.SwordTip,
           6 * Manager.instance.getElementValue(Element.Arcane)
         );
-        Server.instance?.damage(damage);
+        Server.instance?.damage(damage, Server.instance.getActivePlayer());
         ControllableSound.fromEntity(
           [this.position.x, this.position.y],
           Sound.Step

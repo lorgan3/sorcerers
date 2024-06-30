@@ -31,7 +31,7 @@ export class IceWall extends Container implements HurtableEntity {
   public id = -1;
   public readonly type = EntityType.IceWall;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, private character: Character) {
     super();
     this.physicalPower = Manager.instance.getElementValue(Element.Physical);
 
@@ -136,7 +136,10 @@ export class IceWall extends Container implements HurtableEntity {
             entity,
             (this.firstCheck ? 4 : 10) * this.physicalPower
           );
-          Server.instance.damage(new GenericDamage(targets));
+          Server.instance.damage(
+            new GenericDamage(targets),
+            this.character.player
+          );
           return;
         }
       });
@@ -154,10 +157,14 @@ export class IceWall extends Container implements HurtableEntity {
   }
 
   serializeCreate() {
-    return [...this.body.precisePosition] as const;
+    return [...this.body.precisePosition, this.character.id] as const;
   }
 
   static create(data: ReturnType<IceWall["serializeCreate"]>) {
-    return new IceWall(...data);
+    return new IceWall(
+      data[0],
+      data[1],
+      Level.instance.entityMap.get(data[2]) as Character
+    );
   }
 }

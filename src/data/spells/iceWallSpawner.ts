@@ -68,7 +68,8 @@ export class IceWallSpawner extends Container implements Spawnable {
       this._y = y;
       const wall = new IceWall(
         this._x - IceWallSpawner.wallDistance / 2,
-        this._y - 6
+        this._y - 6,
+        this.character
       );
       Server.instance.create(wall);
 

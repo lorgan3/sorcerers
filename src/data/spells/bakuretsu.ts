@@ -104,7 +104,8 @@ export class Bakuretsu extends Container implements Spawnable {
             32,
             6,
             8 * Manager.instance.getElementValue(Element.Elemental)
-          )
+          ),
+          this.character.player
         );
         Manager.instance.setTurnState(TurnState.Ending);
         this.character.setSpellSource(this, false);

@@ -73,7 +73,8 @@ export class Blink extends Container implements TickingEntity {
           12,
           3,
           3 * Manager.instance.getElementValue(Element.Physical)
-        )
+        ),
+        this.character.player
       );
       new Implosion(x * 6, y * 6);
       this.character.move(x, y);

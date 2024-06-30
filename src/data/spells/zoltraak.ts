@@ -173,7 +173,10 @@ export class Zoltraak extends Container implements Spawnable {
       targetList.add(target.entity, damage);
 
       if (target.entity instanceof Shield) {
-        Server.instance?.damage(new GenericDamage(targetList));
+        Server.instance?.damage(
+          new GenericDamage(targetList),
+          Server.instance.getActivePlayer()
+        );
 
         const [cx, cy] = target.entity.getCenter();
         return getDistance(x, y, cx, cy);
@@ -181,7 +184,10 @@ export class Zoltraak extends Container implements Spawnable {
     }
 
     if (targetList.hasEntities()) {
-      Server.instance?.damage(new GenericDamage(targetList));
+      Server.instance?.damage(
+        new GenericDamage(targetList),
+        Server.instance.getActivePlayer()
+      );
     }
 
     return MAX_DISTANCE;

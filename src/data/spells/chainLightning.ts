@@ -86,7 +86,8 @@ export class ChainLightning extends Container implements Spawnable {
               target,
               20 + Manager.instance.getElementValue(Element.Elemental) * 5
             )
-          )
+          ),
+          Server.instance.getActivePlayer()
         );
       }
 

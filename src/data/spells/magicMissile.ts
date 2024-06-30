@@ -115,7 +115,8 @@ export class MagicMissile extends Container implements Syncable {
         16,
         3,
         5 + Manager.instance.getElementValue(Element.Arcane)
-      )
+      ),
+      this.character.player
     );
 
     Server.instance.kill(this);

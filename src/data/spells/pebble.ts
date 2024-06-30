@@ -77,7 +77,7 @@ export class Pebble extends Container implements TickingEntity {
       return;
     }
 
-    Server.instance?.damage(damage);
+    Server.instance?.damage(damage, this.character.player);
     if (damage.getTargets().hasEntities()) {
       Level.instance.remove(this);
     } else {

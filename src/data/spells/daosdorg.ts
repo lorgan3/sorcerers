@@ -101,7 +101,7 @@ export class Daosdorg extends Container implements Spawnable {
       Shape.Tornado,
       1.8 + Manager.instance.getElementValue(Element.Physical)
     );
-    Server.instance?.damage(damage);
+    Server.instance?.damage(damage, Server.instance.getActivePlayer());
 
     if (
       damage
@@ -142,7 +142,7 @@ export class Daosdorg extends Container implements Spawnable {
         3 + Manager.instance.getElementValue(Element.Physical)
       );
 
-      Server.instance?.damage(damage);
+      Server.instance?.damage(damage, Server.instance.getActivePlayer());
     }
 
     if (this.time >= this.lifeTime) {

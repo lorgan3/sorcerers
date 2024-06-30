@@ -324,7 +324,7 @@ export class Server extends Manager {
     }
   }
 
-  damage(damageSource: DamageSource) {
+  damage(damageSource: DamageSource, cause?: Player | null) {
     if (
       damageSource
         .getTargets()
@@ -332,6 +332,10 @@ export class Server extends Manager {
         .includes(this.getActiveCharacter()!)
     ) {
       this.setTurnState(TurnState.Ending);
+    }
+
+    if (cause) {
+      damageSource.cause = cause;
     }
 
     damageSource.damage();
@@ -354,15 +358,15 @@ export class Server extends Manager {
     }
 
     const velocity = character.body.velocity;
-    this.damageQueue.push(
-      new ExplosiveDamage(
-        x + 3,
-        y + 8 + character.body.yVelocity,
-        velocity > 5 ? 12 : 8,
-        Math.min(3, velocity * 0.4),
-        Math.max(1, velocity - 3) ** 2
-      )
+    const damage = new ExplosiveDamage(
+      x + 3,
+      y + 8 + character.body.yVelocity,
+      velocity > 5 ? 12 : 8,
+      Math.min(3, velocity * 0.4),
+      Math.max(1, velocity - 3) ** 2
     );
+    damage.cause = character.lastDamageDealer || character.player;
+    this.damageQueue.push(damage);
   }
 
   endGame() {
@@ -443,13 +447,15 @@ export class Server extends Manager {
           throw new Error("Client should not be trusted!");
         }
 
-        if (this.activePlayer !== player) {
+        const character = this.getActiveCharacter();
+        if (this.activePlayer !== player || !character) {
           return;
         }
 
         const damageSource = DAMAGE_SOURCES[message.kind].deserialize(
           message.data
         );
+        damageSource.cause = character.lastDamageDealer || character.player;
 
         this.damage(damageSource);
         break;

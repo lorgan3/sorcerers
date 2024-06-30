@@ -119,7 +119,10 @@ export class WindBlast extends Container implements Spawnable {
       );
 
       if (targetList.hasEntities()) {
-        Server.instance?.damage(new GenericDamage(targetList));
+        Server.instance?.damage(
+          new GenericDamage(targetList),
+          this.character.player
+        );
       }
     }
   }

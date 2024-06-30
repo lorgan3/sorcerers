@@ -37,7 +37,13 @@ export class Bomb extends Container implements Item {
   public readonly type = EntityType.Bomb;
   public readonly priority = Priority.Dynamic;
 
-  constructor(x: number, y: number, speed: number, direction: number) {
+  constructor(
+    x: number,
+    y: number,
+    speed: number,
+    direction: number,
+    private character: Character
+  ) {
     super();
     this.arcanePower = Manager.instance.getElementValue(Element.Arcane);
     this.fuse = Bomb.fuseTime * (0.5 + Math.random());
@@ -232,10 +238,17 @@ export class Bomb extends Container implements Item {
       ...this.body.precisePosition,
       this.body.velocity,
       this.body.direction,
+      this.character.id,
     ] as const;
   }
 
   static create(data: ReturnType<Bomb["serializeCreate"]>) {
-    return new Bomb(...data);
+    return new Bomb(
+      data[0],
+      data[1],
+      data[2],
+      data[3],
+      Level.instance.entityMap.get(data[4]) as Character
+    );
   }
 }

@@ -84,7 +84,7 @@ export class SmallSword extends Container implements Spawnable {
       Math.random() * SmallSword.shakeIntensity - SmallSword.shakeIntensity / 2;
 
     const damage = new FallDamage(x - 1, y - 2, Shape.SmallSword, 8);
-    Server.instance?.damage(damage);
+    Server.instance?.damage(damage, Server.instance.getActivePlayer());
     ControllableSound.fromEntity(
       [this.position.x, this.position.y],
       Sound.Step

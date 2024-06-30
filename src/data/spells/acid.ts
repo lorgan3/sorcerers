@@ -100,7 +100,8 @@ export class Acid extends Container implements Spawnable {
         y - 4,
         Shape.Acid,
         10 + Manager.instance.getElementValue(Element.Life) * 3
-      )
+      ),
+      Server.instance.getActivePlayer()
     );
     Server.instance.kill(this);
   }

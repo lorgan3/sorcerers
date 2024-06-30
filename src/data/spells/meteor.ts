@@ -187,7 +187,7 @@ export class Meteor extends Container implements Syncable {
               5,
               5 + Manager.instance.getElementValue(Element.Elemental) / 2
             );
-            Server.instance.damage(damage);
+            Server.instance.damage(damage, this.character.player);
 
             const staticEntity = damage
               .getTargets()

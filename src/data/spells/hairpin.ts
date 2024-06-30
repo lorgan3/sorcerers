@@ -53,7 +53,8 @@ export class Hairpin extends Container implements Spawnable {
         this._x,
         this._y,
         this.power + Math.random() - 0.5,
-        this.direction + (Math.random() - 0.5) * spread
+        this.direction + (Math.random() - 0.5) * spread,
+        this.character
       );
 
       Server.instance.create(bomb);

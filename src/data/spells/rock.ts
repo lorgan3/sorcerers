@@ -145,7 +145,8 @@ export class Rock extends Container implements Spawnable {
                   -2,
                   0.5 +
                     Manager.instance.getElementValue(Element.Elemental) * 0.5
-                ) // Negative power to push the player up
+                ), // Negative power to push the player up
+                Server.instance.getActivePlayer()
               );
             }
 
