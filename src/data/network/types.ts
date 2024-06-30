@@ -27,6 +27,7 @@ export enum MessageType {
   turnState,
   Sink,
   Cast,
+  EndGame,
 }
 
 export type Message =
@@ -159,6 +160,10 @@ export type Message =
   | {
       type: MessageType.Cast;
       state: any; // Extra cursor data
+    }
+  | {
+      type: MessageType.EndGame;
+      stats: any[];
     };
 
 export interface Popup {

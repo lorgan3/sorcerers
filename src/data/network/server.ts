@@ -24,6 +24,7 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DAMAGE_SOURCES } from "../damage";
 import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
+import { getAccumulatedStats } from "./statsAccumulator";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -372,21 +373,14 @@ export class Server extends Manager {
   endGame() {
     this.setTurnState(TurnState.Finished);
 
-    const livingPlayer = this.players.find(
-      (player) => player.characters.length > 0
+    this.stats = getAccumulatedStats(
+      this.players.map((player) => player.stats)
     );
 
-    if (livingPlayer) {
-      this.addPopup({
-        title: `${livingPlayer.name} wins!`,
-        duration: 60000,
-      });
-    } else {
-      this.addPopup({
-        title: `Everybody loses!`,
-        duration: 60000,
-      });
-    }
+    this.broadcast({
+      type: MessageType.EndGame,
+      stats: this.stats.map((stat) => stat.serialize()),
+    });
   }
 
   private handleMessage(message: Message, player: Player) {

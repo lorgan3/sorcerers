@@ -6,6 +6,8 @@ import { Popup } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
 import { ELEMENT_MAP } from "../../graphics/elements";
 import { MAX_MANA } from "../../data/network/constants";
+import { AccumulatedStat } from "../../data/network/accumulatedStat";
+import EndGameDialog from "./EndGameDialog.vue";
 
 interface ActivePopup extends Popup {
   out: boolean;
@@ -36,6 +38,7 @@ const players = ref<Player[]>([]);
 const activePlayer = ref<Player | null>(null);
 const popup = ref<ActivePopup | null>(null);
 const maxHp = ref(1);
+const stats = ref<AccumulatedStat<unknown>[] | null>(null);
 
 const poll = () => {
   if (!Manager.instance) {
@@ -49,6 +52,7 @@ const poll = () => {
   players.value = data.players;
   activePlayer.value = data.activePlayer;
   mana.value = data.mana;
+  stats.value = data.stats;
 
   maxHp.value = 100;
   for (let player of data.players) {
@@ -86,6 +90,7 @@ onBeforeUnmount(() => window.clearInterval(id));
     <p class="title">{{ popup!.title }}</p>
     <p class="meta">{{ popup!.meta }}</p>
   </div>
+  <EndGameDialog v-if="stats" :stats="(stats as AccumulatedStat<unknown>[])" />
 
   <div :class="{ hud: true, 'hud-open': forceOpen }">
     <div class="players">
