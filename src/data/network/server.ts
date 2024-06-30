@@ -511,25 +511,24 @@ export class Server extends Manager {
   }
 
   private getNextPlayerIndex() {
-    console.log("Selecting next player");
+    const options = this.players.filter(
+      (player) => player.characters.length > 0
+    );
+
+    if ((options.length === 1 && !this.singlePlayer) || options.length === 0) {
+      return null;
+    }
+
     for (let i = 1; i <= this.players.length; i++) {
       const index = (this.activePlayerIndex + i) % this.players.length;
 
       if (index === this.activePlayerIndex && !this.singlePlayer) {
-        console.log(
-          `${this.players[index].name} is the active player, skipping`
-        );
         continue;
       }
 
       if (this.players[index].characters.length) {
-        console.log(`Selected ${this.players[index].name}`);
         return index;
       }
-
-      console.log(
-        `${this.players[index].name} has no remaining characters, skipping`
-      );
     }
 
     return null;
