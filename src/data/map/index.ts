@@ -262,6 +262,7 @@ export class Map {
       PARALLAX_KEY,
       JSON.stringify(this.config.parallax)
     );
+    data = addMetadata(data, SCALE_KEY, this.config.scale.toString());
 
     if (typeof this.config.terrain.mask === "string") {
       data = addMetadata(data, MASK_KEY, this.config.terrain.mask);

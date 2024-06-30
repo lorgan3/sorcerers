@@ -141,7 +141,7 @@ const loadMap = (config: Config, map: string) => {
   name.value = map;
 
   if (config.terrain.mask) {
-    mask.value = { data: config.terrain.mask as string, visible: true };
+    mask.value = { data: config.terrain.mask as string, visible: false };
   } else {
     mask.value = { data: "", visible: false };
   }

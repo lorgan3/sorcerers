@@ -2,7 +2,7 @@
 import Dialog from "../molecules/Dialog.vue";
 import Input from "../atoms/Input.vue";
 import { BBox } from "../../data/map/bbox";
-import { watch } from "vue";
+import { ref, watch } from "vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import { CONFIGS } from "../../data/map/background";
 
@@ -19,10 +19,14 @@ const { settings, onClose } = defineProps<{
   onClose: (settings: AdvancedSettings) => void;
 }>();
 
+const oldScale = ref(settings.scale);
 watch(
   () => settings.scale,
-  (scale, oldScale) => {
-    settings.bbox = settings.bbox.withScale(scale / oldScale);
+  (scale) => {
+    if (typeof scale === "number") {
+      settings.bbox = settings.bbox.withScale(scale / oldScale.value);
+      oldScale.value = scale;
+    }
   }
 );
 
