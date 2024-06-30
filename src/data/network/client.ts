@@ -23,6 +23,7 @@ import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { GameSettings } from "../../util/localStorage/settings";
+import { AccumulatedStat } from "./accumulatedStat";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -389,6 +390,18 @@ export class Client extends Manager {
 
       case MessageType.Cast:
         this.cast(message.state);
+        break;
+
+      case MessageType.EndGame:
+        {
+          const playerMap = Object.fromEntries(
+            this.players.map((player) => [player.color, player])
+          );
+          this.stats = message.stats.map((stat) =>
+            AccumulatedStat.deserialize(stat, playerMap)
+          );
+        }
+        break;
     }
   }
 
