@@ -194,12 +194,13 @@ export const fade = (data: SoundData, duration = 0.5) => {
 };
 
 export const setVolume = (sfxVolume: number, musicVolume: number) => {
+  sound.disableAutoPause = true;
   SFX_VOLUME = sfxVolume;
   MUSIC_VOLUME = musicVolume;
 
   if (LAST_MUSIC) {
     const s = sound.find(LAST_MUSIC.key);
-    s.volume = musicVolume;
+    s.volume = LAST_MUSIC.volume * musicVolume;
   }
 };
 
