@@ -113,7 +113,7 @@ onMounted(() => reset());
           :value="map"
           :selected="selectedMap.path === path"
         >
-          {{ map }}
+          {{ map.replace("_", " ") }}
         </option>
         <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
           Upload custom map
