@@ -16,11 +16,13 @@ export class Wings extends Container {
   private static minScale = 1;
   private static flapThreshHold = 0.2;
   private static lift = 2.6;
+  private static cooldown = 15;
 
   private sprite: AnimatedSprite;
   private particles: SimpleParticleEmitter;
 
   private _power = Wings.fullPower;
+  private lastFlap = 0;
 
   constructor(private character: Character) {
     super();
@@ -68,11 +70,13 @@ export class Wings extends Container {
     ControllableSound.fromEntity(this.character, Sound.Wing);
   }
 
-  flap() {
+  flap(time: number) {
     if (
-      this.character.body.grounded ||
-      this.character.body.yVelocity > Wings.flapThreshHold
+      (this.character.body.grounded ||
+        this.character.body.yVelocity > Wings.flapThreshHold) &&
+      this.lastFlap + Wings.cooldown < time
     ) {
+      this.lastFlap = time;
       this.character.body.addVelocity(
         0,
         -this.character.body.yVelocity - Wings.lift
@@ -82,7 +86,11 @@ export class Wings extends Container {
       this.sprite.scale.set(map(Wings.minScale, Wings.maxScale, this.power));
       this.particles.burst(10);
       ControllableSound.fromEntity(this.character, Sound.Jump);
+
+      return true;
     }
+
+    return false;
   }
 
   stop() {

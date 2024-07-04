@@ -46,6 +46,10 @@ export class NetworkController implements Controller {
     }
   }
 
+  serialize(): [number, number, number] {
+    return [this.pressedKeys, this.mouseX, this.mouseY];
+  }
+
   deserialize(buffer: [number, number, number]) {
     const changedKeys = this.pressedKeys ^ buffer[0];
 
