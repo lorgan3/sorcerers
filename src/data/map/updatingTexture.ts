@@ -8,6 +8,7 @@ export class UpdatingTexture {
     this.ctx = canvas.getContext("2d")!;
     this.ctx.translate(-offsetX * scale, -offsetY * scale);
     this.ctx.scale(scale, scale);
+    this.ctx.imageSmoothingEnabled = false;
 
     this.texture = Texture.from(canvas);
   }
