@@ -192,8 +192,8 @@ export class Map {
         : undefined,
       layers: this._layers!.map((layer, i) => ({
         data: layers[i],
-        x: layer.x,
-        y: layer.y,
+        x: layer.x * this._scaleMultiplier,
+        y: layer.y * this._scaleMultiplier,
       })),
       bbox: this._bbox!.toJS(),
       parallax: this._parallax!,
