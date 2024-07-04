@@ -6,7 +6,7 @@ import { UpdatingTexture } from "./updatingTexture";
 import { rectangle6x16 } from "../collision/precomputed/rectangles";
 
 export class Terrain {
-  private background: Texture;
+  private background?: Texture;
   private terrain: UpdatingTexture;
 
   private layerTextures: UpdatingTexture[];
@@ -17,7 +17,7 @@ export class Terrain {
 
   public readonly killbox: Killbox;
 
-  public backgroundSprite: Sprite;
+  public backgroundSprite?: Sprite;
   public terrainSprite: Sprite;
   public foreground: Container;
 
@@ -29,9 +29,11 @@ export class Terrain {
     this.terrainSprite = new Sprite(this.terrain.texture);
     this.terrainSprite.scale.set(map.scale);
 
-    this.background = Texture.from(map.background);
-    this.backgroundSprite = new Sprite(this.background);
-    this.backgroundSprite.scale.set(map.scale);
+    if (map.background) {
+      this.background = Texture.from(map.background);
+      this.backgroundSprite = new Sprite(this.background);
+      this.backgroundSprite.scale.set(map.scale);
+    }
 
     this.layerTextures = [];
     this.layerSprites = [];
@@ -52,7 +54,10 @@ export class Terrain {
       this.layerSprites.push(sprite);
     }
 
-    this.killbox = new Killbox(this.background.width, this.background.height);
+    this.killbox = new Killbox(
+      this.terrain.texture.width,
+      this.terrain.texture.height
+    );
 
     this.foreground = new Container();
     this.foreground.scale.set(map.scale);

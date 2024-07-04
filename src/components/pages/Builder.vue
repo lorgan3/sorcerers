@@ -84,7 +84,9 @@ const handleSetBackgroundVisibility = (visible: boolean) =>
 const handleBuild = async () => {
   const map = await Map.fromConfig({
     terrain: { data: terrain.value.data, mask: mask.value.data },
-    background: { data: background.value.data || terrain.value.data },
+    background: background.value.data
+      ? { data: background.value.data }
+      : undefined,
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
@@ -110,7 +112,9 @@ const handleBuild = async () => {
 const handleTest = async () => {
   const config: Config = {
     terrain: { data: terrain.value.data, mask: mask.value.data },
-    background: { data: background.value.data || terrain.value.data },
+    background: background.value.data
+      ? { data: background.value.data }
+      : undefined,
     layers: layers.value
       .filter((layer) => !!layer.data)
       .map((layer) => ({ ...layer })),
@@ -129,7 +133,10 @@ const handleTest = async () => {
 
 const loadMap = (config: Config, map: string) => {
   terrain.value = { data: config.terrain.data as string, visible: true };
-  background.value = { data: config.background.data as string, visible: true };
+  background.value = {
+    data: (config.background?.data as string) || "",
+    visible: true,
+  };
   layers.value = config.layers.map((layer) => ({ ...layer, visible: true }));
   advancedSettings.value = {
     bbox: BBox.fromJS(config.bbox) || BBox.create(0, 0),

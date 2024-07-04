@@ -84,9 +84,11 @@ const handleConnect = () => {
                 data: new Blob([message.map.terrain.data]),
                 mask: message.map.terrain.mask,
               },
-              background: {
-                data: new Blob([message.map.background.data]),
-              },
+              background: message.map.background
+                ? {
+                    data: new Blob([message.map.background.data]),
+                  }
+                : undefined,
               layers: message.map.layers.map((layer) => ({
                 ...layer,
                 data: new Blob([layer.data]),

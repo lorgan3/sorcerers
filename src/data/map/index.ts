@@ -29,7 +29,7 @@ export interface Config {
     data: string | Blob;
     mask?: string | ReturnType<CollisionMask["serialize"]>;
   };
-  background: {
+  background?: {
     data: string | Blob;
   };
   layers: Layer[];
@@ -72,7 +72,9 @@ export class Map {
 
     this.load = Promise.all([
       Map.createCanvasFromData(this.config.terrain.data),
-      Map.createCanvasFromData(this.config.background.data),
+      this.config.background
+        ? Map.createCanvasFromData(this.config.background.data)
+        : undefined,
       typeof this.config.terrain.mask === "string" && this.config.terrain.mask
         ? Map.createCanvasFromData(this.config.terrain.mask)
         : undefined,
@@ -135,10 +137,13 @@ export class Map {
   static async parse(blob: Blob): Promise<Config> {
     let data = new Uint8Array(await blob.arrayBuffer());
 
+    const background = Map.getMetadata(data, BACKGROUND_KEY, "");
     return {
-      background: {
-        data: Map.getMetadata(data, BACKGROUND_KEY),
-      },
+      ...(background && {
+        background: {
+          data: background,
+        },
+      }),
       terrain: {
         data: Map.getMetadata(data, TERRAIN_KEY),
         mask: Map.getMetadata(data, MASK_KEY, "") || undefined,
@@ -166,7 +171,7 @@ export class Map {
   async toConfig(forceMask?: boolean): Promise<Config> {
     const [terrain, background, ...layers] = await Promise.all([
       this._terrain!.convertToBlob({ type: "image/png" }),
-      this._background!.convertToBlob({ type: "image/png" }),
+      this._background?.convertToBlob({ type: "image/png" }),
       ...this._layers!.map((layer) =>
         layer.data.convertToBlob({ type: "image/png" })
       ),
@@ -180,9 +185,11 @@ export class Map {
             ? this._collisionMask!.serialize()
             : undefined,
       },
-      background: {
-        data: background,
-      },
+      background: background
+        ? {
+            data: background,
+          }
+        : undefined,
       layers: this._layers!.map((layer, i) => ({
         data: layers[i],
         x: layer.x,
@@ -197,14 +204,17 @@ export class Map {
   async toBlob() {
     if (
       typeof this.config.terrain.data !== "string" ||
-      typeof this.config.background.data !== "string"
+      (this.config.background &&
+        typeof this.config.background.data !== "string")
     ) {
       throw new Error("Only string configs can be converted to blobs for now");
     }
 
     const [terrain, background, ...layers] = await Promise.all([
       Map.loadImage(this.config.terrain.data),
-      Map.loadImage(this.config.background.data),
+      this.config.background
+        ? Map.loadImage(this.config.background.data)
+        : undefined,
       ...this.config.layers.map((layer) => Map.loadImage(layer.data)),
     ]);
 
@@ -233,7 +243,10 @@ export class Map {
     }
     ctx.fillRect(0, 0, dw, dh);
 
-    ctx.drawImage(background, 0, 0, dw, dh);
+    if (background) {
+      ctx.drawImage(background, 0, 0, dw, dh);
+    }
+
     ctx.drawImage(terrain, 0, 0, dw, dh);
 
     const scale = dw / terrain.width;
@@ -254,7 +267,13 @@ export class Map {
 
     data = addMetadata(data, VERSION_KEY, VERSION.toString());
     data = addMetadata(data, TERRAIN_KEY, this.config.terrain.data);
-    data = addMetadata(data, BACKGROUND_KEY, this.config.background.data);
+    if (this.config.background) {
+      data = addMetadata(
+        data,
+        BACKGROUND_KEY,
+        this.config.background.data as string
+      );
+    }
     data = addMetadata(data, LAYERS_KEY, JSON.stringify(this.config.layers));
     data = addMetadata(data, BBOX_KEY, JSON.stringify(this.config.bbox));
     data = addMetadata(
@@ -278,7 +297,7 @@ export class Map {
   }
 
   get background() {
-    return this._background!;
+    return this._background;
   }
 
   get layers() {

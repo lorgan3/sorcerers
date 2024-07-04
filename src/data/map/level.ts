@@ -105,8 +105,11 @@ export class Level {
       this.viewport.addChild(this.background);
     }
 
+    if (this.terrain.backgroundSprite) {
+      this.viewport.addChild(this.terrain.backgroundSprite);
+    }
+
     this.viewport.addChild(
-      this.terrain.backgroundSprite,
       this.backgroundParticles,
       this.backgroundContainer,
       this.terrain.terrainSprite,
