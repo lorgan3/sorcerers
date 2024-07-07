@@ -40,7 +40,7 @@ const numberFormatter = new Intl.NumberFormat("en");
     <ul class="grid">
       <li v-if="map">
         <h3>Map</h3>
-        {{ map }}
+        {{ map.replace("_", " ") }}
       </li>
       <li>
         <h3>Game duration</h3>
