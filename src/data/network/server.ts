@@ -200,10 +200,13 @@ export class Server extends Manager {
       }
     }
 
-    if (this.activePlayer?.activeCharacter && this.isControlling()) {
+    if (this.activePlayer?.activeCharacter) {
       const inputState = this.activePlayer!.controller.serialize();
 
-      if (this.activePlayer === this._self || !this.settings.trustClient) {
+      if (
+        this.isControlling() &&
+        (this.activePlayer === this._self || !this.settings.trustClient)
+      ) {
         this.activePlayer.activeCharacter.control(this.activePlayer.controller);
       }
 

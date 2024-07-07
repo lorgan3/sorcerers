@@ -9,14 +9,7 @@ import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
 import { Level } from "../map/level";
-import {
-  EntityType,
-  HurtableEntity,
-  Item,
-  Priority,
-  Syncable,
-  isItem,
-} from "../entity/types";
+import { HurtableEntity, Item, Syncable, isItem } from "../entity/types";
 import { Element } from "../spells/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
@@ -80,12 +73,14 @@ export class Client extends Manager {
     if (
       this.connection &&
       this.activePlayer === this._self &&
-      this.activePlayer?.activeCharacter &&
-      this.isControlling()
+      this.activePlayer?.activeCharacter
     ) {
       if (this.settings.trustClient) {
         const inputState = this.controller!.serialize();
-        this.activePlayer.activeCharacter.control(this.controller!);
+
+        if (this.isControlling()) {
+          this.activePlayer.activeCharacter.control(this.controller!);
+        }
 
         this.broadcast({
           type: MessageType.ActiveUpdate,
