@@ -2,7 +2,7 @@ import { AnimatedSprite, BitmapText, Container } from "pixi.js";
 import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
-import { circle16x16 } from "../collision/precomputed/circles";
+import { circle9x9 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Character } from "../entity/character";
 
@@ -45,7 +45,7 @@ export class FireWheel extends Container implements Syncable {
       (0.5 + 0.5 * Manager.instance.getElementValue(Element.Arcane));
 
     this.body = new StickyBody(Level.instance.terrain.collisionMask, {
-      mask: circle16x16,
+      mask: circle9x9,
       velocity: 2,
     });
     this.body.move(x, y);
@@ -125,7 +125,7 @@ export class FireWheel extends Container implements Syncable {
   }
 
   getCenter(): [number, number] {
-    return [this.position.x, this.position.y];
+    return [this.position.x + 6, this.position.y + 6];
   }
 
   tick(dt: number) {
@@ -163,25 +163,20 @@ export class FireWheel extends Container implements Syncable {
       this.lifetime <= 0 ||
       Level.instance.terrain.killbox.collidesWith(
         this.body.mask,
-        this.position.x - 48,
-        this.position.y - 48
+        ...this.getCenter()
       )
     ) {
       this._die(x, y);
       return;
     }
 
-    Level.instance.withNearbyEntities(
-      this.position.x,
-      this.position.y,
-      10 * 6,
-      (entity) => {
-        if (entity instanceof Character) {
-          this._die(x, y);
-          return true;
-        }
+    const [cx, cy] = this.getCenter();
+    Level.instance.withNearbyEntities(cx, cy, 10 * 6, (entity) => {
+      if (entity instanceof Character) {
+        this._die(x, y);
+        return true;
       }
-    );
+    });
   }
 
   private get seconds() {
