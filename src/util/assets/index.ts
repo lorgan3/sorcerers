@@ -9,6 +9,7 @@ export const defaultMaps = {
   Castle: `${import.meta.env.BASE_URL}maps/castle.png`,
   Stadium: `${import.meta.env.BASE_URL}maps/stadium.png`,
   Mario_World: `${import.meta.env.BASE_URL}maps/mario.png`,
+  Office: `${import.meta.env.BASE_URL}maps/office.png`,
 };
 
 export const loadAsMap = (src: string) => ({
