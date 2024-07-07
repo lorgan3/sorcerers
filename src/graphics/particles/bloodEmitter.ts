@@ -2,7 +2,7 @@ import { Container } from "pixi.js";
 import { Particle } from "./particle";
 import { ParticleEmitter } from "./types";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { EntityType, HurtableEntity } from "../../data/entity/types";
+import { EntityType, Spawnable } from "../../data/entity/types";
 import { DamageSource } from "../../data/damage/types";
 import { Level } from "../../data/map/level";
 
@@ -15,13 +15,16 @@ export class BloodEmitter
   extends Container<Particle>
   implements ParticleEmitter
 {
+  private static maxParticles = 1000;
+  private static initialParticles = 100;
+
   fading = false;
   activeParticles = 0;
 
   constructor() {
     super();
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < BloodEmitter.initialParticles; i++) {
       this.createParticle();
     }
   }
@@ -70,7 +73,17 @@ export class BloodEmitter
         Level.instance.terrain.draw(
           (ctx) => {
             ctx.fillStyle = particle.color;
-            ctx.fillRect((particle.x / 6) | 0, (particle.y / 6) | 0, 1, 1);
+
+            if (particle.xVelocity > 0) {
+              ctx.fillRect(
+                ((particle.x / 6) | 0) + 1,
+                ((particle.y / 6) | 0) + 1,
+                1,
+                1
+              );
+            } else {
+              ctx.fillRect((particle.x / 6) | 0, (particle.y / 6) | 0, 1, 1);
+            }
           },
           () => {}
         );
@@ -101,6 +114,11 @@ export class BloodEmitter
     }
 
     if (!particle) {
+      if (this.children.length > BloodEmitter.maxParticles) {
+        console.warn("Max particles reached");
+        return;
+      }
+
       particle = this.createParticle();
     }
 
@@ -114,14 +132,14 @@ export class BloodEmitter
     particle.lifetime = 500 * (1 + 0.2 * Math.random());
   }
 
-  burst(entity: HurtableEntity, damage: number, source?: DamageSource) {
+  burst(entity: Spawnable, damage: number, source?: DamageSource) {
     const [cx, cy] = entity.getCenter();
 
     const direction =
       source?.x !== undefined ? Math.atan2(source.y! - cy, source.x! - cx) : 0;
     const variance = source?.x !== undefined ? Math.PI / 12 : Math.PI * 2;
 
-    const amount = Math.ceil(Math.sqrt(damage) * 4);
+    const amount = Math.ceil(Math.sqrt(damage) * 6);
     for (let i = 0; i < amount; i++) {
       const speed = 5 + Math.random() * 4;
       const angle =
