@@ -573,7 +573,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     const gibs = createCharacterGibs(...this.body.precisePosition);
     gibs.forEach((gib) =>
-      gib.body.addVelocity((Math.random() - 0.5) * 12, -Math.random() * 6)
+      gib.body.addVelocity((Math.random() - 0.5) * 8, -2 - Math.random() * 3)
     );
     Level.instance.add(...gibs);
     Level.instance.bloodEmitter.burst(this, 100);

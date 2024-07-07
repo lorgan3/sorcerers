@@ -49,5 +49,23 @@ export const createCharacterGibs = (x: number, y: number) => {
   });
   legR.body.move(x - 1, y + 12);
 
-  return [head, arm, wand, legL, legR];
+  const chunk1 = new Gib({
+    texture: atlas.textures["gibs_chunk"],
+    mask: circle3x3,
+    offsetX: -7,
+    offsetY: -9,
+    bloody: true,
+  });
+  chunk1.body.move(x - 1, y + 3);
+
+  const chunk2 = new Gib({
+    texture: atlas.textures["gibs_chunk"],
+    mask: circle3x3,
+    offsetX: -7,
+    offsetY: -9,
+    bloody: true,
+  });
+  chunk2.body.move(x + 1, y + 9);
+
+  return [head, arm, wand, legL, legR, chunk1, chunk2];
 };
