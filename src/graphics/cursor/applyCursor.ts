@@ -13,7 +13,6 @@ interface TriggerData {
   applyKeys: Key[];
   apply: (character: Character) => void;
   turnState?: TurnState;
-  client?: boolean;
 }
 
 export class ApplyCursor extends Container implements Cursor<TriggerData> {
@@ -55,18 +54,10 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
       return;
     }
 
-    const canExecuteClientSide =
-      Manager.instance.trustClient && this.spell.data.client;
-
-    if (Server.instance || canExecuteClientSide) {
+    if (Server.instance) {
       for (let key of this.spell.data.applyKeys) {
         if (controller.isKeyDown(key)) {
-          if (canExecuteClientSide) {
-            console.log("trigger");
-            this.trigger(this.spell.data);
-          } else {
-            Server.instance.cast();
-          }
+          Server.instance.cast();
         }
       }
     }

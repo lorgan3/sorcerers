@@ -24,7 +24,6 @@ import { filters } from "@pixi/sound";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { GameSettings } from "../../util/localStorage/settings";
 import { AccumulatedStat } from "./accumulatedStat";
-import { Key } from "../controller/controller";
 
 export class Client extends Manager {
   private connection?: DataConnection;
@@ -78,29 +77,25 @@ export class Client extends Manager {
   fixedTick(dtMs: number) {
     super.fixedTick(dtMs);
 
-    if (
-      !this.connection ||
-      this.activePlayer !== this._self ||
-      !this.activePlayer?.activeCharacter ||
-      !this.isControlling()
-    ) {
-      return;
-    }
+    if (this.connection && this.activePlayer === this._self) {
+      this.connection.send({
+        type: MessageType.InputState,
+        data: this.controller!.serialize(),
+      });
 
-    this.activePlayer.activeCharacter.control(this.activePlayer.controller);
-    this.connection.send({
-      type: MessageType.InputState,
-      data: this.controller!.serialize(),
-    });
-    this.controller!.setKey(Key.Jump, false);
-
-    if (this.settings.trustClient && this.frames % 4 === 0) {
-      this.broadcast({
-        type: MessageType.DynamicUpdate,
-        kind: EntityType.Character,
-        id: this.activePlayer.activeCharacter.id,
-        data: this.activePlayer.activeCharacter.serialize(),
-      } satisfies Message);
+      if (
+        this.settings.trustClient &&
+        this.frames % 4 === 0 &&
+        this.activePlayer?.activeCharacter &&
+        this.isControlling()
+      ) {
+        this.broadcast({
+          type: MessageType.DynamicUpdate,
+          kind: EntityType.Character,
+          id: this.activePlayer.activeCharacter.id,
+          data: this.activePlayer.activeCharacter.serialize(),
+        } satisfies Message);
+      }
     }
   }
 
@@ -244,12 +239,8 @@ export class Client extends Manager {
       case MessageType.InputState:
         this.activePlayer?.controller.deserialize(message.data);
 
-        if (this.isControlling() && this.activePlayer) {
-          if (this.cursor) {
-            this.cursor.tick(0, this.activePlayer.controller);
-          }
-
-          this.activePlayer.activeCharacter.control(
+        if (this.isControlling()) {
+          this.activePlayer?.activeCharacter.control(
             this.activePlayer.controller
           );
         }

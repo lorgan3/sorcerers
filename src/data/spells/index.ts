@@ -187,7 +187,6 @@ const WINGS = spell(ApplyCursor, {
   data: {
     applyKeys: [Key.Up, Key.W],
     apply: (character: Character) => character.giveWings(),
-    client: true,
   },
   iconId: 6,
   range: null,

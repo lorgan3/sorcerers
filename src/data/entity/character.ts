@@ -404,34 +404,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   control(controller: Controller) {
     if (
-      (Manager.instance.trustClient && Manager.instance.self === this.player) ||
-      (!Manager.instance.trustClient && Server.instance)
+      this.body.grounded &&
+      !this.wings &&
+      (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
     ) {
-      if (!controller.isKeyDown(Key.Up) && !controller.isKeyDown(Key.W)) {
-        return;
-      }
-
-      if (this.wings && this.wings.flap(this.time)) {
-        controller.setKey(Key.Jump, true);
-        this.animator.animate(AnimationState.Float);
-
-        if (this.wings.power <= 0) {
-          this.removeWings();
-        }
-      } else if (this.body.grounded && this.body.jump()) {
-        controller.setKey(Key.Jump, true);
-        this.animator.animate(AnimationState.Jump);
-      }
-    } else if (controller.isKeyDown(Key.Jump)) {
-      controller.setKey(Key.Jump, false);
-
-      if (this.wings && this.wings.flap(this.time)) {
-        this.animator.animate(AnimationState.Float);
-
-        if (this.wings.power <= 0) {
-          this.removeWings();
-        }
-      } else if (this.body.jump()) {
+      if (this.body.jump()) {
         this.animator.animate(AnimationState.Jump);
       }
     }
@@ -442,6 +419,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       return;
     }
 
+    this.control(controller);
     this.lookDirection = Math.sign(
       controller.getMouse()[0] - this.getCenter()[0]
     );
@@ -468,6 +446,18 @@ export class Character extends Container implements HurtableEntity, Syncable {
         if (this.sprite.animationSpeed * this.lookDirection < 0) {
           this.sprite.animationSpeed *= this.lookDirection;
         }
+      }
+    }
+
+    if (
+      this.wings &&
+      (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
+    ) {
+      this.wings.flap();
+      this.animator.animate(AnimationState.Float);
+
+      if (this.wings.power <= 0) {
+        this.removeWings();
       }
     }
   }

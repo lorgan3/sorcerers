@@ -25,7 +25,6 @@ import { DAMAGE_SOURCES } from "../damage";
 import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { getAccumulatedStats } from "./statsAccumulator";
-import { Key } from "../controller/controller";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -205,14 +204,15 @@ export class Server extends Manager {
       }
     }
 
-    if (this.activePlayer! === this._self && this.isControlling()) {
-      this.activePlayer!.activeCharacter.control(this.activePlayer!.controller);
+    if (this.activePlayer! === this._self) {
+      const pressedKeys = (
+        this.activePlayer!.controller as KeyboardController
+      ).serialize();
 
       this.broadcast({
         type: MessageType.InputState,
-        data: (this._self.controller as KeyboardController).serialize(),
+        data: pressedKeys,
       });
-      this._self.controller.setKey(Key.Jump, false);
     }
   }
 
@@ -419,15 +419,11 @@ export class Server extends Manager {
         player.controller.deserialize(message.data);
 
         if (player === this.activePlayer) {
+          this.broadcast(message);
+
           if (this.isControlling()) {
             player.activeCharacter.control(this.activePlayer.controller);
           }
-
-          this.broadcast({
-            type: MessageType.InputState,
-            data: player.controller.serialize(),
-          });
-          player.controller.setKey(Key.Jump, false);
         }
         break;
 

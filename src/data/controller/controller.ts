@@ -4,7 +4,6 @@ export interface Controller {
   getLocalMouse(): [number, number];
 
   pressedKeys: number;
-  serialize(): [number, number, number];
   deserialize(buffer: [number, number, number]): void;
   destroy(): void;
   resetKeys(): void;
@@ -38,7 +37,6 @@ export enum Key {
   M1 = "M1",
   M2 = "M2",
   Inventory = "Inventory",
-  Jump = "Jump",
 }
 
 export const keys = Object.values(Key);

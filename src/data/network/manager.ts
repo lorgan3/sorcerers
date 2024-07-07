@@ -181,10 +181,6 @@ export abstract class Manager {
     return this.settings.teamSize;
   }
 
-  get trustClient() {
-    return this.settings.trustClient;
-  }
-
   isEnding() {
     return (
       this._turnState !== TurnState.Ongoing &&

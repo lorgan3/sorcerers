@@ -79,50 +79,27 @@ export class KeyboardController implements Controller {
     this.mouseY = y;
     this.pressedKeys |= keyMap[key];
     this.eventHandlers.get(key)?.forEach((fn) => fn());
-
-    if (this.isHost) {
-      this.serverMouseX = this.mouseX;
-      this.serverMouseY = this.mouseY;
-      this.serverKeys = this.pressedKeys;
-    }
   }
 
   mouseMove(x: number, y: number) {
     this.mouseX = x;
     this.mouseY = y;
-
-    if (this.isHost) {
-      this.serverMouseX = this.mouseX;
-      this.serverMouseY = this.mouseY;
-    }
   }
 
   mouseUp(x: number, y: number, key: Key.M1 | Key.M2) {
     this.pressedKeys &= ~keyMap[key];
-
-    if (this.isHost) {
-      this.serverKeys = this.pressedKeys;
-    }
   }
 
   keyDown(key: string) {
     if (isKey(key)) {
       this.pressedKeys |= keyMap[key];
       this.eventHandlers.get(key)?.forEach((fn) => fn());
-
-      if (this.isHost) {
-        this.serverKeys = this.pressedKeys;
-      }
     }
   }
 
   keyUp(key: string) {
     if (isKey(key)) {
       this.pressedKeys &= ~keyMap[key];
-
-      if (this.isHost) {
-        this.serverKeys = this.pressedKeys;
-      }
     }
   }
 
@@ -134,10 +111,6 @@ export class KeyboardController implements Controller {
     } else {
       this.pressedKeys &= ~keyMap[key];
       this.serverKeys &= ~keyMap[key];
-    }
-
-    if (this.isHost) {
-      this.serverKeys = this.pressedKeys;
     }
   }
 
@@ -201,8 +174,13 @@ export class KeyboardController implements Controller {
   }
 
   serialize(): [number, number, number] {
-    if (this.isTrusted) {
+    if (this.isTrusted || this.isHost) {
       this.serverKeys = this.pressedKeys;
+    }
+
+    if (this.isHost) {
+      this.serverMouseX = this.mouseX;
+      this.serverMouseY = this.mouseY;
     }
 
     return [this.pressedKeys, this.mouseX, this.mouseY];
