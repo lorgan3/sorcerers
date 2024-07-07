@@ -88,7 +88,7 @@ export class CatastraviaMissile extends Container implements Spawnable {
 
   private _die(x: number, y: number) {
     Server.instance.damage(
-      new ExplosiveDamage(x, y, 12, 2, 1),
+      new ExplosiveDamage(x, y, 12, 2, 2),
       Server.instance.getActivePlayer()
     );
     Server.instance.kill(this);
