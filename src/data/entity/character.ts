@@ -355,7 +355,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.position.set(x * 6, y * 6);
 
         if (
-          this._hp > 0 &&
           Level.instance.terrain.killbox.collidesWith(
             this.body.mask,
             this.position.x,

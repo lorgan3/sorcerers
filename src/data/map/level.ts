@@ -159,17 +159,21 @@ export class Level {
       for (let entity of this.hurtables) {
         if (entity.hp <= 0) {
           if (entity instanceof Character) {
-            if (!this.deadCharacterQueue.includes(entity)) {
-              if (entity === Server.instance.getActiveCharacter()) {
-                Server.instance.clearActiveCharacter();
-              }
+            if (entity === Server.instance.getActiveCharacter()) {
+              Server.instance.clearActiveCharacter();
+            }
 
-              //@todo: keep track of the last damage dealer instead
-              if (entity.hp < -500) {
-                Server.instance.kill(entity);
-              } else {
-                this.deadCharacterQueue.push(entity);
+            //@todo: keep track of the last damage dealer instead
+            if (entity.hp < -500) {
+              Server.instance.kill(entity);
+
+              const index = this.deadCharacterQueue.indexOf(entity);
+
+              if (index !== -1) {
+                this.deadCharacterQueue.splice(index, 1);
               }
+            } else if (!this.deadCharacterQueue.includes(entity)) {
+              this.deadCharacterQueue.push(entity);
             }
             continue;
           }
@@ -287,8 +291,10 @@ export class Level {
     const character = this.deadCharacterQueue[0];
 
     Server.instance.highlight(character, () => {
-      Server.instance.kill(character);
-      this.deadCharacterQueue.shift();
+      if (this.deadCharacterQueue[0] === character) {
+        Server.instance.kill(character);
+        this.deadCharacterQueue.shift();
+      }
 
       if (this.hasDeathQueue()) {
         this.performDeathQueue();
