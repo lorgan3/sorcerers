@@ -78,6 +78,7 @@ export class Killbox extends Container {
   }
 
   set level(value: number) {
+    this.riseSpeed = (this.level - value) / RISE_SPEED;
     this.newLevel = value;
   }
 }

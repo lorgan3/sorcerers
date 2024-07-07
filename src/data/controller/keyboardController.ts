@@ -176,9 +176,6 @@ export class KeyboardController implements Controller {
   serialize(): [number, number, number] {
     if (this.isTrusted || this.isHost) {
       this.serverKeys = this.pressedKeys;
-    }
-
-    if (this.isHost) {
       this.serverMouseX = this.mouseX;
       this.serverMouseY = this.mouseY;
     }

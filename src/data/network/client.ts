@@ -77,24 +77,27 @@ export class Client extends Manager {
   fixedTick(dtMs: number) {
     super.fixedTick(dtMs);
 
-    if (this.connection && this.activePlayer === this._self) {
-      this.connection.send({
-        type: MessageType.InputState,
-        data: this.controller!.serialize(),
-      });
+    if (
+      this.connection &&
+      this.activePlayer === this._self &&
+      this.activePlayer?.activeCharacter &&
+      this.isControlling()
+    ) {
+      if (this.settings.trustClient) {
+        const inputState = this.controller!.serialize();
+        this.activePlayer.activeCharacter.control(this.controller!);
 
-      if (
-        this.settings.trustClient &&
-        this.frames % 4 === 0 &&
-        this.activePlayer?.activeCharacter &&
-        this.isControlling()
-      ) {
         this.broadcast({
-          type: MessageType.DynamicUpdate,
-          kind: EntityType.Character,
-          id: this.activePlayer.activeCharacter.id,
+          type: MessageType.ActiveUpdate,
           data: this.activePlayer.activeCharacter.serialize(),
+          inputState,
+          cursor: null,
         } satisfies Message);
+      } else {
+        this.connection.send({
+          type: MessageType.InputState,
+          data: this.controller!.serialize(),
+        });
       }
     }
   }
@@ -236,30 +239,21 @@ export class Client extends Manager {
         Level.instance.cameraTarget.setTarget(character);
         break;
 
-      case MessageType.InputState:
-        this.activePlayer?.controller.deserialize(message.data);
-
-        if (this.isControlling()) {
-          this.activePlayer?.activeCharacter.control(
-            this.activePlayer.controller
-          );
-        }
-        break;
-
       case MessageType.ActiveUpdate:
         if (!this.settings.trustClient || this.activePlayer !== this._self) {
-          this.activePlayer?.characters[this.activePlayer.active].deserialize(
-            message.data
-          );
+          if (this.activePlayer) {
+            this.activePlayer.controller.deserialize(message.inputState);
+            this.activePlayer.characters[this.activePlayer.active].control(
+              this.activePlayer.controller
+            );
+
+            this.activePlayer.characters[this.activePlayer.active].deserialize(
+              message.data
+            );
+          }
         }
 
         this.cursor?.deserialize(message.cursor);
-
-        for (let i = 0; i < message.entities.length; i++) {
-          Level.instance.syncables[Priority.High][i].deserialize(
-            message.entities[i]
-          );
-        }
         break;
 
       case MessageType.SyncDamage:
@@ -305,7 +299,7 @@ export class Client extends Manager {
 
       case MessageType.EntityUpdate:
         for (let i = 0; i < message.entities.length; i++) {
-          const entity = Level.instance.syncables[Priority.Low][i];
+          const entity = Level.instance.syncables[message.priority][i];
           if (
             this.settings.trustClient &&
             this.activePlayer === this._self &&
@@ -314,7 +308,7 @@ export class Client extends Manager {
             continue;
           }
 
-          Level.instance.syncables[Priority.Low][i].deserialize(
+          Level.instance.syncables[message.priority][i].deserialize(
             message.entities[i]
           );
         }

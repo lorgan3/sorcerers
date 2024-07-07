@@ -177,6 +177,7 @@ export class Server extends Manager {
     if (this.frames % 20 === 0) {
       const data: Message = {
         type: MessageType.EntityUpdate,
+        priority: Priority.Low,
         entities: Level.instance.syncables[Priority.Low].map((entity) =>
           entity.serialize()
         ),
@@ -185,15 +186,10 @@ export class Server extends Manager {
       for (let player of this.players) {
         player.connection?.send(data);
       }
-    } else if (
-      this.frames % 4 === 0 &&
-      this.activePlayer?.activeCharacter &&
-      this.isControlling()
-    ) {
+    } else if (this.frames % 4 === 0) {
       const data: Message = {
-        type: MessageType.ActiveUpdate,
-        data: this.activePlayer!.activeCharacter.serialize(),
-        cursor: this.cursor?.serialize() || null,
+        type: MessageType.EntityUpdate,
+        priority: Priority.High,
         entities: Level.instance.syncables[Priority.High].map((entity) =>
           entity.serialize()
         ),
@@ -204,15 +200,23 @@ export class Server extends Manager {
       }
     }
 
-    if (this.activePlayer! === this._self) {
-      const pressedKeys = (
-        this.activePlayer!.controller as KeyboardController
-      ).serialize();
+    if (this.activePlayer?.activeCharacter && this.isControlling()) {
+      const inputState = this.activePlayer!.controller.serialize();
 
-      this.broadcast({
-        type: MessageType.InputState,
-        data: pressedKeys,
-      });
+      if (this.activePlayer === this._self || !this.settings.trustClient) {
+        this.activePlayer.activeCharacter.control(this.activePlayer.controller);
+      }
+
+      const data: Message = {
+        type: MessageType.ActiveUpdate,
+        data: this.activePlayer!.activeCharacter.serialize(),
+        cursor: this.cursor?.serialize() || null,
+        inputState,
+      };
+
+      for (let player of this.players) {
+        player.connection?.send(data);
+      }
     }
   }
 
@@ -417,17 +421,9 @@ export class Server extends Manager {
 
       case MessageType.InputState:
         player.controller.deserialize(message.data);
-
-        if (player === this.activePlayer) {
-          this.broadcast(message);
-
-          if (this.isControlling()) {
-            player.activeCharacter.control(this.activePlayer.controller);
-          }
-        }
         break;
 
-      case MessageType.DynamicUpdate:
+      case MessageType.ActiveUpdate:
         if (!this.settings.trustClient) {
           throw new Error("Client should not be trusted!");
         }
@@ -436,6 +432,8 @@ export class Server extends Manager {
           return;
         }
 
+        this.activePlayer.controller.deserialize(message.inputState);
+        this.activePlayer.activeCharacter.control(this.activePlayer.controller);
         this.activePlayer.activeCharacter.deserialize(message.data);
         break;
 

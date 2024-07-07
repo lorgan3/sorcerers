@@ -1,6 +1,6 @@
 import { GameSettings } from "../../util/localStorage/settings";
 import { DamageSourceType } from "../damage/types";
-import { EntityType } from "../entity/types";
+import { EntityType, Priority } from "../entity/types";
 import { Config } from "../map";
 
 export enum MessageType {
@@ -41,13 +41,14 @@ export type Message =
     }
   | {
       type: MessageType.EntityUpdate;
+      priority: Priority;
       entities: any[];
     }
   | {
       type: MessageType.ActiveUpdate;
       data: number[];
       cursor: any;
-      entities: any[];
+      inputState: [number, number, number];
     }
   | {
       type: MessageType.ActiveCharacter;

@@ -4,6 +4,7 @@ export interface Controller {
   getLocalMouse(): [number, number];
 
   pressedKeys: number;
+  serialize(): [number, number, number];
   deserialize(buffer: [number, number, number]): void;
   destroy(): void;
   resetKeys(): void;

@@ -11,6 +11,7 @@ export class NetworkController implements Controller {
   private previousMouseY = 0;
   private t = 0;
   private eventHandlers = new Map<Key, Set<() => void>>();
+  private buffer: [number, number, number] = [0, 0, 0];
 
   destroy() {}
 
@@ -46,7 +47,12 @@ export class NetworkController implements Controller {
     }
   }
 
+  serialize(): [number, number, number] {
+    return this.buffer;
+  }
+
   deserialize(buffer: [number, number, number]) {
+    this.buffer = buffer;
     const changedKeys = this.pressedKeys ^ buffer[0];
 
     this.pressedKeys = buffer[0];

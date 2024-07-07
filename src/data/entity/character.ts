@@ -403,13 +403,22 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   control(controller: Controller) {
-    if (
-      this.body.grounded &&
-      !this.wings &&
-      (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
-    ) {
+    if (!controller.isKeyDown(Key.Up) && !controller.isKeyDown(Key.W)) {
+      return;
+    }
+
+    if (this.body.grounded && !this.wings) {
       if (this.body.jump()) {
         this.animator.animate(AnimationState.Jump);
+      }
+    }
+
+    if (this.wings) {
+      this.wings.flap();
+      this.animator.animate(AnimationState.Float);
+
+      if (this.wings.power <= 0) {
+        this.removeWings();
       }
     }
   }
@@ -419,7 +428,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
       return;
     }
 
-    this.control(controller);
     this.lookDirection = Math.sign(
       controller.getMouse()[0] - this.getCenter()[0]
     );
@@ -446,18 +454,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
         if (this.sprite.animationSpeed * this.lookDirection < 0) {
           this.sprite.animationSpeed *= this.lookDirection;
         }
-      }
-    }
-
-    if (
-      this.wings &&
-      (controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W))
-    ) {
-      this.wings.flap();
-      this.animator.animate(AnimationState.Float);
-
-      if (this.wings.power <= 0) {
-        this.removeWings();
       }
     }
   }
