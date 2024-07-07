@@ -4,7 +4,7 @@ import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { CollisionMask } from "../collision/collisionMask";
 
 const ANIMATION_SPEED = 0.1;
-const RISE_SPEED = 0.15;
+const RISE_SPEED = 50; // 1.5 seconds
 const SPRITE_OFFSET = 5;
 
 export class Killbox extends Container {
@@ -15,8 +15,13 @@ export class Killbox extends Container {
   private index = 0;
   private _level: number;
   private newLevel: number;
+  private riseSpeed = 0;
 
-  constructor(width: number, private initialHeight: number) {
+  constructor(
+    width: number,
+    private initialHeight: number,
+    private scaleMultiplier: number
+  ) {
     super();
     this.position.y = initialHeight - SPRITE_OFFSET;
     this._level = initialHeight;
@@ -44,9 +49,11 @@ export class Killbox extends Container {
 
   tick(dt: number) {
     if (this._level > this.newLevel) {
-      this._level = Math.max(this.newLevel, this._level - RISE_SPEED * dt);
-      this.position.y = this._level - SPRITE_OFFSET;
-      this.bottom.scale.y = this.initialHeight - this._level - SPRITE_OFFSET;
+      this._level = Math.max(this.newLevel, this._level - this.riseSpeed * dt);
+      this.position.y = (this._level - SPRITE_OFFSET) * this.scaleMultiplier;
+      this.bottom.scale.y =
+        (this.initialHeight - this._level - SPRITE_OFFSET) *
+        this.scaleMultiplier;
     }
 
     const index = (this.index + dt * ANIMATION_SPEED) % this.animation.length;
@@ -62,6 +69,7 @@ export class Killbox extends Container {
   }
 
   rise(amount: number) {
+    this.riseSpeed = amount / RISE_SPEED;
     this.newLevel -= amount;
   }
 

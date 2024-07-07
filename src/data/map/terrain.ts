@@ -56,7 +56,8 @@ export class Terrain {
 
     this.killbox = new Killbox(
       this.terrain.texture.width,
-      this.terrain.texture.height
+      this.terrain.texture.height,
+      map.scaleMultiplier
     );
 
     this.foreground = new Container();
