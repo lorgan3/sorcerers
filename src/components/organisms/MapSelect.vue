@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { defaultMaps, loadAsMap } from "../../util/assets/index";
+import { loadAsMap } from "../../util/assets/index";
 import { onMounted, ref } from "vue";
 import { Assets } from "pixi.js";
 import { Config, Map } from "../../data/map";
+import { DefaultMap, defaultMaps } from "../../util/assets/constants";
 
 const { onEdit, defaultMap } = defineProps<{
   onEdit: (map: Config, name: string) => void;
@@ -12,15 +13,17 @@ const { onEdit, defaultMap } = defineProps<{
 const CUSTOM = "custom";
 const EMPTY = "empty";
 
-const selectedMap = ref<{ map: string; path: string }>(
+const selectedMap = ref<DefaultMap & { map: string }>(
   defaultMap
     ? {
         map: defaultMap,
-        path: defaultMaps[defaultMap],
+        ...defaultMaps[defaultMap],
       }
     : {
         map: EMPTY,
         path: "",
+        author: "",
+        recommendedCharacterCount: 0,
       }
 );
 
@@ -32,39 +35,54 @@ const handleChange = (event: Event) => {
 
   if (map === CUSTOM) {
     customUpload.value!.click();
-    selectedMap.value = { map: CUSTOM, path: "" };
+    selectedMap.value = {
+      map: CUSTOM,
+      path: "",
+      author: "",
+      recommendedCharacterCount: 0,
+    };
     mapPath.value = "";
     return;
   }
 
   if (map === EMPTY) {
-    selectedMap.value = { map: EMPTY, path: "" };
+    selectedMap.value = {
+      map: EMPTY,
+      path: "",
+      author: "",
+      recommendedCharacterCount: 0,
+    };
     mapPath.value = "";
     return;
   }
 
   const defaultMap = map as keyof typeof defaultMaps;
-  selectedMap.value = { map: defaultMap, path: defaultMaps[defaultMap] };
-  mapPath.value = defaultMaps[defaultMap];
+  selectedMap.value = { map: defaultMap, ...defaultMaps[defaultMap] };
+  mapPath.value = defaultMaps[defaultMap].path;
 
-  Assets.load(loadAsMap(defaultMaps[defaultMap])).then(async (map) =>
+  Assets.load(loadAsMap(defaultMaps[defaultMap].path)).then(async (map) =>
     onEdit(map, defaultMap)
   );
 };
 
 const reset = () => {
   if (!defaultMap) {
-    selectedMap.value = { map: EMPTY, path: "" };
+    selectedMap.value = {
+      map: EMPTY,
+      path: "",
+      author: "",
+      recommendedCharacterCount: 0,
+    };
     mapPath.value = "";
     return;
   }
 
-  Assets.load(loadAsMap(defaultMaps[defaultMap])).then(async (map) =>
+  Assets.load(loadAsMap(defaultMaps[defaultMap].path)).then(async (map) =>
     onEdit(map, defaultMap)
   );
 
-  selectedMap.value = { map: defaultMap, path: defaultMaps[defaultMap] };
-  mapPath.value = defaultMaps[defaultMap];
+  selectedMap.value = { map: defaultMap, ...defaultMaps[defaultMap] };
+  mapPath.value = defaultMaps[defaultMap].path;
 };
 
 const handleUploadMap = (event: Event) => {
@@ -89,7 +107,12 @@ const handleUploadMap = (event: Event) => {
       return;
     }
 
-    selectedMap.value = { map: CUSTOM, path: file.name };
+    selectedMap.value = {
+      map: CUSTOM,
+      path: file.name,
+      author: "",
+      recommendedCharacterCount: 0,
+    };
     mapPath.value = reader.result as string;
   };
 };
@@ -98,40 +121,58 @@ onMounted(() => reset());
 </script>
 
 <template>
-  <section class="map-preview">
-    <div class="custom-select">
-      <select @change="handleChange">
-        <option
-          v-if="!defaultMap"
-          :value="EMPTY"
-          :selected="selectedMap.map === EMPTY"
-        >
-          Select map...
-        </option>
-        <option
-          v-for="(path, map) in defaultMaps"
-          :value="map"
-          :selected="selectedMap.path === path"
-        >
-          {{ map.replace("_", " ") }}
-        </option>
-        <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
-          Upload custom map
-        </option>
-      </select>
+  <section class="map-select">
+    <div class="map-preview">
+      <div class="custom-select">
+        <select @change="handleChange">
+          <option
+            v-if="!defaultMap"
+            :value="EMPTY"
+            :selected="selectedMap.map === EMPTY"
+          >
+            Select map...
+          </option>
+          <option
+            v-for="({ path }, map) in defaultMaps"
+            :value="map"
+            :selected="selectedMap.path === path"
+          >
+            {{ map.replace("_", " ") }}
+          </option>
+          <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
+            Upload custom map
+          </option>
+        </select>
+      </div>
+      <img v-if="mapPath" :src="mapPath" />
+      <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
+        <span class="icon icon--spinning">߷</span>
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        @change="handleUploadMap"
+        @cancel="reset"
+        ref="customUpload"
+      />
     </div>
-    <img v-if="mapPath" :src="mapPath" />
-    <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
-      <span class="icon icon--spinning">߷</span>
-    </div>
-    <input
-      type="file"
-      accept="image/*"
-      hidden
-      @change="handleUploadMap"
-      @cancel="reset"
-      ref="customUpload"
-    />
+    <ul v-if="selectedMap.map in defaultMaps" class="info">
+      <li>
+        <h3>Author</h3>
+        {{ selectedMap.author }}
+      </li>
+
+      <li>
+        <h3>Recommended character count</h3>
+        {{ selectedMap.recommendedCharacterCount }}
+      </li>
+
+      <li v-if="selectedMap.theme">
+        <h3>Theme</h3>
+        {{ selectedMap.theme }}
+      </li>
+    </ul>
   </section>
 </template>
 
@@ -177,6 +218,19 @@ select {
   top: 55%;
 }
 
+.map-select {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
 .map-preview {
   display: flex;
   flex-direction: column;
@@ -188,7 +242,6 @@ select {
   overflow: hidden;
   background: var(--background);
   box-shadow: 5px 5px 10px #00000069;
-  margin-top: 10px;
 
   .center-wrapper {
     flex: 1;
