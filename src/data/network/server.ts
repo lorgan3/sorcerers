@@ -29,7 +29,7 @@ import { getAccumulatedStats } from "./statsAccumulator";
 export class Server extends Manager {
   private availableColors = [...COLORS];
   private singlePlayer = false;
-  private started = false;
+  private _started = false;
   private suddenDeath = false;
 
   private disconnectedPlayers: Player[] = [];
@@ -128,7 +128,7 @@ export class Server extends Manager {
       Math.floor(Math.random() * this.players.length) - 1;
     this.cycleActivePlayer();
 
-    this.started = true;
+    this._started = true;
   }
 
   fixedTick(dtMs: number) {
@@ -235,7 +235,7 @@ export class Server extends Manager {
         console.log("open");
         player.reconnect(connection);
 
-        if (this.started) {
+        if (this._started) {
           connection.send({
             type: MessageType.StartGame,
             map: await Level.instance.terrain.serialize(),
@@ -285,7 +285,7 @@ export class Server extends Manager {
         try {
           this.handleMessage(data as Message, player);
 
-          if (!this.started && onUpdate) {
+          if (!this._started && onUpdate) {
             onUpdate();
           }
         } catch (error) {
@@ -297,7 +297,7 @@ export class Server extends Manager {
       connection.on("close", () => {
         console.log("closed");
 
-        if (!this.started) {
+        if (!this._started) {
           this.players.splice(this.players.indexOf(player));
           player.destroy();
           this.availableColors.push(player.color);
@@ -393,7 +393,7 @@ export class Server extends Manager {
   private handleMessage(message: Message, player: Player) {
     switch (message.type) {
       case MessageType.Join:
-        if (this.started) {
+        if (this._started) {
           return;
         }
 
@@ -757,9 +757,13 @@ export class Server extends Manager {
   }
 
   set teamSize(newSize: number) {
-    if (this.started) {
+    if (this._started) {
       throw new Error("Team size is locked when game has started");
     }
     this.settings.teamSize = newSize;
+  }
+
+  get started() {
+    return this._started;
   }
 }

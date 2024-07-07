@@ -396,6 +396,9 @@ export class Client extends Manager {
           );
         }
         break;
+
+      default:
+        console.error("invalid message", message);
     }
   }
 

@@ -93,7 +93,7 @@ onMounted(async () => {
 });
 
 const updateLobby = debounce(() => {
-  if (!Server.instance) {
+  if (!Server.instance || Server.instance.started) {
     return;
   }
 
