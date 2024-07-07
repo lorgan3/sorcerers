@@ -9,7 +9,7 @@ import { Character } from "../entity/character";
 import { StaticBody } from "../collision/staticBody";
 import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
-import { EntityType, Priority, Syncable } from "../entity/types";
+import { EntityType, Layer, Priority, Syncable } from "../entity/types";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
@@ -21,9 +21,9 @@ export class Sword extends Container implements Syncable {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
   private bounceDuration =
-    40 * Manager.instance.getElementValue(Element.Physical) * 2;
+    60 + Manager.instance.getElementValue(Element.Physical) * 10;
   private lastY?: number;
-  private lifetime = 150;
+  private lifetime = 200;
   private collided = false;
 
   private shakeXOffset = 0;
@@ -32,7 +32,8 @@ export class Sword extends Container implements Syncable {
 
   public id = -1;
   public readonly type = EntityType.Excalibur;
-  public readonly priority = Priority.Low;
+  public readonly priority = Priority.High;
+  public readonly layer = Layer.Overlay;
 
   constructor(x: number, y: number) {
     super();
@@ -48,8 +49,8 @@ export class Sword extends Container implements Syncable {
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
     this.sprite = new Sprite(atlas.textures["spells_sword"]);
-    this.sprite.position.set(-55, 105);
-    this.sprite.scale.y = -1;
+    this.sprite.position.set(-55, -700);
+    this.sprite.scale.set(6);
 
     // const sprite2 = new Sprite(Texture.from(swordTipCanvas));
     // sprite2.anchor.set(0);
@@ -75,56 +76,79 @@ export class Sword extends Container implements Syncable {
     this.position.set(x * 6 + this.shakeXOffset, y * 6 + this.shakeYOffset);
     this.fallingSound?.update([this.position.x, this.position.y]);
 
-    if (this.collided) {
-      this.collided = false;
-      this.bounceDuration -= dt;
+    if (!this.lastY || Math.abs(this.lastY - y) >= 2) {
+      const damage = new FallDamage(
+        x,
+        y - 4,
+        Shape.SwordTip,
+        2 + 2 * Manager.instance.getElementValue(Element.Arcane)
+      );
+      Server.instance?.damage(damage, Server.instance.getActivePlayer());
 
-      if (!this.lastY || Math.abs(this.lastY - y) >= 1) {
-        this.lastY = y;
+      if (this.collided) {
+        this.collided = false;
+        this.bounceDuration -= dt;
+
         this.shakeXOffset =
           Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
         this.shakeYOffset =
           Math.random() * SHAKE_INTENSITY - SHAKE_INTENSITY / 2;
 
-        const damage = new FallDamage(
-          x,
-          y - 4,
-          Shape.SwordTip,
-          6 * Manager.instance.getElementValue(Element.Arcane)
-        );
-        Server.instance?.damage(damage, Server.instance.getActivePlayer());
         ControllableSound.fromEntity(
           [this.position.x, this.position.y],
           Sound.Step
         );
 
-        for (let entity of damage.getTargets().getEntities()) {
-          const [x, y] =
-            entity.body instanceof StaticBody ? [0.75, -1.5] : [0.3, 0];
+        if (damage.getTargets().hasEntities()) {
+          const velocity: [0, 0] = [0, 0];
+          for (let entity of damage.getTargets().getEntities()) {
+            const [x, y] = entity.body instanceof StaticBody ? [2, -2] : [1, 0];
 
-          if (this.position.x + 32 > entity.getCenter()[0]) {
-            this.body.addVelocity(x, y);
-          } else {
-            this.body.addVelocity(x * -1, y);
+            if (this.position.x + 32 > entity.getCenter()[0]) {
+              velocity[0] += x;
+            } else {
+              velocity[0] -= x;
+            }
+            velocity[1] += y;
           }
+
+          this.body.setVelocity(...velocity);
         }
 
         if (this.bounceDuration <= 0) {
           this.die();
         }
       }
-    } else if (this.lifetime <= 0) {
-      this.die();
+
+      if (this.lifetime <= 0 && this.y > 2000) {
+        this.die();
+      }
     }
   }
 
   die() {
     Level.instance.remove(this);
     Manager.instance.setTurnState(TurnState.Ending);
+
+    if (this.lifetime > 5) {
+      ControllableSound.fromEntity(this, Sound.Glass);
+
+      for (let i = 3; i <= 9; i += 3) {
+        for (let j = -70; j < 0; j += 3) {
+          Level.instance.bloodEmitter.spawn(
+            Math.ceil(this.position.x) + i * 6,
+            Math.ceil(this.position.y) + j * 6,
+            (Math.random() - 0.5) * 5,
+            (Math.random() - 0.5) * 5,
+            "#0690ce"
+          );
+        }
+      }
+    }
   }
 
   getCenter(): [number, number] {
-    return [this.position.x, this.position.y];
+    return [this.position.x + 9, this.position.y - 116];
   }
 
   serialize() {

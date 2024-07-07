@@ -38,6 +38,7 @@ export class Level {
   public readonly uiContainer = new Container();
   public readonly particleContainer = new ParticleManager();
   public readonly backgroundContainer = new Container();
+  public readonly overlayContainer = new Container();
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
@@ -45,6 +46,7 @@ export class Level {
   private layers: Record<Layer, Container> = {
     [Layer.Background]: this.backgroundContainer,
     [Layer.Default]: this.defaultLayer,
+    [Layer.Overlay]: this.overlayContainer,
   };
 
   public readonly terrain: Terrain;
@@ -116,6 +118,7 @@ export class Level {
       this.defaultLayer,
       this.particleContainer,
       this.terrain.foreground,
+      this.overlayContainer,
       this.numberContainer,
       this.uiContainer
     );

@@ -7,6 +7,7 @@ import { Character } from "./character";
 export enum Layer {
   Background,
   Default,
+  Overlay,
 }
 
 export interface TickingEntity extends Container {

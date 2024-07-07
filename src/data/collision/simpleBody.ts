@@ -64,6 +64,12 @@ export class SimpleBody implements PhysicsBody {
     this.active = 1;
   }
 
+  setVelocity(x: number, y: number) {
+    this.xVelocity = x;
+    this.yVelocity = y;
+    this.active = 1;
+  }
+
   addAngularVelocity(power: number, direction: number) {
     this.xVelocity += Math.cos(direction) * power;
     this.yVelocity += Math.sin(direction) * power;
