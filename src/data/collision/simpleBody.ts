@@ -56,6 +56,11 @@ export class SimpleBody implements PhysicsBody {
     this.y = data[1];
     this.xVelocity = data[2];
     this.yVelocity = data[3];
+
+    const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
+    const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
+    this.rx = alignX(this.x);
+    this.ry = alignY(this.y);
   }
 
   addVelocity(x: number, y: number) {
