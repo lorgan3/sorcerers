@@ -213,6 +213,7 @@ export class Client extends Manager {
         break;
 
       case MessageType.ActiveCharacter:
+        const lastActivePlayer = this.activePlayer;
         Object.keys(this.elements).forEach(
           (key, i) => (this.elements[key as Element] = message.elements[i])
         );
@@ -225,7 +226,10 @@ export class Client extends Manager {
           message.activeCharacter
         );
         character.player.mana = message.newMana;
-        character.player.nextTurn();
+
+        if (character.player !== lastActivePlayer) {
+          character.player.nextTurn();
+        }
 
         if (this.activePlayer?.selectedSpell) {
           this.selectSpell(this.activePlayer?.selectedSpell, this.activePlayer);
