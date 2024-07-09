@@ -26,7 +26,7 @@ export class Bomb extends Container implements Item {
   private time = 0;
   private lastActiveTime = 0;
   private activateTime = -1;
-  private arcanePower = 1;
+  private power = 1;
   private fuse = 0;
   private lastSync = 0;
   private lastX = 0;
@@ -45,7 +45,7 @@ export class Bomb extends Container implements Item {
     private character: Character
   ) {
     super();
-    this.arcanePower = Manager.instance.getElementValue(Element.Arcane);
+    this.power = Manager.instance.getElementValue(Element.Elemental);
     this.fuse = Bomb.fuseTime * (0.5 + Math.random());
 
     this.body = new Body(Level.instance.terrain.characterMask, {
@@ -119,7 +119,7 @@ export class Bomb extends Container implements Item {
 
     this.hp = 0;
     Server.instance?.damage(
-      new ExplosiveDamage(x, y, 16, 2, 5 * (0.7 + this.arcanePower * 0.3))
+      new ExplosiveDamage(x, y, 16, 2, 5 * (0.7 + this.power * 0.3))
     );
     Server.instance.kill(this);
   }

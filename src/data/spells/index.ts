@@ -76,7 +76,7 @@ const MELEE = spell(ApplyCursor, {
 const FIREBALL = spell(PoweredArcaneCircle, {
   name: "Ignis",
   description: "Fireball!",
-  elements: [Element.Elemental],
+  elements: [Element.Arcane],
   cost: 6,
   data: {
     projectile: Fireball,
@@ -329,7 +329,7 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
 const HAIRPIN = spell(PoweredArcaneCircle, {
   name: "Balterie",
   description: "Launch several bombs that detonate on contact",
-  elements: [Element.Arcane],
+  elements: [Element.Elemental],
   cost: 28,
   data: {
     projectile: Hairpin,

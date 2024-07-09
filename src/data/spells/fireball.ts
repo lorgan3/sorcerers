@@ -88,7 +88,7 @@ export class Fireball extends Container implements Syncable {
           y,
           4,
           1,
-          1 + Manager.instance.getElementValue(Element.Elemental)
+          1 + Manager.instance.getElementValue(Element.Arcane)
         ),
         Server.instance.getActivePlayer()
       );
@@ -103,7 +103,7 @@ export class Fireball extends Container implements Syncable {
         y,
         16,
         3,
-        2 + Manager.instance.getElementValue(Element.Elemental)
+        2 + Manager.instance.getElementValue(Element.Arcane)
       ),
       Server.instance.getActivePlayer()
     );
