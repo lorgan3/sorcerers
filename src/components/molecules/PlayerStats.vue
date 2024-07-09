@@ -45,11 +45,11 @@ const grade = computed(() => {
   const percent =
     Object.values(spellEfficiency).reduce((sum, value) => sum + value, 0) / 4;
 
-  if (percent < 0.35) {
+  if (percent < 0.45) {
     return "F";
   }
 
-  if (percent < 0.45) {
+  if (percent < 0.5) {
     return "E";
   }
 
@@ -65,11 +65,11 @@ const grade = computed(() => {
     return "B";
   }
 
-  if (percent < 0.75) {
+  if (percent < 0.7) {
     return "A";
   }
 
-  if (percent < 0.9) {
+  if (percent < 0.85) {
     return "S";
   }
 
