@@ -110,7 +110,7 @@ export class FireWheel extends Container implements Syncable {
         y,
         16,
         3,
-        3 + Manager.instance.getElementValue(Element.Elemental)
+        3 + Manager.instance.getElementValue(Element.Elemental) * 1.2
       ),
       this.character.player
     );
