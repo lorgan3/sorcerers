@@ -55,8 +55,8 @@ export class Terrain {
     }
 
     this.killbox = new Killbox(
-      this.terrain.texture.width,
-      this.terrain.texture.height,
+      this.map.width,
+      this.map.height,
       map.scaleMultiplier
     );
 

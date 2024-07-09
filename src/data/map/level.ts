@@ -26,7 +26,7 @@ import { Manager } from "../network/manager";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
-const SINK_PERCENT = 0.14;
+const SINK_PERCENT = 14;
 
 export class Level {
   private app: Application;
@@ -272,7 +272,9 @@ export class Level {
     this.shake();
     new ControllableSound(Sound.Drain, new filters.StereoFilter(0), {});
     this.terrain.killbox.rise(
-      (this.terrain.height * SINK_PERCENT) / Manager.instance.players.length
+      (this.terrain.height * SINK_PERCENT) /
+        100 /
+        Manager.instance.players.length
     );
 
     return this.terrain.killbox.level;

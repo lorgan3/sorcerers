@@ -23,7 +23,7 @@ export class Killbox extends Container {
     private scaleMultiplier: number
   ) {
     super();
-    this.position.y = initialHeight - SPRITE_OFFSET;
+    this.position.y = initialHeight * this.scaleMultiplier - SPRITE_OFFSET;
     this._level = initialHeight;
     this.newLevel = this._level;
 
@@ -32,7 +32,7 @@ export class Killbox extends Container {
 
     this.sprite = new TilingSprite({
       texture: this.animation[0],
-      width,
+      width: width * scaleMultiplier,
       height: 32,
     });
     this.sprite.tint = 0xa449d0;
@@ -41,7 +41,7 @@ export class Killbox extends Container {
 
     this.bottom = new Graphics();
     this.bottom.rect(0, 0, 1, 1).fill({ color: 0x783fbc, alpha: 0.7 });
-    this.bottom.width = width;
+    this.bottom.width = width * scaleMultiplier;
     this.bottom.position.y = 9.6;
 
     this.addChild(this.sprite, this.bottom);
@@ -50,10 +50,10 @@ export class Killbox extends Container {
   tick(dt: number) {
     if (this._level > this.newLevel) {
       this._level = Math.max(this.newLevel, this._level - this.riseSpeed * dt);
-      this.position.y = (this._level - SPRITE_OFFSET) * this.scaleMultiplier;
+      this.position.y = this._level * this.scaleMultiplier - SPRITE_OFFSET;
       this.bottom.scale.y =
-        (this.initialHeight - this._level - SPRITE_OFFSET) *
-        this.scaleMultiplier;
+        (this.initialHeight - this._level) * this.scaleMultiplier -
+        SPRITE_OFFSET;
     }
 
     const index = (this.index + dt * ANIMATION_SPEED) % this.animation.length;
