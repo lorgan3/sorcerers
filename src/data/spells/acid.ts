@@ -72,7 +72,8 @@ export class Acid extends Container implements Spawnable {
     }
   }
 
-  private onCollide = (x: number, y: number, vx: number, vy: number) => {
+  private onCollide = (_x: number, _y: number, vx: number, vy: number) => {
+    const [x, y] = this.body.precisePosition;
     this._die(x, y);
 
     if (this.isParent) {
