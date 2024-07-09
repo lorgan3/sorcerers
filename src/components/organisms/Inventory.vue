@@ -8,6 +8,7 @@ import { Message, MessageType } from "../../data/network/types";
 import Tooltip from "../atoms/Tooltip.vue";
 import SpellDescription from "../molecules/SpellDescription.vue";
 import SpellSlot from "../molecules/SpellSlot.vue";
+import { Element } from "../../data/spells/types";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -78,6 +79,11 @@ const handleClick = (spell?: Spell) => {
     selectedSpell.value = spell;
   }
 };
+
+const getElementFilter = (element: Element) =>
+  `brightness(${
+    0.1 + Math.min(1, Manager.instance.getElementValue(element) / 1.3)
+  })`;
 </script>
 
 <template>
@@ -108,7 +114,15 @@ const handleClick = (spell?: Spell) => {
             locked: !availableList[selectedSpell.iconId],
           }"
         >
-          <SpellSlot :spell="selectedSpell" />
+          <SpellSlot
+            :spell="selectedSpell"
+            :element1Filter="getElementFilter(selectedSpell.elements[0])"
+            :element2Filter="
+              getElementFilter(
+                selectedSpell.elements[1] || selectedSpell.elements[0]
+              )
+            "
+          />
         </div>
       </Tooltip>
     </div>
@@ -128,7 +142,14 @@ const handleClick = (spell?: Spell) => {
                 }"
                 @click="handleClick(spell)"
               >
-                <SpellSlot :spell="spell" :animated="spell === selectedSpell" />
+                <SpellSlot
+                  :spell="spell"
+                  :animated="spell === selectedSpell"
+                  :element1Filter="getElementFilter(spell.elements[0])"
+                  :element2Filter="
+                    getElementFilter(spell.elements[1] || spell.elements[0])
+                  "
+                />
               </div>
             </Tooltip>
           </div>

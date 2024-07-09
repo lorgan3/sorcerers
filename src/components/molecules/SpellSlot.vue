@@ -1,20 +1,15 @@
 <script setup lang="ts">
 import { Spell } from "../../data/spells";
-import { Manager } from "../../data/network/manager";
 import { ELEMENT_COLOR_MAP } from "../../graphics/elements";
-import { Element } from "../../data/spells/types";
 
 const SPRITES_PER_ROW = 5;
 
-const { spell, animated } = defineProps<{
+const { spell, animated, element1Filter, element2Filter } = defineProps<{
   spell: Spell;
   animated?: boolean;
+  element1Filter: string;
+  element2Filter: string;
 }>();
-
-const getElementFilter = (element: Element) =>
-  `brightness(${
-    0.1 + Math.min(1, Manager.instance.getElementValue(element) / 1.3)
-  })`;
 </script>
 
 <template>
@@ -37,7 +32,7 @@ const getElementFilter = (element: Element) =>
       :style="{
         '--dash-offset': 0,
         stroke: ELEMENT_COLOR_MAP[spell.elements[0]],
-        filter: getElementFilter(spell.elements[0]),
+        filter: element1Filter,
       }"
       x="2px"
       y="2px"
@@ -50,7 +45,7 @@ const getElementFilter = (element: Element) =>
       :style="{
         '--dash-offset': 1,
         stroke: ELEMENT_COLOR_MAP[spell.elements[1] || spell.elements[0]],
-        filter: getElementFilter(spell.elements[1] || spell.elements[0]),
+        filter: element2Filter,
       }"
       x="2px"
       y="2px"
