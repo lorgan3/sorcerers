@@ -186,6 +186,7 @@ export const fade = (data: SoundData, duration = 0.5) => {
 
       if (s.volume <= 0) {
         s.stop();
+        s.volume = data.volume;
         window.clearInterval(timer);
         resolve();
       }
@@ -206,6 +207,10 @@ export const setVolume = (sfxVolume: number, musicVolume: number) => {
 
 export const playMusic = async (music: Music) => {
   if (LAST_MUSIC) {
+    if (LAST_MUSIC.key.startsWith(music)) {
+      return;
+    }
+
     await fade(LAST_MUSIC);
   }
 
