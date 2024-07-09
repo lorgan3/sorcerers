@@ -4,11 +4,10 @@ import { Manager } from "../../data/network/manager";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { Server } from "../../data/network/server";
 import { Client } from "../../data/network/client";
-import { ELEMENT_COLOR_MAP } from "../../graphics/elements";
 import { Message, MessageType } from "../../data/network/types";
-import { Element } from "../../data/spells/types";
 import Tooltip from "../atoms/Tooltip.vue";
 import SpellDescription from "../molecules/SpellDescription.vue";
+import SpellSlot from "../molecules/SpellSlot.vue";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -28,16 +27,11 @@ const sections = {
   Offense: offenseSpells,
 };
 
-const SPRITES_PER_ROW = 5;
-
-const previewSpell = ref(Manager.instance?.selectedSpell);
-const previewMultiplier = ref(1);
+const selectedSpell = ref(Manager.instance?.selectedSpell);
 const availableList = ref<boolean[]>([]);
 
 const poll = () => {
   if (props.isOpen) {
-    previewMultiplier.value = previewSpell.value?.costMultiplier?.() || 1;
-
     const mana = Manager.instance.self.mana;
     availableList.value = [];
     SPELLS.forEach((spell) => {
@@ -80,27 +74,10 @@ const handleClick = (spell?: Spell) => {
       };
       Client.instance.broadcast(message);
     }
+
+    selectedSpell.value = spell;
   }
 };
-
-const onMouseLeave = (event: Event) => {
-  previewSpell.value = Manager.instance.selectedSpell;
-
-  previewMultiplier.value =
-    Manager.instance?.selectedSpell?.costMultiplier?.() || 1;
-};
-
-const onMouseEnter = (spell?: Spell) => {
-  if (spell) {
-    previewSpell.value = spell;
-    previewMultiplier.value = spell.costMultiplier?.() || 1;
-  }
-};
-
-const getElementFilter = (element: Element) =>
-  `brightness(${
-    0.1 + Math.min(1, Manager.instance.getElementValue(element) / 1.3)
-  })`;
 </script>
 
 <template>
@@ -114,15 +91,29 @@ const getElementFilter = (element: Element) =>
         <div class="control crystal-ball slot"></div>
       </Tooltip>
       <Tooltip
+        v-if="!selectedSpell"
         direction="center-left"
         text="Right click to open spell book"
         width="240px"
       >
         <div class="control spell-book slot"></div>
       </Tooltip>
+      <Tooltip v-else direction="center-left">
+        <template v-slot:tooltip>
+          <SpellDescription :spell="selectedSpell"
+        /></template>
+        <div
+          :class="{
+            slot: true,
+            locked: !availableList[selectedSpell.iconId],
+          }"
+        >
+          <SpellSlot :spell="selectedSpell" />
+        </div>
+      </Tooltip>
     </div>
     <div :class="{ wrapper: true, isOpen: props.isOpen }">
-      <div class="inventory" @mouseleave="onMouseLeave">
+      <div class="inventory">
         <template v-for="(spells, title) in sections">
           <p class="title">{{ title }}</p>
           <div class="grid">
@@ -136,55 +127,8 @@ const getElementFilter = (element: Element) =>
                   locked: !availableList[spell.iconId],
                 }"
                 @click="handleClick(spell)"
-                @mouseenter="onMouseEnter(spell)"
               >
-                <div
-                  :style="{
-                    '--row': -Math.floor(spell.iconId / SPRITES_PER_ROW),
-                    '--column': -(spell.iconId % SPRITES_PER_ROW),
-                  }"
-                  class="spell-icon"
-                ></div>
-                <svg
-                  width="50px"
-                  height="50px"
-                  :class="{
-                    border: true,
-                    animated: spell === Manager.instance?.selectedSpell,
-                  }"
-                >
-                  <rect
-                    :style="{
-                      '--dash-offset': 0,
-                      stroke: ELEMENT_COLOR_MAP[spell.elements[0]],
-                      filter: getElementFilter(spell.elements[0]),
-                    }"
-                    x="2px"
-                    y="2px"
-                    width="46px"
-                    height="46px"
-                    rx="3px"
-                    ry="3px"
-                  ></rect>
-                  <rect
-                    :style="{
-                      '--dash-offset': 1,
-                      stroke:
-                        ELEMENT_COLOR_MAP[
-                          spell.elements[1] || spell.elements[0]
-                        ],
-                      filter: getElementFilter(
-                        spell.elements[1] || spell.elements[0]
-                      ),
-                    }"
-                    x="2px"
-                    y="2px"
-                    width="46px"
-                    height="46px"
-                    rx="3px"
-                    ry="3px"
-                  ></rect>
-                </svg>
+                <SpellSlot :spell="spell" :animated="spell === selectedSpell" />
               </div>
             </Tooltip>
           </div>
@@ -301,37 +245,6 @@ const getElementFilter = (element: Element) =>
           font-family: "Eternal";
           font-size: 42px;
           margin-top: 6px;
-        }
-
-        .spell-icon {
-          background: url("../../assets/spells.png");
-          background-position: left calc(var(--column, 0) * var(--size)) top
-            calc(var(--row, 0) * var(--size));
-          width: var(--size);
-          height: var(--size);
-        }
-
-        .border {
-          position: absolute;
-
-          rect {
-            fill: none;
-            stroke: #000;
-            stroke-width: 3px;
-            stroke-dasharray: var(--stroke-length), var(--stroke-length);
-            stroke-dashoffset: calc(
-              var(--dash-offset, 0) * var(--stroke-length)
-            );
-          }
-
-          &.animated {
-            rect {
-              --stroke-length: calc(43.425px * 2);
-              stroke-dasharray: calc(var(--stroke-length) / 2),
-                calc(var(--stroke-length) * 3 / 2);
-              animation: rotateBorder 2s linear infinite;
-            }
-          }
         }
       }
     }
