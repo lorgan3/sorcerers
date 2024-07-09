@@ -6,7 +6,7 @@ import { Manager } from "../data/network/manager";
 import { Viewport } from "../data/map/viewport";
 
 export class CameraTarget {
-  private static maxScale = 1.5;
+  private static maxScale = 2;
   private static minScale = 0.5;
 
   private static zoomSpeed = 0.01;
@@ -89,11 +89,14 @@ export class CameraTarget {
       this.lastTargetPosition = position;
     }
 
-    if (this.controller.isLocalKeyDown(Key.C)) {
+    if (
+      this.controller.isLocalKeyDown(Key.Control) ||
+      this.controller.isLocalKeyDown(Key.M3)
+    ) {
       position = this.controller.getLocalMouse();
+      this.attached = false;
 
       if (!this.oldCDown) {
-        this.attached = false;
         this.oldCDown = true;
         this.lastTargetPosition = position;
       }
@@ -109,7 +112,8 @@ export class CameraTarget {
         this.attached = true;
       }
 
-      this.lastTargetPosition = this.controller.getLocalMouse();
+      position = this.controller.getLocalMouse();
+      this.lastTargetPosition = position;
     }
 
     if (this.controller.isLocalKeyDown(Key.M1)) {

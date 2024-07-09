@@ -9,6 +9,7 @@ const props = defineProps<{
   text?: string;
   direction: Direction;
   to?: string;
+  width?: string;
 }>();
 
 const slots = defineSlots<{
@@ -70,7 +71,7 @@ const handleMouseLeave = (event: MouseEvent) => {
     <Teleport v-if="isOpen" :to="$props.to || '#app'">
       <div
         class="tooltip"
-        :style="{ left: `${x}px`, top: `${y}px` }"
+        :style="{ left: `${x}px`, top: `${y}px`, width: props.width }"
         :class="className"
       >
         <slot name="tooltip"> {{ text }}</slot>

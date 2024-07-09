@@ -105,6 +105,22 @@ const getElementFilter = (element: Element) =>
 
 <template>
   <div class="clip">
+    <div class="controls">
+      <Tooltip
+        direction="center-left"
+        text="Hold ctrl or middle mouse for free camera"
+        width="240px"
+      >
+        <div class="control crystal-ball slot"></div>
+      </Tooltip>
+      <Tooltip
+        direction="center-left"
+        text="Right click to open spell book"
+        width="240px"
+      >
+        <div class="control spell-book slot"></div>
+      </Tooltip>
+    </div>
     <div :class="{ wrapper: true, isOpen: props.isOpen }">
       <div class="inventory" @mouseleave="onMouseLeave">
         <template v-for="(spells, title) in sections">
@@ -180,6 +196,8 @@ const getElementFilter = (element: Element) =>
 
 <style lang="scss" scoped>
 .clip {
+  --size: 48px;
+
   position: absolute;
   right: 2vw;
   bottom: 10vh;
@@ -191,6 +209,46 @@ const getElementFilter = (element: Element) =>
 
   overflow: clip;
   overflow-clip-margin: 2vw;
+}
+
+.controls {
+  position: absolute;
+  right: 0;
+  bottom: 259px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 4px solid var(--primary);
+  border-radius: var(--small-radius);
+  background: var(--background);
+  pointer-events: all;
+  cursor: url("../../assets/pointer.png"), auto;
+  padding: 6px;
+
+  .control {
+    width: var(--size);
+    height: var(--size);
+    background-repeat: no-repeat;
+    background-size: cover;
+    image-rendering: pixelated;
+
+    &.crystal-ball {
+      background-image: url("../../assets/icons/crystal_ball.png");
+    }
+
+    &.spell-book {
+      background-image: url("../../assets/icons/spell_book.png");
+    }
+  }
+}
+
+.slot {
+  border-radius: var(--small-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 0 10px -2px inset var(--highlight);
 }
 
 .wrapper {
@@ -230,13 +288,6 @@ const getElementFilter = (element: Element) =>
       padding-top: 0;
 
       .slot {
-        border-radius: var(--small-radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        box-shadow: 0 0 10px -2px inset var(--highlight);
-
         &.locked {
           opacity: 0.5;
         }
@@ -253,8 +304,6 @@ const getElementFilter = (element: Element) =>
         }
 
         .spell-icon {
-          --size: 48px;
-
           background: url("../../assets/spells.png");
           background-position: left calc(var(--column, 0) * var(--size)) top
             calc(var(--row, 0) * var(--size));

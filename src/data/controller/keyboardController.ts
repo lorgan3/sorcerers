@@ -49,7 +49,7 @@ export class KeyboardController implements Controller {
     this.mouseDown(
       event.global.x / this.target.scale.x + this.target.left,
       event.global.y / this.target.scale.y + this.target.top,
-      event.button === 0 ? Key.M1 : Key.M2
+      event.button === 0 ? Key.M1 : event.button === 2 ? Key.M2 : Key.M3
     );
   };
 
@@ -57,7 +57,7 @@ export class KeyboardController implements Controller {
     this.mouseUp(
       event.global.x / this.target.scale.x + this.target.left,
       event.global.y / this.target.scale.y + this.target.top,
-      event.button === 0 ? Key.M1 : Key.M2
+      event.button === 0 ? Key.M1 : event.button === 2 ? Key.M2 : Key.M3
     );
   };
 
@@ -74,7 +74,7 @@ export class KeyboardController implements Controller {
     window.removeEventListener("contextmenu", this.handleContextMenu);
   }
 
-  mouseDown(x: number, y: number, key: Key.M1 | Key.M2) {
+  mouseDown(x: number, y: number, key: Key.M1 | Key.M2 | Key.M3) {
     this.mouseX = x;
     this.mouseY = y;
     this.pressedKeys |= keyMap[key];
@@ -86,7 +86,7 @@ export class KeyboardController implements Controller {
     this.mouseY = y;
   }
 
-  mouseUp(x: number, y: number, key: Key.M1 | Key.M2) {
+  mouseUp(x: number, y: number, key: Key.M1 | Key.M2 | Key.M3) {
     this.pressedKeys &= ~keyMap[key];
   }
 
