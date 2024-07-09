@@ -13,7 +13,7 @@ export class Player {
   public readonly characters: Character[] = [];
   public active = 0;
 
-  private _name = "";
+  private _name = "Spectator";
   private _team = Team.empty();
   private _color = "";
   private _controller: Controller = new NetworkController();

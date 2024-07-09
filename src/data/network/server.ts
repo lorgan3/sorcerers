@@ -383,7 +383,9 @@ export class Server extends Manager {
 
     window.setTimeout(() => {
       this.stats = getAccumulatedStats(
-        this.players.map((player) => player.stats)
+        this.players
+          .filter((player) => player.joined)
+          .map((player) => player.stats)
       );
 
       this.broadcast({
