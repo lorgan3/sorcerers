@@ -201,7 +201,9 @@ export const setVolume = (sfxVolume: number, musicVolume: number) => {
 
   if (LAST_MUSIC) {
     const s = sound.find(LAST_MUSIC.key);
-    s.volume = LAST_MUSIC.volume * musicVolume;
+    s.instances.forEach(
+      (instance) => (instance.volume = LAST_MUSIC!.volume * musicVolume)
+    );
   }
 };
 
