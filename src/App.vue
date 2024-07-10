@@ -268,10 +268,16 @@ table {
 /* */
 h1,
 h2,
-h3 {
+h3,
+h4 {
   font-family: Eternal;
   color: var(--primary);
 }
+
+h4 {
+  font-size: 20px;
+}
+
 h3 {
   font-size: 24px;
 }

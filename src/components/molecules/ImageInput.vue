@@ -5,21 +5,29 @@ import eyeClosed from "pixelarticons/svg/eye-closed.svg";
 import close from "pixelarticons/svg/close.svg";
 import IconButton from "../atoms/IconButton.vue";
 
-const { name, modelValue, onAdd, clearable, onClear, onToggleVisibility } =
-  defineProps<{
-    name: string;
-    modelValue: string;
-    onAdd?: (file: File, data: string) => void;
-    onClear?: () => void;
-    clearable?: boolean;
-    onToggleVisibility?: (visible: boolean) => void;
-  }>();
+const {
+  name,
+  modelValue,
+  onAdd,
+  clearable,
+  onClear,
+  onToggleVisibility,
+  defaultHidden,
+} = defineProps<{
+  name: string;
+  modelValue: string;
+  onAdd?: (file: File, data: string) => void;
+  onClear?: () => void;
+  clearable?: boolean;
+  onToggleVisibility?: (visible: boolean) => void;
+  defaultHidden?: boolean;
+}>();
 
 const emit = defineEmits<{
   "update:modelValue": [string];
 }>();
 
-const visible = ref(true);
+const visible = ref(!defaultHidden);
 
 const handleAdd = (event: Event) => {
   const file = (event.target as HTMLInputElement).files![0];
@@ -32,6 +40,7 @@ const handleAdd = (event: Event) => {
   reader.readAsDataURL(file);
   reader.onload = () => {
     const result = reader.result as string;
+    (event.target as HTMLInputElement).value = "";
 
     emit("update:modelValue", result);
 
