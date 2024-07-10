@@ -118,6 +118,7 @@ const handleClear = () => {
     object-fit: cover;
     box-shadow: 0 0 10px inset var(--primary);
     border-radius: var(--small-radius);
+    cursor: pointer;
 
     &:hover {
       object-fit: contain;
