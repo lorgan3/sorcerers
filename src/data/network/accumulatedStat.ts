@@ -123,7 +123,7 @@ const ACCUMULATORS = {
     translate: (stat) => `${stat.name} had the highest score!`,
   },
   [StatType.SelfDamage]: {
-    accumulate: lowestNumber(StatType.SelfDamage, "selfDamage"),
+    accumulate: highestNumber(StatType.SelfDamage, "selfDamage"),
     translate: (stat) => `${stat.name} did the most damage... to themselves.`,
   },
   [StatType.OverkillDamage]: {
