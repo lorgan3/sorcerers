@@ -10,10 +10,10 @@ import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
 import {
-  circle16x16,
-  circle16x16Canvas,
   circle24x24,
   circle24x24Canvas,
+  circle9x9,
+  circle9x9Canvas,
 } from "../collision/precomputed/circles";
 import { Player } from "../network/player";
 
@@ -24,7 +24,7 @@ export enum Shape {
   Tornado,
 }
 
-const r = 14;
+const r = 10;
 
 const acidGradient = new OffscreenCanvas(r * 2, r * 2);
 const ctx = acidGradient.getContext("2d")!;
@@ -73,15 +73,15 @@ const SHAPES: Record<
   },
   [Shape.Acid]: {
     subtract: function (ctx) {
-      ctx.drawImage(circle16x16Canvas, this.x, this.y);
+      ctx.drawImage(circle9x9Canvas, this.x, this.y);
     },
     draw: function (ctx) {
       ctx.drawImage(acidGradient, this.x - r / 2, this.y - r / 2);
     },
-    mask: circle16x16,
-    xOffset: 8,
-    yOffset: 8,
-    range: 80,
+    mask: circle9x9,
+    xOffset: 4,
+    yOffset: 4,
+    range: 90,
     power: 0.1,
   },
   [Shape.Tornado]: {

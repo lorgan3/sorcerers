@@ -9,6 +9,7 @@ import { Level } from "../../data/map/level";
 const TINT_MAP: Partial<Record<EntityType, string>> = {
   [EntityType.Character]: "#b91e1e",
   [EntityType.Shield]: "#0690ce",
+  [EntityType.Acid]: "#3fba24",
 };
 
 export class BloodEmitter
@@ -115,7 +116,6 @@ export class BloodEmitter
 
     if (!particle) {
       if (this.children.length > BloodEmitter.maxParticles) {
-        console.warn("Max particles reached");
         return;
       }
 
@@ -141,7 +141,7 @@ export class BloodEmitter
 
     const amount = Math.ceil(Math.sqrt(damage) * 6);
     for (let i = 0; i < amount; i++) {
-      const speed = 5 + Math.random() * 4;
+      const speed = 4 + Math.random() * 3;
       const angle =
         Math.random() > 0.5
           ? direction + (Math.random() - 0.5) * variance

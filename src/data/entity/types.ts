@@ -91,6 +91,7 @@ export enum EntityType {
   Teleport,
   Doragate,
   Daosdorg,
+  AcidDrop,
 }
 
 export enum Priority {

@@ -14,18 +14,14 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { AcidSplash } from "../../graphics/acidSplash";
 import { FallDamage, Shape } from "../damage/fallDamage";
-import { AcidDrop } from "./acidDrop";
 
-export class Acid extends Container implements Spawnable {
-  private static splitAmount = 5;
-  private static splitRange = Math.PI / 3;
-
+export class AcidDrop extends Container implements Spawnable {
   public readonly body: SimpleBody;
   private sprite: AnimatedSprite;
   private lifetime = 200;
 
   public id = -1;
-  public readonly type = EntityType.Acid;
+  public readonly type = EntityType.AcidDrop;
   public readonly priority = Priority.Dynamic;
 
   constructor(x: number, y: number, speed: number, direction: number) {
@@ -46,7 +42,7 @@ export class Acid extends Container implements Spawnable {
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
     this.sprite = new AnimatedSprite(atlas.animations["spells_acid"]);
-    this.sprite.scale.set(3);
+    this.sprite.scale.set(2);
     this.sprite.animationSpeed = 0.3;
     this.sprite.currentFrame = Math.floor(
       this.sprite.totalFrames * Math.random()
@@ -62,27 +58,11 @@ export class Acid extends Container implements Spawnable {
     // sprite2.alpha = 0.5;
 
     this.addChild(this.sprite);
-
-    ControllableSound.fromEntity(this, Sound.Water);
   }
 
   private onCollide = (_x: number, _y: number, vx: number, vy: number) => {
     const [x, y] = this.body.precisePosition;
     this._die(x, y);
-
-    Level.instance.bloodEmitter.burst(this, 30);
-    for (let i = 0; i < Acid.splitAmount; i++) {
-      const direction = Math.atan2(vy, vx) + Math.PI;
-      const entity = new AcidDrop(
-        x,
-        y,
-        0.6 + Math.random() * 0.4,
-        direction -
-          Acid.splitRange / 2 +
-          (i / (Acid.splitAmount - 1)) * Acid.splitRange
-      );
-      Server.instance.create(entity);
-    }
   };
 
   private _die(x: number, y: number) {
@@ -91,7 +71,7 @@ export class Acid extends Container implements Spawnable {
         x,
         y,
         Shape.Acid,
-        24 + Manager.instance.getElementValue(Element.Life) * 3
+        10 + Manager.instance.getElementValue(Element.Life)
       ),
       Server.instance.getActivePlayer()
     );
@@ -128,8 +108,8 @@ export class Acid extends Container implements Spawnable {
     ] as const;
   }
 
-  static create(data: ReturnType<Acid["serializeCreate"]>) {
-    return new Acid(...data);
+  static create(data: ReturnType<AcidDrop["serializeCreate"]>) {
+    return new AcidDrop(...data);
   }
 
   static cast(
@@ -143,7 +123,7 @@ export class Acid extends Container implements Spawnable {
       return;
     }
 
-    const entity = new Acid(x, y, power / 1.5, direction);
+    const entity = new AcidDrop(x, y, power / 1.5, direction);
 
     Server.instance.create(entity);
     return entity;
