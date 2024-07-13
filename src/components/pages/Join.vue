@@ -52,7 +52,8 @@ const handleJoin = async () => {
 
     sessionStorage.setItem(LAST_GAME_KEY, key.value);
     joined.value = true;
-  } catch {
+  } catch (error) {
+    console.error(error);
     return;
   }
 
