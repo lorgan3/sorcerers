@@ -28,10 +28,9 @@ const emit = defineEmits<{
 }>();
 
 const visible = ref(!defaultHidden);
+const active = ref(false);
 
-const handleAdd = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files![0];
-
+const add = (file?: File) => {
   if (!file) {
     return;
   }
@@ -40,14 +39,19 @@ const handleAdd = (event: Event) => {
   reader.readAsDataURL(file);
   reader.onload = () => {
     const result = reader.result as string;
-    (event.target as HTMLInputElement).value = "";
-
     emit("update:modelValue", result);
 
     if (onAdd) {
       onAdd(file, result);
     }
   };
+};
+
+const handleAdd = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files![0];
+  add(file);
+
+  (event.target as HTMLInputElement).value = "";
 };
 
 const handleToggleVisibility = () => {
@@ -62,6 +66,32 @@ const handleClear = () => {
     onClear();
   }
 };
+
+function handleDrop(event: DragEvent) {
+  event.preventDefault();
+
+  if (!event.dataTransfer) {
+    return;
+  }
+
+  add(event.dataTransfer.files[0]);
+}
+
+function handleDragOver(event: DragEvent) {
+  event.preventDefault();
+
+  if (!event.dataTransfer) {
+    return;
+  }
+
+  active.value = [...event.dataTransfer.items].some(
+    (item) => item.kind === "file"
+  );
+}
+
+function handleDragLeave() {
+  active.value = false;
+}
 </script>
 
 <template>
@@ -84,7 +114,12 @@ const handleClear = () => {
         />
       </span>
     </h3>
-    <label class="image-select">
+    <label
+      :class="{ 'image-select': true, 'image-select--active': active }"
+      @drop="handleDrop"
+      @dragover="handleDragOver"
+      @dragleave="handleDragLeave"
+    >
       <input hidden type="file" @change="handleAdd" accept="image/*" />
       <img v-if="modelValue" :src="modelValue" />
       <div v-else class="placeholder">➕ Add {{ name }}</div>
@@ -122,6 +157,13 @@ const handleClear = () => {
 
     &:hover {
       object-fit: contain;
+    }
+  }
+
+  &--active {
+    .placeholder,
+    img {
+      box-shadow: 0 0 10px inset var(--highlight);
     }
   }
 }
