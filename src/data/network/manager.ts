@@ -150,10 +150,6 @@ export abstract class Manager {
     }
 
     if (turnState === TurnState.Ending) {
-      if (this.activePlayer?.activeCharacter) {
-        this.activePlayer.activeCharacter.removeWings();
-      }
-
       this.turnStartTime = Math.min(
         this.time - secondsToMs(this.settings.turnLength) + TURN_GRACE_PERIOD,
         this.turnStartTime
@@ -161,6 +157,10 @@ export abstract class Manager {
     }
 
     this._turnState = turnState;
+
+    if (this.activePlayer?.activeCharacter && !this.isControlling()) {
+      this.activePlayer.activeCharacter.removeWings();
+    }
 
     this.resetCursor();
   }
