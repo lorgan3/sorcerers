@@ -49,7 +49,8 @@ export const createClient = () =>
 
       const peer = new Peer();
 
-      peer.on("error", () => {
+      peer.on("error", (error) => {
+        console.warn("Create client failed", error);
         peer.destroy();
         create();
       });

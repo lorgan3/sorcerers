@@ -280,8 +280,8 @@ export class Server extends Manager {
         }
       });
 
-      connection.on("error", (err) => {
-        console.log("error", err);
+      connection.on("error", (error) => {
+        console.error(error);
       });
 
       connection.on("data", (data) => {

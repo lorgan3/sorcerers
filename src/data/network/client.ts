@@ -122,8 +122,8 @@ export class Client extends Manager {
         resolve();
       });
 
-      this.connection!.on("error", (err) => {
-        console.log("error", err);
+      this.connection!.on("error", (error) => {
+        console.error(error);
         close();
       });
 
