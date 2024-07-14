@@ -40,6 +40,10 @@ const poll = () => {
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
         !Manager.instance.self.executedSpells.includes(spell);
     });
+  } else {
+    if (Manager.instance.self === Manager.instance.getActivePlayer()) {
+      selectedSpell.value = Manager.instance.selectedSpell;
+    }
   }
 };
 
