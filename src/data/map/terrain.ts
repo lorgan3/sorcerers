@@ -4,6 +4,7 @@ import { ComputedLayer, Map } from ".";
 import { Killbox } from "./killbox";
 import { UpdatingTexture } from "./updatingTexture";
 import { rectangle6x16 } from "../collision/precomputed/rectangles";
+import { probeX } from "./utils";
 
 export class Terrain {
   private background?: Texture;
@@ -142,6 +143,68 @@ export class Terrain {
     }
 
     return locations;
+  }
+
+  getRandomItemLocation(gravity?: boolean, mask?: CollisionMask) {
+    for (let i = 0; i < 30; i++) {
+      const x = Math.round(
+        this.map.bbox.left + Math.random() * this.map.bbox.width
+      );
+      let y = Math.round(
+        this.map.bbox.top +
+          Math.random() *
+            Math.min(
+              this.map.bbox.height,
+              this.killbox.level - this.map.bbox.top
+            )
+      );
+
+      if (mask) {
+        if (this.collisionMask.collidesWith(mask, x, y)) {
+          continue;
+        }
+      } else {
+        if (this.collisionMask.collidesWithPoint(x, y)) {
+          continue;
+        }
+      }
+
+      if (!gravity) {
+        if (mask) {
+          if (!this.collisionMask.collidesWith(mask, x, y)) {
+            return [x, y] as const;
+          }
+
+          continue;
+        }
+
+        return [x, y] as const;
+      }
+
+      if (mask) {
+        while (!this.collisionMask.collidesWith(mask, x, y + mask.height)) {
+          if (y > this.map.height) {
+            break;
+          }
+
+          y += mask.height;
+        }
+
+        if (y > this.map.height) {
+          continue;
+        }
+
+        while (!this.collisionMask.collidesWith(mask, x, y + 1)) {
+          y += 1;
+        }
+
+        return [x, y] as const;
+      }
+
+      return [x, probeX(this.collisionMask, x, y)] as const;
+    }
+
+    return null;
   }
 
   subtract(

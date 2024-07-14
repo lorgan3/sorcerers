@@ -23,6 +23,7 @@ import { filters } from "@pixi/sound";
 import { Background } from "./background";
 import { Viewport } from "./viewport";
 import { Manager } from "../network/manager";
+import { circle16x16 } from "../collision/precomputed/circles";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -138,6 +139,29 @@ export class Level {
 
     const index = Math.floor(Math.random() * this.spawnLocations.length);
     return this.spawnLocations.splice(index, 1)[0];
+  }
+
+  getRandomItemLocation() {
+    for (let i = 0; i < 20; i++) {
+      const coords = this.terrain.getRandomItemLocation(true, circle16x16);
+      if (!coords) {
+        return null;
+      }
+
+      let skip = false;
+      this.withNearbyEntities(coords[0] * 6, coords[1] * 6, 150, () => {
+        skip = true;
+        return true;
+      });
+
+      if (skip) {
+        continue;
+      }
+
+      return coords;
+    }
+
+    return null;
   }
 
   collidesWith(other: CollisionMask, dx: number, dy: number) {

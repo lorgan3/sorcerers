@@ -575,15 +575,18 @@ export class Server extends Manager {
         return;
       }
 
-      const item = this.create(
-        getRandomItem(...Level.instance.getRandomSpawnLocation())
-      );
+      const coords = Level.instance.getRandomItemLocation();
+      if (coords) {
+        const item = this.create(getRandomItem(...coords));
 
-      this.highlight(item, () => {
-        item.appear();
+        this.highlight(item, () => {
+          item.appear();
 
+          checkSpawn();
+        });
+      } else {
         checkSpawn();
-      });
+      }
     };
 
     checkSpawn();
