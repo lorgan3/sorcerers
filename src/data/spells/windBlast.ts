@@ -13,7 +13,7 @@ import { GenericDamage } from "../damage/genericDamage";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { angleDiff } from "../../util/math";
+import { angleDiff, getSquareDistance } from "../../util/math";
 
 export class WindBlast extends Container implements Spawnable {
   private static triggerFrame = 4;
@@ -104,7 +104,21 @@ export class WindBlast extends Container implements Spawnable {
 
       const targetList = new TargetList(
         entities
-          .sort((a, b) => b.position.y - a.position.y)
+          .sort(
+            (a, b) =>
+              getSquareDistance(
+                b.position.x,
+                b.position.y,
+                this.character.position.x,
+                this.character.position.y
+              ) -
+              getSquareDistance(
+                a.position.x,
+                a.position.y,
+                this.character.position.x,
+                this.character.position.y
+              )
+          )
           .map((entity) => ({
             entityId: entity.id,
             damage: 0,
