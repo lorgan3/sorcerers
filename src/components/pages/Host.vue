@@ -238,7 +238,7 @@ const handleSelectMap = async (config: Config, name: string) => {
         />
         <TeamDisplay
           v-for="(player, index) in players"
-          :key="player.color"
+          :key="player.color + index"
           :player="player"
           :onDelete="index !== 0 ? () => handleKick(index) : undefined"
           :onEdit="!player.connection ? handleEditPlayer : undefined"
