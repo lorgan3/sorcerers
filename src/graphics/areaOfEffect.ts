@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container } from "pixi.js";
+import { Container, Sprite } from "pixi.js";
 import { SimpleParticleEmitter } from "./particles/simpleParticleEmitter";
 import { Element } from "../data/spells/types";
 import { Level } from "../data/map/level";
@@ -18,12 +18,13 @@ export class AreaOfEffect extends Container implements TickingEntity {
   private static expansionDuration = 20;
   private static maxAlpha = 0.4;
   private static fadeDuration = 60;
+  private static rotationSpeed = Math.PI / 150;
 
   private emitter?: ParticleEmitter;
   private time = 0;
   private fadeTime = -1;
 
-  private circle: AnimatedSprite;
+  private circle: Sprite;
 
   private growSize: number;
   private expansionSize: number;
@@ -43,15 +44,11 @@ export class AreaOfEffect extends Container implements TickingEntity {
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
-    this.circle = new AnimatedSprite(
-      atlas.animations["spells_flatMagicCircle"]
-    );
+    this.circle = new Sprite(atlas.textures["spells_flatMagicCircle"]);
     this.circle.anchor.set(0.5);
-    this.circle.animationSpeed = 0.08;
     this.circle.scale.set(0);
     this.circle.tint = ELEMENT_COLOR_MAP[element];
     this.circle.alpha = 0.0;
-    this.circle.play();
 
     this.addChild(this.circle);
 
@@ -83,6 +80,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
 
   tick(dt: number) {
     this.time += dt;
+    this.rotation -= AreaOfEffect.rotationSpeed * dt;
 
     if (this.fadeTime > -1) {
       const t = this.time - this.fadeTime;
