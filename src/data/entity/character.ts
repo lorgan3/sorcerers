@@ -257,6 +257,18 @@ export class Character extends Container implements HurtableEntity, Syncable {
           Manager.instance.setTurnState(TurnState.Ending);
         },
       })
+      .addAnimation(AnimationState.Read, {
+        ...ANIMATION_CONFIG[AnimationState.Read],
+        onStart: () => {
+          if (
+            Manager.instance.getActiveCharacter() !== this ||
+            !player.controller.isKeyDown(Key.Inventory)
+          ) {
+            this.animator.setDefaultAnimation(AnimationState.Idle);
+            this.animator.animate(AnimationState.Idle);
+          }
+        },
+      })
       .addAnimation(AnimationState.ReadIdle, {
         ...ANIMATION_CONFIG[AnimationState.ReadIdle],
         continuous: () => {
