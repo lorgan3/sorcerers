@@ -244,7 +244,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
           const [cx, cy] = this.getCenter();
           Server.instance?.damage(
             new ImpactDamage(
-              Math.floor(cx / 6) + this.sprite.scale.x * 6.5,
+              Math.floor(cx / 6) + this.sprite.scale.x * 5.5,
               Math.floor(cy / 6) - 6,
               direction,
               MELEE_POWER *

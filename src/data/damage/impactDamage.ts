@@ -36,7 +36,7 @@ export class ImpactDamage implements DamageSource {
     if (!this.targets) {
       this.targets = new TargetList();
 
-      const range = 10 * 6;
+      const range = 16 * 6;
       Level.instance.withNearbyEntities(
         (this.x + 3) * 6,
         (this.y + 8) * 6,
@@ -44,10 +44,18 @@ export class ImpactDamage implements DamageSource {
         (entity) => {
           if (isHurtableEntity(entity)) {
             const [x, y] = entity.getCenter();
-            this.targets!.add(entity, this.power, {
-              power: this.power / 10,
-              direction: this.direction,
-            });
+            if (
+              circle16x16.collidesWith(
+                entity.body.mask,
+                Math.floor(x / 6) - this.x + 4,
+                Math.floor(y / 6) - this.y + 4
+              )
+            ) {
+              this.targets!.add(entity, this.power, {
+                power: this.power / 10,
+                direction: this.direction,
+              });
+            }
           }
         }
       );
