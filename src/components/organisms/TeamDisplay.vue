@@ -71,8 +71,8 @@ const handleDelete = (event: Event) => {
   &:before {
     background: url("../../assets/characters.png");
     background-repeat: no-repeat;
-    background-size: 400%;
-    background-position-x: calc(var(--team-offset) * 33.33%);
+    background-size: 500%;
+    background-position-x: calc(var(--team-offset) * 25%);
     content: "";
     display: block;
     position: absolute;

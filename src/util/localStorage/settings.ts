@@ -45,7 +45,7 @@ export const settingsReviver = (key: string, value: any): any => {
   }
 
   if (key === "itemSpawnChance") {
-    return assertNumber(value, 0, 400);
+    return assertNumber(value, 0, 500);
   }
 
   return value;

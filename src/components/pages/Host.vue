@@ -220,7 +220,7 @@ const handleSelectMap = async (config: Config, name: string) => {
       <h2>
         Players
         <IconButton
-          v-if="players.length < 4"
+          v-if="players.length < COLORS.length"
           title="Add local player"
           :onClick="handleAddLocalPlayer"
           :icon="plus"

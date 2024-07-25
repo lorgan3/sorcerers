@@ -51,14 +51,14 @@ onMounted(() => {
         :player="player"
         :spellEfficiency="efficiency"
         :spellUsage="usage"
-        :rank="rankArray[i]"
+        :rank="rankArray[i] || Rank.None"
       />
     </section>
 
     <section class="highlights">
       <div
         class="highlight"
-        :style="{ '--delay': `${playerStats.length + i}s` }"
+        :style="{ '--delay': `${Math.min(4, playerStats.length) + i}s` }"
         v-for="i in 3"
       >
         {{ stats[i - 1].text }}

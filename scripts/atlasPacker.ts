@@ -21,7 +21,7 @@ const extractColors: Record<string, { from: number[]; to: string[] }> = {
       0x691d1fff, 0x681c1eff, 0x9c484aff, 0x8e3f41ff, 0x3e0b0cff, 0x934042ff,
       0x7f2a2dff, 0x712224ff,
     ],
-    to: ["#fde74c", "#9cc53d", "#5cc0eb", "#e65933"],
+    to: ["#fa9821", "#fde74c", "#9cc53d", "#5cc0eb", "#e65933"],
   },
 };
 

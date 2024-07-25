@@ -22,7 +22,7 @@ const RANK_MAP: Record<Rank, { text: string; color: string; delay: string }> = {
     delay: "2s",
   },
   [Rank.None]: {
-    text: "Last place",
+    text: "",
     color: "var(--background)",
     delay: "3s",
   },
@@ -136,6 +136,7 @@ const grade = computed(() => {
   .rank {
     color: var(--color, var(--primary));
     text-shadow: 1px 1px var(--primary);
+    height: 43px;
   }
 
   .player-name {
