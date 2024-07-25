@@ -71,6 +71,7 @@ export class Bakuretsu extends Container implements Spawnable {
     this.impact.scale.set(3);
     this.impact.y = -128 * 3;
     this.impact.visible = false;
+    this.impact.onComplete = () => (this.impact.visible = false);
 
     this.explosion = new AnimatedSprite(atlas.animations["spells_fireBomb"]);
     this.explosion.anchor.set(0.5);

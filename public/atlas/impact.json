@@ -58,15 +58,7 @@
     }
   },
   "animations": {
-    "impact": [
-      "impact1",
-      "impact2",
-      "impact3",
-      "impact4",
-      "impact5",
-      "impact6",
-      "impact7"
-    ]
+    "impact": ["impact1", "impact2", "impact3", "impact4", "impact5", "impact6"]
   },
   "meta": {
     "app": "https://github.com/lorgan3/sorcerers",

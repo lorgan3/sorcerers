@@ -49,6 +49,7 @@ export class Reelseiden extends Container implements Spawnable {
     super();
     this.position.set(x * 6, y * 6);
 
+    // @TODO: re add animation if ever enabling this spell again
     this.sprite = new AnimatedSprite(
       AssetsContainer.instance.assets!["atlas"].animations["spells_slash"]
     );
