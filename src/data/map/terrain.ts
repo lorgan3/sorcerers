@@ -183,14 +183,14 @@ export class Terrain {
 
       if (mask) {
         while (!this.collisionMask.collidesWith(mask, x, y + mask.height)) {
-          if (y > this.killbox.level || y > this.map.height) {
+          if (y + mask.height > this.killbox.level || y > this.map.height) {
             break;
           }
 
           y += mask.height;
         }
 
-        if (y > this.killbox.level || y > this.map.height) {
+        if (y + mask.height > this.killbox.level || y > this.map.height) {
           continue;
         }
 
@@ -198,7 +198,7 @@ export class Terrain {
           y += 1;
         }
 
-        if (y > this.killbox.level || y > this.map.height) {
+        if (y + mask.height > this.killbox.level || y > this.map.height) {
           continue;
         }
 

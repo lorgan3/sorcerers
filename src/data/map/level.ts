@@ -23,7 +23,7 @@ import { filters } from "@pixi/sound";
 import { Background } from "./background";
 import { Viewport } from "./viewport";
 import { Manager } from "../network/manager";
-import { circle16x16 } from "../collision/precomputed/circles";
+import { ellipse9x16 } from "../collision/precomputed/circles";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -143,7 +143,7 @@ export class Level {
 
   getRandomItemLocation() {
     for (let i = 0; i < 20; i++) {
-      const coords = this.terrain.getRandomItemLocation(true, circle16x16);
+      const coords = this.terrain.getRandomItemLocation(true, ellipse9x16);
       if (!coords) {
         return null;
       }
