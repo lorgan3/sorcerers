@@ -62,7 +62,7 @@ const handleJoin = async () => {
 
 const handleConnect = () => {
   Client.instance.onLobbyUpdate(
-    (message) => {
+    async (message) => {
       switch (message.type) {
         case MessageType.LobbyUpdate:
           players.value = message.players.map(({ characters, ...player }) => ({
@@ -80,7 +80,7 @@ const handleConnect = () => {
         case MessageType.StartGame:
           onPlay(
             key.value,
-            {
+            await Map.fromConfig({
               terrain: {
                 data: new Blob([message.map.terrain.data]),
                 mask: message.map.terrain.mask,
@@ -97,7 +97,7 @@ const handleConnect = () => {
               bbox: message.map.bbox,
               parallax: message.map.parallax,
               scale: message.map.scale,
-            },
+            }),
             message.settings
           );
 
