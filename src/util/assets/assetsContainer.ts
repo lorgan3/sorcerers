@@ -19,6 +19,7 @@ export class AssetsContainer {
 
       BitmapFont.install({
         name: "Eternal",
+        padding: 8,
         style: {
           fontFamily: "Eternal",
           fontSize: 32,
