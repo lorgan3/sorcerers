@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { Manager } from "../../data/network/manager";
+import { Server } from "../../data/network/server";
 import { Player } from "../../data/network/player";
 import { Popup } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
@@ -8,6 +9,8 @@ import { ELEMENT_MAP } from "../../graphics/elements";
 import { MAX_MANA } from "../../data/network/constants";
 import { AccumulatedStat } from "../../data/network/accumulatedStat";
 import EndGameDialog from "./EndGameDialog.vue";
+import IconButton from "../atoms/IconButton.vue";
+import close from "pixelarticons/svg/close.svg";
 
 interface ActivePopup extends Popup {
   out: boolean;
@@ -80,6 +83,10 @@ const poll = () => {
   }
 };
 
+const handleKick = (player: number) => {
+  Server.instance.kick(Server.instance.players[player]);
+};
+
 let id = -1;
 onMounted(() => (id = window.setInterval(poll, 500)));
 onBeforeUnmount(() => window.clearInterval(id));
@@ -95,10 +102,15 @@ onBeforeUnmount(() => window.clearInterval(id));
   <div :class="{ hud: true, 'hud-open': forceOpen }">
     <div class="players">
       <ul>
-        <li class="player" v-for="player in players">
-          <span :class="{ name: true, active: activePlayer === player }">{{
-            player.name
-          }}</span>
+        <li class="player" v-for="(player, i) in players">
+          <span :class="{ name: true, active: activePlayer === player }"
+            >{{ player.name }}
+            <IconButton
+              v-if="Server.instance && i > 0 && !!player.connection"
+              title="Remove player"
+              :onClick="() => handleKick(i)"
+              :icon="close"
+          /></span>
           <ul
             class="characters"
             :style="{
@@ -251,6 +263,7 @@ onBeforeUnmount(() => window.clearInterval(id));
 
     .player {
       font-family: Eternal;
+      font-size: 20px;
 
       .name.active {
         font-weight: bold;
