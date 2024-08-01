@@ -3,7 +3,7 @@ import { useRouter } from "vue-router";
 import { defaults } from "../../util/localStorage/settings";
 import { get, set } from "../../util/localStorage";
 import { ref } from "vue";
-import { setVolume } from "../../sound";
+import { Music, playMusic, setVolume } from "../../sound";
 
 const router = useRouter();
 
@@ -32,6 +32,7 @@ const handleSave = () => {
 
 const handleChangeMusic = () => {
   setVolume(sfxVolume.value, musicVolume.value);
+  playMusic(Music.TitleScreen);
 };
 </script>
 
