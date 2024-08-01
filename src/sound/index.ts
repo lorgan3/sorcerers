@@ -45,6 +45,7 @@ export enum Sound {
 
 export enum Music {
   TitleScreen = "titleScreenMusic",
+  Battle1 = "battleMusic1",
 }
 
 interface SoundData {
@@ -150,6 +151,7 @@ addSoundData(Sound.Smoke, "714257__qubodup__puff-of-smoke");
 addSoundData(Sound.Tada, "397353__plasterbrain__tada-fanfare-g");
 
 addMusicData(Music.TitleScreen, "Sorcerers Theme Sample");
+addMusicData(Music.Battle1, "Sorcerers Battle 1");
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(

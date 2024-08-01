@@ -70,7 +70,7 @@ export const defaults = (settings?: Partial<Settings> | null): Settings => {
     name: "Player",
     tutorialDone: false,
     sfxVolume: 1,
-    musicVolume: 0.6,
+    musicVolume: 0.5,
     gameSettings: {
       turnLength: 45, // Seconds
       gameLength: 10, // Minutes

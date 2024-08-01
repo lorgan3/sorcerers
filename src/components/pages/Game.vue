@@ -11,7 +11,7 @@ import { useRoute, useRouter } from "vue-router";
 import IngameMenu from "../organisms/IngameMenu.vue";
 import { get } from "../../util/localStorage";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
-import { setVolume, stopMusic } from "../../sound";
+import { Music, playMusic, setVolume } from "../../sound";
 
 const { selectedMap, settings: gameSettings } = defineProps<{
   selectedMap: Map;
@@ -48,7 +48,7 @@ watch(canvas, (canvas) => {
     });
 
     setVolume(settings.sfxVolume, settings.musicVolume);
-    stopMusic();
+    playMusic(Music.Battle1);
   }
 });
 
