@@ -152,7 +152,12 @@ export class Client extends Manager {
 
     this.connection!.off("data");
     this.connection!.on("data", (data) => {
-      this.handleMessage(data as Message);
+      try {
+        this.handleMessage(data as Message);
+      } catch (error) {
+        console.error(`[Server error]`, error);
+        this.connection!.close();
+      }
     });
 
     this.connection!.off("close");
