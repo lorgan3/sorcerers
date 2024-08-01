@@ -201,7 +201,8 @@ export class Client extends Manager {
             data.color,
             data.you ? this.controller : undefined
           );
-          player.selectedSpell = data.spell ? SPELLS[data.spell] : null;
+          player.selectedSpell =
+            data.spell !== null ? SPELLS[data.spell] : null;
 
           data.characters.forEach(({ id, name, hp, x, y }) => {
             setId(id);
