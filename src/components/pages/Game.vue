@@ -48,7 +48,7 @@ watch(canvas, (canvas) => {
     });
 
     setVolume(settings.sfxVolume, settings.musicVolume);
-    playMusic(Music.Battle1);
+    playMusic(Music.Battle);
   }
 });
 

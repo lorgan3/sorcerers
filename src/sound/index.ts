@@ -45,7 +45,7 @@ export enum Sound {
 
 export enum Music {
   TitleScreen = "titleScreenMusic",
-  Battle1 = "battleMusic1",
+  Battle = "battleMusic",
 }
 
 interface SoundData {
@@ -150,8 +150,10 @@ addSoundData(Sound.Slime, "433839__archos__slime-28", 0.6);
 addSoundData(Sound.Smoke, "714257__qubodup__puff-of-smoke");
 addSoundData(Sound.Tada, "397353__plasterbrain__tada-fanfare-g");
 
-addMusicData(Music.TitleScreen, "Sorcerers Theme Sample");
-addMusicData(Music.Battle1, "Sorcerers Battle 1");
+addMusicData(Music.TitleScreen, "Sorcerers Theme Sample", 0.8);
+addMusicData(Music.Battle, "Sorcerers Battle 1", 0.8);
+addMusicData(Music.Battle, "Sorcerers Level 2", 0.8);
+addMusicData(Music.Battle, "Sorcerers Level 3", 0.7);
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
@@ -228,7 +230,10 @@ export const playMusic = async (music: Music) => {
 
   await sound.play(result.key, {
     volume: result.volume * MUSIC_VOLUME,
-    loop: true,
+    complete: () => {
+      LAST_MUSIC = undefined;
+      playMusic(music);
+    },
   });
 };
 
