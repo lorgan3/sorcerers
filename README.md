@@ -26,6 +26,15 @@ I've developed this with [VS Code](https://code.visualstudio.com/) and the follo
 
 Check `package.json`, there are also commands available to run tests and check the types.
 
+## Future
+
+Sorcerers is 'complete' in my opinion but there are some ideas that I might want to tackle in the future:
+
+- Spell selection: It could be cool to have even more spells and the option to pick which ones to use in your game. It was already tricky to make the current selection of spells feel unique and semi balanced though.
+- Skins: I do not have the patience or skills to do this myself but I would be happy to collaborate on adding additional skins for the players to the game.
+- More map features: Item chests and teleport points come to mind but feel free to suggest your ideas.
+- Improved networking and physics: The current implementation gets the job done but this feels like an area that could use some more refinement.
+
 ## Credits
 
 See the [ingame credits](https://lorgan3.github.io/sorcerers/#/credits) or [credits.json](credits.json)
