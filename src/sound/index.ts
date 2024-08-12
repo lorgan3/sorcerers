@@ -154,6 +154,7 @@ addMusicData(Music.TitleScreen, "Sorcerers Theme Sample", 0.8);
 addMusicData(Music.Battle, "Sorcerers Battle 1", 0.8);
 addMusicData(Music.Battle, "Sorcerers Level 2", 0.8);
 addMusicData(Music.Battle, "Sorcerers Level 3", 0.7);
+addMusicData(Music.Battle, "Sorcerers Level 4", 0.7);
 
 export const SOUND_ASSETS = Object.fromEntries(
   Object.values(SOUND_DATA).reduce(
