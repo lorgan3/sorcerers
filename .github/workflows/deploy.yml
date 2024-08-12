@@ -56,4 +56,4 @@ jobs:
           gameData: ./dist
           itchUsername: lorgan3
           itchGameId: sorcerers
-          buildChannel: HTML5 / Playable in browser
+          buildChannel: HTML5
