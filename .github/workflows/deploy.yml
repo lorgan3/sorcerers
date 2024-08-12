@@ -38,7 +38,7 @@ jobs:
       - run: yarn test
       - run: yarn build
 
-      - name: Deploy
+      - name: Deploy - GitHub pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
@@ -47,3 +47,13 @@ jobs:
           destination_dir: ./sorcerers
           external_repository: lorgan3/lorgan3.github.io
           publish_branch: master
+
+      - name: Deploy - Itch.io
+        uses: KikimoraGames/itch-publish@v0.0.3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          butlerApiKey: ${{secrets.BUTLER_API_KEY}}
+          gameData: ./dist
+          itchUsername: lorgan3
+          itchGameId: sorcerers
+          buildChannel: HTML5 / Playable in browser
