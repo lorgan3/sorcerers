@@ -13,6 +13,7 @@ import { Element } from "../../data/spells/types";
 const props = defineProps<{
   isOpen: boolean;
   onClose: () => void;
+  setInventoryState: (open: boolean) => void;
 }>();
 
 const { offenseSpells, supportSpells } = SPELLS.reduce(
@@ -92,7 +93,7 @@ const getElementFilter = (element: Element) =>
 
 <template>
   <div class="clip">
-    <div class="controls">
+    <div class="controls" @mousedown="props.setInventoryState(true)">
       <Tooltip
         direction="center-left"
         text="Hold ctrl or middle mouse for free camera"

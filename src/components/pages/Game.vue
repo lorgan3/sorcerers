@@ -78,6 +78,7 @@ const setHudState = (open: boolean) => (forceHudOpen.value = open);
     <Inventory
       :isOpen="inventoryOpen"
       :onClose="() => setInventoryState(false)"
+      :setInventoryState="setInventoryState"
     />
     <Tutorial
       :setHudState="setHudState"
