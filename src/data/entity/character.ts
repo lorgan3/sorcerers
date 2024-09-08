@@ -48,6 +48,8 @@ const PAGE_READ_DURATION = 60;
 
 const MELEE_POWER = 20;
 
+const MAX_NAME_LENGTH = 30;
+
 enum AnimationState {
   Idle = "elf_idle",
   Walk = "elf_walk",
@@ -183,6 +185,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private spellSource: any | null = null;
   private lookDirection = 1;
   private wings?: Wings;
+  private namePlateName: string;
 
   private animator: Animator<AnimationState>;
 
@@ -193,6 +196,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
     public readonly characterName: string
   ) {
     super();
+
+    this.namePlateName =
+      characterName.length > MAX_NAME_LENGTH
+        ? characterName.slice(0, MAX_NAME_LENGTH - 3) + "..."
+        : characterName;
 
     this.body = new Body(Level.instance.terrain.characterMask, {
       mask: rectangle6x16,
@@ -303,7 +311,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     sprite2.alpha = 0.5;
 
     this.namePlate = new BitmapText({
-      text: `${characterName} ${this._hp}`,
+      text: `${this.namePlateName} ${this._hp}`,
       style: {
         fontFamily: "Eternal",
         fontSize: 32,
@@ -347,7 +355,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.lastReportedHp - this._hp,
         ...this.getCenter()
       );
-      this.namePlate.text = `${this.characterName} ${Math.max(
+      this.namePlate.text = `${this.namePlateName} ${Math.max(
         0,
         Math.ceil(this._hp)
       )}`;
@@ -564,7 +572,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.lastReportedHp - this._hp,
         ...this.getCenter()
       );
-      this.namePlate.text = `${this.characterName} ${Math.max(
+      this.namePlate.text = `${this.namePlateName} ${Math.max(
         0,
         Math.ceil(this._hp)
       )}`;
@@ -642,7 +650,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     if (diff > 0) {
       Level.instance.numberContainer.heal(diff, ...this.getCenter());
       this.lastReportedHp += diff;
-      this.namePlate.text = `${this.characterName} ${Math.max(
+      this.namePlate.text = `${this.namePlateName} ${Math.max(
         0,
         Math.ceil(this.lastReportedHp)
       )}`;

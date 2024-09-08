@@ -25,7 +25,7 @@ export class AssetsContainer {
           fontSize: 32,
           fill: "#fff",
           dropShadow: {
-            distance: 4,
+            distance: 2,
             angle: 45,
           },
         },

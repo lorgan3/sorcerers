@@ -57,6 +57,7 @@ const handleDelete = (event: Event) => {
   flex-grow: 0;
   background: var(--background);
   overflow: hidden;
+  white-space: nowrap;
 
   &.interactive {
     cursor: pointer;
