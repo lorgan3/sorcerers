@@ -760,10 +760,6 @@ export class Server extends Manager {
     super.cast(state);
   }
 
-  get teamSize() {
-    return this.settings.teamSize;
-  }
-
   set teamSize(newSize: number) {
     if (this._started) {
       throw new Error("Team size is locked when game has started");
@@ -773,5 +769,9 @@ export class Server extends Manager {
 
   get started() {
     return this._started;
+  }
+
+  isTrusted(character: Character) {
+    return character.player === this._self || !this.settings.trustClient;
   }
 }

@@ -342,4 +342,6 @@ export abstract class Manager {
       Level.instance.setBrowserCursorVisibility(true);
     }
   }
+
+  abstract isTrusted(character: Character): boolean;
 }

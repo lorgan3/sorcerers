@@ -7,6 +7,7 @@ import { EntityType, Spawnable } from "../entity/types";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { Manager } from "../network/manager";
 
 export class Teleport extends Container implements Spawnable {
   private static teleportTime = 10;
@@ -55,7 +56,10 @@ export class Teleport extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!Server.instance || this.time >= Teleport.teleportTime) {
+    if (
+      !Manager.instance.isTrusted(this.character) ||
+      this.time >= Teleport.teleportTime
+    ) {
       return;
     }
 

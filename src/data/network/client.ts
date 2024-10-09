@@ -410,4 +410,8 @@ export class Client extends Manager {
   broadcast(message: Message) {
     this.connection!.send(message);
   }
+
+  isTrusted(character: Character) {
+    return character.player === this._self && this.settings.trustClient;
+  }
 }
