@@ -433,7 +433,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
 
     if (this.wings) {
-      this.wings.flap();
+      this.wings.flap(this.time);
       this.animator.animate(AnimationState.Float);
 
       if (this.wings.power <= 0) {
