@@ -25,7 +25,6 @@ export class IceWall extends Container implements HurtableEntity {
 
   public hp = 10;
   private time = 0;
-  private firstCheck = true;
   private physicalPower = 1;
 
   public id = -1;
@@ -132,10 +131,7 @@ export class IceWall extends Container implements HurtableEntity {
         if (entity instanceof Character) {
           Server.instance.kill(this);
 
-          const targets = new TargetList().add(
-            entity,
-            (this.firstCheck ? 4 : 10) * this.physicalPower
-          );
+          const targets = new TargetList().add(entity, 10 * this.physicalPower);
           Server.instance.damage(
             new GenericDamage(targets),
             this.character.player
@@ -143,8 +139,6 @@ export class IceWall extends Container implements HurtableEntity {
           return;
         }
       });
-
-      this.firstCheck = false;
     }
   }
 
