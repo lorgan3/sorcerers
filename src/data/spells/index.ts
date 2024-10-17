@@ -35,6 +35,7 @@ import { Teleport } from "./teleport";
 import { MindControl } from "./mindControl";
 import { Doragate } from "./doragate";
 import { Daosdorg } from "./daosdorg";
+import { RockCursor } from "../../graphics/cursor/RockCursor";
 
 export interface Spell<TData = any> {
   name: string;
@@ -361,7 +362,7 @@ const ICE_WALL = spell(ArcaneCircle, {
   range: "M",
 });
 
-const ROCK = spell(PoweredArcaneCircle, {
+const ROCK = spell(RockCursor, {
   name: "Bargland",
   description: "Control the earth",
   elements: [Element.Life, Element.Elemental],
@@ -371,14 +372,10 @@ const ROCK = spell(PoweredArcaneCircle, {
   stacking: true,
   data: {
     projectile: Rock,
-    xOffset: 0,
-    yOffset: 0,
-    x: 0,
-    y: 0,
     turnState: TurnState.Ongoing,
   },
   iconId: 15,
-  range: "M",
+  range: null,
 });
 
 const METEOR = spell(Lock, {

@@ -16,8 +16,8 @@ import { Element } from "./types";
 
 export class Rock extends Container implements Spawnable {
   private static growTime = 100;
-  private static shakeIntensity = 8;
-  private static maxHeightDiff = 24;
+  public static shakeIntensity = 8;
+  public static maxHeightDiff = 24;
 
   private sprite: TilingSprite;
   private texture: Texture;
@@ -174,12 +174,12 @@ export class Rock extends Container implements Spawnable {
     return new Rock(...data);
   }
 
-  static cast(x: number, y: number, character: Character, power: number) {
+  static cast(x: number, y: number, character: Character) {
     if (!Server.instance) {
       return;
     }
 
-    const _x = Math.round(x) + character.direction * power * 12;
+    const _x = Math.round(x);
 
     let maxY = y + 8 - Rock.maxHeightDiff;
     let minY = y + 8 + Rock.maxHeightDiff;
