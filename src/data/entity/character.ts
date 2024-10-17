@@ -505,7 +505,13 @@ export class Character extends Container implements HurtableEntity, Syncable {
     if (toggle) {
       this.spellSource = source;
 
-      if (this.animator.animationState !== AnimationState.SpellIdle) {
+      if (
+        this.animator.animationState !== AnimationState.SpellIdle &&
+        !this.player.controller.isKeyDown(Key.Left) &&
+        !this.player.controller.isKeyDown(Key.Right) &&
+        !this.player.controller.isKeyDown(Key.A) &&
+        !this.player.controller.isKeyDown(Key.D)
+      ) {
         this.animator.animate(AnimationState.Spell);
       }
 
