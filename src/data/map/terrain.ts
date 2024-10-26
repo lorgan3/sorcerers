@@ -82,6 +82,10 @@ export class Terrain {
     return this.map.scale;
   }
 
+  get ladders() {
+    return this.map.ladders;
+  }
+
   setLayerVisibility(layer: ComputedLayer, revealed: boolean) {
     this.layerSprites[this.map.layers.indexOf(layer)].alpha = revealed
       ? 0.2

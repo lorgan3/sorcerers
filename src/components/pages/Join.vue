@@ -97,6 +97,7 @@ const handleConnect = () => {
               bbox: message.map.bbox,
               parallax: message.map.parallax,
               scale: message.map.scale,
+              ladders: message.map.ladders,
             }),
             message.settings
           );

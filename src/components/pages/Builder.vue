@@ -31,6 +31,8 @@ const terrain = ref({ data: "", visible: false });
 const mask = ref({ data: "", visible: false });
 const background = ref({ data: "", visible: false });
 const layers = ref<Array<Layer & { visible: boolean }>>([]);
+const ladders = ref<BBox[]>([]);
+const creatingLadder = ref(false);
 
 const settingsOpen = ref(false);
 const advancedSettings = ref<AdvancedSettings>({
@@ -97,6 +99,7 @@ const handleBuild = async () => {
       offset: advancedSettings.value.parallaxOffset,
     },
     scale: advancedSettings.value.scale,
+    ladders: ladders.value,
   });
 
   const url = URL.createObjectURL(await map.toBlob());
@@ -125,6 +128,7 @@ const handleTest = async () => {
       offset: advancedSettings.value.parallaxOffset,
     },
     scale: advancedSettings.value.scale,
+    ladders: ladders.value,
   };
 
   const server = new Server();
@@ -147,6 +151,10 @@ const loadMap = (config: Config, map: string) => {
     parallaxOffset: config.parallax.offset,
   };
   name.value = map;
+  ladders.value =
+    (config.ladders
+      ?.map((bbox) => BBox.fromJS(bbox))
+      .filter(Boolean) as BBox[]) || [];
 
   if (config.terrain.mask) {
     mask.value = { data: config.terrain.mask as string, visible: false };
@@ -198,6 +206,51 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
 
 const handleBBoxChange = (newBBox: BBox) => {
   advancedSettings.value.bbox = newBBox;
+};
+
+const handleCreateLadder = (event: MouseEvent) => {
+  if (!creatingLadder.value) {
+    return;
+  }
+
+  event.preventDefault();
+  const position = preview.value!.getBoundingClientRect();
+  const x = Math.round((position.left - preview.value!.scrollLeft) / 6);
+  const y = Math.round((position.top - preview.value!.scrollTop) / 6);
+  const startX = Math.round(event.pageX / 6) - x;
+  const startY = Math.round(event.pageY / 6) - y;
+
+  ladders.value.push(
+    BBox.fromJS({
+      left: startX,
+      top: startY,
+      right: startX,
+      bottom: startY,
+    })!
+  );
+
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    ladders.value[ladders.value.length - 1].right = Math.max(
+      startX,
+      Math.round(moveEvent.pageX / 6) - x
+    );
+    ladders.value[ladders.value.length - 1].bottom = Math.max(
+      startY,
+      Math.round(moveEvent.pageY / 6) - y
+    );
+  };
+
+  const handleMouseUp = () => {
+    document.onselectstart = null;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    creatingLadder.value = false;
+  };
+
+  event.preventDefault();
+  document.onselectstart = () => false;
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
 };
 </script>
 
@@ -252,6 +305,17 @@ const handleBBoxChange = (newBBox: BBox) => {
       </div>
 
       <div class="section">
+        <h2>
+          Ladders {{ ladders.length ? `(${ladders.length})` : "" }}
+          <IconButton
+            title="Add ladder"
+            :onClick="() => (creatingLadder = true)"
+            :icon="plus"
+          />
+        </h2>
+      </div>
+
+      <div class="section">
         <button class="secondary" @click="settingsOpen = true">
           Adv. settings
         </button>
@@ -274,7 +338,11 @@ const handleBBoxChange = (newBBox: BBox) => {
       </button>
       <button class="secondary" @click="() => router.replace('/')">Back</button>
     </section>
-    <section class="preview" ref="preview">
+    <section
+      :class="{ preview: true, 'add-ladder': creatingLadder }"
+      ref="preview"
+      @mousedown="handleCreateLadder"
+    >
       <div v-if="!terrain.data && !background.data" class="description">
         <p>
           Building your own maps is very easy thanks to the builder. Only a
@@ -439,6 +507,14 @@ const handleBBoxChange = (newBBox: BBox) => {
         </div>
       </template>
       <BoundingBox :bbox="advancedSettings.bbox" :onChange="handleBBoxChange" />
+      <BoundingBox
+        v-for="(ladder, i) in ladders"
+        :bbox="ladder"
+        :onChange="(bbox) => (ladders[i] = bbox)"
+        :onClear="() => ladders.splice(i, 1)"
+        color="#00f"
+        draggable
+      />
     </section>
   </div>
 </template>
@@ -512,6 +588,10 @@ const handleBBoxChange = (newBBox: BBox) => {
     overflow: auto;
     position: relative;
     flex: 1;
+
+    &.add-ladder {
+      cursor: context-menu;
+    }
 
     img.layer {
       position: absolute;

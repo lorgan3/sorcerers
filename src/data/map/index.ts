@@ -36,6 +36,7 @@ export interface Config {
   bbox: PlainBBox;
   parallax: Parallax;
   scale: number;
+  ladders?: PlainBBox[];
 }
 
 const TERRAIN_KEY = "terrain";
@@ -46,6 +47,7 @@ const BBOX_KEY = "bbox";
 const PARALLAX_KEY = "parallax";
 const SCALE_KEY = "scale";
 const VERSION_KEY = "version";
+const LADDERS_KEY = "ladders";
 
 const VERSION = 1;
 const THUMBNAIL_SIZE = 100;
@@ -63,6 +65,7 @@ export class Map {
   private _parallax?: Parallax;
   private _scale = 6;
   private _scaleMultiplier = 1;
+  private _ladders?: BBox[];
 
   public readonly load: Promise<void>;
 
@@ -131,6 +134,11 @@ export class Map {
       this._bbox =
         BBox.fromJS(config.bbox) || BBox.create(this._width, this._height);
       this._parallax = config.parallax || { name: "", offset: 0 };
+
+      this._ladders =
+        (config.ladders
+          ?.map((bbox) => BBox.fromJS(bbox))
+          .filter(Boolean) as BBox[]) || [];
     });
   }
 
@@ -154,6 +162,7 @@ export class Map {
         Map.getMetadata(data, PARALLAX_KEY, '{ "name": "", "offset": 0 }')
       ),
       scale: parseInt(Map.getMetadata(data, SCALE_KEY, "6"), 10),
+      ladders: JSON.parse(Map.getMetadata(data, LADDERS_KEY, "[]")),
     };
   }
 
@@ -198,6 +207,7 @@ export class Map {
       bbox: this._bbox!.toJS(),
       parallax: this._parallax!,
       scale: this._scale,
+      ladders: this._ladders!.map((bbox) => bbox.toJS()),
     };
   }
 
@@ -287,6 +297,14 @@ export class Map {
       data = addMetadata(data, MASK_KEY, this.config.terrain.mask);
     }
 
+    if (this.config.ladders?.length) {
+      data = addMetadata(
+        data,
+        LADDERS_KEY,
+        JSON.stringify(this.config.ladders)
+      );
+    }
+
     return new Blob([data], {
       type: "image/png",
     });
@@ -330,6 +348,10 @@ export class Map {
 
   get scaleMultiplier() {
     return this._scaleMultiplier;
+  }
+
+  get ladders() {
+    return this._ladders!;
   }
 
   public static loadImage(value: string | Blob) {
