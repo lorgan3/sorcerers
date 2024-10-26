@@ -50,7 +50,11 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
     this.pointer.position.set(...controller.getLocalMouse());
     this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
 
-    if (!this.spell.data.applyKeys || this.applied) {
+    if (
+      !this.spell.data.applyKeys ||
+      this.applied ||
+      this.character.body.onLadder
+    ) {
       return;
     }
 

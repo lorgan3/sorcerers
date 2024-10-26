@@ -36,10 +36,6 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
 
     this.addChild(indicator);
     Level.instance.uiContainer.addChild(this);
-
-    if (spell.data.spellSource) {
-      this.character.setSpellSource(this);
-    }
   }
 
   remove(): void {
@@ -55,10 +51,18 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
   }
 
   tick(dt: number, controller: Controller) {
+    if (this.spell.data.spellSource) {
+      this.character.setSpellSource(this);
+    }
+
     this.position.set(...controller.getLocalMouse());
     this.scale.set(2 / Level.instance.viewport.scale.x);
 
-    if (Server.instance && controller.isKeyDown(Key.M1)) {
+    if (
+      Server.instance &&
+      controller.isKeyDown(Key.M1) &&
+      !this.character.body.onLadder
+    ) {
       Server.instance.cast();
     }
   }

@@ -66,6 +66,12 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
   }
 
   updateGraphic(controller: Controller) {
+    if (this.character.body.onLadder) {
+      this.indicator.visible = false;
+      this.character.setSpellSource(this, false);
+      return;
+    }
+
     const [x, y] = controller.getMouse();
     const _x = Math.round(x / 6);
     const _y = Math.round(y / 6);

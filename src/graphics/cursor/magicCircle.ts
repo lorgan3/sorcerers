@@ -80,6 +80,13 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     this.pointer.position.set(...controller.getLocalMouse());
     this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
 
+    if (this.character.body.onLadder) {
+      this.sound?.destroy();
+      this.sound = undefined;
+      this.indicator.visible = false;
+      return;
+    }
+
     const [x2, y2] = this.character.getCenter();
     this.indicator.position.set(x2 + this.character.direction * 20, y2 - 20);
     this.indicator.animationSpeed = this.character.direction * ANIMATION_SPEED;

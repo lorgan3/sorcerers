@@ -98,6 +98,14 @@ export class PoweredArcaneCircle
     this.pointer.position.set(...controller.getLocalMouse());
     this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
 
+    if (this.character.body.onLadder) {
+      this.sound?.destroy();
+      this.sound = undefined;
+      this.indicator.visible = false;
+      this.powerMeter.visible = false;
+      return;
+    }
+
     if (!controller.isKeyDown(Key.M1)) {
       if (this.indicator.visible) {
         if (!this.spell.data.keepSpellSource) {

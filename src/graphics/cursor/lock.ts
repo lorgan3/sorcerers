@@ -60,10 +60,6 @@ export class Lock
 
     this.addChild(this.indicator);
     Level.instance.uiContainer.addChild(this);
-
-    if (spell.data.spellSource) {
-      this.character.setSpellSource(this);
-    }
   }
 
   remove(): void {
@@ -116,7 +112,16 @@ export class Lock
     this.position.set(...controller.getLocalMouse());
     this.scale.set(2 / Level.instance.viewport.scale.x);
 
+    if (this.spell.data.spellSource) {
+      this.character.setSpellSource(this);
+    }
+
     if (!Server.instance) {
+      return;
+    }
+
+    if (this.character.body.onLadder) {
+      this.animate(false);
       return;
     }
 

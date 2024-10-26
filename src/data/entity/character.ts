@@ -564,6 +564,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   setSpellSource(source: any, toggle = true) {
+    if (this.body.onLadder) {
+      return;
+    }
+
     if (toggle) {
       this.spellSource = source;
 
@@ -578,7 +582,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       }
 
       this.animator.setDefaultAnimation(AnimationState.Spell);
-    } else if (source === this.spellSource) {
+    } else if (!source || source === this.spellSource) {
       this.spellSource = null;
       this.animator.animate(AnimationState.SpellDone);
 

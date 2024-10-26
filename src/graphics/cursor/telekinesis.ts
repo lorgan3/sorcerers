@@ -74,7 +74,7 @@ export class Telekinesis extends Container {
     this.arrowBody.scale.x = 2 - this.arrowBody.scale.y / 10;
     this.arrowTip.position.y = SPRITE_SIZE / 2 + distance;
 
-    if (controller.isKeyDown(Key.M1)) {
+    if (controller.isKeyDown(Key.M1) && !this.character.body.onLadder) {
       this.activated = true;
     }
 
