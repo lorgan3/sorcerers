@@ -46,6 +46,7 @@ const SMOKE_TRIGGER = 2;
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
 const PAGE_READ_DURATION = 60;
+const CLIMB_DURATION = 10;
 
 const MELEE_POWER = 20;
 
@@ -65,6 +66,7 @@ enum AnimationState {
   Read = "elf_read",
   ReadIdle = "elf_readIdle",
   ReadDone = "elf_readDone",
+  Climb = "elf_climb",
 }
 
 const ANIMATION_CONFIG: Record<
@@ -158,6 +160,16 @@ const ANIMATION_CONFIG: Record<
     name: "elf_read",
     loop: false,
     speed: -0.15,
+  },
+  [AnimationState.Climb]: {
+    name: "elf_idle",
+    loop: true,
+    speed: 0.1,
+    continuous: (entity) => {
+      ControllableSound.fromEntity(entity, Sound.LadderClimb);
+      return 22 + Math.random() * 5;
+    },
+    duration: CLIMB_DURATION,
   },
 };
 

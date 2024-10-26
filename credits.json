@@ -170,7 +170,7 @@
         ]
       },
       {
-        "author": "brandondelehoy ",
+        "author": "brandondelehoy",
         "items": [
           {
             "name": "Jump1",
@@ -536,6 +536,27 @@
           {
             "name": "Tada Fanfare G",
             "link": "https://freesound.org/people/plasterbrain/sounds/397353/"
+          }
+        ]
+      },
+      {
+        "author": "deleted user",
+        "items": [
+          {
+            "name": "ladderClimb1",
+            "link": "https://freesound.org/people/deleted_user_10023915/sounds/478055/"
+          },
+          {
+            "name": "ladderClimb2",
+            "link": "https://freesound.org/people/deleted_user_10023915/sounds/478054/"
+          },
+          {
+            "name": "ladderClimb3",
+            "link": "https://freesound.org/people/deleted_user_10023915/sounds/478053/"
+          },
+          {
+            "name": "ladderClimb4",
+            "link": "https://freesound.org/people/deleted_user_10023915/sounds/478052/"
           }
         ]
       }

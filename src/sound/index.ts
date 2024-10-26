@@ -41,6 +41,7 @@ export enum Sound {
   Water = "waterSnd",
   Smoke = "smokeSnd",
   Tada = "tadaSnd",
+  LadderClimb = "ladderClimbSnd",
 }
 
 export enum Music {
@@ -149,6 +150,26 @@ addSoundData(Sound.Slime, "433832__archos__slime-21_2", 0.6);
 addSoundData(Sound.Slime, "433839__archos__slime-28", 0.6);
 addSoundData(Sound.Smoke, "714257__qubodup__puff-of-smoke");
 addSoundData(Sound.Tada, "397353__plasterbrain__tada-fanfare-g");
+addSoundData(
+  Sound.LadderClimb,
+  "478055__deleted_user_10023915__ladderclimb1",
+  0.5
+);
+addSoundData(
+  Sound.LadderClimb,
+  "478054__deleted_user_10023915__ladderclimb2",
+  0.5
+);
+addSoundData(
+  Sound.LadderClimb,
+  "478053__deleted_user_10023915__ladderclimb3",
+  0.5
+);
+addSoundData(
+  Sound.LadderClimb,
+  "478052__deleted_user_10023915__ladderclimb4",
+  0.5
+);
 
 addMusicData(Music.TitleScreen, "Sorcerers Theme Sample", 0.8);
 addMusicData(Music.Battle, "Sorcerers Battle 1", 0.8);
