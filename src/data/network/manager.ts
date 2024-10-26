@@ -159,7 +159,7 @@ export abstract class Manager {
     this._turnState = turnState;
 
     if (this.activePlayer?.activeCharacter && !this.isControlling()) {
-      this.activePlayer.activeCharacter.removeWings();
+      this.activePlayer.activeCharacter.endTurn();
     }
 
     this.resetCursor();
@@ -246,7 +246,7 @@ export abstract class Manager {
 
   setActiveCharacter(player: number, character: number) {
     if (this.activePlayer?.activeCharacter) {
-      this.activePlayer.activeCharacter.removeWings();
+      this.activePlayer.activeCharacter.endTurn();
     }
 
     this.activePlayer = this.players[player];

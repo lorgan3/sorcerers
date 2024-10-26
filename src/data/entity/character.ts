@@ -710,6 +710,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.wings = undefined;
   }
 
+  endTurn() {
+    this.removeWings();
+    this.body.setLadderDirection(0);
+  }
+
   melee() {
     this.animator.animate(AnimationState.Swing);
   }
