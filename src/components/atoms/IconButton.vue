@@ -1,14 +1,19 @@
 <script setup lang="ts">
-const { onClick, icon, hoverIcon, title } = defineProps<{
+const { onClick, icon, hoverIcon, title, className } = defineProps<{
   onClick: (event: Event) => void;
   icon: string;
   hoverIcon?: string;
   title?: string;
+  className?: string;
 }>();
 </script>
 
 <template>
-  <button class="icon-button" :title="title" @click="onClick">
+  <button
+    :class="{ 'icon-button': true, [className || '']: !!className }"
+    :title="title"
+    @click="onClick"
+  >
     <img class="icon" :src="icon" />
     <img v-if="hoverIcon" class="icon icon--hover" :src="hoverIcon" />
   </button>
