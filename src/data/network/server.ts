@@ -767,6 +767,10 @@ export class Server extends Manager {
     this.settings.teamSize = newSize;
   }
 
+  get teamSize() {
+    return super.teamSize;
+  }
+
   get started() {
     return this._started;
   }
