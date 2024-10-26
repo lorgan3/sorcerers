@@ -37,6 +37,7 @@ import { Wings } from "./wings";
 import { SmokePuff } from "../../graphics/smokePuff";
 import { Server } from "../network/server";
 import { COLORS } from "../network/constants";
+import { BBox } from "../map/bbox";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
@@ -422,7 +423,55 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   control(controller: Controller) {
-    if (!controller.isKeyDown(Key.Up) && !controller.isKeyDown(Key.W)) {
+    let foundLadder: BBox | null = null;
+    if (this.body.grounded || this.body.onLadder) {
+      for (let ladder of Level.instance.terrain.ladders) {
+        const [x, y] = this.body.precisePosition;
+        if (
+          x + 6 >= ladder.left &&
+          x <= ladder.right &&
+          y + 16 > ladder.top &&
+          y < ladder.bottom &&
+          ladder.top < (foundLadder?.top || Infinity)
+        ) {
+          foundLadder = ladder;
+        }
+      }
+    }
+
+    const isUp = controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W);
+    if (!this.wings && foundLadder && isUp) {
+      this.setSpellSource(null, false);
+      this.body.mountLadder();
+    }
+
+    if (this.body.onLadder) {
+      if (!foundLadder) {
+        this.body.unmountLadder();
+        return;
+      }
+
+      if (isUp) {
+        if (this.body.precisePosition[1] > foundLadder.top) {
+          this.body.setLadderDirection(-1);
+          this.animator.animate(AnimationState.Climb);
+        } else {
+          this.body.setLadderDirection(0);
+        }
+      } else if (
+        controller.isKeyDown(Key.Down) ||
+        controller.isKeyDown(Key.D)
+      ) {
+        this.body.setLadderDirection(1);
+        this.animator.animate(AnimationState.Climb);
+      } else {
+        this.body.setLadderDirection(0);
+      }
+
+      return;
+    }
+
+    if (!isUp) {
       return;
     }
 
@@ -490,6 +539,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.hp -= damage;
     this.lastDamageTime = this.time;
     this._lastDamageDealer = source.cause;
+    this.body.unmountLadder();
 
     Level.instance.bloodEmitter.burst(this, damage, source);
     if (damage > 0) {
@@ -628,6 +678,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   giveWings() {
+    this.body.unmountLadder();
+
     this.wings = new Wings(this);
     this.addChildAt(this.wings, 0);
   }

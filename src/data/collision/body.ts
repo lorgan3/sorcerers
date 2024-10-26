@@ -14,6 +14,7 @@ const SPEED = 0.08;
 const JUMP_STRENGTH = 3.3;
 const JUMP_COOLDOWN = 15;
 const JUMP_CHARGE_TIME = 5;
+const LADDER_SPEED = 0.6;
 
 interface Config {
   mask: CollisionMask;
@@ -22,6 +23,7 @@ interface Config {
   airYFriction?: number;
   groundFriction?: number;
   airControl?: number;
+  ladderSpeed?: number;
   onCollide?: (x: number, y: number) => void;
   roundness?: number;
   bounciness?: number;
@@ -52,6 +54,9 @@ export class Body implements PhysicsBody {
   private roundness: number;
   private lastRollDirection = 0;
   private bounciness = 0;
+  private ladderSpeed: number;
+  private _onLadder = false;
+  private ladderDirection = 0;
 
   constructor(
     private surface: CollisionMask,
@@ -62,6 +67,7 @@ export class Body implements PhysicsBody {
       airYFriction = airXFriction,
       groundFriction = GROUND_FRICTION,
       airControl = AIR_CONTROL,
+      ladderSpeed = LADDER_SPEED,
       onCollide,
       roundness = 0,
       bounciness = 0,
@@ -73,6 +79,7 @@ export class Body implements PhysicsBody {
     this.airYFriction = airYFriction;
     this.groundFriction = groundFriction;
     this.airControl = airControl;
+    this.ladderSpeed = ladderSpeed;
     this.onCollide = onCollide;
     this.roundness = roundness;
     this.bounciness = bounciness;
@@ -116,6 +123,14 @@ export class Body implements PhysicsBody {
     this.active = 1;
   }
 
+  setLadderDirection(direction: 1 | 0 | -1) {
+    this.ladderDirection = direction;
+
+    if (direction) {
+      this.active = 1;
+    }
+  }
+
   move(x: number, y: number) {
     this.x = x;
     this.y = y;
@@ -134,19 +149,23 @@ export class Body implements PhysicsBody {
     }
 
     const idt = Math.pow(dt, 2) / 2;
-    if (this._grounded) {
+    if (this._grounded || this._onLadder) {
       this.xVelocity *= Math.pow(this.groundFriction, dt);
     } else {
       this.xVelocity *= Math.pow(this.airXFriction, dt);
       this.yVelocity *= Math.pow(this.airYFriction, dt);
     }
 
-    let yAcc = this.gravity;
+    let yAcc = this._onLadder ? 0 : this.gravity;
     let yDiff = this.yVelocity * dt + yAcc * idt;
     let xAcc =
       this.walkDirection * SPEED * (this._grounded ? 1 : this.airControl);
 
-    if (this.lastRollDirection && Math.abs(this.xVelocity) < 0.5) {
+    if (
+      this.lastRollDirection &&
+      Math.abs(this.xVelocity) < 0.5 &&
+      !this._onLadder
+    ) {
       xAcc += this.lastRollDirection * this.roundness;
     }
 
@@ -186,6 +205,7 @@ export class Body implements PhysicsBody {
         }
         this.y = alignY(this.y);
         this.rY = this.y;
+        this.unmountLadder();
 
         if (
           this.onCollide &&
@@ -200,7 +220,7 @@ export class Body implements PhysicsBody {
         yDiff *= this.bounciness;
 
         // Roll off slopes.
-        if (this.roundness && yDiff > -0.5) {
+        if (this.roundness && yDiff > -0.5 && !this._onLadder) {
           if (!this.surface.collidesWith(this.mask, this.rX + 1, this.rY + 1)) {
             this.lastRollDirection = 1;
           } else if (
@@ -240,7 +260,12 @@ export class Body implements PhysicsBody {
     }
 
     this.y += yDiff;
-    this.yVelocity += yAcc * dt;
+
+    if (this._onLadder) {
+      this.yVelocity = this.ladderDirection * this.ladderSpeed;
+    } else {
+      this.yVelocity += yAcc * dt;
+    }
 
     this.rY = alignY(this.y);
     this.rX = alignX(this.x + xDiff);
@@ -295,7 +320,8 @@ export class Body implements PhysicsBody {
       this._grounded &&
       this.jumpTimer <= 0 &&
       this.lastRollDirection === 0 &&
-      Math.abs(this.xVelocity) < MIN_MOVEMENT
+      Math.abs(this.xVelocity) < MIN_MOVEMENT &&
+      Math.abs(this.yVelocity) < MIN_MOVEMENT
     ) {
       this.xVelocity = 0;
       this.yVelocity = 0;
@@ -303,6 +329,20 @@ export class Body implements PhysicsBody {
     }
 
     return true;
+  }
+
+  mountLadder() {
+    if (this.ladderSpeed === 0) {
+      return;
+    }
+
+    this._onLadder = true;
+    this.yVelocity = 0;
+  }
+
+  unmountLadder() {
+    this._onLadder = false;
+    this.ladderDirection = 0;
   }
 
   get position(): [number, number] {
@@ -323,5 +363,9 @@ export class Body implements PhysicsBody {
 
   get direction() {
     return Math.atan2(this.yVelocity, this.xVelocity);
+  }
+
+  get onLadder() {
+    return this._onLadder;
   }
 }
