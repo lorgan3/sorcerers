@@ -24,7 +24,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
 </script>
 
 <template>
-  <div className="grid">
+  <div class="grid">
     <div class="blocked"></div>
     <div v-for="row in Element" class="element-header">
       <!-- {{ row }} -->
