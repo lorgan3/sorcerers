@@ -48,7 +48,7 @@ export enum Music {
   Battle = "battleMusic",
 }
 
-interface SoundData {
+export interface SoundData {
   key: `${Sound | Music}_${string}`;
   src: string;
   volume: number;

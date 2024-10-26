@@ -1,11 +1,12 @@
 import { filters, IMediaInstance, PlayOptions, sound } from "@pixi/sound";
-import { getRandomSound, Sound } from ".";
+import { getRandomSound, Sound, SoundData } from ".";
 import { Spawnable } from "../data/entity/types";
 import { Level } from "../data/map/level";
 
 class ControllableSound {
   private ref?: IMediaInstance;
   private promise?: Promise<IMediaInstance>;
+  private soundData: SoundData;
 
   private static soundInstanceCountMap = new Map<Sound, number>();
   private static soundPlaytimeMap = new Map<Sound, number>();
@@ -82,10 +83,10 @@ class ControllableSound {
     private filter: filters.StereoFilter,
     options: PlayOptions
   ) {
-    const soundData = getRandomSound(alias);
-    const promiseOrRef = sound.play(soundData.key, {
+    this.soundData = getRandomSound(alias);
+    const promiseOrRef = sound.play(this.soundData.key, {
       ...options,
-      volume: soundData.volume * (options.volume || 1),
+      volume: this.soundData.volume * (options.volume ?? 1),
       filters: [filter],
       speed: 0.9 + Math.random() / 5,
       complete: () =>
@@ -121,7 +122,7 @@ class ControllableSound {
       const { volume, pan } = ControllableSound.getSoundOptions(
         ...("getCenter" in entity ? entity.getCenter() : entity)
       );
-      this.ref.volume = volume;
+      this.ref.volume = this.soundData.volume * volume;
       this.filter.pan = pan;
     }
   }
