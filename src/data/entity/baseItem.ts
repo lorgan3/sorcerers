@@ -41,7 +41,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       mask: circle9x9,
       gravity: 0.1,
       airXFriction: 0.99,
-      roundness: 0.3,
+      roundness: 0.25,
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
