@@ -81,9 +81,9 @@ const FIREBALL = spell(PoweredArcaneCircle, {
   cost: 6,
   data: {
     projectile: Fireball,
-    xOffset: 9,
+    xOffset: 7,
     yOffset: 12,
-    x: 3,
+    x: 1.5,
     y: 6.5,
     turnState: TurnState.Attacked,
   },
@@ -227,8 +227,8 @@ const MAGIC_MISSILE = spell(ApplyCursor, {
       );
 
       MagicMissile.cast(
-        cx + 3 + Math.cos(rotation) * 7,
-        cy + 6.5 + Math.sin(rotation) * 10.5,
+        cx + 1.5 + Math.cos(rotation) * 9,
+        cy + 6.5 + Math.sin(rotation) * 12,
         character,
         rotation
       );
@@ -297,10 +297,10 @@ const NEPHTEAR = spell(PoweredArcaneCircle, {
   cost: 14,
   data: {
     projectile: Nephtear,
-    xOffset: 16,
-    yOffset: 19,
-    x: 1,
-    y: 5,
+    xOffset: 9,
+    yOffset: 12,
+    x: 1.5,
+    y: 6.5,
     turnState: TurnState.Attacked,
   },
   iconId: 5,
@@ -399,10 +399,10 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   cost: 22,
   data: {
     projectile: FireWheel,
-    xOffset: 16,
-    yOffset: 19,
-    x: -2,
-    y: 0,
+    xOffset: 12,
+    yOffset: 16,
+    x: 3,
+    y: 8,
     turnState: TurnState.Attacked,
   },
   iconId: 8,
@@ -433,10 +433,10 @@ const ACID = spell(PoweredArcaneCircle, {
   cost: 18,
   data: {
     projectile: Acid,
-    xOffset: 16,
-    yOffset: 19,
-    x: -2,
-    y: 0,
+    xOffset: 9,
+    yOffset: 12,
+    x: 1.5,
+    y: 6.5,
     turnState: TurnState.Attacked,
   },
   iconId: 11,
@@ -504,9 +504,9 @@ const DAOSDORG = spell(ArcaneCircle, {
   data: {
     projectile: Daosdorg,
     xOffset: 13,
-    yOffset: 15,
+    yOffset: 18,
     x: 0,
-    y: -3,
+    y: 0,
     turnState: TurnState.Attacked,
   },
   iconId: 19,
