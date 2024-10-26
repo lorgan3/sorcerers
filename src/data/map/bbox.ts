@@ -46,6 +46,16 @@ export class BBox {
     return bbox;
   }
 
+  move(x: number, y: number) {
+    const bbox = this.clone();
+    bbox["left"] += x;
+    bbox["top"] += y;
+    bbox["right"] += x;
+    bbox["bottom"] += y;
+
+    return bbox;
+  }
+
   withScale(scale: number) {
     const bbox = this.clone();
 

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { BBox } from "../../data/map/bbox";
+import close from "pixelarticons/svg/close.svg";
+import IconButton from "../atoms/IconButton.vue";
 
 const props = defineProps<{
   bbox: BBox;
   onChange: (bbox: BBox) => void;
   color?: string;
+  onClear?: () => void;
+  draggable?: boolean;
 }>();
 
 const DIRECTIONS = {
@@ -21,8 +25,9 @@ const offsets = ref({
   right: 0,
   bottom: 0,
 });
+const moving = ref(false);
 
-const handleMouseDown = (
+const handleResize = (
   event: MouseEvent,
   direction: "left" | "top" | "right" | "bottom"
 ) => {
@@ -60,11 +65,42 @@ const handleMouseDown = (
   document.addEventListener("mouseup", handleMouseUp);
   document.onselectstart = () => false;
 };
+
+const handleMove = (event: MouseEvent) => {
+  event.stopPropagation();
+  event.preventDefault();
+
+  const { bbox, onChange } = props;
+  const x = event.pageX;
+  const y = event.pageY;
+  moving.value = true;
+
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    offsets.value["left"] = Math.round((moveEvent.pageX - x) / 6);
+    offsets.value["top"] = Math.round((moveEvent.pageY - y) / 6);
+    offsets.value["right"] = Math.round((moveEvent.pageX - x) / 6);
+    offsets.value["bottom"] = Math.round((moveEvent.pageY - y) / 6);
+  };
+
+  const handleMouseUp = () => {
+    onChange(bbox.move(offsets.value["left"], offsets.value["top"]));
+
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    document.onselectstart = null;
+    offsets.value = BBox.create(0, 0);
+    moving.value = false;
+  };
+
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
+  document.onselectstart = () => false;
+};
 </script>
 
 <template>
   <div
-    class="bbox"
+    :class="{ bbox: true, 'bbox--moving': moving }"
     :style="{
       '--left': `${(bbox.left + offsets.left) * 6}px`,
       '--top': `${(bbox.top + offsets.top) * 6}px`,
@@ -76,14 +112,54 @@ const handleMouseDown = (
     <div
       v-for="(_, direction) in DIRECTIONS"
       :class="`resize-handler resize-handler--${direction}`"
-      @mousedown="(event) => handleMouseDown(event, direction)"
+      @mousedown="(event) => handleResize(event, direction)"
     ></div>
+    <div v-if="props.draggable" class="fill" @mousedown="handleMove"></div>
+    <IconButton
+      className="button"
+      v-if="onClear"
+      title="Clear"
+      :onClick="onClear"
+      :icon="close"
+    />
   </div>
 </template>
 
 <style lang="scss" scoped>
 .bbox {
   --handler-width: 6px;
+
+  &--moving {
+    .fill {
+      z-index: 1;
+    }
+  }
+
+  .button {
+    position: absolute;
+    top: calc(var(--top) + 10px);
+    left: calc(var(--right) - 28px);
+  }
+
+  .fill {
+    position: absolute;
+    background: var(--color, #f00);
+    opacity: 0.2;
+    top: calc(var(--top) + var(--handler-width));
+    left: calc(var(--left) + var(--handler-width));
+    width: calc(
+      var(--right) - var(--left) - var(--handler-width) - var(--handler-width)
+    );
+    height: calc(
+      var(--bottom) - var(--top) - var(--handler-width) - var(--handler-width)
+    );
+    cursor: grab;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.4;
+    }
+  }
 
   .resize-handler {
     position: absolute;
