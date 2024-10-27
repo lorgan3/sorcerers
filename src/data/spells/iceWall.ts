@@ -131,7 +131,10 @@ export class IceWall extends Container implements HurtableEntity {
         if (entity instanceof Character) {
           Server.instance.kill(this);
 
-          const targets = new TargetList().add(entity, 10 * this.physicalPower);
+          const targets = new TargetList().add(
+            entity,
+            5 + 5 * this.physicalPower
+          );
           Server.instance.damage(
             new GenericDamage(targets),
             this.character.player
