@@ -42,6 +42,7 @@ import { BBox } from "../map/bbox";
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
 const SMOKE_TRIGGER = 2;
+const MAX_LADDER_MOUNT_SPEED = 1;
 
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
@@ -199,6 +200,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private lookDirection = 1;
   private wings?: Wings;
   private namePlateName: string;
+  private wasUp = false;
 
   private animator: Animator<AnimationState>;
 
@@ -218,6 +220,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.body = new Body(Level.instance.terrain.characterMask, {
       mask: rectangle6x16,
       onCollide: this.onCollide,
+      ladderTest: this.ladderTest,
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
@@ -434,11 +437,30 @@ export class Character extends Container implements HurtableEntity, Syncable {
     );
   }
 
+  ladderTest(x: number, y: number) {
+    for (let ladder of Level.instance.terrain.ladders) {
+      if (
+        x + 6 >= ladder.left &&
+        x <= ladder.right &&
+        y + 16 > ladder.top &&
+        y < ladder.bottom
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   control(controller: Controller) {
     let foundLadder: BBox | null = null;
-    if (this.body.grounded || this.body.onLadder) {
+    if (
+      this.body.grounded ||
+      this.body.onLadder ||
+      (this.body.yVelocity > 0 && this.body.yVelocity < MAX_LADDER_MOUNT_SPEED)
+    ) {
+      const [x, y] = this.body.precisePosition;
       for (let ladder of Level.instance.terrain.ladders) {
-        const [x, y] = this.body.precisePosition;
         if (
           x + 6 >= ladder.left &&
           x <= ladder.right &&
@@ -464,10 +486,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
       }
 
       if (isUp) {
-        if (this.body.precisePosition[1] > foundLadder.top) {
+        if (this.body.precisePosition[1] + 8 > foundLadder.top) {
           this.body.setLadderDirection(-1);
           this.animator.animate(AnimationState.Climb);
         } else {
+          if (!this.wasUp) {
+            this.body.unmountLadder();
+            this.body.jump();
+          }
+
           this.body.setLadderDirection(0);
         }
       } else if (
@@ -480,6 +507,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.body.setLadderDirection(0);
       }
 
+      this.wasUp = isUp;
       return;
     }
 
