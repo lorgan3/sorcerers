@@ -209,9 +209,13 @@ export class Meteor extends Container implements Syncable {
               this.maxBounceDuration /= 1.5;
             }
 
-            Server.instance.dynamicUpdate(this);
             if (done) {
+              this.body.gravity = 0;
+              this.body.setVelocity(0, 0);
+              Server.instance.dynamicUpdate(this);
               Server.instance.kill(this);
+            } else {
+              Server.instance.dynamicUpdate(this);
             }
           }
         }
