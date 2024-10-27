@@ -46,7 +46,7 @@ export type Message =
     }
   | {
       type: MessageType.ActiveUpdate;
-      data: number[];
+      data: any[];
       cursor: any;
       inputState: [number, number, number];
     }
