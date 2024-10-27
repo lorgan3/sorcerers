@@ -90,7 +90,14 @@ export class Body implements PhysicsBody {
   }
 
   serialize() {
-    return [this.active, this.xVelocity, this.yVelocity, this.x, this.y];
+    return [
+      this.active,
+      this.xVelocity,
+      this.yVelocity,
+      this.x,
+      this.y,
+      this._onLadder,
+    ];
   }
 
   deserialize(data: any[]) {
@@ -98,6 +105,7 @@ export class Body implements PhysicsBody {
     this.xVelocity = data[1];
     this.yVelocity = data[2];
     this.move(data[3], data[4]);
+    this._onLadder = data[5];
   }
 
   walk(direction: 1 | -1) {
