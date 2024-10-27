@@ -12,9 +12,12 @@ import { TurnState } from "../network/types";
 import { Smoke } from "../../graphics/smoke";
 import { map } from "../../util/math";
 import { Server } from "../network/server";
+import { ControllableSound } from "../../sound/controllableSound";
+import { Sound } from "../../sound";
 
 export class Blink extends Container implements TickingEntity {
-  private static blinkTime = 90;
+  private static blinkStartTime = 45;
+  private static blinkTime = 70;
   private static particleSpeed = 10;
   private static blinkDistance = 50;
 
@@ -55,10 +58,15 @@ export class Blink extends Container implements TickingEntity {
   tick(dt: number): void {
     this.time += dt;
 
-    if (this.time > Blink.blinkTime) {
+    if (this.time >= Blink.blinkStartTime && this.character.visible) {
       const [cx, cy] = this.character.getCenter();
       new Smoke(cx, cy, -Math.sign(Math.cos(this.direction)) || 1);
+      ControllableSound.fromEntity(this.character, Sound.Smoke);
+      this.character.visible = false;
+    }
 
+    if (this.time > Blink.blinkTime) {
+      const [cx, cy] = this.character.getCenter();
       const x = Math.round(
         cx / 6 + Math.cos(this.direction) * Blink.blinkDistance
       );
@@ -72,12 +80,14 @@ export class Blink extends Container implements TickingEntity {
           y + 4,
           12,
           3,
-          3 * Manager.instance.getElementValue(Element.Physical)
+          3 + 2.5 * Manager.instance.getElementValue(Element.Physical)
         ),
         this.character.player
       );
       new Implosion(x * 6, y * 6);
       this.character.move(x, y);
+      this.character.position.set(x * 6, y * 6);
+      this.character.visible = true;
 
       Level.instance.remove(this);
       Level.instance.particleContainer.destroyEmitter(this.particles);
