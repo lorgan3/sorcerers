@@ -181,7 +181,7 @@ const WINGS = spell(ApplyCursor, {
   name: "Digardnacht",
   description: "Wings that grant flight",
   elements: [Element.Physical, Element.Life],
-  cost: 12,
+  cost: 16,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
@@ -464,7 +464,7 @@ const MIND_CONTROL = spell(Lock, {
   name: "Auserlese",
   description: "Swap control with another ally",
   elements: [Element.Life],
-  cost: 16,
+  cost: 12,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
