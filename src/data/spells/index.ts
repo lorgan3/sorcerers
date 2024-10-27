@@ -366,7 +366,7 @@ const ROCK = spell(RockCursor, {
   name: "Bargland",
   description: "Control the earth",
   elements: [Element.Life, Element.Elemental],
-  cost: 22,
+  cost: 12,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
@@ -464,7 +464,7 @@ const MIND_CONTROL = spell(Lock, {
   name: "Auserlese",
   description: "Swap control with another ally",
   elements: [Element.Life],
-  cost: 12,
+  cost: 14,
   costMultiplier: () =>
     1.4 - (Manager.instance?.getElementValue(Element.Life) || 1) * 0.4,
   stacking: true,
