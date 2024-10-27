@@ -24,6 +24,7 @@ interface Config {
   groundFriction?: number;
   airControl?: number;
   ladderSpeed?: number;
+  ladderTest?: (x: number, y: number) => boolean;
   onCollide?: (x: number, y: number) => void;
   roundness?: number;
   bounciness?: number;
@@ -57,6 +58,7 @@ export class Body implements PhysicsBody {
   private ladderSpeed: number;
   private _onLadder = false;
   private ladderDirection = 0;
+  private ladderTest?: (x: number, y: number) => boolean;
 
   constructor(
     private surface: CollisionMask,
@@ -68,6 +70,7 @@ export class Body implements PhysicsBody {
       groundFriction = GROUND_FRICTION,
       airControl = AIR_CONTROL,
       ladderSpeed = LADDER_SPEED,
+      ladderTest,
       onCollide,
       roundness = 0,
       bounciness = 0,
@@ -80,6 +83,7 @@ export class Body implements PhysicsBody {
     this.groundFriction = groundFriction;
     this.airControl = airControl;
     this.ladderSpeed = ladderSpeed;
+    this.ladderTest = ladderTest;
     this.onCollide = onCollide;
     this.roundness = roundness;
     this.bounciness = bounciness;
@@ -229,6 +233,10 @@ export class Body implements PhysicsBody {
             this.lastRollDirection = -1;
           }
         }
+      } else if (this.yVelocity === 0 && this.ladderTest?.(this.x, this.y)) {
+        this.mountLadder();
+        yAcc = 0;
+        yDiff = 0;
       }
     } else {
       if (this.jumpTimer > JUMP_CHARGE_TIME) {

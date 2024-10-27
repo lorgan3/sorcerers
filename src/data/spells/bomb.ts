@@ -56,6 +56,7 @@ export class Bomb extends Container implements Item {
       groundFriction: 0.8,
       roundness: 0.2,
       bounciness: -0.1,
+      ladderSpeed: 0,
     });
     this.body.move(x, y);
     this.body.addAngularVelocity(speed, direction);

@@ -42,6 +42,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       gravity: 0.1,
       airXFriction: 0.99,
       roundness: 0.25,
+      ladderSpeed: 0,
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
