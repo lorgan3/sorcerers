@@ -58,6 +58,17 @@ watch(
   }
 );
 
+const oldScale = ref(advancedSettings.value.scale);
+watch(
+  () => advancedSettings.value.scale,
+  (scale) => {
+    ladders.value = ladders.value.map((ladder) =>
+      ladder.withScale(scale / oldScale.value)
+    );
+    oldScale.value = scale;
+  }
+);
+
 const addImageFactory =
   (ref: Ref, visible = true) =>
   (_: File, data: string) => {
@@ -137,6 +148,7 @@ const handleTest = async () => {
 };
 
 const loadMap = (config: Config, map: string) => {
+  oldScale.value = config.scale;
   terrain.value = { data: config.terrain.data as string, visible: true };
   background.value = {
     data: (config.background?.data as string) || "",
@@ -166,8 +178,8 @@ const loadMap = (config: Config, map: string) => {
 const handleAddLayer = () =>
   layers.value.push({
     data: "",
-    x: Math.round(preview.value!.scrollLeft / 6),
-    y: Math.round(preview.value!.scrollTop / 6),
+    x: Math.round(preview.value!.scrollLeft / advancedSettings.value.scale),
+    y: Math.round(preview.value!.scrollTop / advancedSettings.value.scale),
     visible: true,
   });
 
@@ -215,10 +227,14 @@ const handleCreateLadder = (event: MouseEvent) => {
 
   event.preventDefault();
   const position = preview.value!.getBoundingClientRect();
-  const x = Math.round((position.left - preview.value!.scrollLeft) / 6);
-  const y = Math.round((position.top - preview.value!.scrollTop) / 6);
-  const startX = Math.round(event.pageX / 6) - x;
-  const startY = Math.round(event.pageY / 6) - y;
+  const x = Math.round(
+    (position.left - preview.value!.scrollLeft) / advancedSettings.value.scale
+  );
+  const y = Math.round(
+    (position.top - preview.value!.scrollTop) / advancedSettings.value.scale
+  );
+  const startX = Math.round(event.pageX / advancedSettings.value.scale) - x;
+  const startY = Math.round(event.pageY / advancedSettings.value.scale) - y;
 
   ladders.value.push(
     BBox.fromJS({
@@ -232,11 +248,11 @@ const handleCreateLadder = (event: MouseEvent) => {
   const handleMouseMove = (moveEvent: MouseEvent) => {
     ladders.value[ladders.value.length - 1].right = Math.max(
       startX,
-      Math.round(moveEvent.pageX / 6) - x
+      Math.round(moveEvent.pageX / advancedSettings.value.scale) - x
     );
     ladders.value[ladders.value.length - 1].bottom = Math.max(
       startY,
-      Math.round(moveEvent.pageY / 6) - y
+      Math.round(moveEvent.pageY / advancedSettings.value.scale) - y
     );
   };
 
