@@ -48,6 +48,11 @@ export class SimpleBody implements PhysicsBody {
   }
 
   serialize() {
+    const alignX = this.xVelocity > 0 ? Math.ceil : (x: number) => x | 0;
+    const alignY = this.yVelocity > 0 ? Math.ceil : (y: number) => y | 0;
+    this.rx = alignX(this.x);
+    this.ry = alignY(this.y);
+
     return [this.x, this.y, this.xVelocity, this.yVelocity];
   }
 
