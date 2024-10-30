@@ -99,7 +99,7 @@ export class FireWheel extends Container implements Syncable {
         ...this.body.position
       )
     ) {
-      this._die(x, y);
+      this.lifetime = 0;
     }
   }
 
@@ -110,7 +110,7 @@ export class FireWheel extends Container implements Syncable {
         y,
         16,
         3,
-        3 + Manager.instance.getElementValue(Element.Elemental) * 1.2
+        3 + Manager.instance.getElementValue(Element.Elemental) * 2.5
       ),
       this.character.player
     );
