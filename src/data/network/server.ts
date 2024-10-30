@@ -307,7 +307,12 @@ export class Server extends Manager {
 
           this.syncPlayers();
         } else {
-          this.disconnectedPlayers.push(player);
+          if (player.color) {
+            this.disconnectedPlayers.push(player);
+          } else {
+            this.players.splice(this.players.indexOf(player));
+          }
+
           player.disconnect();
         }
         onUpdate?.();
