@@ -48,6 +48,7 @@ const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
 const PAGE_READ_DURATION = 60;
 const CLIMB_DURATION = 10;
+const JUMP_GRACE_TIME = 3;
 
 const MELEE_POWER = 20;
 
@@ -201,6 +202,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private wings?: Wings;
   private namePlateName: string;
   private wasUp = false;
+  private lastGroundedTime = 0;
 
   private animator: Animator<AnimationState>;
 
@@ -390,6 +392,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
         const [x, y] = this.body.precisePosition;
         this.position.set(x * 6, y * 6);
 
+        if (this.body.grounded) {
+          this.lastGroundedTime = this.time;
+        }
+
         if (
           Level.instance.terrain.killbox.collidesWith(
             this.body.mask,
@@ -515,7 +521,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       return;
     }
 
-    if (this.body.grounded && !this.wings) {
+    if (this.time - this.lastGroundedTime < JUMP_GRACE_TIME && !this.wings) {
       if (this.body.jump()) {
         this.animator.animate(AnimationState.Jump);
       }
