@@ -192,6 +192,7 @@ export class Body implements PhysicsBody {
     this.rY = alignY(this.y);
 
     this._grounded = false;
+    this.jumpTimer -= dt;
 
     // We're falling. Check if we've reached the ground yet.
     if (yDiff > 0) {
@@ -226,7 +227,6 @@ export class Body implements PhysicsBody {
           this.onCollide(this.rX, this.rY);
         }
 
-        this.jumpTimer -= dt;
         this.yVelocity *= this.bounciness;
         yAcc *= this.bounciness;
         yDiff *= this.bounciness;
