@@ -300,6 +300,7 @@ export class Body implements PhysicsBody {
         this.rY = this.y;
         this.yVelocity = 0;
         this._grounded = true;
+        this.unmountLadder();
       } else {
         let xCopy = xDiff;
 
