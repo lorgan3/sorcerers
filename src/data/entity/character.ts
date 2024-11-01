@@ -509,6 +509,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
           if (!this.wasUp) {
             this.body.unmountLadder();
             this.body.jump();
+            this.animator.animate(AnimationState.Jump);
           }
 
           this.body.setLadderDirection(0);
