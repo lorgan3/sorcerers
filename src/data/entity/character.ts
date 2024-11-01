@@ -101,7 +101,7 @@ const ANIMATION_CONFIG: Record<
     name: "elf_float",
     loop: true,
     speed: 0.1,
-    available: (entity) => !entity.body.grounded,
+    available: (entity) => !entity.body.grounded && !entity.body.onLadder,
   },
   [AnimationState.Land]: {
     name: "elf_land",
@@ -418,7 +418,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     this.animator.tick(dt);
 
-    if (!this.body.grounded && Math.abs(this.body.yVelocity) > 2) {
+    if (
+      !this.body.grounded &&
+      !this.body.onLadder &&
+      Math.abs(this.body.yVelocity) > 2
+    ) {
       this.animator.animate(AnimationState.Float);
     } else if (
       (this.animator.animationState === AnimationState.Fall ||
