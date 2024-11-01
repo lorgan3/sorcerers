@@ -91,6 +91,8 @@ export class Animator<K extends string = string, S = any> {
       oldConfig.onEnd(this.self);
     }
 
+    this.sprite.stop();
+
     this.time = 0;
     this.nextTime = 0;
     this.completeTime = config.duration || 0;
