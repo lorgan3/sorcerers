@@ -48,14 +48,14 @@ export class Fireball extends Container implements Syncable {
     this.sprite = new AnimatedSprite(atlas.animations["spells_flame"]);
     this.sprite.animationSpeed = 0.3;
     this.sprite.play();
-    this.sprite.anchor.set(0.5);
+    this.sprite.anchor.set(0.25, 0.5);
 
     this.particles = new SimpleParticleEmitter(
       atlas.animations["spells_puff"],
       {
         ...SimpleParticleEmitter.defaultConfig,
         initialize: () => ({
-          x: this.position.x,
+          x: this.position.x + 8,
           y: this.position.y,
           yVelocity: -3,
         }),
