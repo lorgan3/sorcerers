@@ -13,6 +13,8 @@ describe("body", () => {
       mask,
     });
     body.move(0, -1);
+    // @ts-expect-error
+    body._grounded = true;
 
     const dt = TARGET_FPS / fps;
     for (let i = 0; i < TARGET_FPS; i += dt) {
