@@ -487,9 +487,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
       }
     }
 
+    if (this.body.onLadder) {
+      this.setSpellSource(null, false);
+    }
+
     const isUp = controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W);
     if (!this.wings && foundLadder && isUp) {
-      this.setSpellSource(null, false);
       this.body.mountLadder();
     }
 
@@ -609,11 +612,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   setSpellSource(source: any, toggle = true) {
-    if (this.body.onLadder) {
-      return;
-    }
-
     if (toggle) {
+      if (this.body.onLadder) {
+        return;
+      }
+
       this.spellSource = source;
 
       if (
@@ -629,16 +632,24 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.animator.setDefaultAnimation(AnimationState.Spell);
     } else if (!source || source === this.spellSource) {
       this.spellSource = null;
-      this.animator.animate(AnimationState.SpellDone);
 
+      let defaultAnimation;
       if (
         Manager.instance.getActiveCharacter() === this &&
         this.player.controller.isKeyDown(Key.Inventory)
       ) {
-        this.animator.setDefaultAnimation(AnimationState.Read);
+        defaultAnimation = AnimationState.Read;
       } else {
-        this.animator.setDefaultAnimation(AnimationState.Idle);
+        defaultAnimation = AnimationState.Idle;
       }
+
+      if (this.animator.animationState === AnimationState.SpellIdle) {
+        this.animator.animate(AnimationState.SpellDone);
+      } else if (this.animator.animationState === AnimationState.Spell) {
+        this.animator.animate(defaultAnimation);
+      }
+
+      this.animator.setDefaultAnimation(defaultAnimation);
     }
   }
 
