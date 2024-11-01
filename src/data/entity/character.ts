@@ -669,6 +669,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   serialize() {
+    this.move(...this.body.precisePosition);
+
     return this.body.serialize();
   }
 

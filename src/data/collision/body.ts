@@ -152,7 +152,7 @@ export class Body implements PhysicsBody {
     this.rX = alignX(this.x);
     this.rY = alignY(this.y);
 
-    this._grounded = this.surface.collidesWith(this.mask, this.rX, this.rY + 1);
+    // this._grounded = this.surface.collidesWith(this.mask, this.rX, this.rY + 1);
   }
 
   tick(dt: number) {
