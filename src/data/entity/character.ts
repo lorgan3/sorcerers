@@ -447,7 +447,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
     );
   }
 
-  ladderTest(x: number, y: number) {
+  ladderTest = (x: number, y: number) => {
+    if (!Manager.instance.isTrusted(this)) {
+      return false;
+    }
+
     for (let ladder of Level.instance.terrain.ladders) {
       if (
         x + 6 >= ladder.left &&
@@ -460,7 +464,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
 
     return false;
-  }
+  };
 
   control(controller: Controller) {
     let foundLadder: BBox | null = null;
@@ -491,7 +495,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     if (this.body.onLadder) {
       if (!foundLadder) {
-        this.body.unmountLadder();
+        if (Manager.instance.isTrusted(this)) {
+          this.body.unmountLadder();
+        }
         return;
       }
 
