@@ -3,9 +3,11 @@ import { AssetsContainer } from "../../../util/assets/assetsContainer";
 import { ELEMENT_ATLAS_MAP } from "../../elements";
 import { SimpleParticleEmitter } from "../simpleParticleEmitter";
 
-export const createWandParticles = (character: Character) =>
-  new SimpleParticleEmitter(
-    character.player.selectedSpell!.elements.map(
+export const createWandParticles = (character: Character) => {
+  const elements = character.player.selectedSpell!.elements;
+
+  return new SimpleParticleEmitter(
+    elements.map(
       (element) =>
         AssetsContainer.instance.assets!["atlas"].textures[
           `${ELEMENT_ATLAS_MAP[element]}_bright`
@@ -30,19 +32,20 @@ export const createWandParticles = (character: Character) =>
           y: character.position.y + 25 + (Math.random() - 0.5) * 40,
           xVelocity: (Math.sign(-direction) - direction) * 0.5,
           yVelocity: -0.5 - Math.random() * 2,
-          frame: Math.floor(
-            Math.random() * character.player.selectedSpell!.elements.length
-          ),
+          frame: Math.floor(Math.random() * elements.length),
           scale: Math.random() * 0.3 + 0.2,
           alpha: Math.random() * 0.2 + 0.8,
         };
       },
     }
   );
+};
 
-export const createBackgroundParticles = (character: Character) =>
-  new SimpleParticleEmitter(
-    character.player.selectedSpell!.elements.map(
+export const createBackgroundParticles = (character: Character) => {
+  const elements = character.player.selectedSpell!.elements;
+
+  return new SimpleParticleEmitter(
+    elements.map(
       (element) =>
         AssetsContainer.instance.assets!["atlas"].textures[
           `${ELEMENT_ATLAS_MAP[element]}_bright`
@@ -67,12 +70,11 @@ export const createBackgroundParticles = (character: Character) =>
           y: character.position.y + 48,
           xVelocity: direction,
           yVelocity: -0.2 - Math.random() * 0.5,
-          frame: Math.floor(
-            Math.random() * character.player.selectedSpell!.elements.length
-          ),
+          frame: Math.floor(Math.random() * elements.length),
           scale: Math.random() * 0.3 + 0.4,
           alpha: Math.random() * 0.2 + 0.8,
         };
       },
     }
   );
+};
