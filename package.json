@@ -20,7 +20,7 @@
     "meta-png": "^1.0.6",
     "peerjs": "^1.5.4",
     "pixelarticons": "^1.8.1",
-    "pixi.js": "^8.5.2",
+    "pixi.js": "^8.9.2",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5"
   },

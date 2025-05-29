@@ -2207,7 +2207,7 @@ pixelmatch@^4.0.2:
   dependencies:
     pngjs "^3.0.0"
 
-pixi.js@^8.5.2:
+pixi.js@^8.9.2:
   version "8.9.2"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-8.9.2.tgz#17e74a567c03a4a7844cf7ce5d4f8cdb7a4ffe0a"
   integrity sha512-oLFBkOOA/O6OpT5T8o05AxgZB9x9yWNzEQ+WTNZZFoCvfU2GdT4sFTjpVFuHQzgZPmAm/1IFhKdNiXVnlL8PRw==
