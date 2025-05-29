@@ -20,7 +20,10 @@ import GameSettingsComponent from "../organisms/GameSettings.vue";
 import MapSelect from "../organisms/MapSelect.vue";
 import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
-import plus from "pixelarticons/svg/plus.svg";
+import human from "pixelarticons/svg/user-plus.svg";
+import bot from "pixelarticons/svg/contact-plus.svg";
+import { getBotName } from "../../util/word";
+import { AiController } from "../../data/controller/aiController";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -161,6 +164,14 @@ const handleAddLocalPlayer = () => {
   updateLobby();
 };
 
+const handleAddBot = () => {
+  const team = Team.random(gameSettings.value.teamSize);
+  const player = Server.instance.addBot(getBotName(), team);
+  localPlayers.value.push(player.color);
+
+  updateLobby();
+};
+
 const handleKick = (index: number) => {
   const player = Server.instance.players[index];
   const localPlayerIndex = localPlayers.value.findIndex(
@@ -223,7 +234,13 @@ const handleSelectMap = async (config: Config, name: string) => {
           v-if="players.length < COLORS.length"
           title="Add local player"
           :onClick="handleAddLocalPlayer"
-          :icon="plus"
+          :icon="human"
+        />
+        <IconButton
+          v-if="players.length < COLORS.length"
+          title="Add bot"
+          :onClick="handleAddBot"
+          :icon="bot"
         />
       </h2>
 
@@ -242,7 +259,13 @@ const handleSelectMap = async (config: Config, name: string) => {
           :player="player"
           :onDelete="index !== 0 ? () => handleKick(index) : undefined"
           :onEdit="!player.connection ? handleEditPlayer : undefined"
-          :subTitle="!player.connection ? 'Local player' : ''"
+          :subTitle="
+            !player.connection
+              ? player.controller instanceof AiController
+                ? 'Bot'
+                : 'Local player'
+              : ''
+          "
         />
         <TeamDialog
           v-if="editingPlayer"

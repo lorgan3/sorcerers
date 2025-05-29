@@ -25,6 +25,7 @@ import { DAMAGE_SOURCES } from "../damage";
 import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { getAccumulatedStats } from "./statsAccumulator";
+import { AiController } from "../controller/aiController";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -86,10 +87,21 @@ export class Server extends Manager {
     this.localPlayers.push(player);
 
     player.connect(name, team, this.availableColors.pop()!, this.controller);
+    player.resolveReady();
 
     if (!this._self) {
       this._self = player;
     }
+
+    return player;
+  }
+
+  addBot(name: string, team: Team) {
+    const player = new Player();
+    this.players.push(player);
+
+    player.connect(name, team, this.availableColors.pop()!, new AiController());
+    player.resolveReady();
 
     return player;
   }
@@ -102,9 +114,6 @@ export class Server extends Manager {
         settings: this.settings,
       });
 
-      for (let player of this.localPlayers) {
-        player.resolveReady();
-      }
       await Promise.all(this.players.map((player) => player.ready));
     }
 
