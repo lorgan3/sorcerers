@@ -81,13 +81,14 @@ export abstract class Manager {
   }
 
   tick(dt: number) {
+    if (
+      this.activePlayer?.controller instanceof NetworkController ||
+      this.activePlayer?.controller instanceof AiController
+    ) {
+      this.activePlayer.controller.tick(dt);
+    }
+
     if (this.cursor) {
-      if (
-        this.activePlayer!.controller instanceof NetworkController ||
-        this.activePlayer!.controller instanceof AiController
-      ) {
-        this.activePlayer!.controller.tick(dt);
-      }
       this.cursor.tick(dt, this.activePlayer!.controller);
     }
 
