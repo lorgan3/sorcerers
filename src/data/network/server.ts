@@ -214,7 +214,9 @@ export class Server extends Manager {
 
       if (
         this.isControlling() &&
-        (this.activePlayer === this._self || !this.settings.trustClient)
+        (this.activePlayer === this._self ||
+          !this.settings.trustClient ||
+          this.activePlayer.controller instanceof AiController)
       ) {
         this.activePlayer.activeCharacter.control(this.activePlayer.controller);
       }
