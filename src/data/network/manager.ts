@@ -15,6 +15,7 @@ import { Character } from "../entity/character";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
 import { AccumulatedStat } from "./accumulatedStat";
+import { AiController } from "../controller/aiController";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -81,7 +82,10 @@ export abstract class Manager {
 
   tick(dt: number) {
     if (this.cursor) {
-      if (this.activePlayer!.controller instanceof NetworkController) {
+      if (
+        this.activePlayer!.controller instanceof NetworkController ||
+        this.activePlayer!.controller instanceof AiController
+      ) {
         this.activePlayer!.controller.tick(dt);
       }
       this.cursor.tick(dt, this.activePlayer!.controller);
