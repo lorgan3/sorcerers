@@ -8,7 +8,11 @@ export class AiController implements Controller {
   destroy() {}
 
   isKeyDown(key?: Key) {
-    return false;
+    if (!key) {
+      return !!this.pressedKeys;
+    }
+
+    return !!(this.pressedKeys & keyMap[key]);
   }
 
   getMouse(): [number, number] {
