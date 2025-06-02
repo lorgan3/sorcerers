@@ -24,6 +24,8 @@ import { Background } from "./background";
 import { Viewport } from "./viewport";
 import { Manager } from "../network/manager";
 import { ellipse9x16 } from "../collision/precomputed/circles";
+import { PathfindingDebugLayer } from "../../graphics/pathfindingDebug";
+import { Key } from "../controller/controller";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -43,6 +45,7 @@ export class Level {
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
+  public readonly pathfindingDebugLayer = new PathfindingDebugLayer();
 
   private layers: Record<Layer, Container> = {
     [Layer.Background]: this.backgroundContainer,
@@ -119,18 +122,47 @@ export class Level {
       this.defaultLayer,
       this.particleContainer,
       this.terrain.foreground,
+      this.pathfindingDebugLayer,
       this.overlayContainer,
       this.numberContainer,
       this.uiContainer
     );
 
     this.backgroundParticles.addEmitter(this.bloodEmitter);
+
+    // Set up debug key listener (F3 to toggle pathfinding visualization)
+    this.setupDebugKeyListener();
+  }
+
+  private setupDebugKeyListener(): void {
+    // Add global key listener for F3 debug toggle
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "F3") {
+        event.preventDefault();
+        this.togglePathfindingDebug();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Store reference for cleanup
+    (this as any)._debugKeyHandler = handleKeyDown;
   }
 
   private resize = () => {
     this.app.resize();
     this.viewport.resize(window.innerWidth, window.innerHeight);
   };
+
+  destroy() {
+    // Clean up debug key listener
+    if ((this as any)._debugKeyHandler) {
+      window.removeEventListener("keydown", (this as any)._debugKeyHandler);
+    }
+
+    // Clean up resize listener
+    window.removeEventListener("resize", this.resize);
+  }
 
   getRandomSpawnLocation() {
     if (!this.spawnLocations.length) {
@@ -177,6 +209,7 @@ export class Level {
     this.terrain.killbox.tick(dt);
     this.particleContainer.tick(dt);
     this.backgroundParticles.tick(dt);
+    this.pathfindingDebugLayer.tick(dt);
     this.background?.update();
 
     if (Server.instance) {
@@ -347,5 +380,26 @@ export class Level {
     } else {
       this.target.classList.add("render-target--no-pointer");
     }
+  }
+
+  /**
+   * Toggle pathfinding debug visualization
+   */
+  togglePathfindingDebug(): void {
+    this.pathfindingDebugLayer.toggleVisibility();
+  }
+
+  /**
+   * Set pathfinding debug visualization visibility
+   */
+  setPathfindingDebugVisibility(visible: boolean): void {
+    this.pathfindingDebugLayer.setVisibility(visible);
+  }
+
+  /**
+   * Get pathfinding debug information
+   */
+  getPathfindingDebugInfo() {
+    return this.pathfindingDebugLayer.getDebugInfo();
   }
 }

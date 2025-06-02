@@ -9,6 +9,7 @@ import { FIXED_INTERVAL } from "./constants";
 import Peer from "peerjs";
 import { Client } from "./client";
 import { GameSettings } from "../../util/localStorage/settings";
+import { PathfindingService } from "../pathfinding";
 
 export const connect = async (
   target: HTMLElement,
