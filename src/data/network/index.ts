@@ -9,6 +9,7 @@ import { FIXED_INTERVAL } from "./constants";
 import Peer from "peerjs";
 import { Client } from "./client";
 import { GameSettings } from "../../util/localStorage/settings";
+import { setGameContext } from "../context";
 
 export const connect = async (
   target: HTMLElement,
@@ -28,7 +29,14 @@ export const connect = async (
     FIXED_INTERVAL
   );
 
+  setGameContext({
+    level,
+    manager: Manager.instance,
+    server: Server.instance ?? null,
+  });
+
   const handleBack = () => {
+    setGameContext(null);
     Ticker.shared.remove(ticker, null);
     window.clearInterval(fixedTick);
     onBack();

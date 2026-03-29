@@ -1,7 +1,6 @@
 import Peer from "peerjs";
 import { Player } from "./player";
 import { Popup, TurnState } from "./types";
-import { Level } from "../map/level";
 import { KeyboardController } from "../controller/keyboardController";
 import { Spell, getSpellCost } from "../spells";
 import { Cursor } from "../../graphics/cursor/types";
@@ -15,6 +14,7 @@ import { Character } from "../entity/character";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
 import { AccumulatedStat } from "./accumulatedStat";
+import { getContextOrNull, getLevel, setFallbackManager } from "../context";
 
 const TURN_GRACE_PERIOD = 3000;
 const CACHE_TIME = 30;
@@ -22,7 +22,7 @@ const CACHE_TIME = 30;
 export abstract class Manager {
   private static _instance?: Manager;
   static get instance() {
-    return Manager._instance!;
+    return getContextOrNull()?.manager ?? Manager._instance!;
   }
 
   protected _self: Player | null = null;
@@ -51,6 +51,7 @@ export abstract class Manager {
 
   constructor(public readonly peer?: Peer) {
     Manager._instance = this;
+    setFallbackManager(() => Manager._instance);
   }
 
   abstract dealFallDamage(x: number, y: number, character: Character): void;
@@ -68,7 +69,7 @@ export abstract class Manager {
     }
 
     this.onBack = onBack;
-    Level.instance.cameraTarget.connect(controller);
+    getLevel().cameraTarget.connect(controller);
   }
 
   destroy() {
@@ -94,7 +95,7 @@ export abstract class Manager {
       );
     }
 
-    Level.instance.tick(dt);
+    getLevel().tick(dt);
   }
 
   fixedTick(dtMs: number) {
@@ -107,7 +108,7 @@ export abstract class Manager {
   }
 
   checkOverlays() {
-    const layers = Level.instance.terrain.layers;
+    const layers = getLevel().terrain.layers;
 
     if (!this._self || !layers.length) {
       return;
@@ -129,7 +130,7 @@ export abstract class Manager {
         }
       }
 
-      Level.instance.terrain.setLayerVisibility(layer, revealed);
+      getLevel().terrain.setLayerVisibility(layer, revealed);
     }
   }
 
@@ -144,7 +145,7 @@ export abstract class Manager {
         this.turnStartTime
       );
 
-      if (Level.instance.hasDeathQueue()) {
+      if (getLevel().hasDeathQueue()) {
         return;
       }
     }
@@ -234,7 +235,7 @@ export abstract class Manager {
         this.cursor = new spell.cursor(player.activeCharacter, spell);
 
         if (player === this._self) {
-          Level.instance.setBrowserCursorVisibility(false);
+          getLevel().setBrowserCursorVisibility(false);
         }
       }
     }
@@ -260,7 +261,7 @@ export abstract class Manager {
     }
 
     if (this.activePlayer === this._self) {
-      Level.instance.add(
+      getLevel().add(
         new ActivePointer(this.activePlayer.activeCharacter, [0, -100])
       );
     }
@@ -292,7 +293,7 @@ export abstract class Manager {
 
     if (!!this.activePlayer) {
       let buffed = false;
-      Level.instance.withNearbyEntities(
+      getLevel().withNearbyEntities(
         ...this.activePlayer.activeCharacter.getCenter(),
         MagicScroll.aoeRange / 2,
         (entity: HurtableEntity) => {
@@ -339,7 +340,7 @@ export abstract class Manager {
     if (this.cursor) {
       this.cursor.remove();
       this.cursor = null;
-      Level.instance.setBrowserCursorVisibility(true);
+      getLevel().setBrowserCursorVisibility(true);
     }
   }
 

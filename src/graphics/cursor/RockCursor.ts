@@ -5,12 +5,9 @@ import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 
-import { Manager } from "../../data/network/manager";
+import { getLevel, getManager, getServer } from "../../data/context";
 import { Cursor, ProjectileConstructor } from "./types";
 import { TurnState } from "../../data/network/types";
-import { Level } from "../../data/map/level";
-
-import { Server } from "../../data/network/server";
 import { Rock } from "../../data/spells/rock";
 import { probeX } from "../../data/map/utils";
 
@@ -48,11 +45,11 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
     this.pointer.tint = this.character.player.color;
 
     this.addChild(this.indicator, this.pointer);
-    Level.instance.uiContainer.addChild(this);
+    getLevel().uiContainer.addChild(this);
   }
 
   remove(): void {
-    Level.instance.uiContainer.removeChild(this);
+    getLevel().uiContainer.removeChild(this);
     this.character.setSpellSource(this, false);
   }
 
@@ -61,7 +58,7 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
 
     projectile.cast(x / 6, y / 6, this.character);
 
-    Manager.instance.setTurnState(turnState);
+    getManager().setTurnState(turnState);
     this.character.setSpellSource(this, false);
   }
 
@@ -76,7 +73,7 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
     const _x = Math.round(x / 6);
     const _y = Math.round(y / 6);
 
-    if (Level.instance.terrain.collisionMask.collidesWithPoint(_x, _y)) {
+    if (getLevel().terrain.collisionMask.collidesWithPoint(_x, _y)) {
       this.indicator.visible = false;
       this.character.setSpellSource(this, false);
       return;
@@ -87,7 +84,7 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
     let diff = 0;
     for (let i = -24; i < 24; i++) {
       const groundY = probeX(
-        Level.instance.terrain.collisionMask,
+        getLevel().terrain.collisionMask,
         _x + i,
         _y + 8 - Rock.maxHeightDiff
       );
@@ -111,7 +108,7 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
     }
 
     this.pointer.position.set(...controller.getLocalMouse());
-    this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
+    this.pointer.scale.set(2 / getLevel().viewport.scale.x);
 
     if (!this.indicator.visible) {
       this.wasKeyDown = false;
@@ -119,8 +116,8 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
     }
 
     if (!this.wasKeyDown && controller.isKeyDown(Key.M1)) {
-      if (Server.instance) {
-        Server.instance.cast();
+      if (getServer()) {
+        getServer()!.cast();
       }
     }
 

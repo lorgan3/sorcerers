@@ -1,7 +1,7 @@
 import { Container, Sprite } from "pixi.js";
 import { SimpleParticleEmitter } from "./particles/simpleParticleEmitter";
 import { Element } from "../data/spells/types";
-import { Level } from "../data/map/level";
+import { getLevel } from "../data/context";
 import { AssetsContainer } from "../util/assets/assetsContainer";
 import { ELEMENT_ATLAS_MAP, ELEMENT_COLOR_MAP } from "./elements";
 import { ParticleEmitter } from "./particles/types";
@@ -52,7 +52,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
 
     this.addChild(this.circle);
 
-    this.emitter = Level.instance.backgroundParticles.replaceEmitter(
+    this.emitter = getLevel().backgroundParticles.replaceEmitter(
       new SimpleParticleEmitter(
         [atlas.textures[`${ELEMENT_ATLAS_MAP[element]}_bright`]],
         {
@@ -91,7 +91,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
       );
 
       if (this.time - this.fadeTime >= AreaOfEffect.fadeDuration) {
-        Level.instance.remove(this);
+        getLevel().remove(this);
       }
 
       return;
@@ -133,7 +133,7 @@ export class AreaOfEffect extends Container implements TickingEntity {
   }
 
   fade() {
-    Level.instance.backgroundParticles.destroyEmitter(this.emitter);
+    getLevel().backgroundParticles.destroyEmitter(this.emitter);
     this.fadeTime = this.time;
   }
 }

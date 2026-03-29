@@ -1,19 +1,17 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Character } from "../entity/character";
 import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { TurnState } from "../network/types";
-import { Manager } from "../network/manager";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
 import { getIndexFromAngle } from "../collision/util";
-import { Server } from "../network/server";
 import { TargetList } from "../damage/targetList";
 import { GenericDamage } from "../damage/genericDamage";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { angleDiff, getSquareDistance } from "../../util/math";
+import { getLevel, getManager, getServer } from "../context";
 
 export class WindBlast extends Container implements Spawnable {
   private static triggerFrame = 4;
@@ -73,7 +71,7 @@ export class WindBlast extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -90,7 +88,7 @@ export class WindBlast extends Container implements Spawnable {
         this.direction + Math.max(-max, Math.min(max, diff));
 
       const entities: HurtableEntity[] = [];
-      Level.instance.withNearbyEntities(x * 6, y * 6, 32 * 6, (entity) => {
+      getLevel().withNearbyEntities(x * 6, y * 6, 32 * 6, (entity) => {
         const [ex, ey] = entity.body.position;
 
         if (
@@ -127,13 +125,13 @@ export class WindBlast extends Container implements Spawnable {
               power:
                 this.power *
                 (0.7 +
-                  Manager.instance.getElementValue(Element.Elemental) * 0.3),
+                  getManager().getElementValue(Element.Elemental) * 0.3),
             },
           }))
       );
 
       if (targetList.hasEntities()) {
-        Server.instance?.damage(
+        getServer()?.damage(
           new GenericDamage(targetList),
           this.character.player
         );
@@ -142,9 +140,9 @@ export class WindBlast extends Container implements Spawnable {
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
     this.character.setSpellSource(this, false);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -167,7 +165,7 @@ export class WindBlast extends Container implements Spawnable {
       data[1],
       data[2],
       data[3],
-      Level.instance.entityMap.get(data[4]) as Character
+      getLevel().entityMap.get(data[4]) as Character
     );
   }
 
@@ -178,13 +176,13 @@ export class WindBlast extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const entity = new WindBlast(x, y, power, direction, character);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

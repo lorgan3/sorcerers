@@ -1,13 +1,11 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Explosion } from "../../graphics/explosion";
-import { Manager } from "../network/manager";
 import { EntityType, HurtableEntity, Item, Priority } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { Body } from "../collision/body";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
@@ -45,10 +43,10 @@ export class Bomb extends Container implements Item {
     private character: Character
   ) {
     super();
-    this.power = Manager.instance.getElementValue(Element.Elemental);
+    this.power = getManager().getElementValue(Element.Elemental);
     this.fuse = Bomb.fuseTime * (0.5 + Math.random());
 
-    this.body = new Body(Level.instance.terrain.characterMask, {
+    this.body = new Body(getLevel().terrain.characterMask, {
       mask: circle3x3,
       onCollide: this.onCollide,
       gravity: 0.1,
@@ -88,8 +86,8 @@ export class Bomb extends Container implements Item {
     this.sprite.animationSpeed = 0.15;
     ControllableSound.fromEntity(this, Sound.Beep);
 
-    if (Server.instance) {
-      Server.instance.dynamicUpdate(this);
+    if (getServer()) {
+      getServer()!.dynamicUpdate(this);
     }
   }
 
@@ -98,8 +96,8 @@ export class Bomb extends Container implements Item {
     damage: number,
     force?: Force | undefined
   ): void {
-    if (Server.instance && this.activateTime === -1) {
-      Server.instance.activate(this);
+    if (getServer() && this.activateTime === -1) {
+      getServer()!.activate(this);
     }
 
     if (force) {
@@ -114,19 +112,19 @@ export class Bomb extends Container implements Item {
   };
 
   private _die(x: number, y: number) {
-    if (this.hp <= 0 || !Server.instance) {
+    if (this.hp <= 0 || !getServer()) {
       return;
     }
 
     this.hp = 0;
-    Server.instance?.damage(
+    getServer()?.damage(
       new ExplosiveDamage(x, y, 16, 2, 5 * (0.7 + this.power * 0.3))
     );
-    Server.instance.kill(this);
+    getServer()!.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
     new Explosion(this.position.x, this.position.y);
   }
 
@@ -142,14 +140,14 @@ export class Bomb extends Container implements Item {
     }
 
     if (this.body.active) {
-      Level.instance.terrain.characterMask.subtract(
+      getLevel().terrain.characterMask.subtract(
         this.body.mask,
         ...this.body.position
       );
 
       this.body.tick(dt);
 
-      Level.instance.terrain.characterMask.add(
+      getLevel().terrain.characterMask.add(
         this.body.mask,
         ...this.body.position
       );
@@ -157,14 +155,14 @@ export class Bomb extends Container implements Item {
       const [x, y] = this.body.precisePosition;
       this.position.set(x * 6, y * 6);
 
-      if (!Server.instance) {
+      if (!getServer()) {
         return;
       }
 
       if (this.time >= this.lastSync + Bomb.minSyncInterval) {
         const [x, y] = this.body.position;
         if (x !== this.lastX || y !== this.lastY) {
-          Server.instance.dynamicUpdate(this);
+          getServer()!.dynamicUpdate(this);
           this.lastX = x;
           this.lastY = y;
           this.lastSync = this.time;
@@ -173,7 +171,7 @@ export class Bomb extends Container implements Item {
 
       if (this.time > Bomb.primeTime) {
         if (this.activateTime === -1) {
-          Level.instance.withNearbyEntities(
+          getLevel().withNearbyEntities(
             ...this.getCenter(),
             Bomb.triggerRange,
             (entity: HurtableEntity) => {
@@ -181,7 +179,7 @@ export class Bomb extends Container implements Item {
                 return;
               }
 
-              Server.instance.activate(this, entity);
+              getServer()!.activate(this, entity);
               return true;
             }
           );
@@ -190,7 +188,7 @@ export class Bomb extends Container implements Item {
         }
 
         if (
-          Level.instance.terrain.killbox.collidesWith(
+          getLevel().terrain.killbox.collidesWith(
             this.body.mask,
             this.position.x,
             this.position.y
@@ -203,14 +201,14 @@ export class Bomb extends Container implements Item {
   }
 
   move(x: number, y: number) {
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.body.mask,
       ...this.body.position
     );
 
     this.body.move(x, y);
 
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
     );
@@ -221,14 +219,14 @@ export class Bomb extends Container implements Item {
   }
 
   deserialize(data: ReturnType<Bomb["serialize"]>) {
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.body.mask,
       ...this.body.position
     );
 
     this.body.deserialize(data);
 
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
     );
@@ -249,7 +247,7 @@ export class Bomb extends Container implements Item {
       data[1],
       data[2],
       data[3],
-      Level.instance.entityMap.get(data[4]) as Character
+      getLevel().entityMap.get(data[4]) as Character
     );
   }
 }

@@ -8,7 +8,7 @@ import { MessageType } from "../../data/network/types";
 import Peer from "peerjs";
 import { Team } from "../../data/team";
 import { Config, Map } from "../../data/map";
-import { Manager } from "../../data/network/manager";
+import { getManager, getServer } from "../../data/context";
 import { Player } from "../../data/network/player";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
@@ -52,14 +52,14 @@ const editingPlayer = ref<IPlayer>();
 watch(
   () => gameSettings.value.teamSize,
   async (newSize) => {
-    Server.instance.teamSize = newSize;
-    Server.instance.players.forEach((player) => player.team.setSize(newSize));
+    getServer()!.teamSize = newSize;
+    getServer()!.players.forEach((player) => player.team.setSize(newSize));
   }
 );
 
 const createServer = () =>
   new Promise<void>((resolve) => {
-    Manager.instance?.destroy();
+    getManager()?.destroy();
 
     key.value = Math.floor(Math.random() * 10000)
       .toString()
@@ -93,14 +93,14 @@ onMounted(async () => {
 });
 
 const updateLobby = debounce(() => {
-  if (!Server.instance || Server.instance.started) {
+  if (!getServer() || getServer()!.started) {
     return;
   }
 
-  players.value = [...Server.instance.players];
+  players.value = [...getServer()!.players];
 
-  for (let i = 0; i < Server.instance.players.length; i++) {
-    const player = Server.instance.players[i];
+  for (let i = 0; i < getServer()!.players.length; i++) {
+    const player = getServer()!.players[i];
 
     player.connection?.send({
       type: MessageType.LobbyUpdate,
@@ -121,8 +121,8 @@ const handleBack = () => {
     return;
   }
 
-  if (Server.instance) {
-    Server.instance.destroy();
+  if (getServer()) {
+    getServer()!.destroy();
   }
 
   router.replace("/");
@@ -145,14 +145,14 @@ const handleStart = async () => {
   onPlay(key.value, mapContainer.map, gameSettings.value);
 
   logEvent("host_game", {
-    players: Server.instance.players.length,
+    players: getServer()!.players.length,
     map: mapContainer.name,
   });
 };
 
 const handleAddLocalPlayer = () => {
   const team = Team.random(gameSettings.value.teamSize);
-  const player = Server.instance.addPlayer(
+  const player = getServer()!.addPlayer(
     `${settings.name} (${players.value?.length})`,
     team
   );
@@ -162,7 +162,7 @@ const handleAddLocalPlayer = () => {
 };
 
 const handleKick = (index: number) => {
-  const player = Server.instance.players[index];
+  const player = getServer()!.players[index];
   const localPlayerIndex = localPlayers.value.findIndex(
     (localPlayer) => localPlayer === player.color
   );
@@ -171,7 +171,7 @@ const handleKick = (index: number) => {
     localPlayers.value.splice(localPlayerIndex, 1);
   }
 
-  Server.instance.kick(Server.instance.players[index]);
+  getServer()!.kick(getServer()!.players[index]);
   updateLobby();
 };
 

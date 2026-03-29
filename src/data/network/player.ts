@@ -1,12 +1,11 @@
 import { DataConnection } from "peerjs";
 import { Character } from "../entity/character";
 import { Controller, Key } from "../controller/controller";
-import { Level } from "../map/level";
 import { NetworkController } from "../controller/networkController";
 import { Team } from "../team";
 import { Spell, getSpellCost } from "../spells";
 import { MANA_BASE_GAIN, MAX_MANA } from "./constants";
-import { Manager } from "./manager";
+import { getLevel, getManager } from "../context";
 import { Stats } from "./stats";
 
 export class Player {
@@ -56,20 +55,20 @@ export class Player {
   }
 
   private handleOpenInventory = () => {
-    if (Manager.instance.getActivePlayer() === this) {
+    if (getManager().getActivePlayer() === this) {
       this.activeCharacter.openSpellBook();
     }
   };
 
   destroy() {
     if (this.characters.length) {
-      Level.instance.remove(...this.characters);
+      getLevel().remove(...this.characters);
     }
   }
 
   addCharacter(character: Character) {
     this.characters.push(character);
-    Level.instance.add(character);
+    getLevel().add(character);
   }
 
   removeCharacter(character: Character) {
@@ -83,7 +82,7 @@ export class Player {
     }
 
     this.characters.splice(index, 1);
-    Level.instance.remove(character);
+    getLevel().remove(character);
   }
 
   get activeCharacter() {
@@ -146,7 +145,7 @@ export class Player {
 
     const diff = this._mana - oldMana;
     if (diff > 0) {
-      Level.instance.numberContainer.mana(
+      getLevel().numberContainer.mana(
         diff,
         ...this.activeCharacter.getCenter()
       );
@@ -155,7 +154,7 @@ export class Player {
 
   nextTurn() {
     this.turn++;
-    this.mana += MANA_BASE_GAIN * Manager.instance.manaMultiplier;
+    this.mana += MANA_BASE_GAIN * getManager().manaMultiplier;
 
     const inventoryWasOpen = this._controller.isKeyDown(Key.Inventory);
 

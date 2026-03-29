@@ -2,17 +2,15 @@ import { Container, Texture, TilingSprite } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
 import { Character } from "../entity/character";
-import { Level } from "../map/level";
 import { EntityType, Layer, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { probeX } from "../map/utils";
 import { CollisionMask } from "../collision/collisionMask";
 import { StaticBody } from "../collision/staticBody";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 
 export class Rock extends Container implements Spawnable {
   private static growTime = 100;
@@ -79,12 +77,12 @@ export class Rock extends Container implements Spawnable {
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
 
     // @TODO this should fade instead
     this.sound?.destroy();
 
-    Level.instance.terrain.add(
+    getLevel().terrain.add(
       this._x - this.texture.frame.width / 2,
       this._y - this.targetHeight + 4,
       this.collisionMask,
@@ -111,7 +109,7 @@ export class Rock extends Container implements Spawnable {
       this._y * 6
     );
 
-    Level.instance.withNearbyEntities(
+    getLevel().withNearbyEntities(
       this.position.x,
       this.position.y - 96,
       40 * 6,
@@ -137,16 +135,16 @@ export class Rock extends Container implements Spawnable {
                 ey - (this._y - 48 + 8) - 48 + Math.floor(this.sprite.height)
               )
             ) {
-              Server.instance?.damage(
+              getServer()?.damage(
                 new ExplosiveDamage(
                   ex + 3,
                   ey + 3,
                   8,
                   -2,
                   0.5 +
-                    Manager.instance.getElementValue(Element.Elemental) * 0.5
+                    getManager().getElementValue(Element.Elemental) * 0.5
                 ), // Negative power to push the player up
-                Server.instance.getActivePlayer()
+                getServer()!.getActivePlayer()
               );
             }
 
@@ -156,8 +154,8 @@ export class Rock extends Container implements Spawnable {
       }
     );
 
-    if (this.time >= Rock.growTime && Server.instance) {
-      Server.instance.kill(this);
+    if (this.time >= Rock.growTime && getServer()) {
+      getServer()!.kill(this);
     }
   }
 
@@ -175,7 +173,7 @@ export class Rock extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -186,7 +184,7 @@ export class Rock extends Container implements Spawnable {
     let diff = 0;
     for (let i = -24; i < 24; i++) {
       const _y = probeX(
-        Level.instance.terrain.collisionMask,
+        getLevel().terrain.collisionMask,
         _x + i * character.direction,
         y + 8 - Rock.maxHeightDiff
       );
@@ -203,7 +201,7 @@ export class Rock extends Container implements Spawnable {
       character.direction
     );
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

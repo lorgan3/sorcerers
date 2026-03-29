@@ -1,19 +1,17 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
 import { Character } from "../entity/character";
 
 import { CollisionMask } from "../collision/collisionMask";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Spawnable } from "../entity/types";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { probeX } from "../map/utils";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 
 const ARCANE_CIRCLES = [0.6, 0.7, 0.5, 0.4, 0.3, 0.2, 1];
 const GROW_TIME = 30;
@@ -87,7 +85,7 @@ export class Bakuretsu extends Container implements Spawnable {
     this.time += dt;
 
     if (this.time > DONE_TIME) {
-      Level.instance.remove(this);
+      getLevel().remove(this);
     }
 
     if (this.time >= SHRINK_START_TIME) {
@@ -97,18 +95,18 @@ export class Bakuretsu extends Container implements Spawnable {
 
       if (!this.exploded) {
         this.exploded = true;
-        Level.instance.shake();
-        Server.instance?.damage(
+        getLevel().shake();
+        getServer()?.damage(
           new ExplosiveDamage(
             this.rX,
             this.rY,
             32,
             6,
-            8 * Manager.instance.getElementValue(Element.Elemental)
+            8 * getManager().getElementValue(Element.Elemental)
           ),
           this.character.player
         );
-        Manager.instance.setTurnState(TurnState.Ending);
+        getManager().setTurnState(TurnState.Ending);
         this.character.setSpellSource(this, false);
       }
 
@@ -167,24 +165,24 @@ export class Bakuretsu extends Container implements Spawnable {
   static create(data: ReturnType<Bakuretsu["serializeCreate"]>) {
     return new Bakuretsu(
       data[0],
-      Level.instance.terrain.collisionMask,
-      Level.instance.entityMap.get(data[1]) as Character
+      getLevel().terrain.collisionMask,
+      getLevel().entityMap.get(data[1]) as Character
     );
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const entity = new Bakuretsu(
       x,
-      Level.instance.terrain.characterMask,
+      getLevel().terrain.characterMask,
       character
     );
 
-    Server.instance.create(entity);
-    Server.instance.focus(entity);
+    getServer()!.create(entity);
+    getServer()!.focus(entity);
     return entity;
   }
 }

@@ -1,20 +1,19 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { Character } from "../entity/character";
 
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Priority, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { AcidSplash } from "../../graphics/acidSplash";
 import { FallDamage, Shape } from "../damage/fallDamage";
 import { AcidDrop } from "./acidDrop";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class Acid extends Container implements Spawnable {
   private static splitAmount = 5;
@@ -28,12 +27,18 @@ export class Acid extends Container implements Spawnable {
   public readonly type = EntityType.Acid;
   public readonly priority = Priority.Dynamic;
 
-  constructor(x: number, y: number, speed: number, direction: number) {
+  constructor(
+    x: number,
+    y: number,
+    speed: number,
+    direction: number,
+    private collisionMask: CollisionMask
+  ) {
     super();
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       friction: 0.99,
       gravity: 0.04,
       bounciness: 1,
@@ -70,7 +75,7 @@ export class Acid extends Container implements Spawnable {
     const [x, y] = this.body.precisePosition;
     this._die(x, y);
 
-    Level.instance.bloodEmitter.burst(this, 30);
+    getLevel().bloodEmitter.burst(this, 30);
     for (let i = 0; i < Acid.splitAmount; i++) {
       const direction = Math.atan2(vy, vx) + Math.PI;
       const entity = new AcidDrop(
@@ -79,28 +84,29 @@ export class Acid extends Container implements Spawnable {
         0.6 + Math.random() * 0.4,
         direction -
           Acid.splitRange / 2 +
-          (i / (Acid.splitAmount - 1)) * Acid.splitRange
+          (i / (Acid.splitAmount - 1)) * Acid.splitRange,
+        this.collisionMask
       );
-      Server.instance.create(entity);
+      getServer()!.create(entity);
     }
   };
 
   private _die(x: number, y: number) {
-    Server.instance?.damage(
+    getServer()?.damage(
       new FallDamage(
         x,
         y,
         Shape.Acid,
-        24 + Manager.instance.getElementValue(Element.Life) * 3
+        24 + getManager().getElementValue(Element.Life) * 3
       ),
-      Server.instance.getActivePlayer()
+      getServer()!.getActivePlayer()
     );
-    Server.instance.kill(this);
+    getServer()!.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getManager().setTurnState(TurnState.Ending);
     new AcidSplash(...this.getCenter());
     ControllableSound.fromEntity(this, Sound.Slime);
   }
@@ -115,7 +121,7 @@ export class Acid extends Container implements Spawnable {
     this.position.set(x * 6, y * 6);
 
     this.lifetime -= dt;
-    if (this.lifetime <= 0 && Server.instance) {
+    if (this.lifetime <= 0 && getServer()) {
       this._die(x, y);
     }
   }
@@ -129,7 +135,7 @@ export class Acid extends Container implements Spawnable {
   }
 
   static create(data: ReturnType<Acid["serializeCreate"]>) {
-    return new Acid(...data);
+    return new Acid(...data, getLevel().terrain.characterMask);
   }
 
   static cast(
@@ -139,13 +145,13 @@ export class Acid extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
-    const entity = new Acid(x, y, power / 1.5, direction);
+    const entity = new Acid(x, y, power / 1.5, direction, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

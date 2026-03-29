@@ -2,12 +2,11 @@ import { AnimatedSprite, Container } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Character } from "./character";
 import { map } from "../../util/math";
-import { Level } from "../map/level";
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Manager } from "../network/manager";
 import { Element } from "../spells/types";
+import { getLevel, getManager } from "../context";
 
 export class Wings extends Container {
   private static fullPower = 100;
@@ -29,7 +28,7 @@ export class Wings extends Container {
     this.character.body.gravity = 0.1;
     this._power =
       Wings.fullPower *
-      (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3);
+      (0.7 + getManager().getElementValue(Element.Physical) * 0.3);
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -66,7 +65,7 @@ export class Wings extends Container {
               },
       }
     );
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
     ControllableSound.fromEntity(this.character, Sound.Wing);
   }
 
@@ -94,7 +93,7 @@ export class Wings extends Container {
 
   stop() {
     this.character.body.gravity = 0.2;
-    Level.instance.particleContainer.destroyEmitter(this.particles);
+    getLevel().particleContainer.destroyEmitter(this.particles);
   }
 
   get power() {

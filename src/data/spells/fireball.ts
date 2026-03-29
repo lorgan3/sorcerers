@@ -1,5 +1,4 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
@@ -9,13 +8,13 @@ import { Character } from "../entity/character";
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { Explosion } from "../../graphics/explosion";
 import { ParticleEmitter } from "../../graphics/particles/types";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Priority, Syncable } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class Fireball extends Container implements Syncable {
   public readonly body: SimpleBody;
@@ -28,12 +27,12 @@ export class Fireball extends Container implements Syncable {
   public readonly type = EntityType.Fireball;
   public readonly priority = Priority.Dynamic;
 
-  constructor(x: number, y: number, speed: number, direction: number) {
+  constructor(x: number, y: number, speed: number, direction: number, collisionMask: CollisionMask) {
     super();
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       bounciness: -0.9,
       friction: 0.96,
       gravity: 0.25,
@@ -67,13 +66,13 @@ export class Fireball extends Container implements Syncable {
     // sprite2.scale.set(6);
 
     this.addChild(this.sprite);
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
   }
 
   private onCollide = (x: number, y: number) => {
     this.bounces--;
 
-    const playerCollision = !Level.instance.terrain.collisionMask.collidesWith(
+    const playerCollision = !getLevel().terrain.collisionMask.collidesWith(
       this.body.mask,
       x,
       y
@@ -82,39 +81,39 @@ export class Fireball extends Container implements Syncable {
     if (this.bounces === 0 || playerCollision) {
       this._die(x, y);
     } else {
-      Server.instance.damage(
+      getServer()!.damage(
         new ExplosiveDamage(
           x,
           y,
           4,
           1,
-          1 + Manager.instance.getElementValue(Element.Arcane)
+          1 + getManager().getElementValue(Element.Arcane)
         ),
-        Server.instance.getActivePlayer()
+        getServer()!.getActivePlayer()
       );
-      Server.instance.dynamicUpdate(this);
+      getServer()!.dynamicUpdate(this);
     }
   };
 
   private _die(x: number, y: number) {
-    Server.instance.damage(
+    getServer()!.damage(
       new ExplosiveDamage(
         x,
         y,
         16,
         3,
-        2 + Manager.instance.getElementValue(Element.Arcane)
+        2 + getManager().getElementValue(Element.Arcane)
       ),
-      Server.instance.getActivePlayer()
+      getServer()!.getActivePlayer()
     );
-    Server.instance.kill(this);
+    getServer()!.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
-    Level.instance.particleContainer.destroyEmitter(this.particles);
+    getLevel().remove(this);
+    getLevel().particleContainer.destroyEmitter(this.particles);
     new Explosion(this.position.x, this.position.y);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -127,7 +126,7 @@ export class Fireball extends Container implements Syncable {
     this.position.set(x * 6, y * 6);
 
     this.lifetime -= dt;
-    if (this.lifetime <= 0 && Server.instance) {
+    if (this.lifetime <= 0 && getServer()) {
       this._die(x, y);
     }
   }
@@ -149,7 +148,7 @@ export class Fireball extends Container implements Syncable {
   }
 
   static create(data: ReturnType<Fireball["serializeCreate"]>) {
-    return new Fireball(...data);
+    return new Fireball(...data, getLevel().terrain.characterMask);
   }
 
   static cast(
@@ -159,13 +158,13 @@ export class Fireball extends Container implements Syncable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
-    const entity = new Fireball(x, y, power * 1.2, direction);
+    const entity = new Fireball(x, y, power * 1.2, direction, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

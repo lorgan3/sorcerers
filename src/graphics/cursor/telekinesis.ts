@@ -3,8 +3,7 @@ import { Container, Sprite } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Character } from "../../data/entity/character";
 import { Key } from "../../data/controller/controller";
-import { Level } from "../../data/map/level";
-import { Manager } from "../../data/network/manager";
+import { getLevel, getManager } from "../../data/context";
 import { TurnState } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
 import { ControllableSound } from "../../sound/controllableSound";
@@ -85,15 +84,15 @@ export class Telekinesis extends Container {
       } else {
         const power =
           Math.sqrt(distance / 10) *
-          (0.5 + Manager.instance.getElementValue(Element.Physical) * 0.5);
+          (0.5 + getManager().getElementValue(Element.Physical) * 0.5);
 
         this.character.body.addAngularVelocity(
           power,
           this.rotation + Math.PI / 2
         );
-        Level.instance.remove(this);
+        getLevel().remove(this);
         this.source.setSpellSource(this, false);
-        Manager.instance.setTurnState(TurnState.Ending);
+        getManager().setTurnState(TurnState.Ending);
         ControllableSound.fromEntity(this.character, Sound.Arrow);
       }
     }
@@ -102,7 +101,7 @@ export class Telekinesis extends Container {
   static cast(x: number, y: number, character: Character, source: Character) {
     const entity = new Telekinesis(x, y, character, source);
 
-    Level.instance.add(entity);
+    getLevel().add(entity);
     return entity;
   }
 }

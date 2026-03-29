@@ -1,11 +1,9 @@
-import { Level } from "../map/level";
 import { Character } from "../entity/character";
 import { EntityType, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
 import { Bomb } from "./bomb";
 import { Container } from "pixi.js";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
+import { getLevel, getManager, getServer } from "../context";
 import { map } from "../../util/math";
 
 export class Hairpin extends Container implements Spawnable {
@@ -33,7 +31,7 @@ export class Hairpin extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -57,18 +55,18 @@ export class Hairpin extends Container implements Spawnable {
         this.character
       );
 
-      Server.instance.create(bomb);
+      getServer()!.create(bomb);
 
       if (this.bombsRemaining === 0) {
-        Server.instance.kill(this);
+        getServer()!.kill(this);
       }
     }
   }
 
   die() {
     this.character.setSpellSource(this, false);
-    Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -91,7 +89,7 @@ export class Hairpin extends Container implements Spawnable {
       data[1],
       data[2],
       data[3],
-      Level.instance.entityMap.get(data[4]) as Character
+      getLevel().entityMap.get(data[4]) as Character
     );
   }
 
@@ -102,13 +100,13 @@ export class Hairpin extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const entity = new Hairpin(x, y, direction, 1 + power, character);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

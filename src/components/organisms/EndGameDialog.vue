@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Manager } from "../../data/network/manager";
+import { getManager } from "../../data/context";
 import Dialog from "../molecules/Dialog.vue";
 import { AccumulatedStat, StatType } from "../../data/network/accumulatedStat";
 import { computed, onMounted } from "vue";
@@ -32,7 +32,7 @@ const playerStats = computed(() => {
 const rankArray = Object.values(Rank);
 
 const handleQuit = () => {
-  Manager.instance.destroy();
+  getManager().destroy();
 };
 
 onMounted(() => {

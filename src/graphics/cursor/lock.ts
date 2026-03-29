@@ -4,12 +4,10 @@ import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
-import { Level } from "../../data/map/level";
+import { getLevel, getManager, getServer } from "../../data/context";
 import { HurtableEntity } from "../../data/entity/types";
 import { Cursor, ProjectileConstructor } from "./types";
-import { Manager } from "../../data/network/manager";
 import { TurnState } from "../../data/network/types";
-import { Server } from "../../data/network/server";
 
 export enum Target {
   Any,
@@ -59,11 +57,11 @@ export class Lock
     this.indicator.tint = this.character.player.color;
 
     this.addChild(this.indicator);
-    Level.instance.uiContainer.addChild(this);
+    getLevel().uiContainer.addChild(this);
   }
 
   remove(): void {
-    Level.instance.uiContainer.removeChild(this);
+    getLevel().uiContainer.removeChild(this);
     this.character.setSpellSource(this, false);
   }
 
@@ -99,24 +97,24 @@ export class Lock
 
   trigger({ projectile, turnState }: TriggerData, { id }: TriggerState) {
     const entity = id
-      ? (Level.instance.entityMap.get(id) as HurtableEntity)
+      ? (getLevel().entityMap.get(id) as HurtableEntity)
       : null;
 
     const position = this.getPosition();
     projectile.cast(...position, entity, this.character);
 
-    Manager.instance.setTurnState(turnState);
+    getManager().setTurnState(turnState);
   }
 
   tick(dt: number, controller: Controller) {
     this.position.set(...controller.getLocalMouse());
-    this.scale.set(2 / Level.instance.viewport.scale.x);
+    this.scale.set(2 / getLevel().viewport.scale.x);
 
     if (this.spell.data.spellSource) {
       this.character.setSpellSource(this);
     }
 
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -133,13 +131,13 @@ export class Lock
 
       case Target.Solid:
         this.animate(
-          Level.instance.terrain.characterMask.collidesWithPoint(...position)
+          getLevel().terrain.characterMask.collidesWithPoint(...position)
         );
         break;
 
       case Target.Free:
         this.animate(
-          !Level.instance.terrain.characterMask.collidesWith(
+          !getLevel().terrain.characterMask.collidesWith(
             this.character.body.mask,
             ...position
           )
@@ -148,7 +146,7 @@ export class Lock
 
       case Target.Entity:
         this.entity = null;
-        Level.instance.withNearbyEntities(
+        getLevel().withNearbyEntities(
           position[0] * 6,
           position[1] * 6,
           20,
@@ -163,7 +161,7 @@ export class Lock
 
       case Target.Character:
         this.entity = null;
-        Level.instance.withNearbyEntities(
+        getLevel().withNearbyEntities(
           position[0] * 6,
           position[1] * 6,
           16,
@@ -180,7 +178,7 @@ export class Lock
 
       case Target.Ally:
         this.entity = null;
-        Level.instance.withNearbyEntities(
+        getLevel().withNearbyEntities(
           position[0] * 6,
           position[1] * 6,
           16,
@@ -203,7 +201,7 @@ export class Lock
     if (controller.isKeyDown(Key.M1) && this.locked) {
       const triggerState: TriggerState = { id: this.entity?.id };
 
-      Server.instance.cast(triggerState);
+      getServer()!.cast(triggerState);
     }
   }
 

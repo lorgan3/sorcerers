@@ -1,6 +1,6 @@
 import { Container, Sprite } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { CollisionMask } from "../collision/collisionMask";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
@@ -8,10 +8,9 @@ import { TickingEntity } from "../entity/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getRandom } from "../../util/array";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { Character } from "../entity/character";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 
 export class Pebble extends Container implements TickingEntity {
   private static riseTime = 40;
@@ -31,11 +30,12 @@ export class Pebble extends Container implements TickingEntity {
     rx: number,
     private ry: number,
     private groundLevel: number,
-    private character: Character
+    private character: Character,
+    collisionMask: CollisionMask
   ) {
     super();
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
       onCollide: this.onCollide,
       bounciness: 1,
@@ -70,16 +70,16 @@ export class Pebble extends Container implements TickingEntity {
       y,
       4,
       1,
-      1.5 + Manager.instance.getElementValue(Element.Arcane) * 0.7
+      1.5 + getManager().getElementValue(Element.Arcane) * 0.7
     );
 
     if (damage.getTargets().getEntities().includes(this.character)) {
       return;
     }
 
-    Server.instance?.damage(damage, this.character.player);
+    getServer()?.damage(damage, this.character.player);
     if (damage.getTargets().hasEntities()) {
-      Level.instance.remove(this);
+      getLevel().remove(this);
     } else {
       this.collided = true;
     }
@@ -119,7 +119,7 @@ export class Pebble extends Container implements TickingEntity {
       if (this.collided) {
         this.time2 += dt;
         if (this.time2 > Pebble.collisionTime) {
-          Level.instance.remove(this);
+          getLevel().remove(this);
         }
       }
     }

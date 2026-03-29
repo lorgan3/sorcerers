@@ -1,15 +1,13 @@
 import { Container } from "pixi.js";
-import { Level } from "../map/level";
 import { Character } from "../entity/character";
 import { EntityType, Spawnable } from "../entity/types";
 import { circle3x3 } from "../collision/precomputed/circles";
-import { Server } from "../network/server";
 import { Pebble } from "./pebble";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 
 export class Doragate extends Container implements Spawnable {
   private static pebbleAmount = 4;
@@ -37,9 +35,10 @@ export class Doragate extends Container implements Spawnable {
     this.sound = ControllableSound.fromEntity(character, Sound.Rumble);
 
     this.pebbles = this.positions.map(
-      ([x, y]) => new Pebble(x, y, groundLevel, character)
+      ([x, y]) =>
+        new Pebble(x, y, groundLevel, character, getLevel().terrain.characterMask)
     );
-    Level.instance.add(...this.pebbles);
+    getLevel().add(...this.pebbles);
   }
 
   getCenter(): [number, number] {
@@ -64,16 +63,16 @@ export class Doragate extends Container implements Spawnable {
       this.launchCounter++;
     }
 
-    if (Server.instance && this.time > Doragate.lifetime) {
-      Level.instance.remove(...this.pebbles);
-      Server.instance.kill(this);
+    if (getServer() && this.time > Doragate.lifetime) {
+      getLevel().remove(...this.pebbles);
+      getServer()!.kill(this);
     }
   }
 
   die() {
     this.character.setSpellSource(this, false);
-    Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   serializeCreate() {
@@ -90,12 +89,12 @@ export class Doragate extends Container implements Spawnable {
       data[0],
       data[1],
       data[2],
-      Level.instance.entityMap.get(data[3]) as Character
+      getLevel().entityMap.get(data[3]) as Character
     );
   }
 
   static cast(_x: number, _y: number, character: Character, direction: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -105,13 +104,13 @@ export class Doragate extends Container implements Spawnable {
       let i = 0;
       i <
       Doragate.pebbleAmount +
-        Manager.instance.getElementValue(Element.Physical);
+        getManager().getElementValue(Element.Physical);
       i++
     ) {
       const x = Math.floor(cx / 6 - 12 + Math.random() * 25);
       const y = Math.floor(cy / 6 + 6 - Math.random() * 20);
 
-      if (!Level.instance.terrain.collisionMask.collidesWith(circle3x3, x, y)) {
+      if (!getLevel().terrain.collisionMask.collidesWith(circle3x3, x, y)) {
         positions.push([x, y]);
       }
     }
@@ -119,7 +118,7 @@ export class Doragate extends Container implements Spawnable {
     const [_, ry] = character.body.position;
     const entity = new Doragate(direction, positions, ry + 20, character);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

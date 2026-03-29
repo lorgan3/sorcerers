@@ -1,5 +1,4 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
@@ -8,10 +7,11 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { Explosion } from "../../graphics/explosion";
 import { EntityType, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
+import { getLevel, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { angleDiff, getAngle, getSquareDistance } from "../../util/math";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class CatastraviaMissile extends Container implements Spawnable {
   private static growTime = 45;
@@ -35,14 +35,15 @@ export class CatastraviaMissile extends Container implements Spawnable {
     y: number,
     private direction: number,
     private targetX: number,
-    private targetY: number
+    private targetY: number,
+    collisionMask: CollisionMask
   ) {
     super();
     this.distance = getSquareDistance(x, y, targetX, targetY);
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       friction: 1,
       gravity: 0,
     });
@@ -79,7 +80,7 @@ export class CatastraviaMissile extends Container implements Spawnable {
         }),
       }
     );
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -87,18 +88,18 @@ export class CatastraviaMissile extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    Server.instance.damage(
+    getServer()!.damage(
       new ExplosiveDamage(x, y, 12, 2, 2),
-      Server.instance.getActivePlayer()
+      getServer()!.getActivePlayer()
     );
-    Server.instance.kill(this);
+    getServer()!.kill(this);
   }
 
   die() {
     this.dead = true;
-    Level.instance.remove(this);
+    getLevel().remove(this);
     new Explosion(this.position.x, this.position.y);
-    Level.instance.particleContainer.destroyEmitter(this.particles);
+    getLevel().particleContainer.destroyEmitter(this.particles);
   }
 
   getCenter(): [number, number] {
@@ -111,7 +112,7 @@ export class CatastraviaMissile extends Container implements Spawnable {
     const [x, y] = this.body.precisePosition;
     this.position.set(x * 6, y * 6);
 
-    if (Server.instance) {
+    if (getServer()) {
       const newDistance = getSquareDistance(x, y, this.targetX, this.targetY);
 
       if (
@@ -157,6 +158,6 @@ export class CatastraviaMissile extends Container implements Spawnable {
   }
 
   static create(data: ReturnType<CatastraviaMissile["serializeCreate"]>) {
-    return new CatastraviaMissile(...data);
+    return new CatastraviaMissile(...data, getLevel().terrain.characterMask);
   }
 }

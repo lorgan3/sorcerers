@@ -1,13 +1,11 @@
 import { Container } from "pixi.js";
-import { Level } from "../map/level";
-
 import { Character } from "../entity/character";
 
 import { EntityType, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
 import { TurnState } from "../network/types";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
+import { CollisionMask } from "../collision/collisionMask";
 import { SmallSword } from "./smallSword";
 import { probeX } from "../map/utils";
 import { ControllableSound } from "../../sound/controllableSound";
@@ -28,17 +26,17 @@ export class GateOfBabylon extends Container implements Spawnable {
   private swordCount: number;
   private sound?: ControllableSound;
 
-  constructor(private _x: number, private character: Character) {
+  constructor(private _x: number, private character: Character, collisionMask: CollisionMask) {
     super();
     character.setSpellSource(this);
 
     this.swordCount =
       GateOfBabylon.swordCount +
       Math.round(
-        Manager.instance.getElementValue(Element.Physical) * 2.67 - 2.5
+        getManager().getElementValue(Element.Physical) * 2.67 - 2.5
       );
 
-    const y = probeX(Level.instance.terrain.characterMask, _x) - 30;
+    const y = probeX(collisionMask, _x) - 30;
     this.position.set(_x * 6, y * 6);
     this.sound = ControllableSound.fromEntity(this, Sound.DarkMagic, {
       loop: true,
@@ -50,7 +48,7 @@ export class GateOfBabylon extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -59,8 +57,8 @@ export class GateOfBabylon extends Container implements Spawnable {
     if (this.swords.length === this.swordCount) {
       this.sound?.fade(dt, 25);
       if (this.swords.every((sword) => sword.dead)) {
-        Server.instance.kill(this);
-        Server.instance.setTurnState(TurnState.Ending);
+        getServer()!.kill(this);
+        getServer()!.setTurnState(TurnState.Ending);
       }
 
       return;
@@ -75,18 +73,18 @@ export class GateOfBabylon extends Container implements Spawnable {
           GateOfBabylon.spawnRange / 2
       );
 
-      const y = probeX(Level.instance.terrain.collisionMask, x);
+      const y = probeX(getLevel().terrain.collisionMask, x);
 
-      const sword = new SmallSword(x, y - 50 - Math.random() * 50);
-      Server.instance.create(sword);
+      const sword = new SmallSword(x, y - 50 - Math.random() * 50, getLevel().terrain.characterMask);
+      getServer()!.create(sword);
       this.swords.push(sword);
     }
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
     this.character.setSpellSource(this, false);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
     this.sound?.destroy();
   }
 
@@ -97,19 +95,20 @@ export class GateOfBabylon extends Container implements Spawnable {
   static create(data: ReturnType<GateOfBabylon["serializeCreate"]>) {
     return new GateOfBabylon(
       data[0],
-      Level.instance.entityMap.get(data[1]) as Character
+      getLevel().entityMap.get(data[1]) as Character,
+      getLevel().terrain.characterMask
     );
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
-    const entity = new GateOfBabylon(x, character);
+    const entity = new GateOfBabylon(x, character, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
-    Server.instance.focus(entity);
+    getServer()!.create(entity);
+    getServer()!.focus(entity);
     return entity;
   }
 }

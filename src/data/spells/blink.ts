@@ -2,16 +2,14 @@ import { Container } from "pixi.js";
 import { TickingEntity } from "../entity/types";
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Level } from "../map/level";
 import { Character } from "../entity/character";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { Implosion } from "../../graphics/implosion";
 import { TurnState } from "../network/types";
 import { Smoke } from "../../graphics/smoke";
 import { map } from "../../util/math";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 
@@ -52,7 +50,7 @@ export class Blink extends Container implements TickingEntity {
         }),
       }
     );
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
   }
 
   tick(dt: number): void {
@@ -74,13 +72,13 @@ export class Blink extends Container implements TickingEntity {
         cy / 6 + Math.sin(this.direction) * Blink.blinkDistance
       );
 
-      Server.instance?.damage(
+      getServer()?.damage(
         new ExplosiveDamage(
           x + 3,
           y + 4,
           12,
           3,
-          3 + 2.5 * Manager.instance.getElementValue(Element.Physical)
+          3 + 2.5 * getManager().getElementValue(Element.Physical)
         ),
         this.character.player
       );
@@ -89,10 +87,10 @@ export class Blink extends Container implements TickingEntity {
       this.character.position.set(x * 6, y * 6);
       this.character.visible = true;
 
-      Level.instance.remove(this);
-      Level.instance.particleContainer.destroyEmitter(this.particles);
+      getLevel().remove(this);
+      getLevel().particleContainer.destroyEmitter(this.particles);
       this.character.setSpellSource(this, false);
-      Manager.instance.setTurnState(TurnState.Ending);
+      getManager().setTurnState(TurnState.Ending);
     }
   }
 }

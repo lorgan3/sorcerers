@@ -1,5 +1,4 @@
 import { Container } from "pixi.js";
-import { Level } from "../map/level";
 import { Body } from "../collision/body";
 import {
   EntityType,
@@ -13,10 +12,10 @@ import {
 import { circle9x9 } from "../collision/precomputed/circles";
 import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
-import { Server } from "../network/server";
 import { Character } from "./character";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { getLevel, getServer } from "../context";
 
 export abstract class BaseItem extends Container implements Syncable, Item {
   protected static floatSpeed = 0.3;
@@ -37,7 +36,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
   constructor(x: number, y: number, protected _appeared = false) {
     super();
 
-    this.body = new Body(Level.instance.terrain.characterMask, {
+    this.body = new Body(getLevel().terrain.characterMask, {
       mask: circle9x9,
       gravity: 0.1,
       airXFriction: 0.99,
@@ -87,8 +86,8 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       if (activeTime > BaseItem.floatDuration) {
         this.visible = false;
 
-        if (Server.instance && Server.instance.isEnding()) {
-          Server.instance.kill(this);
+        if (getServer() && getServer()!.isEnding()) {
+          getServer()!.kill(this);
         }
 
         return;
@@ -112,8 +111,8 @@ export abstract class BaseItem extends Container implements Syncable, Item {
         this.position.set(x * 6, y * 6);
       }
 
-      if (Server.instance) {
-        Level.instance.withNearbyEntities(
+      if (getServer()) {
+        getLevel().withNearbyEntities(
           ...this.getCenter(),
           48,
           (entity: HurtableEntity) => {
@@ -121,26 +120,26 @@ export abstract class BaseItem extends Container implements Syncable, Item {
               return;
             }
 
-            Server.instance.activate(this, entity);
+            getServer()!.activate(this, entity);
             return true;
           }
         );
 
         if (
-          Level.instance.terrain.killbox.collidesWith(
+          getLevel().terrain.killbox.collidesWith(
             this.body.mask,
             this.position.x,
             this.position.y
           )
         ) {
-          Server.instance.kill(this);
+          getServer()!.kill(this);
         }
       }
     }
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
   }
 
   activate(character?: Character) {

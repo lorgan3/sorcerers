@@ -1,6 +1,6 @@
 import { Sprite } from "pixi.js";
 import { AssetsContainer } from "../util/assets/assetsContainer";
-import { Level } from "../data/map/level";
+import { getLevel } from "../data/context";
 import { Spawnable, TickingEntity } from "../data/entity/types";
 
 export class ActivePointer extends Sprite implements TickingEntity {
@@ -21,7 +21,7 @@ export class ActivePointer extends Sprite implements TickingEntity {
     this.anchor.set(0.5);
     this.scale.set(3);
 
-    Level.instance.add(this);
+    getLevel().add(this);
   }
 
   tick(dt: number): void {
@@ -34,7 +34,7 @@ export class ActivePointer extends Sprite implements TickingEntity {
       oy -= (this.time - ActivePointer.lifeTime) * 2;
 
       if (this.alpha <= 0.01) {
-        Level.instance.remove(this);
+        getLevel().remove(this);
         return;
       }
     } else {

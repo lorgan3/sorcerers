@@ -1,5 +1,4 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
@@ -7,13 +6,13 @@ import { Character } from "../entity/character";
 
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { ParticleEmitter } from "../../graphics/particles/types";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { CollisionMask } from "../collision/collisionMask";
 import { map } from "../../util/math";
 import { IceImpact } from "../../graphics/iceImpact";
 import { ImpactDamage } from "../damage/impactDamage";
@@ -27,12 +26,12 @@ export class Nephtear extends Container implements Spawnable {
   public id = -1;
   public readonly type = EntityType.Nephtear;
 
-  constructor(x: number, y: number, speed: number, direction: number) {
+  constructor(x: number, y: number, speed: number, direction: number, collisionMask: CollisionMask) {
     super();
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       friction: 1,
       gravity: 0.01,
     });
@@ -73,7 +72,7 @@ export class Nephtear extends Container implements Spawnable {
     // sprite2.scale.set(6);
 
     this.addChild(this.sprite);
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -81,23 +80,23 @@ export class Nephtear extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    Server.instance.damage(
+    getServer()!.damage(
       new ImpactDamage(
         x,
         y,
         this.sprite.rotation,
-        30 * (0.7 + Manager.instance.getElementValue(Element.Elemental) * 0.3)
+        30 * (0.7 + getManager().getElementValue(Element.Elemental) * 0.3)
       ),
-      Server.instance.getActivePlayer()
+      getServer()!.getActivePlayer()
     );
-    Server.instance.kill(this);
+    getServer()!.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
-    Level.instance.particleContainer.destroyEmitter(this.particles);
+    getLevel().remove(this);
+    getLevel().particleContainer.destroyEmitter(this.particles);
     new IceImpact(this.position.x, this.position.y, this.sprite.rotation);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -111,7 +110,7 @@ export class Nephtear extends Container implements Spawnable {
     this.sprite.rotation = this.body.direction;
 
     this.lifetime -= dt;
-    if (this.lifetime <= 0 && Server.instance) {
+    if (this.lifetime <= 0 && getServer()) {
       this._die(x, y);
     }
   }
@@ -133,7 +132,7 @@ export class Nephtear extends Container implements Spawnable {
   }
 
   static create(data: ReturnType<Nephtear["serializeCreate"]>) {
-    return new Nephtear(...data);
+    return new Nephtear(...data, getLevel().terrain.characterMask);
   }
 
   static cast(
@@ -143,13 +142,13 @@ export class Nephtear extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
-    const entity = new Nephtear(x, y, 2 + power / 3, direction);
+    const entity = new Nephtear(x, y, 2 + power / 3, direction, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

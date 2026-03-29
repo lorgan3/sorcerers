@@ -1,5 +1,4 @@
 import { Sprite } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Element } from "../spells/types";
 import { ELEMENT_ATLAS_MAP } from "../../graphics/elements";
@@ -9,6 +8,7 @@ import { EntityType } from "./types";
 import { Character } from "./character";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { getLevel } from "../context";
 
 export class MagicScroll extends BaseItem {
   static aoeRange = 64 * 6;
@@ -74,6 +74,6 @@ export class MagicScroll extends BaseItem {
       MagicScroll.aoeRange,
       this.element
     );
-    Level.instance.add(this.aoe);
+    getLevel().add(this.aoe);
   }
 }

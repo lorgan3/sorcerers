@@ -1,6 +1,6 @@
 import { Container, TilingSprite } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { CollisionMask } from "../collision/collisionMask";
 import { SimpleBody } from "../collision/simpleBody";
 
 import { FallDamage, Shape } from "../damage/fallDamage";
@@ -12,7 +12,7 @@ import { getRandom } from "../../util/array";
 import { rectangle1x6 } from "../collision/precomputed/rectangles";
 import { map } from "../../util/math";
 import { SpawnPoint } from "../../graphics/spawnPoint";
-import { Server } from "../network/server";
+import { getLevel, getServer } from "../context";
 
 export class SmallSword extends Container implements Spawnable {
   private static shakeIntensity = 3;
@@ -37,13 +37,13 @@ export class SmallSword extends Container implements Spawnable {
   private shakeYOffset = 0;
   private fallingSound?: ControllableSound;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, collisionMask: CollisionMask) {
     super();
 
     this.spawnPoint = new SpawnPoint(x * 6 + 3, y * 6 - 18);
-    Level.instance.add(this.spawnPoint);
+    getLevel().add(this.spawnPoint);
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: rectangle1x6,
       onCollide: this.onCollide,
       bounciness: 0.7,
@@ -84,7 +84,7 @@ export class SmallSword extends Container implements Spawnable {
       Math.random() * SmallSword.shakeIntensity - SmallSword.shakeIntensity / 2;
 
     const damage = new FallDamage(x - 1, y - 2, Shape.SmallSword, 8);
-    Server.instance?.damage(damage, Server.instance.getActivePlayer());
+    getServer()?.damage(damage, getServer()!.getActivePlayer());
     ControllableSound.fromEntity(
       [this.position.x, this.position.y],
       Sound.Step
@@ -141,7 +141,7 @@ export class SmallSword extends Container implements Spawnable {
 
   die() {
     this.dead = true;
-    Level.instance.remove(this, this.spawnPoint);
+    getLevel().remove(this, this.spawnPoint);
   }
 
   serializeCreate() {
@@ -149,6 +149,6 @@ export class SmallSword extends Container implements Spawnable {
   }
 
   static create(data: ReturnType<SmallSword["serializeCreate"]>) {
-    return new SmallSword(...data);
+    return new SmallSword(...data, getLevel().terrain.characterMask);
   }
 }

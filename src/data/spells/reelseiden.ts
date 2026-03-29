@@ -1,8 +1,6 @@
 import { AnimatedSprite, Container } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Level } from "../map/level";
 import { Character } from "../entity/character";
-import { Server } from "../network/server";
 import { EntityType, Spawnable } from "../entity/types";
 import { angles, getIndexFromAngle } from "../collision/util";
 import { getAngle } from "../../util/math";
@@ -18,8 +16,8 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { GenericDamage } from "../damage/genericDamage";
 import { TargetList } from "../damage/targetList";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 
 const TOOLS = [
   {
@@ -60,12 +58,12 @@ export class Reelseiden extends Container implements Spawnable {
     this.sprite.scale.set(3);
     this.sprite.animationSpeed = 0.2;
     this.sprite.play();
-    this.sprite.onComplete = () => Level.instance.remove(this);
+    this.sprite.onComplete = () => getLevel().remove(this);
 
     this.addChild(this.sprite);
 
     for (let tool of TOOLS) {
-      Level.instance.terrain.subtract(
+      getLevel().terrain.subtract(
         x + tool.offset,
         y + tool.offset,
         tool.mask[angleIndex],
@@ -81,7 +79,7 @@ export class Reelseiden extends Container implements Spawnable {
 
     const targetList = new TargetList();
 
-    Level.instance.withNearbyEntities(
+    getLevel().withNearbyEntities(
       x * 6 + 72,
       y * 6 + 72,
       28 * 6,
@@ -98,7 +96,7 @@ export class Reelseiden extends Container implements Spawnable {
             targetList.add(
               entity,
               20 *
-                (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3)
+                (0.7 + getManager().getElementValue(Element.Physical) * 0.3)
             );
             return;
           }
@@ -107,15 +105,15 @@ export class Reelseiden extends Container implements Spawnable {
     );
 
     if (targetList.hasEntities()) {
-      Server.instance?.damage(
+      getServer()?.damage(
         new GenericDamage(targetList),
-        Server.instance.getActivePlayer()
+        getServer()!.getActivePlayer()
       );
     }
 
     ControllableSound.fromEntity(this, Sound.Slice);
 
-    Level.instance.add(this);
+    getLevel().add(this);
   }
 
   getCenter(): [number, number] {
@@ -139,14 +137,14 @@ export class Reelseiden extends Container implements Spawnable {
     character: Character,
     angle: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const angleIndex = getIndexFromAngle(angle);
     const entity = new Reelseiden(x - 12, y - 12, angleIndex);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

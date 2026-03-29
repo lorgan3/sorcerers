@@ -5,7 +5,6 @@ import { Character } from "../entity/character";
 import { CollisionMask } from "../collision/collisionMask";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
 import { getIndexFromAngle } from "../collision/util";
-import { Level } from "../map/level";
 import {
   EntityType,
   HurtableEntity,
@@ -13,12 +12,11 @@ import {
   Syncable,
 } from "../entity/types";
 import { StaticBody } from "../collision/staticBody";
-import { Server } from "../network/server";
 import { DamageSource } from "../damage/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 
 export class Shield extends Container implements HurtableEntity, Syncable {
   private static spawnSpeed = 0.15;
@@ -44,7 +42,7 @@ export class Shield extends Container implements HurtableEntity, Syncable {
       this._hp = hp;
     } else {
       this._hp =
-        Shield.baseHp + Manager.instance.getElementValue(Element.Physical) * 6;
+        Shield.baseHp + getManager().getElementValue(Element.Physical) * 6;
     }
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
@@ -74,7 +72,7 @@ export class Shield extends Container implements HurtableEntity, Syncable {
     };
 
     const index = getIndexFromAngle(this.sprite.rotation);
-    this.body = new StaticBody(Level.instance.terrain.characterMask, {
+    this.body = new StaticBody(getLevel().terrain.characterMask, {
       mask: rotatedRectangle6x24[index],
     });
     this.body.move(x, y);
@@ -103,7 +101,7 @@ export class Shield extends Container implements HurtableEntity, Syncable {
 
   die() {
     this.subtract();
-    Level.instance.remove(this);
+    getLevel().remove(this);
     ControllableSound.fromEntity(this, Sound.Glass);
   }
 
@@ -129,13 +127,13 @@ export class Shield extends Container implements HurtableEntity, Syncable {
       this.add();
     }
 
-    Level.instance.bloodEmitter.burst(this, damage, source);
+    getLevel().bloodEmitter.burst(this, damage, source);
   }
 
   tick() {
-    if (this.body.moved && Server.instance) {
+    if (this.body.moved && getServer()) {
       this.move();
-      Server.instance.dynamicUpdate(this);
+      getServer()!.dynamicUpdate(this);
     }
   }
 
@@ -153,7 +151,7 @@ export class Shield extends Container implements HurtableEntity, Syncable {
       return;
     }
 
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.shieldArea,
       this.maskX,
       this.maskY
@@ -162,13 +160,13 @@ export class Shield extends Container implements HurtableEntity, Syncable {
 
   private add() {
     [this.maskX, this.maskY] = this.body.position;
-    this.shieldArea = Level.instance.terrain.collisionMask.difference(
+    this.shieldArea = getLevel().terrain.collisionMask.difference(
       this.body.mask,
       this.maskX,
       this.maskY
     );
 
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       this.maskX,
       this.maskY
@@ -193,13 +191,13 @@ export class Shield extends Container implements HurtableEntity, Syncable {
   }
 
   static cast(x: number, y: number, character: Character, angle: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const entity = new Shield(x, y, angle - Math.PI / 2);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

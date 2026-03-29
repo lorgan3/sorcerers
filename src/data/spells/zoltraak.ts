@@ -1,5 +1,4 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
 import { Character } from "../entity/character";
@@ -18,12 +17,11 @@ import { circle3x3 } from "../collision/precomputed/circles";
 import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { TargetList } from "../damage/targetList";
 import { GenericDamage } from "../damage/genericDamage";
-import { Server } from "../network/server";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Shield } from "./shield";
+import { getLevel, getManager, getServer } from "../context";
 
 const DAMAGE = 35;
 const MAX_DISTANCE = 912;
@@ -68,7 +66,7 @@ export class Zoltraak extends Container implements Spawnable {
     let y2 = y - 24 * Math.sin(angle) - 10;
 
     for (let i = 0; i < maxI; i++) {
-      Level.instance.terrain.subtract(
+      getLevel().terrain.subtract(
         x2,
         y2,
         TOOLS[Math.floor(i / 2)].mask[angleIndex],
@@ -85,7 +83,7 @@ export class Zoltraak extends Container implements Spawnable {
       y2 -= 23 * Math.sin(angle);
     }
 
-    Level.instance.terrain.subtractCircle(
+    getLevel().terrain.subtractCircle(
       (x - 152 * Math.cos(angle) + 2) | 0,
       (y - 152 * Math.sin(angle) + 2) | 0,
       1.5,
@@ -115,7 +113,7 @@ export class Zoltraak extends Container implements Spawnable {
     this.time += dt;
 
     if (this.time > 20) {
-      Level.instance.remove(this);
+      getLevel().remove(this);
     }
   }
 
@@ -133,7 +131,7 @@ export class Zoltraak extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character, rotation: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -143,7 +141,7 @@ export class Zoltraak extends Container implements Spawnable {
 
     const entity = new Zoltraak(x, y, angleIndex, distance);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 
@@ -151,7 +149,7 @@ export class Zoltraak extends Container implements Spawnable {
   private static getDistance(x: number, y: number, angle: number) {
     const targets: Array<{ distance: number; entity: HurtableEntity }> = [];
 
-    Level.instance.withNearbyEntities(
+    getLevel().withNearbyEntities(
       x,
       y,
       MAX_DISTANCE,
@@ -168,14 +166,14 @@ export class Zoltraak extends Container implements Spawnable {
     targets.sort((a, b) => a.distance - b.distance);
     const targetList = new TargetList();
 
-    let damage = DAMAGE + Manager.instance.getElementValue(Element.Arcane) * 6;
+    let damage = DAMAGE + getManager().getElementValue(Element.Arcane) * 6;
     for (let target of targets) {
       targetList.add(target.entity, damage);
 
       if (target.entity instanceof Shield) {
-        Server.instance?.damage(
+        getServer()?.damage(
           new GenericDamage(targetList),
-          Server.instance.getActivePlayer()
+          getServer()!.getActivePlayer()
         );
 
         const [cx, cy] = target.entity.getCenter();
@@ -184,9 +182,9 @@ export class Zoltraak extends Container implements Spawnable {
     }
 
     if (targetList.hasEntities()) {
-      Server.instance?.damage(
+      getServer()?.damage(
         new GenericDamage(targetList),
-        Server.instance.getActivePlayer()
+        getServer()!.getActivePlayer()
       );
     }
 

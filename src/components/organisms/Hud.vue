@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { Manager } from "../../data/network/manager";
-import { Server } from "../../data/network/server";
+import { getManager, getServer } from "../../data/context";
 import { Player } from "../../data/network/player";
 import { Popup } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
@@ -29,7 +28,7 @@ const getElements = () =>
   Object.fromEntries(
     Object.values(Element).map((element) => [
       element,
-      Manager.instance.getElementValue(element),
+      getManager().getElementValue(element),
     ])
   ) as Record<Element, number>;
 
@@ -44,11 +43,11 @@ const maxHp = ref(1);
 const stats = ref<AccumulatedStat<unknown>[] | null>(null);
 
 const poll = () => {
-  if (!Manager.instance) {
+  if (!getManager()) {
     return;
   }
 
-  const data = Manager.instance.getHudData();
+  const data = getManager().getHudData();
   elements.value = getElements();
   turnTime.value = data.turnTime;
   gameTime.value = data.gameTime;
@@ -69,7 +68,7 @@ const poll = () => {
   }
 
   if (!popup.value) {
-    const popped = Manager.instance.popupPop();
+    const popped = getManager().popupPop();
     if (popped) {
       popup.value = { ...popped, out: false };
       window.setTimeout(() => {
@@ -84,7 +83,7 @@ const poll = () => {
 };
 
 const handleKick = (player: number) => {
-  Server.instance.kick(Server.instance.players[player]);
+  getServer()!.kick(getServer()!.players[player]);
 };
 
 let id = -1;
@@ -106,7 +105,7 @@ onBeforeUnmount(() => window.clearInterval(id));
           <span :class="{ name: true, active: activePlayer === player }"
             >{{ player.name }}
             <IconButton
-              v-if="Server.instance && i > 0 && !!player.connection"
+              v-if="getServer() && i > 0 && !!player.connection"
               title="Remove player"
               :onClick="() => handleKick(i)"
               :icon="close"
@@ -115,7 +114,7 @@ onBeforeUnmount(() => window.clearInterval(id));
             class="characters"
             :style="{
               '--max-hp': maxHp,
-              '--team-size': Manager.instance.teamSize,
+              '--team-size': getManager().teamSize,
             }"
           >
             <li

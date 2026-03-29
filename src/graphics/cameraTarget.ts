@@ -2,7 +2,7 @@ import { KeyboardController } from "../data/controller/keyboardController";
 import { Key } from "../data/controller/controller";
 import { Spawnable } from "../data/entity/types";
 import { getDistance } from "../util/math";
-import { Manager } from "../data/network/manager";
+import { getManager } from "../data/context";
 import { Viewport } from "../data/map/viewport";
 
 export class CameraTarget {
@@ -72,14 +72,14 @@ export class CameraTarget {
     }
 
     if (
-      Manager.instance.self?.activeCharacter &&
-      Manager.instance.isControlling() &&
-      Manager.instance.self?.activeCharacter?.body.velocity !== 0
+      getManager().self?.activeCharacter &&
+      getManager().isControlling() &&
+      getManager().self?.activeCharacter?.body.velocity !== 0
     ) {
       this.attached = true;
 
-      if (this.target !== Manager.instance.self?.activeCharacter) {
-        this.target = Manager.instance.self?.activeCharacter;
+      if (this.target !== getManager().self?.activeCharacter) {
+        this.target = getManager().self?.activeCharacter;
         this.lastTargetPosition = this.controller.getLocalMouse();
       }
     }

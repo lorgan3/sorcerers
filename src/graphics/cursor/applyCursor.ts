@@ -2,12 +2,10 @@ import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 import { Cursor } from "./types";
-import { Manager } from "../../data/network/manager";
+import { getLevel, getManager, getServer } from "../../data/context";
 import { TurnState } from "../../data/network/types";
-import { Server } from "../../data/network/server";
 import { Container, Sprite } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
-import { Level } from "../../data/map/level";
 
 interface TriggerData {
   applyKeys: Key[];
@@ -30,11 +28,11 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
     this.pointer.tint = this.character.player.color;
 
     this.addChild(this.pointer);
-    Level.instance.uiContainer.addChild(this);
+    getLevel().uiContainer.addChild(this);
   }
 
   remove() {
-    Level.instance.uiContainer.removeChild(this);
+    getLevel().uiContainer.removeChild(this);
   }
 
   trigger({ apply, turnState }: TriggerData) {
@@ -42,13 +40,13 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
     apply(this.character);
 
     if (turnState) {
-      Manager.instance.setTurnState(turnState);
+      getManager().setTurnState(turnState);
     }
   }
 
   tick(dt: number, controller: Controller) {
     this.pointer.position.set(...controller.getLocalMouse());
-    this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
+    this.pointer.scale.set(2 / getLevel().viewport.scale.x);
 
     if (
       !this.spell.data.applyKeys ||
@@ -58,10 +56,10 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
       return;
     }
 
-    if (Server.instance) {
+    if (getServer()) {
       for (let key of this.spell.data.applyKeys) {
         if (controller.isKeyDown(key)) {
-          Server.instance.cast();
+          getServer()!.cast();
         }
       }
     }

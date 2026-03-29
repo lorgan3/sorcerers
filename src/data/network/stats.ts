@@ -6,7 +6,7 @@ import { Potion } from "../entity/potion";
 import { Item } from "../entity/types";
 import { Spell } from "../spells";
 import { Element } from "../spells/types";
-import { Manager } from "./manager";
+import { getManager } from "../context";
 import { Player } from "./player";
 
 export class Stats {
@@ -39,7 +39,7 @@ export class Stats {
     for (let element of spell.elements) {
       this.elementUsage[element]++;
       this.elementEfficiency[element] +=
-        Manager.instance.getElementValue(element);
+        getManager().getElementValue(element);
     }
   }
 
@@ -63,7 +63,7 @@ export class Stats {
             otherCharacter.hp <= 0 || character === otherCharacter
         )
       ) {
-        this.timeOfDeath = Manager.instance.getTime();
+        this.timeOfDeath = getManager().getTime();
       }
 
       if (damageSource.cause) {

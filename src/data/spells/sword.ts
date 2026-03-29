@@ -1,19 +1,18 @@
 import { Container, Sprite } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
+import { CollisionMask } from "../collision/collisionMask";
 import { SimpleBody } from "../collision/simpleBody";
 
 import { swordTip } from "../collision/precomputed/triangles";
 import { FallDamage, Shape } from "../damage/fallDamage";
 import { Character } from "../entity/character";
 import { StaticBody } from "../collision/staticBody";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Layer, Priority, Syncable } from "../entity/types";
 import { Element } from "./types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 
 const SHAKE_INTENSITY = 8;
 
@@ -21,7 +20,7 @@ export class Sword extends Container implements Syncable {
   public readonly body: SimpleBody;
   private sprite!: Sprite;
   private bounceDuration =
-    60 + Manager.instance.getElementValue(Element.Physical) * 10;
+    60 + getManager().getElementValue(Element.Physical) * 10;
   private lastY?: number;
   private lifetime = 200;
   private collided = false;
@@ -35,10 +34,10 @@ export class Sword extends Container implements Syncable {
   public readonly priority = Priority.High;
   public readonly layer = Layer.Overlay;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, collisionMask: CollisionMask) {
     super();
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: swordTip,
       onCollide: this.onCollide,
       bounciness: 0.8,
@@ -81,9 +80,9 @@ export class Sword extends Container implements Syncable {
         x,
         y - 4,
         Shape.SwordTip,
-        2 + 2 * Manager.instance.getElementValue(Element.Arcane)
+        2 + 2 * getManager().getElementValue(Element.Arcane)
       );
-      Server.instance?.damage(damage, Server.instance.getActivePlayer());
+      getServer()?.damage(damage, getServer()!.getActivePlayer());
 
       if (this.collided) {
         this.collided = false;
@@ -127,15 +126,15 @@ export class Sword extends Container implements Syncable {
   }
 
   die() {
-    Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getManager().setTurnState(TurnState.Ending);
 
     if (this.lifetime > 5) {
       ControllableSound.fromEntity(this, Sound.Glass);
 
       for (let i = 3; i <= 9; i += 3) {
         for (let j = -70; j < 0; j += 3) {
-          Level.instance.bloodEmitter.spawn(
+          getLevel().bloodEmitter.spawn(
             Math.ceil(this.position.x) + i * 6,
             Math.ceil(this.position.y) + j * 6,
             (Math.random() - 0.5) * 5,
@@ -164,18 +163,18 @@ export class Sword extends Container implements Syncable {
   }
 
   static create(data: ReturnType<Sword["serializeCreate"]>) {
-    return new Sword(...data);
+    return new Sword(...data, getLevel().terrain.characterMask);
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
-    const entity = new Sword(x, y);
+    const entity = new Sword(x, y, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
-    Server.instance.focus(entity);
+    getServer()!.create(entity);
+    getServer()!.focus(entity);
     return entity;
   }
 }

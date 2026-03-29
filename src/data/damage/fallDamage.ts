@@ -5,7 +5,6 @@ import {
   swordTip,
   swordTipCanvas,
 } from "../collision/precomputed/triangles";
-import { Level } from "../map/level";
 import { TargetList } from "./targetList";
 import { DamageSource, DamageSourceType } from "./types";
 import { isHurtableEntity } from "../entity/types";
@@ -16,6 +15,7 @@ import {
   circle9x9Canvas,
 } from "../collision/precomputed/circles";
 import { Player } from "../network/player";
+import { getLevel } from "../context";
 
 export enum Shape {
   SwordTip,
@@ -113,10 +113,10 @@ export class FallDamage implements DamageSource {
     const data = SHAPES[this.shape];
 
     if (data.draw) {
-      Level.instance.terrain.draw((ctx) => data.draw!.call(this, ctx));
+      getLevel().terrain.draw((ctx) => data.draw!.call(this, ctx));
     }
 
-    Level.instance.terrain.subtract(this.x, this.y, data.mask, (ctx) =>
+    getLevel().terrain.subtract(this.x, this.y, data.mask, (ctx) =>
       data.subtract.call(this, ctx)
     );
 
@@ -133,7 +133,7 @@ export class FallDamage implements DamageSource {
     const data = SHAPES[this.shape];
     const sx = (this.x + data.xOffset) * 6;
     const sy = (this.y + data.yOffset) * 6;
-    Level.instance.withNearbyEntities(sx, sy, data.range, (entity) => {
+    getLevel().withNearbyEntities(sx, sy, data.range, (entity) => {
       if (isHurtableEntity(entity)) {
         const [x] = entity.getCenter();
         const direction = sx < x ? -Math.PI / 3 : Math.PI + Math.PI / 3;

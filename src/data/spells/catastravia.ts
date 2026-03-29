@@ -1,15 +1,12 @@
 import { Container } from "pixi.js";
-import { Level } from "../map/level";
-
 import { Character } from "../entity/character";
 
 import { EntityType, Spawnable } from "../entity/types";
 import { CatastraviaMissile } from "./catastraviaMissile";
 import { circle9x9 } from "../collision/precomputed/circles";
-import { Server } from "../network/server";
 import { TurnState } from "../network/types";
-import { Manager } from "../network/manager";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 
 export class Catastravia extends Container implements Spawnable {
   private static missileCount = 15;
@@ -39,8 +36,8 @@ export class Catastravia extends Container implements Spawnable {
 
     this.missileCount =
       Catastravia.missileCount +
-      Math.round(Manager.instance.getElementValue(Element.Life) * 2.67 - 2.5);
-    this.range = 3 + Manager.instance.getElementValue(Element.Arcane) * 2;
+      Math.round(getManager().getElementValue(Element.Life) * 2.67 - 2.5);
+    this.range = 3 + getManager().getElementValue(Element.Arcane) * 2;
 
     const [cx, cy] = character.getCenter();
     this.targetX = Math.floor(cx / 6 + Math.cos(direction) * distance);
@@ -52,7 +49,7 @@ export class Catastravia extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
@@ -60,8 +57,8 @@ export class Catastravia extends Container implements Spawnable {
 
     if (this.missiles.length === this.missileCount) {
       if (this.missiles.every((missle) => missle.dead)) {
-        Server.instance.kill(this);
-        Server.instance.setTurnState(
+        getServer()!.kill(this);
+        getServer()!.setTurnState(
           this.missileCount === 0 ? TurnState.Ongoing : TurnState.Ending
         );
       }
@@ -90,16 +87,17 @@ export class Catastravia extends Container implements Spawnable {
             (cy + Math.sin(_dir) * (96 + Math.random() * 64)) / 6
           );
 
-          if (!Level.instance.collidesWith(circle9x9, x - 3, y - 3)) {
+          if (!getLevel().collidesWith(circle9x9, x - 3, y - 3)) {
             const missile = new CatastraviaMissile(
               x,
               y,
               _dir,
               this.targetX,
-              this.targetY
+              this.targetY,
+              getLevel().terrain.characterMask
             );
 
-            Server.instance.create(missile);
+            getServer()!.create(missile);
             this.missiles.push(missile);
             return;
           }
@@ -113,7 +111,7 @@ export class Catastravia extends Container implements Spawnable {
 
   die() {
     this.character.setSpellSource(this, false);
-    Level.instance.remove(this);
+    getLevel().remove(this);
   }
 
   serializeCreate() {
@@ -124,7 +122,7 @@ export class Catastravia extends Container implements Spawnable {
     return new Catastravia(
       data[0],
       data[1],
-      Level.instance.entityMap.get(data[2]) as Character
+      getLevel().entityMap.get(data[2]) as Character
     );
   }
 
@@ -135,13 +133,13 @@ export class Catastravia extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const entity = new Catastravia(direction, 50 + 20 * power, character);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }
