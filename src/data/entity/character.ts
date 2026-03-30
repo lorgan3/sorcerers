@@ -28,29 +28,25 @@ import {
 } from "../../graphics/particles/factory/character";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Wings } from "./wings";
 import { SmokePuff } from "../../graphics/smokePuff";
 import { COLORS } from "../network/constants";
-import { BBox } from "../map/bbox";
 import { getLevel, getManager, getServer } from "../context";
 import { CharacterHealth } from "./characterHealth";
+import { CharacterMovement } from "./characterMovement";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
 const SMOKE_TRIGGER = 2;
-const MAX_LADDER_MOUNT_SPEED = 1;
-
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
 const PAGE_READ_DURATION = 60;
 const CLIMB_DURATION = 10;
-const JUMP_GRACE_TIME = 3;
 
 const MELEE_POWER = 20;
 
 const MAX_NAME_LENGTH = 30;
 
-enum AnimationState {
+export enum AnimationState {
   Idle = "elf_idle",
   Walk = "elf_walk",
   Jump = "elf_jump",
@@ -189,10 +185,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private lastActiveTime = 0;
   private spellSource: any | null = null;
   private lookDirection = 1;
-  private wings?: Wings;
   private namePlateName: string;
-  private wasUp = false;
-  private lastGroundedTime = 0;
+  public readonly movement: CharacterMovement;
 
   private animator: Animator<AnimationState>;
 
@@ -209,10 +203,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ? characterName.slice(0, MAX_NAME_LENGTH - 3) + "..."
         : characterName;
 
+    this.movement = new CharacterMovement(this);
     this.body = new Body(getLevel().terrain.characterMask, {
       mask: rectangle6x16,
       onCollide: this.onCollide,
-      ladderTest: this.ladderTest,
+      ladderTest: this.movement.ladderTest,
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
@@ -372,7 +367,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.position.set(x * 6, y * 6);
 
         if (this.body.grounded) {
-          this.lastGroundedTime = this.time;
+          this.movement.lastGroundedTime = this.time;
         }
 
         if (
@@ -426,142 +421,36 @@ export class Character extends Container implements HurtableEntity, Syncable {
     );
   }
 
-  ladderTest = (x: number, y: number) => {
-    if (!getManager().isTrusted(this)) {
-      return false;
-    }
-
-    for (let ladder of getLevel().terrain.ladders) {
-      if (
-        x + 6 >= ladder.left &&
-        x <= ladder.right &&
-        y + 16 > ladder.top &&
-        y < ladder.bottom
-      ) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   control(controller: Controller) {
-    let foundLadder: BBox | null = null;
-    if (
-      this.body.grounded ||
-      this.body.onLadder ||
-      (this.body.yVelocity > 0 && this.body.yVelocity < MAX_LADDER_MOUNT_SPEED)
-    ) {
-      const [x, y] = this.body.precisePosition;
-      for (let ladder of getLevel().terrain.ladders) {
-        if (
-          x + 6 >= ladder.left &&
-          x <= ladder.right &&
-          y + 16 > ladder.top &&
-          y < ladder.bottom &&
-          ladder.top < (foundLadder?.top || Infinity)
-        ) {
-          foundLadder = ladder;
-        }
-      }
-    }
-
-    if (this.body.onLadder) {
-      this.setSpellSource(null, false);
-    }
-
-    const isUp = controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W);
-    if (!this.wings && foundLadder && isUp) {
-      this.body.mountLadder();
-    }
-
-    if (this.body.onLadder) {
-      if (!foundLadder) {
-        if (getManager().isTrusted(this)) {
-          this.body.unmountLadder();
-        }
-        return;
-      }
-
-      if (isUp) {
-        if (this.body.precisePosition[1] + 8 > foundLadder.top) {
-          this.body.setLadderDirection(-1);
-          this.animator.animate(AnimationState.Climb);
-        } else {
-          if (!this.wasUp) {
-            this.body.unmountLadder();
-            this.body.jump();
-            this.animator.animate(AnimationState.Jump);
-          }
-
-          this.body.setLadderDirection(0);
-        }
-      } else if (
-        controller.isKeyDown(Key.Down) ||
-        controller.isKeyDown(Key.D)
-      ) {
-        this.body.setLadderDirection(1);
-        this.animator.animate(AnimationState.Climb);
-      } else {
-        this.body.setLadderDirection(0);
-      }
-
-      this.wasUp = isUp;
-      return;
-    }
-
-    if (!isUp) {
-      return;
-    }
-
-    if (this.time - this.lastGroundedTime < JUMP_GRACE_TIME && !this.wings) {
-      if (this.body.jump()) {
-        this.animator.animate(AnimationState.Jump);
-      }
-    }
-
-    if (this.wings) {
-      this.wings.flap(this.time);
-      this.animator.animate(AnimationState.Float);
-
-      if (this.wings.power <= 0) {
-        this.removeWings();
-      }
-    }
+    this.movement.control(controller);
   }
 
   controlContinuous(dt: number, controller: Controller) {
-    if (this.animator.isBlocking) {
-      return;
-    }
+    this.movement.controlContinuous(dt, controller);
+  }
 
+  /** Trigger an animation by state name. Used by helpers. */
+  animate(state: keyof typeof AnimationState): void {
+    this.animator.animate(AnimationState[state]);
+  }
+
+  /** Check if current animation is blocking input. Used by CharacterMovement. */
+  isAnimationBlocking(): boolean {
+    return !!this.animator.isBlocking;
+  }
+
+  /** Update look direction from controller mouse position. Used by CharacterMovement. */
+  updateLookDirection(controller: Controller): void {
     this.lookDirection = Math.sign(
       controller.getMouse()[0] - this.getCenter()[0]
     );
     this.sprite.scale.x = 2 * this.lookDirection;
+  }
 
-    if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
-      this.body.walk(-1);
-
-      if (this.body.grounded) {
-        this.animator.animate(AnimationState.Walk);
-
-        if (this.sprite.animationSpeed * this.lookDirection < 0) {
-          this.sprite.animationSpeed *= this.lookDirection;
-        }
-      }
-    }
-
-    if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
-      this.body.walk(1);
-
-      if (this.body.grounded) {
-        this.animator.animate(AnimationState.Walk);
-
-        if (this.sprite.animationSpeed * this.lookDirection < 0) {
-          this.sprite.animationSpeed *= this.lookDirection;
-        }
-      }
+  /** Sync animation speed direction with look direction. Used by CharacterMovement. */
+  syncAnimationDirection(): void {
+    if (this.sprite.animationSpeed * this.lookDirection < 0) {
+      this.sprite.animationSpeed *= this.lookDirection;
     }
   }
 
@@ -659,25 +548,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   giveWings() {
-    this.body.unmountLadder();
-
-    this.wings = new Wings(this);
-    this.addChildAt(this.wings, 0);
+    this.movement.giveWings();
   }
 
   removeWings() {
-    if (!this.wings) {
-      return;
-    }
-
-    this.wings.stop();
-    this.removeChild(this.wings);
-    this.wings = undefined;
+    this.movement.removeWings();
   }
 
   endTurn() {
-    this.removeWings();
-    this.body.setLadderDirection(0);
+    this.movement.endTurn();
   }
 
   melee() {
