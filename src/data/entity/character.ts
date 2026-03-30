@@ -12,7 +12,6 @@ import { Player } from "../network/player";
 import { Force, TargetList } from "../damage/targetList";
 import { EntityType, HurtableEntity, Priority, Syncable } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
-import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
 import { ParticleEmitter } from "../../graphics/particles/types";
 import {
@@ -27,8 +26,6 @@ import {
   createBackgroundParticles,
   createWandParticles,
 } from "../../graphics/particles/factory/character";
-import { createCharacterGibs } from "./gib/characterGibs";
-import { Explosion } from "../../graphics/explosion";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Wings } from "./wings";
@@ -36,6 +33,7 @@ import { SmokePuff } from "../../graphics/smokePuff";
 import { COLORS } from "../network/constants";
 import { BBox } from "../map/bbox";
 import { getLevel, getManager, getServer } from "../context";
+import { CharacterHealth } from "./characterHealth";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
@@ -174,12 +172,10 @@ const ANIMATION_CONFIG: Record<
 };
 
 export class Character extends Container implements HurtableEntity, Syncable {
-  private static readonly invulnerableTime = 1;
-  private static readonly damageNumberTime = 90;
   private static readonly maxInactiveTime = 3;
-  private static readonly damageAttributionTime = 120;
 
   public readonly body: Body;
+  public readonly health: CharacterHealth;
   public id = -1;
   public readonly priority = Priority.Low;
   public readonly type = EntityType.Character;
@@ -189,11 +185,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private particles?: ParticleEmitter;
   private foregroundParticles?: ParticleEmitter;
 
-  private _hp = 100;
-  private lastReportedHp = this._hp;
-  private time = 0;
-  private lastDamageTime = -1;
-  private _lastDamageDealer: Player | null = null;
+  public time = 0;
   private lastActiveTime = 0;
   private spellSource: any | null = null;
   private lookDirection = 1;
@@ -327,7 +319,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     sprite2.alpha = 0.5;
 
     this.namePlate = new BitmapText({
-      text: `${this.namePlateName} ${this._hp}`,
+      text: `${this.namePlateName} 100`,
       style: {
         fontFamily: "Eternal",
         fontSize: 32,
@@ -336,6 +328,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.namePlate.tint = this.player.color;
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(18, -40);
+
+    this.health = new CharacterHealth(this, this.namePlate, this.namePlateName);
 
     this.addChild(this.sprite, this.namePlate);
   }
@@ -363,20 +357,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.body.active = 1;
     }
 
-    if (
-      this.lastReportedHp !== this._hp &&
-      this.time > this.lastDamageTime + Character.damageNumberTime
-    ) {
-      getLevel().numberContainer.damage(
-        this.lastReportedHp - this._hp,
-        ...this.getCenter()
-      );
-      this.namePlate.text = `${this.namePlateName} ${Math.max(
-        0,
-        Math.ceil(this._hp)
-      )}`;
-      this.lastReportedHp = this._hp;
-    }
+    this.health.reportDamageNumbers();
 
     if (this.body.active) {
       this.lastActiveTime = this.time;
@@ -585,28 +566,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   damage(source: DamageSource, damage: number, force?: Force) {
-    if (
-      this.lastDamageTime !== -1 &&
-      this.time <= this.lastDamageTime + Character.invulnerableTime
-    ) {
-      return;
-    }
-
-    this.player.stats.registerDamage(source, this, damage, force);
-
-    this.hp -= damage;
-    this.lastDamageTime = this.time;
-    this._lastDamageDealer = source.cause;
-    this.body.unmountLadder();
-
-    getLevel().bloodEmitter.burst(this, damage, source);
-    if (damage > 0) {
-      ControllableSound.fromEntity(this, Sound.Splat);
-    }
-
-    if (force) {
-      this.body.addAngularVelocity(force.power, force.direction);
-    }
+    this.health.damage(source, damage, force);
   }
 
   setSpellSource(source: any, toggle = true) {
@@ -695,58 +655,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   die() {
-    if (this._hp !== this.lastReportedHp) {
-      getLevel().numberContainer.damage(
-        this.lastReportedHp - this._hp,
-        ...this.getCenter()
-      );
-      this.namePlate.text = `${this.namePlateName} ${Math.max(
-        0,
-        Math.ceil(this._hp)
-      )}`;
-      this.lastReportedHp = this._hp;
-    }
-
-    getLevel().terrain.characterMask.subtract(
-      this.body.mask,
-      ...this.body.position
-    );
-
-    this.player.removeCharacter(this);
-
-    const [x, y] = this.getCenter();
-    new Explosion(x, y);
-    getLevel().shake();
-
-    const gibs = createCharacterGibs(...this.body.precisePosition);
-    gibs.forEach((gib) =>
-      gib.body.addVelocity((Math.random() - 0.5) * 8, -2 - Math.random() * 3)
-    );
-    getLevel().add(...gibs);
-    getLevel().bloodEmitter.burst(this, 100);
-
-    getLevel().terrain.draw((ctx) => {
-      const splat = AssetsContainer.instance.assets!["atlas"].textures[
-        "gibs_splat"
-      ] as Texture;
-
-      ctx.drawImage(
-        splat.source.resource,
-        splat.frame.left,
-        splat.frame.top,
-        splat.frame.width,
-        splat.frame.height,
-        x / 6 - splat.frame.width / 2,
-        y / 6 - splat.frame.height / 2 + 5,
-        splat.frame.width,
-        splat.frame.height
-      );
-    });
-
-    getServer()?.damage(
-      new ExplosiveDamage(x / 6, y / 6, 16, 1, 1),
-      this.player
-    );
+    this.health.die();
   }
 
   giveWings() {
@@ -776,23 +685,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   get hp() {
-    return this._hp;
+    return this.health.hp;
   }
 
   set hp(hp: number) {
-    const oldHp = this._hp;
-    const diff = hp - oldHp;
-    if (diff > 0) {
-      getLevel().numberContainer.heal(diff, ...this.getCenter());
-      this.lastReportedHp += diff;
-      this.namePlate.text = `${this.namePlateName} ${Math.max(
-        0,
-        Math.ceil(this.lastReportedHp)
-      )}`;
-    }
-
-    this._hp = hp;
-    this.body.active = 1;
+    this.health.hp = hp;
   }
 
   get direction() {
@@ -800,10 +697,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   get lastDamageDealer() {
-    if (this.time > this.lastDamageTime + Character.damageAttributionTime) {
-      return null;
-    }
-
-    return this._lastDamageDealer;
+    return this.health.lastDamageDealer;
   }
 }
