@@ -2,25 +2,21 @@
 import { onMounted, ref, watch } from "vue";
 import { get, set } from "../../util/localStorage";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
-import { Server } from "../../data/network/server";
-import { PEER_ID_PREFIX } from "../../data/network/constants";
 import { MessageType } from "../../data/network/types";
-import Peer from "peerjs";
-import { Team } from "../../data/team";
 import { Config, Map } from "../../data/map";
-import { getManager, getServer } from "../../data/context";
-import { Player } from "../../data/network/player";
+import { getServer } from "../../data/context";
 import debounce from "lodash.debounce";
 import { useRouter } from "vue-router";
 import { logEvent } from "../../util/firebase";
 import TeamDisplay from "../organisms/TeamDisplay.vue";
 import TeamDialog from "../organisms/TeamDialog.vue";
-import { IPlayer } from "../types";
 import GameSettingsComponent from "../organisms/GameSettings.vue";
 import MapSelect from "../organisms/MapSelect.vue";
 import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
+import { useHostServer } from "./composables/useHostServer";
+import { useHostPlayers } from "./composables/useHostPlayers";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -31,8 +27,6 @@ const router = useRouter();
 const settings = defaults(get("Settings"));
 
 const team = ref(settings.team);
-const serverStarting = ref(false);
-const localPlayers = ref<string[]>([]);
 
 const mapContainer: { map: Map | null; name: string } = {
   map: null,
@@ -43,11 +37,8 @@ const gameSettings = ref({
   ...settings.gameSettings,
 });
 
-const key = ref("");
-const players = ref<Player[]>([]);
-const promise = ref<Promise<void>>();
-
-const editingPlayer = ref<IPlayer>();
+const { key, serverStarting, promise, createServer, destroyServer } =
+  useHostServer(gameSettings);
 
 watch(
   () => gameSettings.value.teamSize,
@@ -57,41 +48,6 @@ watch(
     server.players.forEach((player) => player.team.setSize(newSize));
   }
 );
-
-const createServer = () =>
-  new Promise<void>((resolve) => {
-    getManager()?.destroy();
-
-    key.value = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, "0");
-
-    const peer = new Peer(PEER_ID_PREFIX + key.value);
-
-    peer.on("error", () => {
-      createServer().then(resolve);
-    });
-
-    peer.once("open", () => {
-      peer.off("error");
-
-      const server = new Server(peer);
-      server.teamSize = gameSettings.value.teamSize;
-
-      const player = server.addPlayer(settings.name, team.value);
-      localPlayers.value.push(player.color);
-
-      server.listen(updateLobby);
-      resolve();
-    });
-  });
-
-onMounted(async () => {
-  promise.value = createServer();
-
-  await promise.value;
-  updateLobby();
-});
 
 const updateLobby = debounce(() => {
   const server = getServer();
@@ -118,16 +74,33 @@ const updateLobby = debounce(() => {
   }
 }, 200);
 
+const {
+  players,
+  localPlayers,
+  editingPlayer,
+  handleAddLocalPlayer,
+  handleKick,
+  handleEditPlayer,
+  handleClose,
+  handleSave,
+} = useHostPlayers(updateLobby, gameSettings);
+
+onMounted(async () => {
+  promise.value = createServer(settings.name, team.value, (server) => {
+    const player = server.addPlayer(settings.name, team.value);
+    localPlayers.value.push(player.color);
+    server.listen(updateLobby);
+  });
+
+  await promise.value;
+  updateLobby();
+});
+
 const handleBack = () => {
   if (serverStarting.value) {
     return;
   }
-
-  const server = getServer();
-  if (server) {
-    server.destroy();
-  }
-
+  destroyServer();
   router.replace("/");
 };
 
@@ -151,51 +124,6 @@ const handleStart = async () => {
     players: getServer()!.players.length,
     map: mapContainer.name,
   });
-};
-
-const handleAddLocalPlayer = () => {
-  const team = Team.random(gameSettings.value.teamSize);
-  const player = getServer()!.addPlayer(
-    `${settings.name} (${players.value?.length})`,
-    team
-  );
-  localPlayers.value.push(player.color);
-
-  updateLobby();
-};
-
-const handleKick = (index: number) => {
-  const server = getServer()!;
-  const player = server.players[index];
-  const localPlayerIndex = localPlayers.value.findIndex(
-    (localPlayer) => localPlayer === player.color
-  );
-
-  if (localPlayerIndex !== -1) {
-    localPlayers.value.splice(localPlayerIndex, 1);
-  }
-
-  server.kick(server.players[index]);
-  updateLobby();
-};
-
-const handleEditPlayer = (player: IPlayer) => {
-  editingPlayer.value = player;
-};
-
-const handleClose = () => {
-  editingPlayer.value = undefined;
-  updateLobby();
-};
-
-const handleSave = (name: string, characters: string[]) => {
-  (editingPlayer.value as Player).rename(
-    name,
-    Team.fromJson(characters, gameSettings.value.teamSize)
-  );
-
-  editingPlayer.value = undefined;
-  updateLobby();
 };
 
 const handleSaveSettings = (settings: GameSettings) => {
@@ -226,7 +154,7 @@ const handleSelectMap = async (config: Config, name: string) => {
         <IconButton
           v-if="players.length < COLORS.length"
           title="Add local player"
-          :onClick="handleAddLocalPlayer"
+          :onClick="() => handleAddLocalPlayer(settings.name)"
           :icon="plus"
         />
       </h2>
