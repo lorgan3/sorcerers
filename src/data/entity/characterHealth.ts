@@ -5,8 +5,6 @@ import { Force } from "../damage/targetList";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getLevel, getServer } from "../context";
-import { GenericDamage } from "../damage/genericDamage";
-import { TargetList } from "../damage/targetList";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Texture } from "pixi.js";

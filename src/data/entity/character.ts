@@ -175,7 +175,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private static readonly maxInactiveTime = 3;
 
   public readonly body: Body;
-  public readonly health: CharacterHealth;
+  private readonly health: CharacterHealth;
   public id = -1;
   public readonly priority = Priority.Low;
   public readonly type = EntityType.Character;
