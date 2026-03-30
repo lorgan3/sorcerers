@@ -126,39 +126,84 @@ export type ProjectileFactory = SpawnableFactory & {
 };
 
 export function defineProjectile(config: ProjectileConfig): ProjectileFactory {
-  const priority = config.priority ?? Priority.Dynamic;
-  const turnState = config.turnState ?? TurnState.Ending;
+  const configPriority = config.priority ?? Priority.Dynamic;
+  const configTurnState = config.turnState ?? TurnState.Ending;
   const centerOffset = config.centerOffset ?? [0, 0];
 
-  function createEntity(
-    x: number,
-    y: number,
-    speed: number,
-    direction: number,
-    collisionMask: CollisionMask
-  ): Spawnable & { body: SimpleBody } {
-    const container = new Container() as Container & {
-      id: number;
-      type: EntityType;
-      priority: Priority;
-      body: SimpleBody;
-      sprite: AnimatedSprite;
-      particles: ParticleEmitter | null;
-    };
+  class ProjectileEntityImpl extends Container implements Syncable {
+    public id = -1;
+    public readonly type = config.type;
+    public readonly priority = configPriority;
+    public readonly body: SimpleBody;
+    public readonly sprite: AnimatedSprite;
+    public readonly particles: ParticleEmitter | null;
 
-    container.id = -1;
-    (container as any).type = config.type;
-    (container as any).priority = priority;
+    private bounces = config.body.bounces ?? 0;
+    private lifetime = config.lifetime;
 
-    // Track bounces
-    let bounces = config.body.bounces ?? 0;
-    let lifetime = config.lifetime;
+    constructor(
+      x: number,
+      y: number,
+      speed: number,
+      direction: number,
+      collisionMask: CollisionMask
+    ) {
+      super();
 
-    // Collision handler
-    const onCollide = (cx: number, cy: number, vx: number, vy: number) => {
+      this.body = new SimpleBody(collisionMask, {
+        mask: config.body.mask,
+        onCollide: getServer() ? this.onCollide : undefined,
+        friction: config.body.friction,
+        gravity: config.body.gravity,
+        bounciness: config.body.bounciness,
+      });
+      this.body.move(x, y);
+      this.body.addAngularVelocity(speed, direction);
+      this.position.set(x * 6, y * 6);
+
+      if (config.sound) {
+        ControllableSound.fromEntity(this, config.sound);
+      }
+
+      const atlas = AssetsContainer.instance.assets!["atlas"];
+      this.sprite = new AnimatedSprite(
+        atlas.animations[config.sprite.animation]
+      );
+      this.sprite.animationSpeed = config.sprite.animationSpeed;
+      this.sprite.play();
+      this.sprite.anchor.set(...config.sprite.anchor);
+      if (config.sprite.scale) this.sprite.scale.set(config.sprite.scale);
+      if (config.sprite.alpha !== undefined)
+        this.sprite.alpha = config.sprite.alpha;
+      if (config.sprite.offset)
+        this.sprite.position.set(...config.sprite.offset);
+      if (config.sprite.rotateWithDirection) this.sprite.rotation = direction;
+      if (config.sprite.randomStartFrame) {
+        this.sprite.currentFrame = Math.floor(
+          this.sprite.totalFrames * Math.random()
+        );
+      }
+      this.addChild(this.sprite);
+
+      if (config.particles) {
+        const particleConfig = config.particles;
+        this.particles = createParticles(particleConfig.animation, {
+          ...particleConfig.config,
+          initialize: () =>
+            particleConfig.config.initialize({
+              x: this.position.x,
+              y: this.position.y,
+            }),
+        });
+      } else {
+        this.particles = null;
+      }
+    }
+
+    private onCollide = (cx: number, cy: number, vx: number, vy: number) => {
       if (config.onCollide) {
         const suppress = config.onCollide(
-          container as unknown as ProjectileEntity,
+          this as unknown as ProjectileEntity,
           cx,
           cy,
           vx,
@@ -167,79 +212,28 @@ export function defineProjectile(config: ProjectileConfig): ProjectileFactory {
         if (suppress) return;
       }
 
-      if (bounces > 0) {
-        // Check if this is a player collision (not terrain)
+      if (this.bounces > 0) {
         const playerCollision =
-          !getLevel().terrain.collisionMask.collidesWith(body.mask, cx, cy);
+          !getLevel().terrain.collisionMask.collidesWith(
+            this.body.mask,
+            cx,
+            cy
+          );
 
         if (!playerCollision) {
-          bounces--;
+          this.bounces--;
           if (config.bounceDamage) {
             applyExplosiveDamage(cx, cy, config.bounceDamage);
           }
-          getServer()!.dynamicUpdate(container as unknown as Syncable);
+          getServer()!.dynamicUpdate(this);
           return;
         }
-        // Player collision — fall through to die
       }
 
-      die(cx, cy);
+      this.applyDamageAndKill(cx, cy);
     };
 
-    // Body
-    const body = new SimpleBody(collisionMask, {
-      mask: config.body.mask,
-      onCollide: getServer() ? onCollide : undefined,
-      friction: config.body.friction,
-      gravity: config.body.gravity,
-      bounciness: config.body.bounciness,
-    });
-    body.move(x, y);
-    body.addAngularVelocity(speed, direction);
-    container.position.set(x * 6, y * 6);
-    container.body = body;
-
-    // Sound
-    if (config.sound) {
-      ControllableSound.fromEntity(
-        [container.position.x, container.position.y],
-        config.sound
-      );
-    }
-
-    // Sprite
-    const atlas = AssetsContainer.instance.assets!["atlas"];
-    const sprite = new AnimatedSprite(atlas.animations[config.sprite.animation]);
-    sprite.animationSpeed = config.sprite.animationSpeed;
-    sprite.play();
-    sprite.anchor.set(...config.sprite.anchor);
-    if (config.sprite.scale) sprite.scale.set(config.sprite.scale);
-    if (config.sprite.alpha !== undefined) sprite.alpha = config.sprite.alpha;
-    if (config.sprite.offset) sprite.position.set(...config.sprite.offset);
-    if (config.sprite.rotateWithDirection) sprite.rotation = direction;
-    if (config.sprite.randomStartFrame) {
-      sprite.currentFrame = Math.floor(sprite.totalFrames * Math.random());
-    }
-    container.addChild(sprite);
-    container.sprite = sprite;
-
-    // Particles
-    let particles: ParticleEmitter | null = null;
-    if (config.particles) {
-      const particleConfig = config.particles;
-      particles = createParticles(particleConfig.animation, {
-        ...particleConfig.config,
-        initialize: () =>
-          particleConfig.config.initialize({
-            x: container.position.x,
-            y: container.position.y,
-          }),
-      });
-    }
-    container.particles = particles;
-
-    // Death
-    function die(dx: number, dy: number) {
+    private applyDamageAndKill(dx: number, dy: number) {
       const dmg = config.damage;
       if (dmg.type === "explosive") {
         applyExplosiveDamage(dx, dy, {
@@ -250,7 +244,7 @@ export function defineProjectile(config: ProjectileConfig): ProjectileFactory {
           multiplier: dmg.multiplier,
         });
       } else if (dmg.type === "impact") {
-        applyImpactDamage(dx, dy, sprite.rotation, {
+        applyImpactDamage(dx, dy, this.sprite.rotation, {
           base: dmg.base,
           element: dmg.element,
           multiplier: dmg.multiplier,
@@ -263,88 +257,81 @@ export function defineProjectile(config: ProjectileConfig): ProjectileFactory {
           multiplier: dmg.multiplier,
         });
       }
-      getServer()!.kill(container as unknown as Spawnable);
+      getServer()!.kill(this);
     }
 
-    // Spawnable/Syncable methods
-    (container as any).tick = (dt: number) => {
-      body.tick(dt);
-      const [bx, by] = body.precisePosition;
-      container.position.set(bx * 6, by * 6);
+    tick(dt: number) {
+      this.body.tick(dt);
+      const [bx, by] = this.body.precisePosition;
+      this.position.set(bx * 6, by * 6);
       if (config.sprite.rotateWithDirection) {
-        sprite.rotation = body.direction;
+        this.sprite.rotation = this.body.direction;
       }
 
       if (config.onTick) {
-        config.onTick(container as unknown as ProjectileEntity, dt);
+        config.onTick(this as unknown as ProjectileEntity, dt);
       }
 
-      lifetime -= dt;
-      if (lifetime <= 0 && getServer()) {
-        die(bx, by);
+      this.lifetime -= dt;
+      if (this.lifetime <= 0 && getServer()) {
+        this.applyDamageAndKill(bx, by);
       }
-    };
+    }
 
-    (container as any).die = () => {
-      getLevel().remove(container);
-      if (particles) {
-        getLevel().particleContainer.destroyEmitter(particles);
+    die() {
+      getLevel().remove(this);
+      if (this.particles) {
+        getLevel().particleContainer.destroyEmitter(this.particles);
       }
 
       const effect = config.deathEffect;
       if (effect === "explosion") {
-        new Explosion(container.position.x, container.position.y);
+        new Explosion(this.position.x, this.position.y);
       } else if (effect === "acidSplash") {
         new AcidSplash(
-          container.position.x + centerOffset[0],
-          container.position.y + centerOffset[1]
+          this.position.x + centerOffset[0],
+          this.position.y + centerOffset[1]
         );
       } else if (effect === "iceImpact") {
-        new IceImpact(
-          container.position.x,
-          container.position.y,
-          sprite.rotation
-        );
+        new IceImpact(this.position.x, this.position.y, this.sprite.rotation);
       } else {
-        effect.custom(
-          container.position.x,
-          container.position.y,
-          sprite.rotation
-        );
+        effect.custom(this.position.x, this.position.y, this.sprite.rotation);
       }
 
       if (config.deathSound) {
-        ControllableSound.fromEntity(
-          [container.position.x, container.position.y],
-          config.deathSound
-        );
+        ControllableSound.fromEntity(this, config.deathSound);
       }
 
-      getManager().setTurnState(turnState);
-    };
+      getManager().setTurnState(configTurnState);
+    }
 
-    (container as any).getCenter = (): [number, number] => [
-      container.position.x + centerOffset[0],
-      container.position.y + centerOffset[1],
-    ];
+    getCenter(): [number, number] {
+      return [
+        this.position.x + centerOffset[0],
+        this.position.y + centerOffset[1],
+      ];
+    }
 
-    (container as any).serialize = () => body.serialize();
+    serialize() {
+      return this.body.serialize();
+    }
 
-    (container as any).deserialize = (data: any) => body.deserialize(data);
+    deserialize(data: ReturnType<ProjectileEntityImpl["serialize"]>) {
+      this.body.deserialize(data);
+    }
 
-    (container as any).serializeCreate = () =>
-      [
-        ...body.precisePosition,
-        body.velocity,
-        body.direction,
+    serializeCreate() {
+      return [
+        ...this.body.precisePosition,
+        this.body.velocity,
+        this.body.direction,
       ] as const;
-
-    return container as unknown as Spawnable & { body: SimpleBody };
+    }
   }
 
   return {
     create(data: readonly [number, number, number, number]) {
-      return createEntity(
+      return new ProjectileEntityImpl(
         data[0],
         data[1],
         data[2],
@@ -365,8 +352,9 @@ export function defineProjectile(config: ProjectileConfig): ProjectileFactory {
           ? config.cast.speed(power)
           : power * config.cast.speed;
 
-      return castProjectile((collisionMask) =>
-        createEntity(x, y, speed, direction, collisionMask)
+      return castProjectile(
+        (collisionMask) =>
+          new ProjectileEntityImpl(x, y, speed, direction, collisionMask)
       );
     },
   };
