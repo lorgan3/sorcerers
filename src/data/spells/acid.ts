@@ -12,7 +12,7 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { AcidSplash } from "../../graphics/acidSplash";
 import { FallDamage, Shape } from "../damage/fallDamage";
-import { AcidDrop } from "./acidDrop";
+import { acidDrop } from "./acidDrop";
 import { CollisionMask } from "../collision/collisionMask";
 
 export class Acid extends Container implements Spawnable {
@@ -78,15 +78,12 @@ export class Acid extends Container implements Spawnable {
     getLevel().bloodEmitter.burst(this, 30);
     for (let i = 0; i < Acid.splitAmount; i++) {
       const direction = Math.atan2(vy, vx) + Math.PI;
-      const entity = new AcidDrop(
-        x,
-        y,
-        0.6 + Math.random() * 0.4,
+      const speed = 0.6 + Math.random() * 0.4;
+      const dir =
         direction -
-          Acid.splitRange / 2 +
-          (i / (Acid.splitAmount - 1)) * Acid.splitRange,
-        this.collisionMask
-      );
+        Acid.splitRange / 2 +
+        (i / (Acid.splitAmount - 1)) * Acid.splitRange;
+      const entity = acidDrop.create([x, y, speed, dir]);
       getServer()!.create(entity);
     }
   };
