@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { Ref, onMounted, ref, watch } from "vue";
-import { Map, Layer, Config } from "../../data/map";
+import { onMounted, ref, watch } from "vue";
+import { Map, Config, Layer } from "../../data/map";
 import Input from "../atoms/Input.vue";
-import { Server } from "../../data/network/server";
-import { Team } from "../../data/team";
 import BoundingBox from "../molecules/BoundingBox.vue";
 import { BBox } from "../../data/map/bbox";
 import { useRouter } from "vue-router";
-import { logEvent } from "../../util/firebase";
 import { GameSettings } from "../../util/localStorage/settings";
-import { defaults } from "../../util/localStorage/settings";
 import MapSelect from "../organisms/MapSelect.vue";
 import BuilderSettings, {
   AdvancedSettings,
@@ -18,6 +14,9 @@ import ImageInput from "../molecules/ImageInput.vue";
 import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
 import Collapsible from "../atoms/Collapsible.vue";
+import { useBuilderLayers } from "./composables/useBuilderLayers";
+import { useBuilderLadders } from "./composables/useBuilderLadders";
+import { useBuilderMap } from "./composables/useBuilderMap";
 
 const { onPlay, config } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -27,12 +26,6 @@ const router = useRouter();
 const preview = ref<HTMLDivElement>();
 
 const name = ref("");
-const terrain = ref({ data: "", visible: false });
-const mask = ref({ data: "", visible: false });
-const background = ref({ data: "", visible: false });
-const layers = ref<Array<Layer & { visible: boolean }>>([]);
-const ladders = ref<BBox[]>([]);
-const creatingLadder = ref(false);
 
 const settingsOpen = ref(false);
 const advancedSettings = ref<AdvancedSettings>({
@@ -42,6 +35,23 @@ const advancedSettings = ref<AdvancedSettings>({
   parallaxName: "",
   parallaxOffset: 0,
 });
+
+const oldScale = ref(advancedSettings.value.scale);
+
+const {
+  terrain, mask, background, layers,
+  handleAddTerrain, handleSetTerrainVisibility,
+  handleAddMask, handleSetMaskVisibility,
+  handleAddBackground, handleSetBackgroundVisibility,
+  handleAddLayer, handleRemoveLayer, handleSetLayerVisibility,
+} = useBuilderLayers(advancedSettings, preview);
+
+const { ladders, creatingLadder, handleCreateLadder } =
+  useBuilderLadders(advancedSettings, preview);
+
+const { handleBuild, handleTest, loadMap } = useBuilderMap(
+  name, terrain, mask, background, layers, ladders, advancedSettings, oldScale
+);
 
 onMounted(async () => {
   if (config) {
@@ -58,7 +68,6 @@ watch(
   }
 );
 
-const oldScale = ref(advancedSettings.value.scale);
 watch(
   () => advancedSettings.value.scale,
   (scale) => {
@@ -68,128 +77,6 @@ watch(
     oldScale.value = scale;
   }
 );
-
-const addImageFactory =
-  (ref: Ref, visible = true) =>
-  (_: File, data: string) => {
-    ref.value = { data, visible };
-
-    if (advancedSettings.value.bbox.isEmpty()) {
-      var image = new Image();
-      image.src = data;
-
-      image.onload = () => {
-        advancedSettings.value.bbox = BBox.create(image.width, image.height);
-      };
-    }
-  };
-
-const handleAddTerrain = addImageFactory(terrain);
-const handleSetTerrainVisibility = (visible: boolean) =>
-  (terrain.value.visible = visible);
-const handleAddMask = addImageFactory(mask, false);
-const handleSetMaskVisibility = (visible: boolean) =>
-  (mask.value.visible = visible);
-
-const handleAddBackground = addImageFactory(background);
-const handleSetBackgroundVisibility = (visible: boolean) =>
-  (background.value.visible = visible);
-
-const handleBuild = async () => {
-  const map = await Map.fromConfig({
-    terrain: { data: terrain.value.data, mask: mask.value.data },
-    background: background.value.data
-      ? { data: background.value.data }
-      : undefined,
-    layers: layers.value
-      .filter((layer) => !!layer.data)
-      .map((layer) => ({ ...layer })),
-    bbox: advancedSettings.value.bbox,
-    parallax: {
-      name: advancedSettings.value.parallaxName,
-      offset: advancedSettings.value.parallaxOffset,
-    },
-    scale: advancedSettings.value.scale,
-    ladders: ladders.value,
-  });
-
-  const url = URL.createObjectURL(await map.toBlob());
-  setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-
-  const link = document.createElement("a");
-  link.download = `${name.value || "map"}.png`;
-  link.href = url;
-  link.click();
-
-  logEvent("build_map");
-};
-
-const handleTest = async () => {
-  const config: Config = {
-    terrain: { data: terrain.value.data, mask: mask.value.data },
-    background: background.value.data
-      ? { data: background.value.data }
-      : undefined,
-    layers: layers.value
-      .filter((layer) => !!layer.data)
-      .map((layer) => ({ ...layer })),
-    bbox: advancedSettings.value.bbox,
-    parallax: {
-      name: advancedSettings.value.parallaxName,
-      offset: advancedSettings.value.parallaxOffset,
-    },
-    scale: advancedSettings.value.scale,
-    ladders: ladders.value,
-  };
-
-  const server = new Server();
-  server.addPlayer("Test player", Team.random());
-  onPlay("0000", config, { ...defaults().gameSettings, teamSize: 1 });
-};
-
-const loadMap = (config: Config, map: string) => {
-  oldScale.value = config.scale;
-  terrain.value = { data: config.terrain.data as string, visible: true };
-  background.value = {
-    data: (config.background?.data as string) || "",
-    visible: true,
-  };
-  layers.value = config.layers.map((layer) => ({ ...layer, visible: true }));
-  advancedSettings.value = {
-    bbox: BBox.fromJS(config.bbox) || BBox.create(0, 0),
-    scale: config.scale,
-    customMask: !!config.terrain.mask,
-    parallaxName: config.parallax.name,
-    parallaxOffset: config.parallax.offset,
-  };
-  name.value = map;
-  ladders.value =
-    (config.ladders
-      ?.map((bbox) => BBox.fromJS(bbox))
-      .filter(Boolean) as BBox[]) || [];
-
-  if (config.terrain.mask) {
-    mask.value = { data: config.terrain.mask as string, visible: false };
-  } else {
-    mask.value = { data: "", visible: false };
-  }
-};
-
-const handleAddLayer = () =>
-  layers.value.push({
-    data: "",
-    x: Math.round(preview.value!.scrollLeft / advancedSettings.value.scale),
-    y: Math.round(preview.value!.scrollTop / advancedSettings.value.scale),
-    visible: true,
-  });
-
-const handleRemoveLayer = (index: number) => {
-  layers.value = layers.value.filter((_, i) => i !== index);
-};
-
-const handleSetLayerVisibility = (visible: boolean, index: number) => {
-  layers.value[index].visible = visible;
-};
 
 const handleMouseDown = (event: MouseEvent, layer: Layer) => {
   let x = layer.x;
@@ -218,55 +105,6 @@ const handleMouseDown = (event: MouseEvent, layer: Layer) => {
 
 const handleBBoxChange = (newBBox: BBox) => {
   advancedSettings.value.bbox = newBBox;
-};
-
-const handleCreateLadder = (event: MouseEvent) => {
-  if (!creatingLadder.value) {
-    return;
-  }
-
-  event.preventDefault();
-  const position = preview.value!.getBoundingClientRect();
-  const x = Math.round(
-    (position.left - preview.value!.scrollLeft) / advancedSettings.value.scale
-  );
-  const y = Math.round(
-    (position.top - preview.value!.scrollTop) / advancedSettings.value.scale
-  );
-  const startX = Math.round(event.pageX / advancedSettings.value.scale) - x;
-  const startY = Math.round(event.pageY / advancedSettings.value.scale) - y;
-
-  ladders.value.push(
-    BBox.fromJS({
-      left: startX,
-      top: startY,
-      right: startX,
-      bottom: startY,
-    })!
-  );
-
-  const handleMouseMove = (moveEvent: MouseEvent) => {
-    ladders.value[ladders.value.length - 1].right = Math.max(
-      startX,
-      Math.round(moveEvent.pageX / advancedSettings.value.scale) - x
-    );
-    ladders.value[ladders.value.length - 1].bottom = Math.max(
-      startY,
-      Math.round(moveEvent.pageY / advancedSettings.value.scale) - y
-    );
-  };
-
-  const handleMouseUp = () => {
-    document.onselectstart = null;
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
-    creatingLadder.value = false;
-  };
-
-  event.preventDefault();
-  document.onselectstart = () => false;
-  document.addEventListener("mousemove", handleMouseMove);
-  document.addEventListener("mouseup", handleMouseUp);
 };
 </script>
 
@@ -349,7 +187,7 @@ const handleCreateLadder = (event: MouseEvent) => {
       >
         Build
       </button>
-      <button class="primary" title="Build and test" @click="handleTest">
+      <button class="primary" title="Build and test" @click="() => handleTest(onPlay)">
         Test
       </button>
       <button class="secondary" @click="() => router.replace('/')">Back</button>
