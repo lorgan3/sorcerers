@@ -11,7 +11,8 @@ import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { AcidSplash } from "../../graphics/acidSplash";
-import { FallDamage, Shape } from "../damage/fallDamage";
+import { Shape } from "../damage/fallDamage";
+import { applyFallDamage } from "./utils";
 import { acidDrop } from "./acidDrop";
 import { CollisionMask } from "../collision/collisionMask";
 
@@ -89,15 +90,12 @@ export class Acid extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    getServer()?.damage(
-      new FallDamage(
-        x,
-        y,
-        Shape.Acid,
-        24 + getManager().getElementValue(Element.Life) * 3
-      ),
-      getServer()!.getActivePlayer()
-    );
+    applyFallDamage(x, y, {
+      shape: Shape.Acid,
+      base: 24,
+      element: Element.Life,
+      multiplier: 3,
+    });
     getServer()!.kill(this);
   }
 
