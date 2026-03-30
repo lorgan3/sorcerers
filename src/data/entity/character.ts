@@ -32,6 +32,7 @@ import { SmokePuff } from "../../graphics/smokePuff";
 import { COLORS } from "../network/constants";
 import { getLevel, getManager, getServer } from "../context";
 import { CharacterHealth } from "./characterHealth";
+import { CharacterCombat } from "./characterCombat";
 import { CharacterMovement } from "./characterMovement";
 
 // Start bouncing when impact is greater than this value
@@ -183,9 +184,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   public time = 0;
   private lastActiveTime = 0;
-  private spellSource: any | null = null;
   private lookDirection = 1;
   private namePlateName: string;
+  public readonly combat: CharacterCombat;
   public readonly movement: CharacterMovement;
 
   private animator: Animator<AnimationState>;
@@ -203,6 +204,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ? characterName.slice(0, MAX_NAME_LENGTH - 3) + "..."
         : characterName;
 
+    this.combat = new CharacterCombat(this);
     this.movement = new CharacterMovement(this);
     this.body = new Body(getLevel().terrain.characterMask, {
       mask: rectangle6x16,
@@ -286,7 +288,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
           if (
             (getManager().getActiveCharacter() !== this ||
               !this.player.controller.isKeyDown()) &&
-            !this.spellSource
+            !this.combat.isCasting()
           ) {
             this.animator.animate(AnimationState.ReadDone);
           }
@@ -459,60 +461,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   setSpellSource(source: any, toggle = true) {
-    if (toggle) {
-      if (this.body.onLadder) {
-        return;
-      }
-
-      this.spellSource = source;
-
-      if (
-        this.animator.animationState !== AnimationState.SpellIdle &&
-        !this.player.controller.isKeyDown(Key.Left) &&
-        !this.player.controller.isKeyDown(Key.Right) &&
-        !this.player.controller.isKeyDown(Key.A) &&
-        !this.player.controller.isKeyDown(Key.D)
-      ) {
-        this.animator.animate(AnimationState.Spell);
-      }
-
-      this.animator.setDefaultAnimation(AnimationState.Spell);
-    } else if (!source || source === this.spellSource) {
-      this.spellSource = null;
-
-      let defaultAnimation;
-      if (
-        getManager().getActiveCharacter() === this &&
-        this.player.controller.isKeyDown(Key.Inventory)
-      ) {
-        defaultAnimation = AnimationState.Read;
-      } else {
-        defaultAnimation = AnimationState.Idle;
-      }
-
-      if (this.animator.animationState === AnimationState.SpellIdle) {
-        this.animator.animate(AnimationState.SpellDone);
-      } else if (this.animator.animationState === AnimationState.Spell) {
-        this.animator.animate(defaultAnimation);
-      }
-
-      this.animator.setDefaultAnimation(defaultAnimation);
-    }
+    this.combat.setSpellSource(source, toggle);
   }
 
   isCasting() {
-    return !!this.spellSource;
+    return this.combat.isCasting();
   }
 
   openSpellBook() {
-    if (
-      !this.spellSource &&
-      this.animator.animationState !== AnimationState.Read &&
-      this.animator.animationState !== AnimationState.ReadIdle
-    ) {
-      this.animator.animate(AnimationState.Read);
-      this.animator.setDefaultAnimation(AnimationState.Read);
-    }
+    this.combat.openSpellBook();
   }
 
   serialize() {
