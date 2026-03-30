@@ -29,7 +29,7 @@ import { Character } from "./character";
 import { MagicScroll } from "./magicScroll";
 import { Potion } from "./potion";
 import { PotionType } from "./potionData";
-import { EntityType, Item, Spawnable } from "./types";
+import { EntityType, Item, Spawnable, SpawnableFactory } from "./types";
 
 // Starting at 1 because 0 is a falsy value 🤡
 let id = 1;
@@ -38,10 +38,7 @@ export const setId = (value: number) => (id = value);
 
 export const getId = () => id++;
 
-export const ENTITIES: Record<
-  EntityType,
-  { create: (data: any) => Spawnable }
-> = {
+export const ENTITIES: Record<EntityType, SpawnableFactory> = {
   [EntityType.Shield]: Shield,
   [EntityType.Zoltraak]: Zoltraak,
   [EntityType.Fireball]: Fireball,

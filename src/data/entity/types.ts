@@ -46,6 +46,11 @@ export interface Item extends Spawnable, HurtableEntity {
   die(): void;
 }
 
+export interface SpawnableFactory {
+  create(data: any): Spawnable;
+  cast?(...args: any[]): any;
+}
+
 export function isHurtableEntity(entity: {}): entity is HurtableEntity {
   return "getCenter" in entity;
 }
