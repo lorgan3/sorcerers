@@ -456,6 +456,16 @@ export class Character extends Container implements HurtableEntity, Syncable {
     }
   }
 
+  /** Check if current animation matches a given state. Used by CharacterCombat. */
+  isInAnimationState(state: keyof typeof AnimationState): boolean {
+    return this.animator.animationState === AnimationState[state];
+  }
+
+  /** Set the default animation state. Used by CharacterCombat. */
+  setDefaultAnimation(state: keyof typeof AnimationState): void {
+    this.animator.setDefaultAnimation(AnimationState[state]);
+  }
+
   damage(source: DamageSource, damage: number, force?: Force) {
     this.health.damage(source, damage, force);
   }
@@ -517,7 +527,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   melee() {
-    this.animator.animate(AnimationState.Swing);
+    this.combat.melee();
   }
 
   get hp() {
