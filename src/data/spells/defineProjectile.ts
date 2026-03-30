@@ -121,7 +121,11 @@ export interface ProjectileEntity extends Container, Syncable {
   readonly particles: ParticleEmitter | null;
 }
 
-export function defineProjectile(config: ProjectileConfig): SpawnableFactory {
+export type ProjectileFactory = SpawnableFactory & {
+  cast(...args: any[]): any;
+};
+
+export function defineProjectile(config: ProjectileConfig): ProjectileFactory {
   const priority = config.priority ?? Priority.Dynamic;
   const turnState = config.turnState ?? TurnState.Ending;
   const centerOffset = config.centerOffset ?? [0, 0];
