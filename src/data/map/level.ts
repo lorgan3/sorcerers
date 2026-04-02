@@ -133,6 +133,12 @@ export class Level {
     this.viewport.resize(window.innerWidth, window.innerHeight);
   };
 
+  destroy() {
+    window.removeEventListener("resize", this.resize);
+    this.app.destroy();
+    this.target.removeChild(this.app.canvas);
+  }
+
   getRandomSpawnLocation() {
     if (!this.spawnLocations.length) {
       this.spawnLocations = this.terrain.getSpawnLocations();
