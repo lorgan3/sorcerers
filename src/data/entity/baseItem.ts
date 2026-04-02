@@ -86,8 +86,9 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       if (activeTime > BaseItem.floatDuration) {
         this.visible = false;
 
-        if (getServer() && getServer()!.isEnding()) {
-          getServer()!.kill(this);
+        const server = getServer();
+        if (server && server.isEnding()) {
+          server.kill(this);
         }
 
         return;
@@ -111,7 +112,8 @@ export abstract class BaseItem extends Container implements Syncable, Item {
         this.position.set(x * 6, y * 6);
       }
 
-      if (getServer()) {
+      const server = getServer();
+      if (server) {
         getLevel().withNearbyEntities(
           ...this.getCenter(),
           48,
@@ -120,7 +122,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
               return;
             }
 
-            getServer()!.activate(this, entity);
+            server.activate(this, entity);
             return true;
           }
         );
@@ -132,7 +134,7 @@ export abstract class BaseItem extends Container implements Syncable, Item {
             this.position.y
           )
         ) {
-          getServer()!.kill(this);
+          server.kill(this);
         }
       }
     }
