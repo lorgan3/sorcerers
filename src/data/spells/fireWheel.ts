@@ -1,5 +1,4 @@
 import { AnimatedSprite, BitmapText, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 
 import { circle9x9 } from "../collision/precomputed/circles";
@@ -7,15 +6,15 @@ import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Character } from "../entity/character";
 
 import { Explosion } from "../../graphics/explosion";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Layer, Priority, Syncable } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 
 import { StickyBody } from "../collision/stickyBody";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class FireWheel extends Container implements Syncable {
   private static baseLifeTime = 450;
@@ -36,15 +35,16 @@ export class FireWheel extends Container implements Syncable {
     y: number,
     speed: number,
     private direction: number,
-    private character: Character
+    private character: Character,
+    private collisionMask: CollisionMask
   ) {
     super();
 
     this.lifetime =
       FireWheel.baseLifeTime *
-      (0.5 + 0.5 * Manager.instance.getElementValue(Element.Arcane));
+      (0.5 + 0.5 * getManager().getElementValue(Element.Arcane));
 
-    this.body = new StickyBody(Level.instance.terrain.collisionMask, {
+    this.body = new StickyBody(collisionMask, {
       mask: circle9x9,
       velocity: 2,
     });
@@ -94,8 +94,8 @@ export class FireWheel extends Container implements Syncable {
 
     // When spawning in a wall
     if (
-      Server.instance &&
-      Level.instance.terrain.collisionMask.collidesWithPoint(
+      getServer() &&
+      this.collisionMask.collidesWithPoint(
         ...this.body.position
       )
     ) {
@@ -104,23 +104,24 @@ export class FireWheel extends Container implements Syncable {
   }
 
   private _die(x: number, y: number) {
-    Server.instance.damage(
+    const server = getServer()!;
+    server.damage(
       new ExplosiveDamage(
         x,
         y,
         16,
         3,
-        3 + Manager.instance.getElementValue(Element.Elemental) * 2.5
+        3 + getManager().getElementValue(Element.Elemental) * 2.5
       ),
       this.character.player
     );
-    Server.instance.kill(this);
+    server.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
     new Explosion(this.position.x, this.position.y);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
     this.sound?.destroy();
   }
 
@@ -155,13 +156,13 @@ export class FireWheel extends Container implements Syncable {
     }
 
     this.lifetime -= dt;
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     if (
       this.lifetime <= 0 ||
-      Level.instance.terrain.killbox.collidesWith(
+      getLevel().terrain.killbox.collidesWith(
         this.body.mask,
         ...this.getCenter()
       )
@@ -171,7 +172,7 @@ export class FireWheel extends Container implements Syncable {
     }
 
     const [cx, cy] = this.getCenter();
-    Level.instance.withNearbyEntities(cx, cy, 10 * 6, (entity) => {
+    getLevel().withNearbyEntities(cx, cy, 10 * 6, (entity) => {
       if (entity instanceof Character) {
         this._die(x, y);
         return true;
@@ -206,7 +207,8 @@ export class FireWheel extends Container implements Syncable {
       data[1],
       data[2],
       data[3],
-      Level.instance.entityMap.get(data[4]) as Character
+      getLevel().entityMap.get(data[4]) as Character,
+      getLevel().terrain.collisionMask
     );
   }
 
@@ -217,14 +219,15 @@ export class FireWheel extends Container implements Syncable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
-    const entity = new FireWheel(x, y, power * 1.5, direction, character);
+    const entity = new FireWheel(x, y, power * 1.5, direction, character, getLevel().terrain.collisionMask);
 
-    Server.instance.create(entity);
-    Server.instance.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }

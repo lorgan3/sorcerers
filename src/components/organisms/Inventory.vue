@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { SPELLS, Spell } from "../../data/spells";
-import { Manager } from "../../data/network/manager";
+import { getManager, getServer } from "../../data/context";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { Server } from "../../data/network/server";
 import { Client } from "../../data/network/client";
 import { Message, MessageType } from "../../data/network/types";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -29,21 +28,21 @@ const sections = {
   Offense: offenseSpells,
 };
 
-const selectedSpell = ref(Manager.instance?.selectedSpell);
+const selectedSpell = ref(getManager()?.selectedSpell);
 const availableList = ref<boolean[]>([]);
 
 const poll = () => {
   if (props.isOpen) {
-    const mana = Manager.instance.self.mana;
+    const mana = getManager().self.mana;
     availableList.value = [];
     SPELLS.forEach((spell) => {
       availableList.value[spell.iconId] =
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
-        !Manager.instance.self.executedSpells.includes(spell);
+        !getManager().self.executedSpells.includes(spell);
     });
   } else {
-    if (Manager.instance.self === Manager.instance.getActivePlayer()) {
-      selectedSpell.value = Manager.instance.selectedSpell;
+    if (getManager().self === getManager().getActivePlayer()) {
+      selectedSpell.value = getManager().selectedSpell;
     }
   }
 };
@@ -59,18 +58,19 @@ watch(
 );
 
 const handleClick = (spell?: Spell) => {
-  if (spell && !Manager.instance.self.executedSpells.includes(spell)) {
+  if (spell && !getManager().self.executedSpells.includes(spell)) {
     props.onClose();
 
-    if (Server.instance) {
-      Manager.instance.selectSpell(spell);
+    const server = getServer();
+    if (server) {
+      getManager().selectSpell(spell);
 
       const message: Message = {
         type: MessageType.SelectSpell,
         spell: SPELLS.indexOf(spell),
-        player: Server.instance.players.indexOf(Server.instance.self),
+        player: server.players.indexOf(server.self),
       };
-      Server.instance.broadcast(message);
+      server.broadcast(message);
     }
 
     if (Client.instance) {
@@ -87,7 +87,7 @@ const handleClick = (spell?: Spell) => {
 
 const getElementFilter = (element: Element) =>
   `brightness(${
-    0.1 + Math.min(1, Manager.instance.getElementValue(element) / 1.3)
+    0.1 + Math.min(1, getManager().getElementValue(element) / 1.3)
   })`;
 </script>
 

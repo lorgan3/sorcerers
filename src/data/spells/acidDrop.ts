@@ -1,19 +1,18 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { Character } from "../entity/character";
 
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Priority, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { AcidSplash } from "../../graphics/acidSplash";
 import { FallDamage, Shape } from "../damage/fallDamage";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class AcidDrop extends Container implements Spawnable {
   public readonly body: SimpleBody;
@@ -24,12 +23,18 @@ export class AcidDrop extends Container implements Spawnable {
   public readonly type = EntityType.AcidDrop;
   public readonly priority = Priority.Dynamic;
 
-  constructor(x: number, y: number, speed: number, direction: number) {
+  constructor(
+    x: number,
+    y: number,
+    speed: number,
+    direction: number,
+    collisionMask: CollisionMask
+  ) {
     super();
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       friction: 0.99,
       gravity: 0.04,
       bounciness: 1,
@@ -66,21 +71,22 @@ export class AcidDrop extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    Server.instance?.damage(
+    const server = getServer();
+    server?.damage(
       new FallDamage(
         x,
         y,
         Shape.Acid,
-        10 + Manager.instance.getElementValue(Element.Life)
+        10 + getManager().getElementValue(Element.Life)
       ),
-      Server.instance.getActivePlayer()
+      server.getActivePlayer()
     );
-    Server.instance.kill(this);
+    server?.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getManager().setTurnState(TurnState.Ending);
     new AcidSplash(...this.getCenter());
     ControllableSound.fromEntity(this, Sound.Slime);
   }
@@ -95,7 +101,7 @@ export class AcidDrop extends Container implements Spawnable {
     this.position.set(x * 6, y * 6);
 
     this.lifetime -= dt;
-    if (this.lifetime <= 0 && Server.instance) {
+    if (this.lifetime <= 0 && getServer()) {
       this._die(x, y);
     }
   }
@@ -109,7 +115,7 @@ export class AcidDrop extends Container implements Spawnable {
   }
 
   static create(data: ReturnType<AcidDrop["serializeCreate"]>) {
-    return new AcidDrop(...data);
+    return new AcidDrop(...data, getLevel().terrain.characterMask);
   }
 
   static cast(
@@ -119,13 +125,14 @@ export class AcidDrop extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
-    const entity = new AcidDrop(x, y, power / 1.5, direction);
+    const entity = new AcidDrop(x, y, power / 1.5, direction, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
+    server.create(entity);
     return entity;
   }
 }

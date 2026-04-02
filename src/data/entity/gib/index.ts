@@ -1,8 +1,8 @@
 import { Sprite, Texture } from "pixi.js";
 import { CollisionMask } from "../../collision/collisionMask";
 import { SimpleBody } from "../../collision/simpleBody";
-import { Level } from "../../map/level";
 import { TickingEntity } from "../types";
+import { getLevel } from "../../context";
 
 export interface GibConfig {
   texture: Texture;
@@ -35,7 +35,7 @@ export class Gib extends Sprite implements TickingEntity {
     this.offsetX = -offsetX * 2;
     this.offsetY = -offsetY * 2;
 
-    this.body = new SimpleBody(Level.instance.terrain.collisionMask, {
+    this.body = new SimpleBody(getLevel().terrain.collisionMask, {
       mask,
       bounciness: -0.7,
       gravity: 0.25,
@@ -57,7 +57,7 @@ export class Gib extends Sprite implements TickingEntity {
     this.position.set(x * 6, y * 6);
 
     if (this.bloody && Math.random() > 0.8) {
-      Level.instance.bloodEmitter.spawn(
+      getLevel().bloodEmitter.spawn(
         x * 6 + this.offsetX + (Math.random() - 0.5) * 4,
         y * 6 + this.offsetY + (Math.random() - 0.5) * 4,
         0,
@@ -67,7 +67,7 @@ export class Gib extends Sprite implements TickingEntity {
 
     this.time -= dt;
     if (this.time <= 0) {
-      Level.instance.remove(this);
+      getLevel().remove(this);
     }
   }
 }

@@ -1,6 +1,6 @@
 import { AnimatedSprite } from "pixi.js";
 import { AssetsContainer } from "../util/assets/assetsContainer";
-import { Level } from "../data/map/level";
+import { getLevel } from "../data/context";
 
 export class Explosion extends AnimatedSprite {
   constructor(x: number, y: number) {
@@ -15,7 +15,7 @@ export class Explosion extends AnimatedSprite {
     this.animationSpeed = 0.3;
     this.play();
 
-    Level.instance.add(this);
-    this.onComplete = () => Level.instance.remove(this);
+    getLevel().add(this);
+    this.onComplete = () => getLevel().remove(this);
   }
 }

@@ -1,14 +1,12 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { Character } from "../entity/character";
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { ParticleEmitter } from "../../graphics/particles/types";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { rectangle6x16 } from "../collision/precomputed/rectangles";
@@ -16,6 +14,7 @@ import { FallDamage, Shape } from "../damage/fallDamage";
 import { map } from "../../util/math";
 import { StaticBody } from "../collision/staticBody";
 import { Element } from "./types";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class Daosdorg extends Container implements Spawnable {
   private static baseLifeTime = 40;
@@ -32,16 +31,16 @@ export class Daosdorg extends Container implements Spawnable {
   public id = -1;
   public readonly type = EntityType.Daosdorg;
 
-  constructor(x: number, y: number, direction: number) {
+  constructor(x: number, y: number, direction: number, collisionMask: CollisionMask) {
     super();
 
     this.lifeTime =
       Daosdorg.baseLifeTime *
-      (0.5 + 0.5 * Manager.instance.getElementValue(Element.Arcane));
+      (0.5 + 0.5 * getManager().getElementValue(Element.Arcane));
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: rectangle6x16,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       bounciness: 1,
       friction: 0.94,
       gravity: 0,
@@ -86,7 +85,7 @@ export class Daosdorg extends Container implements Spawnable {
     // sprite2.alpha = 0.5;
 
     this.addChild(this.sprite);
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
   }
 
   private onCollide = (x: number, y: number) => {
@@ -99,9 +98,10 @@ export class Daosdorg extends Container implements Spawnable {
       x - 9,
       y - 4,
       Shape.Tornado,
-      1.8 + Manager.instance.getElementValue(Element.Physical)
+      1.8 + getManager().getElementValue(Element.Physical)
     );
-    Server.instance?.damage(damage, Server.instance.getActivePlayer());
+    const server = getServer();
+    server?.damage(damage, server.getActivePlayer());
 
     if (
       damage
@@ -114,9 +114,9 @@ export class Daosdorg extends Container implements Spawnable {
   };
 
   die() {
-    Level.instance.remove(this);
-    Level.instance.particleContainer.destroyEmitter(this.particles);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getLevel().particleContainer.destroyEmitter(this.particles);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -139,10 +139,11 @@ export class Daosdorg extends Container implements Spawnable {
         x - 9,
         y - 4,
         Shape.Tornado,
-        3 + Manager.instance.getElementValue(Element.Physical)
+        3 + getManager().getElementValue(Element.Physical)
       );
 
-      Server.instance?.damage(damage, Server.instance.getActivePlayer());
+      const server = getServer();
+      server?.damage(damage, server.getActivePlayer());
     }
 
     if (this.time >= this.lifeTime) {
@@ -155,17 +156,18 @@ export class Daosdorg extends Container implements Spawnable {
   }
 
   static create(data: ReturnType<Daosdorg["serializeCreate"]>) {
-    return new Daosdorg(...data);
+    return new Daosdorg(...data, getLevel().terrain.characterMask);
   }
 
   static cast(x: number, y: number, character: Character, direction: number) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
-    const entity = new Daosdorg(x, y, direction);
+    const entity = new Daosdorg(x, y, direction, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
+    server.create(entity);
     return entity;
   }
 }

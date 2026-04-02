@@ -1,11 +1,9 @@
 import { AnimatedSprite, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { circle9x9 } from "../collision/precomputed/circles";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, HurtableEntity } from "../entity/types";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 import { StaticBody } from "../collision/staticBody";
 import { TargetList } from "../damage/targetList";
 import { CollisionMask } from "../collision/collisionMask";
@@ -30,11 +28,11 @@ export class IceWall extends Container implements HurtableEntity {
   public id = -1;
   public readonly type = EntityType.IceWall;
 
-  constructor(x: number, y: number, private character: Character) {
+  constructor(x: number, y: number, private character: Character, collisionMask: CollisionMask) {
     super();
-    this.physicalPower = Manager.instance.getElementValue(Element.Physical);
+    this.physicalPower = getManager().getElementValue(Element.Physical);
 
-    this.body = new StaticBody(Level.instance.terrain.characterMask, {
+    this.body = new StaticBody(collisionMask, {
       mask: circle9x9,
     });
     this.body.move(x, y);
@@ -68,7 +66,7 @@ export class IceWall extends Container implements HurtableEntity {
       }
     );
 
-    this.spikeArea = Level.instance.terrain.collisionMask.difference(
+    this.spikeArea = getLevel().terrain.collisionMask.difference(
       this.body.mask,
       ...this.body.position
     );
@@ -80,31 +78,31 @@ export class IceWall extends Container implements HurtableEntity {
 
     this.addChild(this.sprite);
     this.add();
-    Level.instance.particleContainer.addEmitter(this.particles);
+    getLevel().particleContainer.addEmitter(this.particles);
   }
 
   private add() {
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
     );
   }
 
   damage(): void {
-    Server.instance?.kill(this);
+    getServer()?.kill(this);
   }
 
   die() {
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.spikeArea,
       ...this.body.position
     );
 
     ControllableSound.fromEntity(this, Sound.Glass);
     this.particles.burst(10);
-    Level.instance.remove(this);
-    Level.instance.particleContainer.destroyEmitter(this.particles);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getLevel().particleContainer.destroyEmitter(this.particles);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -114,28 +112,30 @@ export class IceWall extends Container implements HurtableEntity {
   tick(dt: number) {
     this.time += dt;
 
+    const server = getServer();
+
     if (this.body.moved) {
       this.body.moved = false;
       const [x, y] = this.body.precisePosition;
       this.position.set(x * 6, y * 6);
 
       if (Math.random() > 0.98) {
-        Server.instance.kill(this);
+        server!.kill(this);
         return;
       }
     }
 
-    if (this.time > 15 && Server.instance) {
+    if (this.time > 15 && server) {
       this.time = 0;
-      Level.instance.withNearbyEntities(...this.getCenter(), 64, (entity) => {
+      getLevel().withNearbyEntities(...this.getCenter(), 64, (entity) => {
         if (entity instanceof Character) {
-          Server.instance.kill(this);
+          server.kill(this);
 
           const targets = new TargetList().add(
             entity,
             5 + 5 * this.physicalPower
           );
-          Server.instance.damage(
+          server.damage(
             new GenericDamage(targets),
             this.character.player
           );
@@ -161,7 +161,8 @@ export class IceWall extends Container implements HurtableEntity {
     return new IceWall(
       data[0],
       data[1],
-      Level.instance.entityMap.get(data[2]) as Character
+      getLevel().entityMap.get(data[2]) as Character,
+      getLevel().terrain.characterMask
     );
   }
 }

@@ -1,5 +1,4 @@
 import { AnimatedSprite, Container, Texture } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle30x30 } from "../collision/precomputed/circles";
@@ -8,7 +7,6 @@ import { Character } from "../entity/character";
 
 import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEmitter";
 import { ParticleEmitter } from "../../graphics/particles/types";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import {
   EntityType,
@@ -16,8 +14,8 @@ import {
   Priority,
   Syncable,
 } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getAngle } from "../../util/math";
@@ -48,18 +46,19 @@ export class Meteor extends Container implements Syncable {
     y: number,
     private time: number,
     private direction: number,
-    private character: Character
+    private character: Character,
+    collisionMask: CollisionMask
   ) {
     super();
     character.setSpellSource(this);
 
     this.maxBounceDuration =
       Meteor.bounceDuration +
-      Math.round(Manager.instance.getElementValue(Element.Physical) * 6);
+      Math.round(getManager().getElementValue(Element.Physical) * 6);
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle30x30,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       bounciness: 1,
       friction: 1,
       gravity: 0,
@@ -90,7 +89,7 @@ export class Meteor extends Container implements Syncable {
         }),
       }
     );
-    Level.instance.backgroundParticles.addEmitter(this.particles);
+    getLevel().backgroundParticles.addEmitter(this.particles);
 
     // const sprite2 = new Sprite(
     //   Texture.fromBuffer(circle30x30Canvas.data, 30, 30)
@@ -103,15 +102,15 @@ export class Meteor extends Container implements Syncable {
   }
 
   private onCollide = (x: number, y: number) => {
-    if (Level.instance.collidesWith(this.body.mask, x, y)) {
+    if (getLevel().collidesWith(this.body.mask, x, y)) {
       this.collided = true;
     }
   };
 
   die() {
-    Level.instance.remove(this);
-    Level.instance.backgroundParticles.destroyEmitter(this.particles);
-    Level.instance.cameraTarget.shake();
+    getLevel().remove(this);
+    getLevel().backgroundParticles.destroyEmitter(this.particles);
+    getLevel().cameraTarget.shake();
     this.character.setSpellSource(this, false);
 
     const texture = this.textures[this.sprite.currentFrame];
@@ -133,7 +132,7 @@ export class Meteor extends Container implements Syncable {
     );
 
     const [x, y] = this.body.position;
-    Level.instance.terrain.add(
+    getLevel().terrain.add(
       x,
       y,
       collisionMask,
@@ -143,7 +142,7 @@ export class Meteor extends Container implements Syncable {
       () => {}
     );
 
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -178,16 +177,17 @@ export class Meteor extends Container implements Syncable {
         ) {
           this.bounceTime = this.time;
 
-          if (Server.instance) {
+          const server = getServer();
+          if (server) {
             const [x, y] = this.body.position;
             const damage = new ExplosiveDamage(
               x + 15,
               y + 15,
               16,
               5,
-              5 + Manager.instance.getElementValue(Element.Elemental) / 2
+              5 + getManager().getElementValue(Element.Elemental) / 2
             );
-            Server.instance.damage(damage, this.character.player);
+            server.damage(damage, this.character.player);
 
             const staticEntity = damage
               .getTargets()
@@ -212,21 +212,21 @@ export class Meteor extends Container implements Syncable {
             if (done) {
               this.body.gravity = 0;
               this.body.setVelocity(0, 0);
-              Server.instance.dynamicUpdate(this);
-              Server.instance.kill(this);
+              server.dynamicUpdate(this);
+              server.kill(this);
             } else {
-              Server.instance.dynamicUpdate(this);
+              server.dynamicUpdate(this);
             }
           }
         }
       } else if (
-        Level.instance.terrain.killbox.collidesWith(
+        getLevel().terrain.killbox.collidesWith(
           this.body.mask,
           this.position.x,
           this.position.y
         )
       ) {
-        Server.instance.kill(this);
+        getServer()!.kill(this);
       }
     }
   }
@@ -256,25 +256,27 @@ export class Meteor extends Container implements Syncable {
       data[1],
       data[2],
       data[3],
-      Level.instance.entityMap.get(data[4]) as Character
+      getLevel().entityMap.get(data[4]) as Character,
+      getLevel().terrain.characterMask
     );
   }
 
   static cast(x: number, y: number, _: HurtableEntity, character: Character) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const maxAngle =
       character.direction === 1 ? -Math.PI / 4 : Math.PI + Math.PI / 4;
     const maxX = Math.tan(maxAngle) * y;
-    const _x = Math.max(0, Math.min(Level.instance.terrain.width, x + maxX));
+    const _x = Math.max(0, Math.min(getLevel().terrain.width, x + maxX));
 
     const angle = getAngle(_x, -32, x - 16, y - 16);
-    const entity = new Meteor(_x, -32, 0, angle, character);
+    const entity = new Meteor(_x, -32, 0, angle, character, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
-    Server.instance.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }

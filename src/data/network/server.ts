@@ -3,8 +3,8 @@ import { MessageType, Message, Popup, TurnState } from "./types";
 import { Player } from "./player";
 import { Character } from "../entity/character";
 import { KeyboardController } from "../controller/keyboardController";
-import { Level } from "../map/level";
 import { Manager } from "./manager";
+import { getLevel, setFallbackServer } from "../context";
 import { MESSAGES, PLACEHOLDER } from "../text/turnStart";
 import { Team } from "../team";
 import { COLORS } from "./constants";
@@ -48,6 +48,7 @@ export class Server extends Manager {
 
     super(peer);
     Server._serverInstance = this;
+    setFallbackServer(() => Server._serverInstance);
   }
 
   connect(
@@ -98,7 +99,7 @@ export class Server extends Manager {
     if (this.localPlayers.length !== this.players.length) {
       Server.instance.broadcast({
         type: MessageType.StartGame,
-        map: await Level.instance.terrain.serialize(),
+        map: await getLevel().terrain.serialize(),
         settings: this.settings,
       });
 
@@ -113,7 +114,7 @@ export class Server extends Manager {
         player.addCharacter(
           new Character(
             player,
-            ...Level.instance.getRandomSpawnLocation(),
+            ...getLevel().getRandomSpawnLocation(),
             player.team.characters[i]
           )
         );
@@ -136,9 +137,9 @@ export class Server extends Manager {
 
     if (
       this._turnState === TurnState.Ending &&
-      Level.instance.hasDeathQueue()
+      getLevel().hasDeathQueue()
     ) {
-      Level.instance.performDeathQueue();
+      getLevel().performDeathQueue();
     }
 
     if (
@@ -159,7 +160,7 @@ export class Server extends Manager {
 
         this.broadcast({
           type: MessageType.Sink,
-          level: Level.instance.sink(),
+          level: getLevel().sink(),
         });
 
         this.setTurnState(TurnState.Rising);
@@ -178,7 +179,7 @@ export class Server extends Manager {
       const data: Message = {
         type: MessageType.EntityUpdate,
         priority: Priority.Low,
-        entities: Level.instance.syncables[Priority.Low].map((entity) =>
+        entities: getLevel().syncables[Priority.Low].map((entity) =>
           entity.serialize()
         ),
       };
@@ -190,7 +191,7 @@ export class Server extends Manager {
       const data: Message = {
         type: MessageType.EntityUpdate,
         priority: Priority.High,
-        entities: Level.instance.syncables[Priority.High].map((entity) =>
+        entities: getLevel().syncables[Priority.High].map((entity) =>
           entity.serialize()
         ),
       };
@@ -241,7 +242,7 @@ export class Server extends Manager {
         if (this._started) {
           connection.send({
             type: MessageType.StartGame,
-            map: await Level.instance.terrain.serialize(),
+            map: await getLevel().terrain.serialize(),
             settings: this.settings,
           } satisfies Message);
 
@@ -259,7 +260,7 @@ export class Server extends Manager {
             newMana: this.players[activePlayerIndex].mana,
           } as Message);
 
-          const spawnables = [...Level.instance.entities].filter(
+          const spawnables = [...getLevel().entities].filter(
             isSpawnableEntity
           );
           for (let spawnable of spawnables) {
@@ -273,7 +274,7 @@ export class Server extends Manager {
 
           this.broadcast({
             type: MessageType.Sink,
-            level: Level.instance.terrain.killbox.level,
+            level: getLevel().terrain.killbox.level,
           });
         } else if (onUpdate) {
           onUpdate();
@@ -580,7 +581,7 @@ export class Server extends Manager {
         return;
       }
 
-      const coords = Level.instance.getRandomItemLocation();
+      const coords = getLevel().getRandomItemLocation();
       if (coords) {
         const item = this.create(getRandomItem(...coords));
 
@@ -683,7 +684,7 @@ export class Server extends Manager {
   }
 
   create<T extends Spawnable>(entity: T) {
-    Level.instance.add(entity);
+    getLevel().add(entity);
 
     this.broadcast({
       type: MessageType.Spawn,
@@ -716,7 +717,7 @@ export class Server extends Manager {
   }
 
   focus(target: Spawnable, callback?: () => void) {
-    Level.instance.cameraTarget.setTarget(target, callback);
+    getLevel().cameraTarget.setTarget(target, callback);
 
     this.broadcast({
       type: MessageType.Focus,
@@ -725,7 +726,7 @@ export class Server extends Manager {
   }
 
   highlight(target: HurtableEntity, callback?: () => void) {
-    Level.instance.cameraTarget.highlight(target, callback);
+    getLevel().cameraTarget.highlight(target, callback);
 
     this.broadcast({
       type: MessageType.Highlight,

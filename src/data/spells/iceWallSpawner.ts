@@ -1,10 +1,8 @@
 import { Container } from "pixi.js";
-import { Level } from "../map/level";
 import { Character } from "../entity/character";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Spawnable } from "../entity/types";
-import { Server } from "../network/server";
+import { getLevel, getManager, getServer } from "../context";
 import { probeX } from "../map/utils";
 import { IceWall } from "./iceWall";
 import { Element } from "./types";
@@ -30,7 +28,7 @@ export class IceWallSpawner extends Container implements Spawnable {
     character.setSpellSource(this);
     this.wallCount =
       IceWallSpawner.wallCount +
-      Math.round(Manager.instance.getElementValue(Element.Elemental) * 3 - 2.5);
+      Math.round(getManager().getElementValue(Element.Elemental) * 3 - 2.5);
 
     this.direction = character.direction;
     this._x = x + this.direction * IceWallSpawner.startDistance;
@@ -42,7 +40,8 @@ export class IceWallSpawner extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -52,7 +51,7 @@ export class IceWallSpawner extends Container implements Spawnable {
       this.time = 0;
 
       const y = probeX(
-        Level.instance.terrain.collisionMask,
+        getLevel().terrain.collisionMask,
         this._x,
         this._y - IceWallSpawner.maxHeightDiff / 2
       );
@@ -61,7 +60,7 @@ export class IceWallSpawner extends Container implements Spawnable {
         y >= this._y + IceWallSpawner.maxHeightDiff ||
         y === this._y - IceWallSpawner.maxHeightDiff
       ) {
-        Server.instance.kill(this);
+        server.kill(this);
         return;
       }
 
@@ -69,23 +68,24 @@ export class IceWallSpawner extends Container implements Spawnable {
       const wall = new IceWall(
         this._x - IceWallSpawner.wallDistance / 2,
         this._y - 6,
-        this.character
+        this.character,
+        getLevel().terrain.characterMask
       );
-      Server.instance.create(wall);
+      server.create(wall);
 
       this._x += IceWallSpawner.wallDistance * this.direction;
       this.wallCount--;
 
       if (this.wallCount <= 0) {
-        Server.instance.kill(this);
+        server.kill(this);
       }
     }
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
     this.character.setSpellSource(this, false);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   serializeCreate() {
@@ -96,18 +96,19 @@ export class IceWallSpawner extends Container implements Spawnable {
     return new IceWallSpawner(
       data[0],
       data[1],
-      Level.instance.entityMap.get(data[2]) as Character
+      getLevel().entityMap.get(data[2]) as Character
     );
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new IceWallSpawner(x, y, character);
 
-    Server.instance.create(entity);
+    server.create(entity);
     return entity;
   }
 }

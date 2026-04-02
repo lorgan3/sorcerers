@@ -8,8 +8,8 @@ import { Team } from "../team";
 import { SPELLS } from "../spells";
 import { DAMAGE_SOURCES } from "../damage";
 import { ENTITIES, setId } from "../entity";
-import { Level } from "../map/level";
 import { HurtableEntity, Item, Syncable, isItem } from "../entity/types";
+import { getLevel } from "../context";
 import { Element } from "../spells/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
@@ -241,7 +241,7 @@ export class Client extends Manager {
           this.selectSpell(this.activePlayer?.selectedSpell, this.activePlayer);
         }
 
-        Level.instance.cameraTarget.setTarget(character);
+        getLevel().cameraTarget.setTarget(character);
         break;
 
       case MessageType.ActiveUpdate:
@@ -290,7 +290,7 @@ export class Client extends Manager {
 
       case MessageType.Die:
         {
-          const entity = Level.instance.entityMap.get(
+          const entity = getLevel().entityMap.get(
             message.id
           ) as HurtableEntity;
 
@@ -304,7 +304,7 @@ export class Client extends Manager {
 
       case MessageType.EntityUpdate:
         for (let i = 0; i < message.entities.length; i++) {
-          const entity = Level.instance.syncables[message.priority][i];
+          const entity = getLevel().syncables[message.priority][i];
           if (
             this.settings.trustClient &&
             this.activePlayer === this._self &&
@@ -313,7 +313,7 @@ export class Client extends Manager {
             continue;
           }
 
-          Level.instance.syncables[message.priority][i].deserialize(
+          getLevel().syncables[message.priority][i].deserialize(
             message.entities[i]
           );
         }
@@ -329,34 +329,34 @@ export class Client extends Manager {
 
           setId(message.id);
           const entity = ENTITIES[message.kind]!.create(message.data);
-          Level.instance.add(entity);
+          getLevel().add(entity);
         }
         break;
 
       case MessageType.DynamicUpdate:
         {
-          const entity = Level.instance.entityMap.get(message.id) as Syncable;
+          const entity = getLevel().entityMap.get(message.id) as Syncable;
           entity.deserialize(message.data);
         }
         break;
 
       case MessageType.Focus:
         {
-          const entity = Level.instance.entityMap.get(
+          const entity = getLevel().entityMap.get(
             message.id
           ) as HurtableEntity;
 
-          Level.instance.cameraTarget.setTarget(entity);
+          getLevel().cameraTarget.setTarget(entity);
         }
         break;
 
       case MessageType.Highlight:
         {
-          const entity = Level.instance.entityMap.get(
+          const entity = getLevel().entityMap.get(
             message.id
           ) as HurtableEntity;
 
-          Level.instance.cameraTarget.highlight(
+          getLevel().cameraTarget.highlight(
             entity,
             isItem(entity) ? () => entity.appear() : undefined
           );
@@ -365,9 +365,9 @@ export class Client extends Manager {
 
       case MessageType.Activate:
         {
-          const item = Level.instance.entityMap.get(message.id) as Item;
+          const item = getLevel().entityMap.get(message.id) as Item;
           const trigger = message.tId
-            ? (Level.instance.entityMap.get(message.tId) as Character)
+            ? (getLevel().entityMap.get(message.tId) as Character)
             : undefined;
 
           item.activate(trigger);
@@ -379,12 +379,12 @@ export class Client extends Manager {
         break;
 
       case MessageType.Sink:
-        if (Level.instance.terrain.killbox.level > message.level) {
-          Level.instance.shake();
+        if (getLevel().terrain.killbox.level > message.level) {
+          getLevel().shake();
           new ControllableSound(Sound.Drain, new filters.StereoFilter(0), {});
         }
 
-        Level.instance.terrain.killbox.level = message.level;
+        getLevel().terrain.killbox.level = message.level;
         break;
 
       case MessageType.Cast:

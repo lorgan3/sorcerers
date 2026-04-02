@@ -5,7 +5,6 @@ import {
   Sprite,
   Texture,
 } from "pixi.js";
-import { Level } from "../map/level";
 import { Body } from "../collision/body";
 import { Controller, Key } from "../controller/controller";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
@@ -20,7 +19,6 @@ import {
   rectangle6x16,
   rectangle6x16Canvas,
 } from "../collision/precomputed/rectangles";
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { ImpactDamage } from "../damage/impactDamage";
 import { Animation, Animator } from "../../graphics/animator";
@@ -35,9 +33,9 @@ import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Wings } from "./wings";
 import { SmokePuff } from "../../graphics/smokePuff";
-import { Server } from "../network/server";
 import { COLORS } from "../network/constants";
 import { BBox } from "../map/bbox";
+import { getLevel, getManager, getServer } from "../context";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
@@ -219,14 +217,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ? characterName.slice(0, MAX_NAME_LENGTH - 3) + "..."
         : characterName;
 
-    this.body = new Body(Level.instance.terrain.characterMask, {
+    this.body = new Body(getLevel().terrain.characterMask, {
       mask: rectangle6x16,
       onCollide: this.onCollide,
       ladderTest: this.ladderTest,
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
     );
@@ -242,22 +240,22 @@ export class Character extends Container implements HurtableEntity, Syncable {
       .addAnimation(AnimationState.SpellIdle, {
         ...ANIMATION_CONFIG[AnimationState.SpellIdle],
         onStart: () => {
-          this.particles = Level.instance.backgroundParticles.replaceEmitter(
+          this.particles = getLevel().backgroundParticles.replaceEmitter(
             createBackgroundParticles(this),
             this.particles
           );
           this.foregroundParticles =
-            Level.instance.particleContainer.replaceEmitter(
+            getLevel().particleContainer.replaceEmitter(
               createWandParticles(this),
               this.foregroundParticles
             );
         },
         onEnd: () => {
-          this.particles = Level.instance.backgroundParticles.destroyEmitter(
+          this.particles = getLevel().backgroundParticles.destroyEmitter(
             this.particles!
           );
           this.foregroundParticles =
-            Level.instance.particleContainer.destroyEmitter(
+            getLevel().particleContainer.destroyEmitter(
               this.foregroundParticles!
             );
         },
@@ -268,26 +266,26 @@ export class Character extends Container implements HurtableEntity, Syncable {
           const direction =
             this.sprite.scale.x > 0 ? -Math.PI / 3 : Math.PI + Math.PI / 3;
           const [cx, cy] = this.getCenter();
-          Server.instance?.damage(
+          getServer()?.damage(
             new ImpactDamage(
               Math.floor(cx / 6) + this.sprite.scale.x * 6,
               Math.floor(cy / 6) - 6,
               direction,
               MELEE_POWER *
-                (0.7 + Manager.instance.getElementValue(Element.Physical) * 0.3)
+                (0.7 + getManager().getElementValue(Element.Physical) * 0.3)
             ),
             this.player
           );
 
           this.animator.animate(AnimationState.SpellDone);
-          Manager.instance.setTurnState(TurnState.Ending);
+          getManager().setTurnState(TurnState.Ending);
         },
       })
       .addAnimation(AnimationState.Read, {
         ...ANIMATION_CONFIG[AnimationState.Read],
         onStart: () => {
           if (
-            Manager.instance.getActiveCharacter() !== this ||
+            getManager().getActiveCharacter() !== this ||
             !player.controller.isKeyDown(Key.Inventory)
           ) {
             this.animator.setDefaultAnimation(AnimationState.Idle);
@@ -299,7 +297,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ...ANIMATION_CONFIG[AnimationState.ReadIdle],
         continuous: () => {
           if (
-            (Manager.instance.getActiveCharacter() !== this ||
+            (getManager().getActiveCharacter() !== this ||
               !this.player.controller.isKeyDown()) &&
             !this.spellSource
           ) {
@@ -310,7 +308,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         },
         onEnd: () => {
           if (
-            Manager.instance.getActiveCharacter() !== this ||
+            getManager().getActiveCharacter() !== this ||
             !player.controller.isKeyDown(Key.Inventory)
           ) {
             this.animator.setDefaultAnimation(AnimationState.Idle);
@@ -344,14 +342,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   private onCollide = (x: number, y: number) => {
     if (this.body.yVelocity > SMOKE_TRIGGER && this.body.grounded) {
-      Level.instance.add(new SmokePuff(x * 6 + 18, y * 6 + 72));
+      getLevel().add(new SmokePuff(x * 6 + 18, y * 6 + 72));
     }
 
     if (
       Math.abs(this.body.xVelocity) > BOUNCE_TRIGGER ||
       Math.abs(this.body.yVelocity) > BOUNCE_TRIGGER
     ) {
-      Manager.instance.dealFallDamage(x, y, this);
+      getManager().dealFallDamage(x, y, this);
     }
   };
 
@@ -369,7 +367,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.lastReportedHp !== this._hp &&
       this.time > this.lastDamageTime + Character.damageNumberTime
     ) {
-      Level.instance.numberContainer.damage(
+      getLevel().numberContainer.damage(
         this.lastReportedHp - this._hp,
         ...this.getCenter()
       );
@@ -383,7 +381,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     if (this.body.active) {
       this.lastActiveTime = this.time;
 
-      Level.instance.terrain.characterMask.subtract(
+      getLevel().terrain.characterMask.subtract(
         this.body.mask,
         ...this.body.position
       );
@@ -397,20 +395,20 @@ export class Character extends Container implements HurtableEntity, Syncable {
         }
 
         if (
-          Level.instance.terrain.killbox.collidesWith(
+          getLevel().terrain.killbox.collidesWith(
             this.body.mask,
             this.position.x,
             this.position.y
           )
         ) {
-          Server.instance?.damage(
+          getServer()?.damage(
             new GenericDamage(new TargetList().add(this, 999))
             // this.lastDamageDealer
           );
         }
       }
 
-      Level.instance.terrain.characterMask.add(
+      getLevel().terrain.characterMask.add(
         this.body.mask,
         ...this.body.position
       );
@@ -434,25 +432,25 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   move(x: number, y: number) {
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.body.mask,
       ...this.body.position
     );
 
     this.body.move(x, y);
 
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
     );
   }
 
   ladderTest = (x: number, y: number) => {
-    if (!Manager.instance.isTrusted(this)) {
+    if (!getManager().isTrusted(this)) {
       return false;
     }
 
-    for (let ladder of Level.instance.terrain.ladders) {
+    for (let ladder of getLevel().terrain.ladders) {
       if (
         x + 6 >= ladder.left &&
         x <= ladder.right &&
@@ -474,7 +472,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       (this.body.yVelocity > 0 && this.body.yVelocity < MAX_LADDER_MOUNT_SPEED)
     ) {
       const [x, y] = this.body.precisePosition;
-      for (let ladder of Level.instance.terrain.ladders) {
+      for (let ladder of getLevel().terrain.ladders) {
         if (
           x + 6 >= ladder.left &&
           x <= ladder.right &&
@@ -498,7 +496,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     if (this.body.onLadder) {
       if (!foundLadder) {
-        if (Manager.instance.isTrusted(this)) {
+        if (getManager().isTrusted(this)) {
           this.body.unmountLadder();
         }
         return;
@@ -601,7 +599,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this._lastDamageDealer = source.cause;
     this.body.unmountLadder();
 
-    Level.instance.bloodEmitter.burst(this, damage, source);
+    getLevel().bloodEmitter.burst(this, damage, source);
     if (damage > 0) {
       ControllableSound.fromEntity(this, Sound.Splat);
     }
@@ -635,7 +633,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
       let defaultAnimation;
       if (
-        Manager.instance.getActiveCharacter() === this &&
+        getManager().getActiveCharacter() === this &&
         this.player.controller.isKeyDown(Key.Inventory)
       ) {
         defaultAnimation = AnimationState.Read;
@@ -675,14 +673,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   deserialize(data: any[]) {
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.body.mask,
       ...this.body.position
     );
 
     this.body.deserialize(data);
 
-    Level.instance.terrain.characterMask.add(
+    getLevel().terrain.characterMask.add(
       this.body.mask,
       ...this.body.position
     );
@@ -698,7 +696,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   die() {
     if (this._hp !== this.lastReportedHp) {
-      Level.instance.numberContainer.damage(
+      getLevel().numberContainer.damage(
         this.lastReportedHp - this._hp,
         ...this.getCenter()
       );
@@ -709,7 +707,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       this.lastReportedHp = this._hp;
     }
 
-    Level.instance.terrain.characterMask.subtract(
+    getLevel().terrain.characterMask.subtract(
       this.body.mask,
       ...this.body.position
     );
@@ -718,16 +716,16 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
     const [x, y] = this.getCenter();
     new Explosion(x, y);
-    Level.instance.shake();
+    getLevel().shake();
 
     const gibs = createCharacterGibs(...this.body.precisePosition);
     gibs.forEach((gib) =>
       gib.body.addVelocity((Math.random() - 0.5) * 8, -2 - Math.random() * 3)
     );
-    Level.instance.add(...gibs);
-    Level.instance.bloodEmitter.burst(this, 100);
+    getLevel().add(...gibs);
+    getLevel().bloodEmitter.burst(this, 100);
 
-    Level.instance.terrain.draw((ctx) => {
+    getLevel().terrain.draw((ctx) => {
       const splat = AssetsContainer.instance.assets!["atlas"].textures[
         "gibs_splat"
       ] as Texture;
@@ -745,7 +743,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
       );
     });
 
-    Server.instance?.damage(
+    getServer()?.damage(
       new ExplosiveDamage(x / 6, y / 6, 16, 1, 1),
       this.player
     );
@@ -785,7 +783,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     const oldHp = this._hp;
     const diff = hp - oldHp;
     if (diff > 0) {
-      Level.instance.numberContainer.heal(diff, ...this.getCenter());
+      getLevel().numberContainer.heal(diff, ...this.getCenter());
       this.lastReportedHp += diff;
       this.namePlate.text = `${this.namePlateName} ${Math.max(
         0,

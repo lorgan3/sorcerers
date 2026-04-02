@@ -17,6 +17,13 @@ const pixiDependencies = [
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: [vue()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+      },
+    },
+  },
   server: {
     port: 3000,
   },

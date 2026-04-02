@@ -1,5 +1,5 @@
-import { HurtableEntity } from "../entity/types";
-import { Level } from "../map/level";
+import { HurtableEntity, TickingEntity } from "../entity/types";
+import { getLevel } from "../context";
 import { DamageSource } from "./types";
 
 export interface Force {
@@ -26,9 +26,12 @@ export class TargetList {
     return this;
   }
 
-  damage(source: DamageSource) {
+  damage(
+    source: DamageSource,
+    entityMap: Map<number, TickingEntity> = getLevel().entityMap
+  ) {
     for (let target of this.targets) {
-      const entity = Level.instance.entityMap.get(target.entityId) as
+      const entity = entityMap.get(target.entityId) as
         | HurtableEntity
         | undefined;
       entity?.damage(source, target.damage, target.force);
@@ -48,10 +51,11 @@ export class TargetList {
     );
   }
 
-  getEntities() {
+  getEntities(
+    entityMap: Map<number, TickingEntity> = getLevel().entityMap
+  ) {
     return this.targets.map(
-      (target) =>
-        Level.instance.entityMap.get(target.entityId) as HurtableEntity
+      (target) => entityMap.get(target.entityId) as HurtableEntity
     );
   }
 

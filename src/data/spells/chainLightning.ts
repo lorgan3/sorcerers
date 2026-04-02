@@ -1,9 +1,6 @@
 import { Container } from "pixi.js";
-import { Level } from "../map/level";
-
 import { Character } from "../entity/character";
 
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import {
   EntityType,
@@ -11,9 +8,9 @@ import {
   Spawnable,
   isHurtableEntity,
 } from "../entity/types";
-import { Server } from "../network/server";
 
 import { ControllableSound } from "../../sound/controllableSound";
+import { getLevel, getManager, getServer } from "../context";
 import { Sound } from "../../sound";
 import { Lightning } from "../../graphics/lightning";
 import { angleDiff, getAngle, getDistance } from "../../util/math";
@@ -46,8 +43,8 @@ export class ChainLightning extends Container implements Spawnable {
   }
 
   die() {
-    Level.instance.remove(this);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getLevel().remove(this);
+    getManager().setTurnState(TurnState.Ending);
   }
 
   getCenter(): [number, number] {
@@ -76,18 +73,19 @@ export class ChainLightning extends Container implements Spawnable {
       const distance = getDistance(x, y, ...coords);
       const direction = getAngle(x, y, ...coords);
 
-      Level.instance.add(new Lightning(x, y, distance, direction));
+      getLevel().add(new Lightning(x, y, distance, direction));
 
       const target = this.targets[this.index];
       if (isHurtableEntity(target)) {
-        Server.instance?.damage(
+        const server = getServer();
+        server?.damage(
           new GenericDamage(
             new TargetList().add(
               target,
-              20 + Manager.instance.getElementValue(Element.Elemental) * 5
+              20 + getManager().getElementValue(Element.Elemental) * 5
             )
           ),
-          Server.instance.getActivePlayer()
+          server.getActivePlayer()
         );
       }
 
@@ -114,14 +112,15 @@ export class ChainLightning extends Container implements Spawnable {
       data[1],
       data[2].map((data) =>
         typeof data === "number"
-          ? (Level.instance.entityMap.get(data) as HurtableEntity)
+          ? (getLevel().entityMap.get(data) as HurtableEntity)
           : data
       )
     );
   }
 
   static cast(x: number, y: number, character: Character, direction: number) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -132,7 +131,7 @@ export class ChainLightning extends Container implements Spawnable {
 
     for (let i = 0; i < ChainLightning.maxChains; i++) {
       const nextTargets: Array<[number, HurtableEntity]> = [];
-      Level.instance.withNearbyEntities(
+      getLevel().withNearbyEntities(
         checkX,
         checkY,
         ChainLightning.maxRange,
@@ -181,7 +180,7 @@ export class ChainLightning extends Container implements Spawnable {
 
     const entity = new ChainLightning(x, y, targets);
 
-    Server.instance.create(entity);
+    server.create(entity);
     return entity;
   }
 }

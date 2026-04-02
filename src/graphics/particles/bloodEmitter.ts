@@ -4,7 +4,7 @@ import { ParticleEmitter } from "./types";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { EntityType, Spawnable } from "../../data/entity/types";
 import { DamageSource } from "../../data/damage/types";
-import { Level } from "../../data/map/level";
+import { getLevel } from "../../data/context";
 
 const TINT_MAP: Partial<Record<EntityType, string>> = {
   [EntityType.Character]: "#b91e1e",
@@ -60,7 +60,7 @@ export class BloodEmitter
       particle.alpha = Math.min(1, particle.lifetime / 10);
 
       if (
-        !Level.instance.terrain.collisionMask.collidesWithPoint(
+        !getLevel().terrain.collisionMask.collidesWithPoint(
           (particle.x / 6) | 0,
           (particle.y / 6) | 0
         )
@@ -71,7 +71,7 @@ export class BloodEmitter
         particle.y += particle.yVelocity * dt;
       } else {
         particle.lifetime = 0;
-        Level.instance.terrain.draw(
+        getLevel().terrain.draw(
           (ctx) => {
             ctx.fillStyle = particle.color;
 

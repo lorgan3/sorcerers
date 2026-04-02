@@ -1,17 +1,17 @@
 import { Character } from "../entity/character";
-import { Level } from "../map/level";
-import { Server } from "../network/server";
+import { getLevel, getServer } from "../context";
 
 export class MindControl {
   static cast(x: number, y: number, character: Character, _: Character) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
-    Server.instance.broadcastActiveCharacter(
-      Server.instance.players.indexOf(character.player),
+    server.broadcastActiveCharacter(
+      server.players.indexOf(character.player),
       character.player.characters.indexOf(character)
     );
-    Level.instance.cameraTarget.setTarget(character);
+    getLevel().cameraTarget.setTarget(character);
   }
 }

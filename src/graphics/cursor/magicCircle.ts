@@ -5,13 +5,11 @@ import { Spell } from "../../data/spells";
 import { Character } from "../../data/entity/character";
 import { Controller, Key } from "../../data/controller/controller";
 
-import { Manager } from "../../data/network/manager";
+import { getLevel, getManager, getServer } from "../../data/context";
 import { Cursor, ProjectileConstructor } from "./types";
 import { TurnState } from "../../data/network/types";
-import { Level } from "../../data/map/level";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Server } from "../../data/network/server";
 
 const SCALE_MULTIPLIER = 0.8;
 const ANIMATION_SPEED = -0.4;
@@ -50,11 +48,11 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
     this.pointer.tint = this.character.player.color;
 
     this.addChild(this.indicator, this.pointer);
-    Level.instance.uiContainer.addChild(this);
+    getLevel().uiContainer.addChild(this);
   }
 
   remove(): void {
-    Level.instance.uiContainer.removeChild(this);
+    getLevel().uiContainer.removeChild(this);
     this.character.setSpellSource(this, false);
     this.sound?.destroy();
   }
@@ -73,12 +71,12 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
       rotation
     );
 
-    Manager.instance.setTurnState(turnState);
+    getManager().setTurnState(turnState);
   }
 
   tick(dt: number, controller: Controller) {
     this.pointer.position.set(...controller.getLocalMouse());
-    this.pointer.scale.set(2 / Level.instance.viewport.scale.x);
+    this.pointer.scale.set(2 / getLevel().viewport.scale.x);
 
     if (this.character.body.onLadder) {
       this.sound?.destroy();
@@ -99,9 +97,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
         this.indicator.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
-        if (Server.instance) {
-          Server.instance.cast();
-        }
+        getServer()?.cast();
       }
 
       return;

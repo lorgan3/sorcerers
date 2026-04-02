@@ -1,16 +1,14 @@
 import { AnimatedSprite, BitmapText, Container } from "pixi.js";
-import { Level } from "../map/level";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { SimpleBody } from "../collision/simpleBody";
 import { circle3x3 } from "../collision/precomputed/circles";
 import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Character } from "../entity/character";
 
-import { Manager } from "../network/manager";
 import { TurnState } from "../network/types";
 import { EntityType, Priority, Syncable } from "../entity/types";
-import { Server } from "../network/server";
 import { Element } from "./types";
+import { getLevel, getManager, getServer } from "../context";
 import { Key } from "../controller/controller";
 import { angleDiff, getAngle } from "../../util/math";
 import { ParticleEmitter } from "../../graphics/particles/types";
@@ -18,6 +16,7 @@ import { SimpleParticleEmitter } from "../../graphics/particles/simpleParticleEm
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Implosion } from "../../graphics/implosion";
+import { CollisionMask } from "../collision/collisionMask";
 
 export class MagicMissile extends Container implements Syncable {
   private static lifetime = 400;
@@ -38,16 +37,17 @@ export class MagicMissile extends Container implements Syncable {
     y: number,
     private speed: number,
     private direction: number,
-    private character: Character
+    private character: Character,
+    collisionMask: CollisionMask
   ) {
     super();
     character.setSpellSource(this);
     this.lifetime =
-      MagicMissile.lifetime * Manager.instance.getElementValue(Element.Life);
+      MagicMissile.lifetime * getManager().getElementValue(Element.Life);
 
-    this.body = new SimpleBody(Level.instance.terrain.characterMask, {
+    this.body = new SimpleBody(collisionMask, {
       mask: circle3x3,
-      onCollide: Server.instance ? this.onCollide : undefined,
+      onCollide: getServer() ? this.onCollide : undefined,
       friction: 0.97,
       gravity: 0.1,
     });
@@ -95,8 +95,8 @@ export class MagicMissile extends Container implements Syncable {
         }),
       }
     );
-    Level.instance.particleContainer.addEmitter(this.particles);
-    Level.instance.cameraTarget.setTarget(this);
+    getLevel().particleContainer.addEmitter(this.particles);
+    getLevel().cameraTarget.setTarget(this);
   }
 
   getCenter(): [number, number] {
@@ -108,28 +108,29 @@ export class MagicMissile extends Container implements Syncable {
   };
 
   private _die(x: number, y: number) {
-    Server.instance.damage(
+    const server = getServer()!;
+    server.damage(
       new ExplosiveDamage(
         x,
         y,
         16,
         3,
-        5 + Manager.instance.getElementValue(Element.Arcane)
+        5 + getManager().getElementValue(Element.Arcane)
       ),
       this.character.player
     );
 
-    Server.instance.kill(this);
+    server.kill(this);
   }
 
   die() {
-    Level.instance.remove(this);
+    getLevel().remove(this);
 
     const [x, y] = this.body.precisePosition;
     new Implosion(x * 6, y * 6);
-    Manager.instance.setTurnState(TurnState.Ending);
+    getManager().setTurnState(TurnState.Ending);
     this.character.setSpellSource(this, false);
-    Level.instance.particleContainer.destroyEmitter(this.particles);
+    getLevel().particleContainer.destroyEmitter(this.particles);
     this.sound?.destroy();
   }
 
@@ -167,7 +168,7 @@ export class MagicMissile extends Container implements Syncable {
     }
 
     this.lifetime -= dt;
-    if (this.lifetime <= 0 && Server.instance) {
+    if (this.lifetime <= 0 && getServer()) {
       this._die(x, y);
     }
   }
@@ -199,18 +200,20 @@ export class MagicMissile extends Container implements Syncable {
       data[1],
       data[2],
       data[3],
-      Level.instance.entityMap.get(data[4]) as Character
+      getLevel().entityMap.get(data[4]) as Character,
+      getLevel().terrain.characterMask
     );
   }
 
   static cast(x: number, y: number, character: Character, direction: number) {
-    if (!Server.instance) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
-    const entity = new MagicMissile(x, y, 1.5, direction, character);
+    const entity = new MagicMissile(x, y, 1.5, direction, character, getLevel().terrain.characterMask);
 
-    Server.instance.create(entity);
+    server.create(entity);
     return entity;
   }
 }

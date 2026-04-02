@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { Manager } from "../../data/network/manager";
+import { getManager } from "../../data/context";
 import Dialog from "../molecules/Dialog.vue";
 
 const route = useRoute();
@@ -9,7 +9,7 @@ const { onCancel } = defineProps<{
 }>();
 
 const handleQuit = () => {
-  Manager.instance.destroy();
+  getManager().destroy();
 };
 </script>
 

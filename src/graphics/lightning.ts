@@ -1,6 +1,6 @@
 import { AnimatedSprite } from "pixi.js";
 import { AssetsContainer } from "../util/assets/assetsContainer";
-import { Level } from "../data/map/level";
+import { getLevel } from "../data/context";
 import { ControllableSound } from "../sound/controllableSound";
 import { Sound } from "../sound";
 
@@ -22,7 +22,7 @@ export class Lightning extends AnimatedSprite {
 
     ControllableSound.fromEntity([x, y], Sound.Whip);
 
-    Level.instance.add(this);
-    this.onComplete = () => Level.instance.remove(this);
+    getLevel().add(this);
+    this.onComplete = () => getLevel().remove(this);
   }
 }

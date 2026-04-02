@@ -1,7 +1,7 @@
 import { filters, IMediaInstance, PlayOptions, sound } from "@pixi/sound";
 import { getRandomSound, Sound, SoundData } from ".";
 import { Spawnable } from "../data/entity/types";
-import { Level } from "../data/map/level";
+import { getLevel } from "../data/context";
 
 class ControllableSound {
   private ref?: IMediaInstance;
@@ -35,7 +35,7 @@ class ControllableSound {
   }
 
   static getSoundOptions(cx: number, cy: number) {
-    const { x, y, width, height, scale } = Level.instance.getViewport();
+    const { x, y, width, height, scale } = getLevel().getViewport();
     const horizontalDirection = (cx - x) / (width / 2);
     const verticalDirection = (cy - y) / (height / 2);
 

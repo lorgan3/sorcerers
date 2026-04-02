@@ -1,13 +1,11 @@
 import { AnimatedSprite, Container } from "pixi.js";
 
-import { Level } from "../map/level";
 import { Character } from "../entity/character";
-import { Server } from "../network/server";
 import { EntityType, Spawnable } from "../entity/types";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Manager } from "../network/manager";
+import { getLevel, getManager, getServer } from "../context";
 
 export class Teleport extends Container implements Spawnable {
   private static teleportTime = 10;
@@ -27,12 +25,12 @@ export class Teleport extends Container implements Spawnable {
     super();
 
     this.fromSprite = this.createSprite(...this.character.body.precisePosition);
-    this.fromSprite.onComplete = () => Level.instance.remove(this);
+    this.fromSprite.onComplete = () => getLevel().remove(this);
 
     this.toSprite = this.createSprite(rx, ry);
 
     this.addChild(this.fromSprite, this.toSprite);
-    Level.instance.add(this);
+    getLevel().add(this);
 
     ControllableSound.fromEntity(this.character, Sound.Smoke);
   }
@@ -57,7 +55,7 @@ export class Teleport extends Container implements Spawnable {
 
   tick(dt: number) {
     if (
-      !Manager.instance.isTrusted(this.character) ||
+      !getManager().isTrusted(this.character) ||
       this.time >= Teleport.teleportTime
     ) {
       return;
@@ -78,18 +76,18 @@ export class Teleport extends Container implements Spawnable {
     return new Teleport(
       data[0],
       data[1],
-      Level.instance.entityMap.get(data[2]) as Character
+      getLevel().entityMap.get(data[2]) as Character
     );
   }
 
   static cast(x: number, y: number, _: null, character: Character) {
-    if (!Server.instance) {
+    if (!getServer()) {
       return;
     }
 
     const entity = new Teleport(x, y, character);
 
-    Server.instance.create(entity);
+    getServer()!.create(entity);
     return entity;
   }
 }

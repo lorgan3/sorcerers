@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import "./src/test/canvasStub";
 
 expect.extend({
   toApproximate(expected: number, actual: number) {

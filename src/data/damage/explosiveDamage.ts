@@ -12,6 +12,7 @@ import { isHurtableEntity } from "../entity/types";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { Player } from "../network/player";
+import { getLevel } from "../context";
 
 const DEFAULT_POWER = 5;
 const DEFAULT_DAMAGE_MULTIPLIER = 5;
@@ -64,7 +65,7 @@ export class ExplosiveDamage implements DamageSource {
   ) {}
 
   damage() {
-    Level.instance.terrain.draw((ctx) => {
+    getLevel().terrain.draw((ctx) => {
       const offset = Math.ceil(this.range * ExplosiveDamage.gradientMultiplier);
       ctx.drawImage(
         ExplosiveDamage.gradients[this.range],
@@ -73,7 +74,7 @@ export class ExplosiveDamage implements DamageSource {
       );
     });
 
-    Level.instance.terrain.subtractCircle(
+    getLevel().terrain.subtractCircle(
       this.x,
       this.y,
       this.range,
@@ -101,12 +102,17 @@ export class ExplosiveDamage implements DamageSource {
     return [this.x, this.y, this.range, this.targets?.serialize()] as const;
   }
 
-  getTargets() {
+  getTargets(withNearbyEntities?: Level["withNearbyEntities"]) {
     if (!this.targets) {
       this.targets = new TargetList();
 
+      if (!withNearbyEntities) {
+        const level = getLevel();
+        withNearbyEntities = level.withNearbyEntities.bind(level);
+      }
+
       const range = (this.range + 5) * 6;
-      Level.instance.withNearbyEntities(
+      withNearbyEntities(
         this.x * 6,
         this.y * 6,
         range,

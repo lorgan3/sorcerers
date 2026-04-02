@@ -24,6 +24,7 @@ import { Background } from "./background";
 import { Viewport } from "./viewport";
 import { Manager } from "../network/manager";
 import { ellipse9x16 } from "../collision/precomputed/circles";
+import { getContextOrNull } from "../context";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -67,7 +68,7 @@ export class Level {
 
   private static _instance: Level;
   static get instance() {
-    return Level._instance;
+    return getContextOrNull()?.level ?? Level._instance;
   }
 
   constructor(private target: HTMLElement, map: GameMap) {
