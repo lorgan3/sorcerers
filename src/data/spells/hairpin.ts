@@ -31,7 +31,8 @@ export class Hairpin extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -55,10 +56,10 @@ export class Hairpin extends Container implements Spawnable {
         this.character
       );
 
-      getServer()!.create(bomb);
+      server.create(bomb);
 
       if (this.bombsRemaining === 0) {
-        getServer()!.kill(this);
+        server.kill(this);
       }
     }
   }
@@ -100,13 +101,14 @@ export class Hairpin extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Hairpin(x, y, direction, 1 + power, character);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

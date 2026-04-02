@@ -40,7 +40,8 @@ export class IceWallSpawner extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -59,7 +60,7 @@ export class IceWallSpawner extends Container implements Spawnable {
         y >= this._y + IceWallSpawner.maxHeightDiff ||
         y === this._y - IceWallSpawner.maxHeightDiff
       ) {
-        getServer()!.kill(this);
+        server.kill(this);
         return;
       }
 
@@ -70,13 +71,13 @@ export class IceWallSpawner extends Container implements Spawnable {
         this.character,
         getLevel().terrain.characterMask
       );
-      getServer()!.create(wall);
+      server.create(wall);
 
       this._x += IceWallSpawner.wallDistance * this.direction;
       this.wallCount--;
 
       if (this.wallCount <= 0) {
-        getServer()!.kill(this);
+        server.kill(this);
       }
     }
   }
@@ -100,13 +101,14 @@ export class IceWallSpawner extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new IceWallSpawner(x, y, character);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

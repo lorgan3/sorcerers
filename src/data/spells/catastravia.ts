@@ -49,7 +49,8 @@ export class Catastravia extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -57,8 +58,8 @@ export class Catastravia extends Container implements Spawnable {
 
     if (this.missiles.length === this.missileCount) {
       if (this.missiles.every((missle) => missle.dead)) {
-        getServer()!.kill(this);
-        getServer()!.setTurnState(
+        server.kill(this);
+        server.setTurnState(
           this.missileCount === 0 ? TurnState.Ongoing : TurnState.Ending
         );
       }
@@ -97,7 +98,7 @@ export class Catastravia extends Container implements Spawnable {
               getLevel().terrain.characterMask
             );
 
-            getServer()!.create(missile);
+            server.create(missile);
             this.missiles.push(missile);
             return;
           }
@@ -133,13 +134,14 @@ export class Catastravia extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Catastravia(direction, 50 + 20 * power, character);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

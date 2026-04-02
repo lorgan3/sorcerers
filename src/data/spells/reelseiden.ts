@@ -105,9 +105,10 @@ export class Reelseiden extends Container implements Spawnable {
     );
 
     if (targetList.hasEntities()) {
-      getServer()?.damage(
+      const server = getServer();
+      server?.damage(
         new GenericDamage(targetList),
-        getServer()!.getActivePlayer()
+        server.getActivePlayer()
       );
     }
 
@@ -137,14 +138,15 @@ export class Reelseiden extends Container implements Spawnable {
     character: Character,
     angle: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const angleIndex = getIndexFromAngle(angle);
     const entity = new Reelseiden(x - 12, y - 12, angleIndex);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

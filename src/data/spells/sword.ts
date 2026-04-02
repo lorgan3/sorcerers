@@ -82,7 +82,8 @@ export class Sword extends Container implements Syncable {
         Shape.SwordTip,
         2 + 2 * getManager().getElementValue(Element.Arcane)
       );
-      getServer()?.damage(damage, getServer()!.getActivePlayer());
+      const server = getServer();
+      server?.damage(damage, server.getActivePlayer());
 
       if (this.collided) {
         this.collided = false;
@@ -167,14 +168,15 @@ export class Sword extends Container implements Syncable {
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Sword(x, y, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
-    getServer()!.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }

@@ -131,7 +131,8 @@ export class Zoltraak extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character, rotation: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -141,7 +142,7 @@ export class Zoltraak extends Container implements Spawnable {
 
     const entity = new Zoltraak(x, y, angleIndex, distance);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 
@@ -171,9 +172,10 @@ export class Zoltraak extends Container implements Spawnable {
       targetList.add(target.entity, damage);
 
       if (target.entity instanceof Shield) {
-        getServer()?.damage(
+        const server = getServer();
+        server?.damage(
           new GenericDamage(targetList),
-          getServer()!.getActivePlayer()
+          server.getActivePlayer()
         );
 
         const [cx, cy] = target.entity.getCenter();
@@ -182,9 +184,10 @@ export class Zoltraak extends Container implements Spawnable {
     }
 
     if (targetList.hasEntities()) {
-      getServer()?.damage(
+      const server = getServer();
+      server?.damage(
         new GenericDamage(targetList),
-        getServer()!.getActivePlayer()
+        server.getActivePlayer()
       );
     }
 

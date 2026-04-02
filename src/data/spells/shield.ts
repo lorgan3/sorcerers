@@ -131,9 +131,10 @@ export class Shield extends Container implements HurtableEntity, Syncable {
   }
 
   tick() {
-    if (this.body.moved && getServer()) {
+    const server = getServer();
+    if (this.body.moved && server) {
       this.move();
-      getServer()!.dynamicUpdate(this);
+      server.dynamicUpdate(this);
     }
   }
 
@@ -191,13 +192,14 @@ export class Shield extends Container implements HurtableEntity, Syncable {
   }
 
   static cast(x: number, y: number, character: Character, angle: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Shield(x, y, angle - Math.PI / 2);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

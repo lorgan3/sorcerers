@@ -135,7 +135,8 @@ export class Rock extends Container implements Spawnable {
                 ey - (this._y - 48 + 8) - 48 + Math.floor(this.sprite.height)
               )
             ) {
-              getServer()?.damage(
+              const server = getServer();
+              server?.damage(
                 new ExplosiveDamage(
                   ex + 3,
                   ey + 3,
@@ -144,7 +145,7 @@ export class Rock extends Container implements Spawnable {
                   0.5 +
                     getManager().getElementValue(Element.Elemental) * 0.5
                 ), // Negative power to push the player up
-                getServer()!.getActivePlayer()
+                server.getActivePlayer()
               );
             }
 
@@ -154,8 +155,9 @@ export class Rock extends Container implements Spawnable {
       }
     );
 
-    if (this.time >= Rock.growTime && getServer()) {
-      getServer()!.kill(this);
+    const server = getServer();
+    if (this.time >= Rock.growTime && server) {
+      server.kill(this);
     }
   }
 
@@ -173,7 +175,8 @@ export class Rock extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -201,7 +204,7 @@ export class Rock extends Container implements Spawnable {
       character.direction
     );
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

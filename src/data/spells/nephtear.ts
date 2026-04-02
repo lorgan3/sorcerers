@@ -80,16 +80,17 @@ export class Nephtear extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    getServer()!.damage(
+    const server = getServer()!;
+    server.damage(
       new ImpactDamage(
         x,
         y,
         this.sprite.rotation,
         30 * (0.7 + getManager().getElementValue(Element.Elemental) * 0.3)
       ),
-      getServer()!.getActivePlayer()
+      server.getActivePlayer()
     );
-    getServer()!.kill(this);
+    server.kill(this);
   }
 
   die() {
@@ -142,13 +143,14 @@ export class Nephtear extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Nephtear(x, y, 2 + power / 3, direction, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

@@ -48,7 +48,8 @@ export class GateOfBabylon extends Container implements Spawnable {
   }
 
   tick(dt: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -57,8 +58,8 @@ export class GateOfBabylon extends Container implements Spawnable {
     if (this.swords.length === this.swordCount) {
       this.sound?.fade(dt, 25);
       if (this.swords.every((sword) => sword.dead)) {
-        getServer()!.kill(this);
-        getServer()!.setTurnState(TurnState.Ending);
+        server.kill(this);
+        server.setTurnState(TurnState.Ending);
       }
 
       return;
@@ -76,7 +77,7 @@ export class GateOfBabylon extends Container implements Spawnable {
       const y = probeX(getLevel().terrain.collisionMask, x);
 
       const sword = new SmallSword(x, y - 50 - Math.random() * 50, getLevel().terrain.characterMask);
-      getServer()!.create(sword);
+      server.create(sword);
       this.swords.push(sword);
     }
   }
@@ -101,14 +102,15 @@ export class GateOfBabylon extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new GateOfBabylon(x, character, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
-    getServer()!.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }

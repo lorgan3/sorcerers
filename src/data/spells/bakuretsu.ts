@@ -171,7 +171,8 @@ export class Bakuretsu extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -181,8 +182,8 @@ export class Bakuretsu extends Container implements Spawnable {
       character
     );
 
-    getServer()!.create(entity);
-    getServer()!.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }

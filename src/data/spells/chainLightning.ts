@@ -77,14 +77,15 @@ export class ChainLightning extends Container implements Spawnable {
 
       const target = this.targets[this.index];
       if (isHurtableEntity(target)) {
-        getServer()?.damage(
+        const server = getServer();
+        server?.damage(
           new GenericDamage(
             new TargetList().add(
               target,
               20 + getManager().getElementValue(Element.Elemental) * 5
             )
           ),
-          getServer()!.getActivePlayer()
+          server.getActivePlayer()
         );
       }
 
@@ -118,7 +119,8 @@ export class ChainLightning extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character, direction: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -178,7 +180,7 @@ export class ChainLightning extends Container implements Spawnable {
 
     const entity = new ChainLightning(x, y, targets);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }
