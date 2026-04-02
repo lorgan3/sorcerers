@@ -143,7 +143,7 @@ export class Map {
   }
 
   static async parse(blob: Blob): Promise<Config> {
-    let data = new Uint8Array(await blob.arrayBuffer());
+    let data: Uint8Array = new Uint8Array(await blob.arrayBuffer());
 
     const background = Map.getMetadata(data, BACKGROUND_KEY, "");
     return {
@@ -273,7 +273,7 @@ export class Map {
     }
 
     const blob = await canvas.convertToBlob({ type: "image/png" });
-    let data = new Uint8Array(await blob.arrayBuffer());
+    let data: Uint8Array = new Uint8Array(await blob.arrayBuffer());
 
     data = addMetadata(data, VERSION_KEY, VERSION.toString());
     data = addMetadata(data, TERRAIN_KEY, this.config.terrain.data);
