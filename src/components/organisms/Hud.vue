@@ -83,7 +83,8 @@ const poll = () => {
 };
 
 const handleKick = (player: number) => {
-  getServer()!.kick(getServer()!.players[player]);
+  const server = getServer()!;
+  server.kick(server.players[player]);
 };
 
 let id = -1;

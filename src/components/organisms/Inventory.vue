@@ -61,15 +61,16 @@ const handleClick = (spell?: Spell) => {
   if (spell && !getManager().self.executedSpells.includes(spell)) {
     props.onClose();
 
-    if (getServer()) {
+    const server = getServer();
+    if (server) {
       getManager().selectSpell(spell);
 
       const message: Message = {
         type: MessageType.SelectSpell,
         spell: SPELLS.indexOf(spell),
-        player: getServer()!.players.indexOf(getServer()!.self),
+        player: server.players.indexOf(server.self),
       };
-      getServer()!.broadcast(message);
+      server.broadcast(message);
     }
 
     if (Client.instance) {

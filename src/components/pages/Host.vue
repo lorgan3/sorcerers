@@ -52,8 +52,9 @@ const editingPlayer = ref<IPlayer>();
 watch(
   () => gameSettings.value.teamSize,
   async (newSize) => {
-    getServer()!.teamSize = newSize;
-    getServer()!.players.forEach((player) => player.team.setSize(newSize));
+    const server = getServer()!;
+    server.teamSize = newSize;
+    server.players.forEach((player) => player.team.setSize(newSize));
   }
 );
 
@@ -93,14 +94,15 @@ onMounted(async () => {
 });
 
 const updateLobby = debounce(() => {
-  if (!getServer() || getServer()!.started) {
+  const server = getServer();
+  if (!server || server.started) {
     return;
   }
 
-  players.value = [...getServer()!.players];
+  players.value = [...server.players];
 
-  for (let i = 0; i < getServer()!.players.length; i++) {
-    const player = getServer()!.players[i];
+  for (let i = 0; i < server.players.length; i++) {
+    const player = server.players[i];
 
     player.connection?.send({
       type: MessageType.LobbyUpdate,
@@ -121,8 +123,9 @@ const handleBack = () => {
     return;
   }
 
-  if (getServer()) {
-    getServer()!.destroy();
+  const server = getServer();
+  if (server) {
+    server.destroy();
   }
 
   router.replace("/");
@@ -162,7 +165,8 @@ const handleAddLocalPlayer = () => {
 };
 
 const handleKick = (index: number) => {
-  const player = getServer()!.players[index];
+  const server = getServer()!;
+  const player = server.players[index];
   const localPlayerIndex = localPlayers.value.findIndex(
     (localPlayer) => localPlayer === player.color
   );
@@ -171,7 +175,7 @@ const handleKick = (index: number) => {
     localPlayers.value.splice(localPlayerIndex, 1);
   }
 
-  getServer()!.kick(getServer()!.players[index]);
+  server.kick(server.players[index]);
   updateLobby();
 };
 
