@@ -2,6 +2,10 @@ import type { Level } from "./map/level";
 import type { Manager } from "./network/manager";
 import type { Server } from "./network/server";
 
+// Note: Client.instance is intentionally not part of GameContext.
+// Client is only used in UI components (Inventory.vue, Join.vue, JoinDialog.vue),
+// not in game logic, so it doesn't need mock injection for testing.
+
 export interface GameContext {
   level: Level;
   manager: Manager;
