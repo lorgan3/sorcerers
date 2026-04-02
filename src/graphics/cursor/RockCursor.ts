@@ -116,9 +116,7 @@ export class RockCursor extends Container implements Cursor<TriggerData> {
     }
 
     if (!this.wasKeyDown && controller.isKeyDown(Key.M1)) {
-      if (getServer()) {
-        getServer()!.cast();
-      }
+      getServer()?.cast();
     }
 
     this.wasKeyDown = controller.isKeyDown(Key.M1);

@@ -113,9 +113,7 @@ export class PoweredArcaneCircle
         this.indicator.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
-        if (getServer()) {
-          getServer()!.cast();
-        }
+        getServer()?.cast();
       }
 
       return;

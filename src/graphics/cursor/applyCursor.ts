@@ -56,10 +56,11 @@ export class ApplyCursor extends Container implements Cursor<TriggerData> {
       return;
     }
 
-    if (getServer()) {
+    const server = getServer();
+    if (server) {
       for (let key of this.spell.data.applyKeys) {
         if (controller.isKeyDown(key)) {
-          getServer()!.cast();
+          server.cast();
         }
       }
     }

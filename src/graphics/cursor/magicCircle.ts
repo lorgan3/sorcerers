@@ -97,9 +97,7 @@ export class ArcaneCircle extends Container implements Cursor<TriggerData> {
         this.indicator.visible = false;
         this.indicator.scale.set(0.1 * SCALE_MULTIPLIER);
 
-        if (getServer()) {
-          getServer()!.cast();
-        }
+        getServer()?.cast();
       }
 
       return;
