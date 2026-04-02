@@ -1,4 +1,3 @@
-import { describe, it, expect } from "vitest";
 import { CollisionMask } from "../collisionMask";
 
 describe("CollisionMask", () => {
