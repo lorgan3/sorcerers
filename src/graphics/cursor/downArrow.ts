@@ -56,12 +56,13 @@ export class ArrowDown extends Container implements Cursor<TriggerData> {
     this.position.set(...controller.getLocalMouse());
     this.scale.set(2 / getLevel().viewport.scale.x);
 
+    const server = getServer();
     if (
-      getServer() &&
+      server &&
       controller.isKeyDown(Key.M1) &&
       !this.character.body.onLadder
     ) {
-      getServer()!.cast();
+      server.cast();
     }
   }
 
