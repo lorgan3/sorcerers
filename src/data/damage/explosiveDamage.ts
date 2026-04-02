@@ -102,12 +102,14 @@ export class ExplosiveDamage implements DamageSource {
     return [this.x, this.y, this.range, this.targets?.serialize()] as const;
   }
 
-  getTargets(
-    withNearbyEntities: Level["withNearbyEntities"] = getLevel()
-      .withNearbyEntities.bind(getLevel())
-  ) {
+  getTargets(withNearbyEntities?: Level["withNearbyEntities"]) {
     if (!this.targets) {
       this.targets = new TargetList();
+
+      if (!withNearbyEntities) {
+        const level = getLevel();
+        withNearbyEntities = level.withNearbyEntities.bind(level);
+      }
 
       const range = (this.range + 5) * 6;
       withNearbyEntities(
