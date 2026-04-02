@@ -281,6 +281,13 @@ export class Terrain {
     }
   }
 
+  flush() {
+    this.terrain.flush();
+    for (let layer of this.layerTextures) {
+      layer.flush();
+    }
+  }
+
   serialize() {
     return this.map.toConfig(true);
   }

@@ -213,6 +213,7 @@ export class Level {
     }
 
     this.cameraTarget.tick(dt);
+    this.terrain.flush();
   }
 
   add(
