@@ -81,7 +81,8 @@ export class Fireball extends Container implements Syncable {
     if (this.bounces === 0 || playerCollision) {
       this._die(x, y);
     } else {
-      getServer()!.damage(
+      const server = getServer()!;
+      server.damage(
         new ExplosiveDamage(
           x,
           y,
@@ -89,14 +90,15 @@ export class Fireball extends Container implements Syncable {
           1,
           1 + getManager().getElementValue(Element.Arcane)
         ),
-        getServer()!.getActivePlayer()
+        server.getActivePlayer()
       );
-      getServer()!.dynamicUpdate(this);
+      server.dynamicUpdate(this);
     }
   };
 
   private _die(x: number, y: number) {
-    getServer()!.damage(
+    const server = getServer()!;
+    server.damage(
       new ExplosiveDamage(
         x,
         y,
@@ -104,9 +106,9 @@ export class Fireball extends Container implements Syncable {
         3,
         2 + getManager().getElementValue(Element.Arcane)
       ),
-      getServer()!.getActivePlayer()
+      server.getActivePlayer()
     );
-    getServer()!.kill(this);
+    server.kill(this);
   }
 
   die() {
@@ -158,13 +160,14 @@ export class Fireball extends Container implements Syncable {
     power: number,
     direction: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Fireball(x, y, power * 1.2, direction, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

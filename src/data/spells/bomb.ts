@@ -86,9 +86,7 @@ export class Bomb extends Container implements Item {
     this.sprite.animationSpeed = 0.15;
     ControllableSound.fromEntity(this, Sound.Beep);
 
-    if (getServer()) {
-      getServer()!.dynamicUpdate(this);
-    }
+    getServer()?.dynamicUpdate(this);
   }
 
   damage(
@@ -96,8 +94,8 @@ export class Bomb extends Container implements Item {
     damage: number,
     force?: Force | undefined
   ): void {
-    if (getServer() && this.activateTime === -1) {
-      getServer()!.activate(this);
+    if (this.activateTime === -1) {
+      getServer()?.activate(this);
     }
 
     if (force) {
@@ -112,15 +110,16 @@ export class Bomb extends Container implements Item {
   };
 
   private _die(x: number, y: number) {
-    if (this.hp <= 0 || !getServer()) {
+    const server = getServer();
+    if (this.hp <= 0 || !server) {
       return;
     }
 
     this.hp = 0;
-    getServer()?.damage(
+    server.damage(
       new ExplosiveDamage(x, y, 16, 2, 5 * (0.7 + this.power * 0.3))
     );
-    getServer()!.kill(this);
+    server.kill(this);
   }
 
   die() {
@@ -155,14 +154,15 @@ export class Bomb extends Container implements Item {
       const [x, y] = this.body.precisePosition;
       this.position.set(x * 6, y * 6);
 
-      if (!getServer()) {
+      const server = getServer();
+      if (!server) {
         return;
       }
 
       if (this.time >= this.lastSync + Bomb.minSyncInterval) {
         const [x, y] = this.body.position;
         if (x !== this.lastX || y !== this.lastY) {
-          getServer()!.dynamicUpdate(this);
+          server.dynamicUpdate(this);
           this.lastX = x;
           this.lastY = y;
           this.lastSync = this.time;
@@ -179,7 +179,7 @@ export class Bomb extends Container implements Item {
                 return;
               }
 
-              getServer()!.activate(this, entity);
+              server.activate(this, entity);
               return true;
             }
           );

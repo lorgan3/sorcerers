@@ -104,7 +104,8 @@ export class FireWheel extends Container implements Syncable {
   }
 
   private _die(x: number, y: number) {
-    getServer()!.damage(
+    const server = getServer()!;
+    server.damage(
       new ExplosiveDamage(
         x,
         y,
@@ -114,7 +115,7 @@ export class FireWheel extends Container implements Syncable {
       ),
       this.character.player
     );
-    getServer()!.kill(this);
+    server.kill(this);
   }
 
   die() {
@@ -218,14 +219,15 @@ export class FireWheel extends Container implements Syncable {
     power: number,
     direction: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new FireWheel(x, y, power * 1.5, direction, character, getLevel().terrain.collisionMask);
 
-    getServer()!.create(entity);
-    getServer()!.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }

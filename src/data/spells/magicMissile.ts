@@ -108,7 +108,8 @@ export class MagicMissile extends Container implements Syncable {
   };
 
   private _die(x: number, y: number) {
-    getServer()!.damage(
+    const server = getServer()!;
+    server.damage(
       new ExplosiveDamage(
         x,
         y,
@@ -119,7 +120,7 @@ export class MagicMissile extends Container implements Syncable {
       this.character.player
     );
 
-    getServer()!.kill(this);
+    server.kill(this);
   }
 
   die() {
@@ -205,13 +206,14 @@ export class MagicMissile extends Container implements Syncable {
   }
 
   static cast(x: number, y: number, character: Character, direction: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new MagicMissile(x, y, 1.5, direction, character, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

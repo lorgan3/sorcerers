@@ -177,7 +177,8 @@ export class Meteor extends Container implements Syncable {
         ) {
           this.bounceTime = this.time;
 
-          if (getServer()) {
+          const server = getServer();
+          if (server) {
             const [x, y] = this.body.position;
             const damage = new ExplosiveDamage(
               x + 15,
@@ -186,7 +187,7 @@ export class Meteor extends Container implements Syncable {
               5,
               5 + getManager().getElementValue(Element.Elemental) / 2
             );
-            getServer()!.damage(damage, this.character.player);
+            server.damage(damage, this.character.player);
 
             const staticEntity = damage
               .getTargets()
@@ -211,10 +212,10 @@ export class Meteor extends Container implements Syncable {
             if (done) {
               this.body.gravity = 0;
               this.body.setVelocity(0, 0);
-              getServer()!.dynamicUpdate(this);
-              getServer()!.kill(this);
+              server.dynamicUpdate(this);
+              server.kill(this);
             } else {
-              getServer()!.dynamicUpdate(this);
+              server.dynamicUpdate(this);
             }
           }
         }
@@ -261,7 +262,8 @@ export class Meteor extends Container implements Syncable {
   }
 
   static cast(x: number, y: number, _: HurtableEntity, character: Character) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -273,8 +275,8 @@ export class Meteor extends Container implements Syncable {
     const angle = getAngle(_x, -32, x - 16, y - 16);
     const entity = new Meteor(_x, -32, 0, angle, character, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
-    getServer()!.focus(entity);
+    server.create(entity);
+    server.focus(entity);
     return entity;
   }
 }
