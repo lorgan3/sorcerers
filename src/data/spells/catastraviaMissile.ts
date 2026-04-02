@@ -88,11 +88,12 @@ export class CatastraviaMissile extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    getServer()!.damage(
+    const server = getServer()!;
+    server.damage(
       new ExplosiveDamage(x, y, 12, 2, 2),
-      getServer()!.getActivePlayer()
+      server.getActivePlayer()
     );
-    getServer()!.kill(this);
+    server.kill(this);
   }
 
   die() {

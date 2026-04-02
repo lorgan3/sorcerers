@@ -63,9 +63,10 @@ export class Doragate extends Container implements Spawnable {
       this.launchCounter++;
     }
 
-    if (getServer() && this.time > Doragate.lifetime) {
+    const server = getServer();
+    if (server && this.time > Doragate.lifetime) {
       getLevel().remove(...this.pebbles);
-      getServer()!.kill(this);
+      server.kill(this);
     }
   }
 
@@ -94,7 +95,8 @@ export class Doragate extends Container implements Spawnable {
   }
 
   static cast(_x: number, _y: number, character: Character, direction: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
@@ -118,7 +120,7 @@ export class Doragate extends Container implements Spawnable {
     const [_, ry] = character.body.position;
     const entity = new Doragate(direction, positions, ry + 20, character);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

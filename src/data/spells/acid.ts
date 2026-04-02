@@ -92,16 +92,17 @@ export class Acid extends Container implements Spawnable {
   };
 
   private _die(x: number, y: number) {
-    getServer()?.damage(
+    const server = getServer();
+    server?.damage(
       new FallDamage(
         x,
         y,
         Shape.Acid,
         24 + getManager().getElementValue(Element.Life) * 3
       ),
-      getServer()!.getActivePlayer()
+      server.getActivePlayer()
     );
-    getServer()!.kill(this);
+    server?.kill(this);
   }
 
   die() {
@@ -145,13 +146,14 @@ export class Acid extends Container implements Spawnable {
     power: number,
     direction: number
   ) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Acid(x, y, power / 1.5, direction, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }

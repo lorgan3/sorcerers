@@ -100,7 +100,8 @@ export class Daosdorg extends Container implements Spawnable {
       Shape.Tornado,
       1.8 + getManager().getElementValue(Element.Physical)
     );
-    getServer()?.damage(damage, getServer()!.getActivePlayer());
+    const server = getServer();
+    server?.damage(damage, server.getActivePlayer());
 
     if (
       damage
@@ -141,7 +142,8 @@ export class Daosdorg extends Container implements Spawnable {
         3 + getManager().getElementValue(Element.Physical)
       );
 
-      getServer()?.damage(damage, getServer()!.getActivePlayer());
+      const server = getServer();
+      server?.damage(damage, server.getActivePlayer());
     }
 
     if (this.time >= this.lifeTime) {
@@ -158,13 +160,14 @@ export class Daosdorg extends Container implements Spawnable {
   }
 
   static cast(x: number, y: number, character: Character, direction: number) {
-    if (!getServer()) {
+    const server = getServer();
+    if (!server) {
       return;
     }
 
     const entity = new Daosdorg(x, y, direction, getLevel().terrain.characterMask);
 
-    getServer()!.create(entity);
+    server.create(entity);
     return entity;
   }
 }
