@@ -12,7 +12,6 @@ import { Player } from "../network/player";
 import { Force, TargetList } from "../damage/targetList";
 import { EntityType, HurtableEntity, Priority, Syncable } from "./types";
 import { GenericDamage } from "../damage/genericDamage";
-import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { DamageSource } from "../damage/types";
 import { ParticleEmitter } from "../../graphics/particles/types";
 import {
@@ -27,32 +26,28 @@ import {
   createBackgroundParticles,
   createWandParticles,
 } from "../../graphics/particles/factory/character";
-import { createCharacterGibs } from "./gib/characterGibs";
-import { Explosion } from "../../graphics/explosion";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { Wings } from "./wings";
 import { SmokePuff } from "../../graphics/smokePuff";
 import { COLORS } from "../network/constants";
-import { BBox } from "../map/bbox";
 import { getLevel, getManager, getServer } from "../context";
+import { CharacterHealth } from "./characterHealth";
+import { CharacterCombat } from "./characterCombat";
+import { CharacterMovement } from "./characterMovement";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
 const SMOKE_TRIGGER = 2;
-const MAX_LADDER_MOUNT_SPEED = 1;
-
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
 const PAGE_READ_DURATION = 60;
 const CLIMB_DURATION = 10;
-const JUMP_GRACE_TIME = 3;
 
 const MELEE_POWER = 20;
 
 const MAX_NAME_LENGTH = 30;
 
-enum AnimationState {
+export enum AnimationState {
   Idle = "elf_idle",
   Walk = "elf_walk",
   Jump = "elf_jump",
@@ -174,12 +169,10 @@ const ANIMATION_CONFIG: Record<
 };
 
 export class Character extends Container implements HurtableEntity, Syncable {
-  private static readonly invulnerableTime = 1;
-  private static readonly damageNumberTime = 90;
   private static readonly maxInactiveTime = 3;
-  private static readonly damageAttributionTime = 120;
 
   public readonly body: Body;
+  private readonly health: CharacterHealth;
   public id = -1;
   public readonly priority = Priority.Low;
   public readonly type = EntityType.Character;
@@ -189,18 +182,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private particles?: ParticleEmitter;
   private foregroundParticles?: ParticleEmitter;
 
-  private _hp = 100;
-  private lastReportedHp = this._hp;
-  private time = 0;
-  private lastDamageTime = -1;
-  private _lastDamageDealer: Player | null = null;
+  private _time = 0;
   private lastActiveTime = 0;
-  private spellSource: any | null = null;
   private lookDirection = 1;
-  private wings?: Wings;
   private namePlateName: string;
-  private wasUp = false;
-  private lastGroundedTime = 0;
+  public readonly combat: CharacterCombat;
+  public readonly movement: CharacterMovement;
 
   private animator: Animator<AnimationState>;
 
@@ -217,10 +204,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
         ? characterName.slice(0, MAX_NAME_LENGTH - 3) + "..."
         : characterName;
 
+    this.combat = new CharacterCombat(this);
+    this.movement = new CharacterMovement(this);
     this.body = new Body(getLevel().terrain.characterMask, {
       mask: rectangle6x16,
       onCollide: this.onCollide,
-      ladderTest: this.ladderTest,
+      ladderTest: this.movement.ladderTest,
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
@@ -299,7 +288,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
           if (
             (getManager().getActiveCharacter() !== this ||
               !this.player.controller.isKeyDown()) &&
-            !this.spellSource
+            !this.combat.isCasting()
           ) {
             this.animator.animate(AnimationState.ReadDone);
           }
@@ -327,7 +316,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     sprite2.alpha = 0.5;
 
     this.namePlate = new BitmapText({
-      text: `${this.namePlateName} ${this._hp}`,
+      text: `${this.namePlateName} 100`,
       style: {
         fontFamily: "Eternal",
         fontSize: 32,
@@ -336,6 +325,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.namePlate.tint = this.player.color;
     this.namePlate.anchor.set(0.5);
     this.namePlate.position.set(18, -40);
+
+    this.health = new CharacterHealth(this, this.namePlate, this.namePlateName);
 
     this.addChild(this.sprite, this.namePlate);
   }
@@ -358,28 +349,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   tick(dt: number) {
-    this.time += dt;
-    if (this.time > this.lastActiveTime + Character.maxInactiveTime) {
+    this._time += dt;
+    if (this._time > this.lastActiveTime + Character.maxInactiveTime) {
       this.body.active = 1;
     }
 
-    if (
-      this.lastReportedHp !== this._hp &&
-      this.time > this.lastDamageTime + Character.damageNumberTime
-    ) {
-      getLevel().numberContainer.damage(
-        this.lastReportedHp - this._hp,
-        ...this.getCenter()
-      );
-      this.namePlate.text = `${this.namePlateName} ${Math.max(
-        0,
-        Math.ceil(this._hp)
-      )}`;
-      this.lastReportedHp = this._hp;
-    }
+    this.health.reportDamageNumbers();
 
     if (this.body.active) {
-      this.lastActiveTime = this.time;
+      this.lastActiveTime = this._time;
 
       getLevel().terrain.characterMask.subtract(
         this.body.mask,
@@ -391,7 +369,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.position.set(x * 6, y * 6);
 
         if (this.body.grounded) {
-          this.lastGroundedTime = this.time;
+          this.movement.lastGroundedTime = this._time;
         }
 
         if (
@@ -445,225 +423,63 @@ export class Character extends Container implements HurtableEntity, Syncable {
     );
   }
 
-  ladderTest = (x: number, y: number) => {
-    if (!getManager().isTrusted(this)) {
-      return false;
-    }
-
-    for (let ladder of getLevel().terrain.ladders) {
-      if (
-        x + 6 >= ladder.left &&
-        x <= ladder.right &&
-        y + 16 > ladder.top &&
-        y < ladder.bottom
-      ) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   control(controller: Controller) {
-    let foundLadder: BBox | null = null;
-    if (
-      this.body.grounded ||
-      this.body.onLadder ||
-      (this.body.yVelocity > 0 && this.body.yVelocity < MAX_LADDER_MOUNT_SPEED)
-    ) {
-      const [x, y] = this.body.precisePosition;
-      for (let ladder of getLevel().terrain.ladders) {
-        if (
-          x + 6 >= ladder.left &&
-          x <= ladder.right &&
-          y + 16 > ladder.top &&
-          y < ladder.bottom &&
-          ladder.top < (foundLadder?.top || Infinity)
-        ) {
-          foundLadder = ladder;
-        }
-      }
-    }
-
-    if (this.body.onLadder) {
-      this.setSpellSource(null, false);
-    }
-
-    const isUp = controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W);
-    if (!this.wings && foundLadder && isUp) {
-      this.body.mountLadder();
-    }
-
-    if (this.body.onLadder) {
-      if (!foundLadder) {
-        if (getManager().isTrusted(this)) {
-          this.body.unmountLadder();
-        }
-        return;
-      }
-
-      if (isUp) {
-        if (this.body.precisePosition[1] + 8 > foundLadder.top) {
-          this.body.setLadderDirection(-1);
-          this.animator.animate(AnimationState.Climb);
-        } else {
-          if (!this.wasUp) {
-            this.body.unmountLadder();
-            this.body.jump();
-            this.animator.animate(AnimationState.Jump);
-          }
-
-          this.body.setLadderDirection(0);
-        }
-      } else if (
-        controller.isKeyDown(Key.Down) ||
-        controller.isKeyDown(Key.D)
-      ) {
-        this.body.setLadderDirection(1);
-        this.animator.animate(AnimationState.Climb);
-      } else {
-        this.body.setLadderDirection(0);
-      }
-
-      this.wasUp = isUp;
-      return;
-    }
-
-    if (!isUp) {
-      return;
-    }
-
-    if (this.time - this.lastGroundedTime < JUMP_GRACE_TIME && !this.wings) {
-      if (this.body.jump()) {
-        this.animator.animate(AnimationState.Jump);
-      }
-    }
-
-    if (this.wings) {
-      this.wings.flap(this.time);
-      this.animator.animate(AnimationState.Float);
-
-      if (this.wings.power <= 0) {
-        this.removeWings();
-      }
-    }
+    this.movement.control(controller);
   }
 
   controlContinuous(dt: number, controller: Controller) {
-    if (this.animator.isBlocking) {
-      return;
-    }
+    this.movement.controlContinuous(dt, controller);
+  }
 
+  /** Trigger an animation by state name. Used by helpers. */
+  animate(state: keyof typeof AnimationState): void {
+    this.animator.animate(AnimationState[state]);
+  }
+
+  /** Check if current animation is blocking input. Used by CharacterMovement. */
+  isAnimationBlocking(): boolean {
+    return !!this.animator.isBlocking;
+  }
+
+  /** Update look direction from controller mouse position. Used by CharacterMovement. */
+  updateLookDirection(controller: Controller): void {
     this.lookDirection = Math.sign(
       controller.getMouse()[0] - this.getCenter()[0]
     );
     this.sprite.scale.x = 2 * this.lookDirection;
+  }
 
-    if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
-      this.body.walk(-1);
-
-      if (this.body.grounded) {
-        this.animator.animate(AnimationState.Walk);
-
-        if (this.sprite.animationSpeed * this.lookDirection < 0) {
-          this.sprite.animationSpeed *= this.lookDirection;
-        }
-      }
+  /** Sync animation speed direction with look direction. Used by CharacterMovement. */
+  syncAnimationDirection(): void {
+    if (this.sprite.animationSpeed * this.lookDirection < 0) {
+      this.sprite.animationSpeed *= this.lookDirection;
     }
+  }
 
-    if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
-      this.body.walk(1);
+  /** Check if current animation matches a given state. Used by CharacterCombat. */
+  isInAnimationState(state: keyof typeof AnimationState): boolean {
+    return this.animator.animationState === AnimationState[state];
+  }
 
-      if (this.body.grounded) {
-        this.animator.animate(AnimationState.Walk);
-
-        if (this.sprite.animationSpeed * this.lookDirection < 0) {
-          this.sprite.animationSpeed *= this.lookDirection;
-        }
-      }
-    }
+  /** Set the default animation state. Used by CharacterCombat. */
+  setDefaultAnimation(state: keyof typeof AnimationState): void {
+    this.animator.setDefaultAnimation(AnimationState[state]);
   }
 
   damage(source: DamageSource, damage: number, force?: Force) {
-    if (
-      this.lastDamageTime !== -1 &&
-      this.time <= this.lastDamageTime + Character.invulnerableTime
-    ) {
-      return;
-    }
-
-    this.player.stats.registerDamage(source, this, damage, force);
-
-    this.hp -= damage;
-    this.lastDamageTime = this.time;
-    this._lastDamageDealer = source.cause;
-    this.body.unmountLadder();
-
-    getLevel().bloodEmitter.burst(this, damage, source);
-    if (damage > 0) {
-      ControllableSound.fromEntity(this, Sound.Splat);
-    }
-
-    if (force) {
-      this.body.addAngularVelocity(force.power, force.direction);
-    }
+    this.health.damage(source, damage, force);
   }
 
   setSpellSource(source: any, toggle = true) {
-    if (toggle) {
-      if (this.body.onLadder) {
-        return;
-      }
-
-      this.spellSource = source;
-
-      if (
-        this.animator.animationState !== AnimationState.SpellIdle &&
-        !this.player.controller.isKeyDown(Key.Left) &&
-        !this.player.controller.isKeyDown(Key.Right) &&
-        !this.player.controller.isKeyDown(Key.A) &&
-        !this.player.controller.isKeyDown(Key.D)
-      ) {
-        this.animator.animate(AnimationState.Spell);
-      }
-
-      this.animator.setDefaultAnimation(AnimationState.Spell);
-    } else if (!source || source === this.spellSource) {
-      this.spellSource = null;
-
-      let defaultAnimation;
-      if (
-        getManager().getActiveCharacter() === this &&
-        this.player.controller.isKeyDown(Key.Inventory)
-      ) {
-        defaultAnimation = AnimationState.Read;
-      } else {
-        defaultAnimation = AnimationState.Idle;
-      }
-
-      if (this.animator.animationState === AnimationState.SpellIdle) {
-        this.animator.animate(AnimationState.SpellDone);
-      } else if (this.animator.animationState === AnimationState.Spell) {
-        this.animator.animate(defaultAnimation);
-      }
-
-      this.animator.setDefaultAnimation(defaultAnimation);
-    }
+    this.combat.setSpellSource(source, toggle);
   }
 
   isCasting() {
-    return !!this.spellSource;
+    return this.combat.isCasting();
   }
 
   openSpellBook() {
-    if (
-      !this.spellSource &&
-      this.animator.animationState !== AnimationState.Read &&
-      this.animator.animationState !== AnimationState.ReadIdle
-    ) {
-      this.animator.animate(AnimationState.Read);
-      this.animator.setDefaultAnimation(AnimationState.Read);
-    }
+    this.combat.openSpellBook();
   }
 
   serialize() {
@@ -695,104 +511,35 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   die() {
-    if (this._hp !== this.lastReportedHp) {
-      getLevel().numberContainer.damage(
-        this.lastReportedHp - this._hp,
-        ...this.getCenter()
-      );
-      this.namePlate.text = `${this.namePlateName} ${Math.max(
-        0,
-        Math.ceil(this._hp)
-      )}`;
-      this.lastReportedHp = this._hp;
-    }
-
-    getLevel().terrain.characterMask.subtract(
-      this.body.mask,
-      ...this.body.position
-    );
-
-    this.player.removeCharacter(this);
-
-    const [x, y] = this.getCenter();
-    new Explosion(x, y);
-    getLevel().shake();
-
-    const gibs = createCharacterGibs(...this.body.precisePosition);
-    gibs.forEach((gib) =>
-      gib.body.addVelocity((Math.random() - 0.5) * 8, -2 - Math.random() * 3)
-    );
-    getLevel().add(...gibs);
-    getLevel().bloodEmitter.burst(this, 100);
-
-    getLevel().terrain.draw((ctx) => {
-      const splat = AssetsContainer.instance.assets!["atlas"].textures[
-        "gibs_splat"
-      ] as Texture;
-
-      ctx.drawImage(
-        splat.source.resource,
-        splat.frame.left,
-        splat.frame.top,
-        splat.frame.width,
-        splat.frame.height,
-        x / 6 - splat.frame.width / 2,
-        y / 6 - splat.frame.height / 2 + 5,
-        splat.frame.width,
-        splat.frame.height
-      );
-    });
-
-    getServer()?.damage(
-      new ExplosiveDamage(x / 6, y / 6, 16, 1, 1),
-      this.player
-    );
+    this.health.die();
   }
 
   giveWings() {
-    this.body.unmountLadder();
-
-    this.wings = new Wings(this);
-    this.addChildAt(this.wings, 0);
+    this.movement.giveWings();
   }
 
   removeWings() {
-    if (!this.wings) {
-      return;
-    }
-
-    this.wings.stop();
-    this.removeChild(this.wings);
-    this.wings = undefined;
+    this.movement.removeWings();
   }
 
   endTurn() {
-    this.removeWings();
-    this.body.setLadderDirection(0);
+    this.movement.endTurn();
   }
 
   melee() {
-    this.animator.animate(AnimationState.Swing);
+    this.combat.melee();
   }
 
   get hp() {
-    return this._hp;
+    return this.health.hp;
   }
 
   set hp(hp: number) {
-    const oldHp = this._hp;
-    const diff = hp - oldHp;
-    if (diff > 0) {
-      getLevel().numberContainer.heal(diff, ...this.getCenter());
-      this.lastReportedHp += diff;
-      this.namePlate.text = `${this.namePlateName} ${Math.max(
-        0,
-        Math.ceil(this.lastReportedHp)
-      )}`;
-    }
+    this.health.hp = hp;
+  }
 
-    this._hp = hp;
-    this.body.active = 1;
+  get time() {
+    return this._time;
   }
 
   get direction() {
@@ -800,10 +547,6 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   get lastDamageDealer() {
-    if (this.time > this.lastDamageTime + Character.damageAttributionTime) {
-      return null;
-    }
-
-    return this._lastDamageDealer;
+    return this.health.lastDamageDealer;
   }
 }
