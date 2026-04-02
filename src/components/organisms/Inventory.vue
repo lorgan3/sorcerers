@@ -34,15 +34,29 @@ const availableList = ref<boolean[]>([]);
 const poll = () => {
   if (props.isOpen) {
     const mana = getManager().self.mana;
-    availableList.value = [];
+    const executedSpells = getManager().self.executedSpells;
+    let changed = false;
+
     SPELLS.forEach((spell) => {
-      availableList.value[spell.iconId] =
+      const available =
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
-        !getManager().self.executedSpells.includes(spell);
+        !executedSpells.includes(spell);
+
+      if (availableList.value[spell.iconId] !== available) {
+        availableList.value[spell.iconId] = available;
+        changed = true;
+      }
     });
+
+    if (changed) {
+      availableList.value = [...availableList.value];
+    }
   } else {
     if (getManager().self === getManager().getActivePlayer()) {
-      selectedSpell.value = getManager().selectedSpell;
+      const newSpell = getManager().selectedSpell;
+      if (selectedSpell.value !== newSpell) {
+        selectedSpell.value = newSpell;
+      }
     }
   }
 };
