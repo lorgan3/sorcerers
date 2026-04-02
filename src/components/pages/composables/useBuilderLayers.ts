@@ -18,7 +18,7 @@ export function useBuilderLayers(
       target.value = { data, visible };
 
       if (advancedSettings.value.bbox.isEmpty()) {
-        var image = new Image();
+        const image = new Image();
         image.src = data;
 
         image.onload = () => {

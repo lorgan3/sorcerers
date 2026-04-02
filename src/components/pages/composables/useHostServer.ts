@@ -3,7 +3,7 @@ import Peer from "peerjs";
 import { Server } from "../../../data/network/server";
 import { PEER_ID_PREFIX } from "../../../data/network/constants";
 import { getManager, getServer } from "../../../data/context";
-import { Team } from "../../../data/team";
+import type { Team } from "../../../data/team";
 import { GameSettings } from "../../../util/localStorage/settings";
 
 export function useHostServer(gameSettings: { value: GameSettings }) {

@@ -182,7 +182,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   private particles?: ParticleEmitter;
   private foregroundParticles?: ParticleEmitter;
 
-  public time = 0;
+  private _time = 0;
   private lastActiveTime = 0;
   private lookDirection = 1;
   private namePlateName: string;
@@ -349,15 +349,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   tick(dt: number) {
-    this.time += dt;
-    if (this.time > this.lastActiveTime + Character.maxInactiveTime) {
+    this._time += dt;
+    if (this._time > this.lastActiveTime + Character.maxInactiveTime) {
       this.body.active = 1;
     }
 
     this.health.reportDamageNumbers();
 
     if (this.body.active) {
-      this.lastActiveTime = this.time;
+      this.lastActiveTime = this._time;
 
       getLevel().terrain.characterMask.subtract(
         this.body.mask,
@@ -369,7 +369,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.position.set(x * 6, y * 6);
 
         if (this.body.grounded) {
-          this.movement.lastGroundedTime = this.time;
+          this.movement.lastGroundedTime = this._time;
         }
 
         if (
@@ -536,6 +536,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
   set hp(hp: number) {
     this.health.hp = hp;
+  }
+
+  get time() {
+    return this._time;
   }
 
   get direction() {
