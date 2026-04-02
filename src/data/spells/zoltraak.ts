@@ -154,12 +154,12 @@ export class Zoltraak extends Container implements Spawnable {
       x,
       y,
       MAX_DISTANCE,
-      (entity, distance) => {
+      (entity, distanceSquared) => {
         const [cx, cy] = entity.getCenter();
         const rayDistance = getRayDistance(x, y, angle, cx, cy);
 
         if (rayDistance <= 48) {
-          targets.push({ distance, entity });
+          targets.push({ distance: distanceSquared, entity });
         }
       }
     );

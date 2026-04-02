@@ -135,13 +135,13 @@ export class ChainLightning extends Container implements Spawnable {
         checkX,
         checkY,
         ChainLightning.maxRange,
-        (entity, distance) => {
+        (entity, distanceSquared) => {
           if (entity === character || targets.includes(entity)) {
             return;
           }
 
           if (i > 0) {
-            nextTargets.push([distance, entity]);
+            nextTargets.push([distanceSquared, entity]);
             return;
           }
 
