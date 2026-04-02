@@ -12,7 +12,7 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["earcut", "fluent-ffmpeg", "lodash", "lodash.debounce"]
+    "types": ["earcut", "fluent-ffmpeg", "lodash", "lodash.debounce", "vitest/globals"]
   },
   "include": [
     "src/**/*.ts",
