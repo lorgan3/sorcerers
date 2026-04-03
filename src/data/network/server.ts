@@ -354,8 +354,7 @@ export class Server extends Manager {
     if (
       damageSource
         .getTargets()
-        .getEntities()
-        .includes(this.getActiveCharacter()!)
+        .hasEntity(this.getActiveCharacter()!)
     ) {
       this.setTurnState(TurnState.Ending);
     }
