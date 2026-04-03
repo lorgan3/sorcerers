@@ -31,16 +31,23 @@ const sections = {
 const selectedSpell = ref(getManager()?.selectedSpell);
 const availableList = ref<boolean[]>([]);
 
+let cachedExecutedSpells: Spell[] | null = null;
+let cachedExecutedSet: Set<Spell> = new Set();
+
 const poll = () => {
   if (props.isOpen) {
     const mana = getManager().self.mana;
-    const executedSet = new Set(getManager().self.executedSpells);
+    const currentExecuted = getManager().self.executedSpells;
+    if (cachedExecutedSpells !== currentExecuted) {
+      cachedExecutedSpells = currentExecuted;
+      cachedExecutedSet = new Set(currentExecuted);
+    }
     let changed = false;
 
     SPELLS.forEach((spell) => {
       const available =
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
-        !executedSet.has(spell);
+        !cachedExecutedSet.has(spell);
 
       if (availableList.value[spell.iconId] !== available) {
         availableList.value[spell.iconId] = available;
