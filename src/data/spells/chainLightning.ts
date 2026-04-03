@@ -125,18 +125,20 @@ export class ChainLightning extends Container implements Spawnable {
     }
 
     const targets: Target[] = [];
+    const targetSet = new Set<HurtableEntity>();
+    const nextTargets: Array<[number, HurtableEntity]> = [];
 
     let checkX = x * 6;
     let checkY = y * 6;
 
     for (let i = 0; i < ChainLightning.maxChains; i++) {
-      const nextTargets: Array<[number, HurtableEntity]> = [];
+      nextTargets.length = 0;
       getLevel().withNearbyEntities(
         checkX,
         checkY,
         ChainLightning.maxRange,
         (entity, distanceSquared) => {
-          if (entity === character || targets.includes(entity)) {
+          if (entity === character || targetSet.has(entity)) {
             return;
           }
 
@@ -165,6 +167,7 @@ export class ChainLightning extends Container implements Spawnable {
 
       [checkX, checkY] = nextTarget[1].getCenter();
       targets.push(nextTarget[1]);
+      targetSet.add(nextTarget[1]);
 
       if (nextTarget[1] instanceof Shield) {
         break;
