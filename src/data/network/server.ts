@@ -369,10 +369,20 @@ export class Server extends Manager {
 
     damageSource.damage();
 
+    // Collect post-knockback character states for affected entities
+    const affectedEntities = damageSource.getTargets().getEntities();
+    const entities: [number, ...any[]][] = [];
+    for (const entity of affectedEntities) {
+      if (entity instanceof Character && entity.hp > 0) {
+        entities.push([entity.id, ...entity.body.serialize()]);
+      }
+    }
+
     this.broadcast({
       type: MessageType.SyncDamage,
       kind: damageSource.type,
       data: damageSource.serialize(),
+      entities: entities.length > 0 ? entities : undefined,
     });
   }
 
