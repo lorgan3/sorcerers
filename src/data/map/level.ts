@@ -135,8 +135,9 @@ export class Level {
 
   destroy() {
     window.removeEventListener("resize", this.resize);
+    const canvas = this.app.canvas;
     this.app.destroy();
-    this.target.removeChild(this.app.canvas);
+    canvas.remove();
   }
 
   getRandomSpawnLocation() {
