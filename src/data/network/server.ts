@@ -36,6 +36,23 @@ export class Server extends Manager {
   private localPlayers: Player[] = [];
   private damageQueue: DamageSource[] = [];
 
+  private lowPriorityMessage: Extract<
+    Message,
+    { type: MessageType.EntityUpdate }
+  > = {
+    type: MessageType.EntityUpdate,
+    priority: Priority.Low,
+    entities: [],
+  };
+  private highPriorityMessage: Extract<
+    Message,
+    { type: MessageType.EntityUpdate }
+  > = {
+    type: MessageType.EntityUpdate,
+    priority: Priority.High,
+    entities: [],
+  };
+
   private static _serverInstance?: Server;
   static get instance() {
     return Server._serverInstance!;
@@ -176,28 +193,26 @@ export class Server extends Manager {
     }
 
     if (this.frames % 20 === 0) {
-      const data: Message = {
-        type: MessageType.EntityUpdate,
-        priority: Priority.Low,
-        entities: getLevel().syncables[Priority.Low].map((entity) =>
-          entity.serialize()
-        ),
-      };
+      const syncables = getLevel().syncables[Priority.Low];
+      const entities = this.lowPriorityMessage.entities;
+      for (let i = 0; i < syncables.length; i++) {
+        entities[i] = syncables[i].serialize();
+      }
+      entities.length = syncables.length;
 
       for (let player of this.players) {
-        player.connection?.send(data);
+        player.connection?.send(this.lowPriorityMessage);
       }
     } else if (this.frames % 4 === 0) {
-      const data: Message = {
-        type: MessageType.EntityUpdate,
-        priority: Priority.High,
-        entities: getLevel().syncables[Priority.High].map((entity) =>
-          entity.serialize()
-        ),
-      };
+      const syncables = getLevel().syncables[Priority.High];
+      const entities = this.highPriorityMessage.entities;
+      for (let i = 0; i < syncables.length; i++) {
+        entities[i] = syncables[i].serialize();
+      }
+      entities.length = syncables.length;
 
       for (let player of this.players) {
-        player.connection?.send(data);
+        player.connection?.send(this.highPriorityMessage);
       }
     }
 
@@ -343,8 +358,7 @@ export class Server extends Manager {
     if (
       damageSource
         .getTargets()
-        .getEntities()
-        .includes(this.getActiveCharacter()!)
+        .hasEntity(this.getActiveCharacter()!)
     ) {
       this.setTurnState(TurnState.Ending);
     }

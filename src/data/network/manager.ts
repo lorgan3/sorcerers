@@ -14,6 +14,7 @@ import { Character } from "../entity/character";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
 import { AccumulatedStat } from "./accumulatedStat";
+import { DEFAULT_ELEMENT_VALUE } from "./constants";
 import { getContextOrNull, getLevel, setFallbackManager } from "../context";
 
 const TURN_GRACE_PERIOD = 3000;
@@ -34,7 +35,7 @@ export abstract class Manager {
   protected time = 0;
   protected frames = 0;
   protected elements = Object.fromEntries(
-    Object.values(Element).map((element) => [element, 1.75])
+    Object.values(Element).map((element) => [element, DEFAULT_ELEMENT_VALUE])
   ) as Record<Element, number>;
   private cachedElementValues: Partial<
     Record<Element, { value: number; time: number }>
@@ -309,7 +310,7 @@ export abstract class Manager {
       );
 
       if (buffed) {
-        const value = Math.min(1.75, this.elements[element] * 2);
+        const value = Math.min(DEFAULT_ELEMENT_VALUE, this.elements[element] * 2);
         this.cachedElementValues[element] = { value, time: this.time };
         return value;
       }

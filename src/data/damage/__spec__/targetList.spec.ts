@@ -163,4 +163,45 @@ describe("TargetList", () => {
       expect(entities).toEqual([entity]);
     });
   });
+
+  describe("hasEntity", () => {
+    it("returns true when entity is in the target list", () => {
+      const entity = createMockEntity(1);
+      const entityMap = new Map<number, TickingEntity>([
+        [1, entity as unknown as TickingEntity],
+      ]);
+
+      const list = new TargetList();
+      list.add(entity, 10);
+
+      expect(list.hasEntity(entity, entityMap)).toBe(true);
+    });
+
+    it("returns false when entity is not in the target list", () => {
+      const entity1 = createMockEntity(1);
+      const entity2 = createMockEntity(2);
+      const entityMap = new Map<number, TickingEntity>([
+        [1, entity1 as unknown as TickingEntity],
+        [2, entity2 as unknown as TickingEntity],
+      ]);
+
+      const list = new TargetList();
+      list.add(entity1, 10);
+
+      expect(list.hasEntity(entity2, entityMap)).toBe(false);
+    });
+
+    it("returns false when entity id exists but resolved entity differs", () => {
+      const entity1 = createMockEntity(1);
+      const differentEntity = createMockEntity(1);
+      const entityMap = new Map<number, TickingEntity>([
+        [1, differentEntity as unknown as TickingEntity],
+      ]);
+
+      const list = new TargetList();
+      list.add(entity1, 10);
+
+      expect(list.hasEntity(entity1, entityMap)).toBe(false);
+    });
+  });
 });

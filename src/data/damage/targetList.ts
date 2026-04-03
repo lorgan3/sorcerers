@@ -59,6 +59,18 @@ export class TargetList {
     );
   }
 
+  hasEntity(
+    entity: HurtableEntity,
+    entityMap: Map<number, TickingEntity> = getLevel().entityMap
+  ) {
+    for (const target of this.targets) {
+      if (entityMap.get(target.entityId) === entity) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   hasEntities() {
     return !!this.targets.length;
   }

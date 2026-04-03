@@ -133,6 +133,13 @@ export class Level {
     this.viewport.resize(window.innerWidth, window.innerHeight);
   };
 
+  destroy() {
+    window.removeEventListener("resize", this.resize);
+    const canvas = this.app.canvas;
+    this.app.destroy();
+    canvas.remove();
+  }
+
   getRandomSpawnLocation() {
     if (!this.spawnLocations.length) {
       this.spawnLocations = this.terrain.getSpawnLocations();
@@ -213,6 +220,7 @@ export class Level {
     }
 
     this.cameraTarget.tick(dt);
+    this.terrain.flush();
   }
 
   add(
@@ -267,10 +275,12 @@ export class Level {
       }
 
       if ("priority" in object) {
-        this.syncables[object.priority].splice(
-          this.syncables[object.priority].indexOf(object),
-          1
-        );
+        const arr = this.syncables[object.priority];
+        const index = arr.indexOf(object);
+        if (index !== -1) {
+          arr[index] = arr[arr.length - 1];
+          arr.pop();
+        }
       }
     }
   }
@@ -279,14 +289,14 @@ export class Level {
     x: number,
     y: number,
     range: number,
-    fn: (entity: HurtableEntity, distance: number) => void | boolean
+    fn: (entity: HurtableEntity, distanceSquared: number) => void | boolean
   ) {
     const rangeSquared = range ** 2;
     for (let entity of this.hurtables) {
       const [ex, ey] = entity.getCenter();
-      const distance = (ex - x) ** 2 + (ey - y) ** 2;
-      if (distance < rangeSquared) {
-        if (fn(entity, Math.sqrt(distance))) {
+      const distanceSquared = (ex - x) ** 2 + (ey - y) ** 2;
+      if (distanceSquared < rangeSquared) {
+        if (fn(entity, distanceSquared)) {
           return;
         }
       }

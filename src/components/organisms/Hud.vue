@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef, triggerRef } from "vue";
 import { getManager, getServer } from "../../data/context";
 import { Player } from "../../data/network/player";
 import { Popup } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
 import { ELEMENT_MAP } from "../../graphics/elements";
-import { MAX_MANA } from "../../data/network/constants";
+import { DEFAULT_ELEMENT_VALUE, MAX_MANA } from "../../data/network/constants";
 import { AccumulatedStat } from "../../data/network/accumulatedStat";
 import EndGameDialog from "./EndGameDialog.vue";
 import IconButton from "../atoms/IconButton.vue";
@@ -24,15 +24,11 @@ const { forceOpen } = defineProps<{
   forceOpen: boolean;
 }>();
 
-const getElements = () =>
+const elements = shallowRef(
   Object.fromEntries(
-    Object.values(Element).map((element) => [
-      element,
-      getManager().getElementValue(element),
-    ])
-  ) as Record<Element, number>;
-
-const elements = ref(getElements());
+    Object.values(Element).map((element) => [element, DEFAULT_ELEMENT_VALUE])
+  ) as Record<Element, number>
+);
 const turnTime = ref(0);
 const gameTime = ref(0);
 const mana = ref(0);
@@ -48,24 +44,39 @@ const poll = () => {
   }
 
   const data = getManager().getHudData();
-  elements.value = getElements();
-  turnTime.value = data.turnTime;
-  gameTime.value = data.gameTime;
-  players.value = data.players;
-  activePlayer.value = data.activePlayer;
-  mana.value = data.mana;
-  stats.value = data.stats;
 
-  maxHp.value = 100;
+  let elementsChanged = false;
+  const currentElements = elements.value;
+  for (const element of Object.values(Element)) {
+    const newValue = getManager().getElementValue(element);
+    if (newValue !== currentElements[element]) {
+      currentElements[element] = newValue;
+      elementsChanged = true;
+    }
+  }
+  if (elementsChanged) {
+    triggerRef(elements);
+  }
+
+  if (turnTime.value !== data.turnTime) turnTime.value = data.turnTime;
+  if (gameTime.value !== data.gameTime) gameTime.value = data.gameTime;
+  if (mana.value !== data.mana) mana.value = data.mana;
+  if (players.value !== data.players) players.value = data.players;
+  if (activePlayer.value !== data.activePlayer)
+    activePlayer.value = data.activePlayer;
+  if (stats.value !== data.stats) stats.value = data.stats;
+
+  let newMaxHp = 100;
   for (let player of data.players) {
     let hp =
       player.characters.reduce((sum, character) => sum + character.hp, 0) /
       player.characters.length;
 
-    if (hp > maxHp.value) {
-      maxHp.value = hp;
+    if (hp > newMaxHp) {
+      newMaxHp = hp;
     }
   }
+  if (maxHp.value !== newMaxHp) maxHp.value = newMaxHp;
 
   if (!popup.value) {
     const popped = getManager().popupPop();

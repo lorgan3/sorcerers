@@ -31,18 +31,41 @@ const sections = {
 const selectedSpell = ref(getManager()?.selectedSpell);
 const availableList = ref<boolean[]>([]);
 
+let cachedExecutedSpells: Spell[] | null = null;
+let cachedExecutedLength = 0;
+let cachedExecutedSet: Set<Spell> = new Set();
+
 const poll = () => {
   if (props.isOpen) {
     const mana = getManager().self.mana;
-    availableList.value = [];
+    const currentExecuted = getManager().self.executedSpells;
+    if (cachedExecutedSpells !== currentExecuted || cachedExecutedLength !== currentExecuted.length) {
+      cachedExecutedSpells = currentExecuted;
+      cachedExecutedLength = currentExecuted.length;
+      cachedExecutedSet = new Set(currentExecuted);
+    }
+    let changed = false;
+
     SPELLS.forEach((spell) => {
-      availableList.value[spell.iconId] =
+      const available =
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
-        !getManager().self.executedSpells.includes(spell);
+        !cachedExecutedSet.has(spell);
+
+      if (availableList.value[spell.iconId] !== available) {
+        availableList.value[spell.iconId] = available;
+        changed = true;
+      }
     });
+
+    if (changed) {
+      availableList.value = [...availableList.value];
+    }
   } else {
     if (getManager().self === getManager().getActivePlayer()) {
-      selectedSpell.value = getManager().selectedSpell;
+      const newSpell = getManager().selectedSpell;
+      if (selectedSpell.value !== newSpell) {
+        selectedSpell.value = newSpell;
+      }
     }
   }
 };

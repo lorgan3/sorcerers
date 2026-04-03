@@ -1,4 +1,5 @@
 import { Element } from "../spells/types";
+import { DEFAULT_ELEMENT_VALUE } from "./constants";
 import { Player } from "./player";
 import { Stats } from "./stats";
 
@@ -198,7 +199,7 @@ const ACCUMULATORS = {
               stat.elementUsage[element]
                 ? stat.elementEfficiency[element] /
                   stat.elementUsage[element] /
-                  1.75
+                  DEFAULT_ELEMENT_VALUE
                 : 0.57,
             ])
           ),

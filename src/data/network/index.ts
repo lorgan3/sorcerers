@@ -36,6 +36,7 @@ export const connect = async (
   });
 
   const handleBack = () => {
+    level.destroy();
     setGameContext(null);
     Ticker.shared.remove(ticker, null);
     window.clearInterval(fixedTick);
