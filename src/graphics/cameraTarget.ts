@@ -19,8 +19,9 @@ export class CameraTarget {
   private static acceleration = 0.7;
   private static manualAcceleration = 0.35;
 
-  static shakeAmount = 15;
+  static shakeAmount = 10;
   static shakeIntensity = 12;
+  static shakeInterval = 25;
 
   private controller: KeyboardController | undefined;
   private target?: Spawnable;
@@ -42,6 +43,7 @@ export class CameraTarget {
 
   private shakeRemaining = 0;
   private shakeCenter: [number, number] = [0, 0];
+  private shakeTimer = 0;
 
   constructor(private viewport: Viewport) {
     this.position = [
@@ -52,6 +54,17 @@ export class CameraTarget {
 
   tick(dt: number) {
     if (this.shakeRemaining > 0) {
+      const dtMs = dt * (1000 / 60);
+      this.shakeTimer += dtMs;
+
+      while (
+        this.shakeTimer >= CameraTarget.shakeInterval &&
+        this.shakeRemaining > 0
+      ) {
+        this.shakeTimer -= CameraTarget.shakeInterval;
+        this.shakeRemaining--;
+      }
+
       this.viewport.moveCenter(
         this.shakeCenter[0] +
           Math.random() * CameraTarget.shakeIntensity -
@@ -60,7 +73,6 @@ export class CameraTarget {
           Math.random() * CameraTarget.shakeIntensity -
           CameraTarget.shakeIntensity / 2
       );
-      this.shakeRemaining--;
       return;
     }
 
@@ -294,5 +306,6 @@ export class CameraTarget {
     const center = this.viewport.center;
     this.shakeCenter = [center[0], center[1]];
     this.shakeRemaining = CameraTarget.shakeAmount;
+    this.shakeTimer = 0;
   }
 }
