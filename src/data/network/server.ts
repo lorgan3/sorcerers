@@ -35,6 +35,7 @@ export class Server extends Manager {
   private disconnectedPlayers: Player[] = [];
   private localPlayers: Player[] = [];
   private damageQueue: DamageSource[] = [];
+  private burstSyncFrames = 0;
 
   private lowPriorityMessage: Extract<
     Message,
@@ -192,7 +193,12 @@ export class Server extends Manager {
       this.damage(damageSource);
     }
 
-    if (this.frames % 20 === 0) {
+    if (this.burstSyncFrames > 0) {
+      this.burstSyncFrames--;
+    }
+
+    const lowSyncInterval = this.burstSyncFrames > 0 ? 4 : 20;
+    if (this.frames % lowSyncInterval === 0) {
       const syncables = getLevel().syncables[Priority.Low];
       const entities = this.lowPriorityMessage.entities;
       for (let i = 0; i < syncables.length; i++) {
@@ -203,7 +209,9 @@ export class Server extends Manager {
       for (let player of this.players) {
         player.connection?.send(this.lowPriorityMessage);
       }
-    } else if (this.frames % 4 === 0) {
+    }
+
+    if (this.frames % 4 === 0) {
       const syncables = getLevel().syncables[Priority.High];
       const entities = this.highPriorityMessage.entities;
       for (let i = 0; i < syncables.length; i++) {
@@ -384,6 +392,10 @@ export class Server extends Manager {
       data: damageSource.serialize(),
       entities: entities.length > 0 ? entities : undefined,
     });
+
+    if (entities.length > 0) {
+      this.burstSyncFrames = 20;
+    }
   }
 
   dealFallDamage(x: number, y: number, character: Character) {
