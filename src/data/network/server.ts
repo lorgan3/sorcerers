@@ -194,18 +194,22 @@ export class Server extends Manager {
 
     if (this.frames % 20 === 0) {
       const syncables = getLevel().syncables[Priority.Low];
-      this.lowPriorityMessage.entities = syncables.map((entity) =>
-        entity.serialize()
-      );
+      const entities = this.lowPriorityMessage.entities;
+      for (let i = 0; i < syncables.length; i++) {
+        entities[i] = syncables[i].serialize();
+      }
+      entities.length = syncables.length;
 
       for (let player of this.players) {
         player.connection?.send(this.lowPriorityMessage);
       }
     } else if (this.frames % 4 === 0) {
       const syncables = getLevel().syncables[Priority.High];
-      this.highPriorityMessage.entities = syncables.map((entity) =>
-        entity.serialize()
-      );
+      const entities = this.highPriorityMessage.entities;
+      for (let i = 0; i < syncables.length; i++) {
+        entities[i] = syncables[i].serialize();
+      }
+      entities.length = syncables.length;
 
       for (let player of this.players) {
         player.connection?.send(this.highPriorityMessage);
