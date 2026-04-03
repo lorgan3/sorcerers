@@ -64,7 +64,7 @@ export class ExplosiveDamage implements DamageSource {
     private targets?: TargetList
   ) {}
 
-  damage() {
+  damage(skipForce?: boolean) {
     getLevel().terrain.draw((ctx) => {
       const offset = Math.ceil(this.range * ExplosiveDamage.gradientMultiplier);
       ctx.drawImage(
@@ -95,7 +95,7 @@ export class ExplosiveDamage implements DamageSource {
       );
     }
 
-    this.getTargets().damage(this);
+    this.getTargets().damage(this, undefined, skipForce);
   }
 
   serialize() {
