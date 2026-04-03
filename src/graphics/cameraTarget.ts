@@ -19,9 +19,8 @@ export class CameraTarget {
   private static acceleration = 0.7;
   private static manualAcceleration = 0.35;
 
-  static shakeAmount = 10;
+  static shakeAmount = 15;
   static shakeIntensity = 12;
-
 
   private controller: KeyboardController | undefined;
   private target?: Spawnable;

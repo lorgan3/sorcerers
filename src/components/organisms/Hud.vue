@@ -5,7 +5,7 @@ import { Player } from "../../data/network/player";
 import { Popup } from "../../data/network/types";
 import { Element } from "../../data/spells/types";
 import { ELEMENT_MAP } from "../../graphics/elements";
-import { MAX_MANA } from "../../data/network/constants";
+import { DEFAULT_ELEMENT_VALUE, MAX_MANA } from "../../data/network/constants";
 import { AccumulatedStat } from "../../data/network/accumulatedStat";
 import EndGameDialog from "./EndGameDialog.vue";
 import IconButton from "../atoms/IconButton.vue";
@@ -26,7 +26,7 @@ const { forceOpen } = defineProps<{
 
 const elements = ref(
   Object.fromEntries(
-    Object.values(Element).map((element) => [element, 1.75])
+    Object.values(Element).map((element) => [element, DEFAULT_ELEMENT_VALUE])
   ) as Record<Element, number>
 );
 const turnTime = ref(0);

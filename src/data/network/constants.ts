@@ -8,3 +8,5 @@ export const PEER_ID_PREFIX = "sorcerers-";
 export const FIXED_INTERVAL = 1000 / 20;
 
 export const LAST_GAME_KEY = "lastGameKey";
+
+export const DEFAULT_ELEMENT_VALUE = 1.75;
