@@ -116,9 +116,10 @@ export class ExplosiveDamage implements DamageSource {
         this.x * 6,
         this.y * 6,
         range,
-        (entity, distance) => {
+        (entity, distanceSquared) => {
           if (isHurtableEntity(entity)) {
             const [x, y] = entity.getCenter();
+            const distance = Math.sqrt(distanceSquared);
             this.targets!.add(
               entity,
               (5 + 5 * ((range - distance) / range)) * this.damageMultiplier,
