@@ -24,15 +24,11 @@ const { forceOpen } = defineProps<{
   forceOpen: boolean;
 }>();
 
-const getElements = () =>
+const elements = ref(
   Object.fromEntries(
-    Object.values(Element).map((element) => [
-      element,
-      getManager().getElementValue(element),
-    ])
-  ) as Record<Element, number>;
-
-const elements = ref(getElements());
+    Object.values(Element).map((element) => [element, 1.75])
+  ) as Record<Element, number>
+);
 const turnTime = ref(0);
 const gameTime = ref(0);
 const mana = ref(0);
@@ -49,13 +45,17 @@ const poll = () => {
 
   const data = getManager().getHudData();
 
-  const newElements = getElements();
+  let elementsChanged = false;
   const currentElements = elements.value;
-  for (const key in newElements) {
-    if (newElements[key as Element] !== currentElements[key as Element]) {
-      elements.value = newElements;
-      break;
+  for (const element of Object.values(Element)) {
+    const newValue = getManager().getElementValue(element);
+    if (newValue !== currentElements[element]) {
+      currentElements[element] = newValue;
+      elementsChanged = true;
     }
+  }
+  if (elementsChanged) {
+    elements.value = { ...currentElements };
   }
 
   if (turnTime.value !== data.turnTime) turnTime.value = data.turnTime;

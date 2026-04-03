@@ -274,10 +274,12 @@ export class Level {
       }
 
       if ("priority" in object) {
-        this.syncables[object.priority].splice(
-          this.syncables[object.priority].indexOf(object),
-          1
-        );
+        const arr = this.syncables[object.priority];
+        const index = arr.indexOf(object);
+        if (index !== -1) {
+          arr[index] = arr[arr.length - 1];
+          arr.pop();
+        }
       }
     }
   }

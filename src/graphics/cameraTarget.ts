@@ -21,7 +21,7 @@ export class CameraTarget {
 
   static shakeAmount = 10;
   static shakeIntensity = 12;
-  static shakeInterval = 25;
+
 
   private controller: KeyboardController | undefined;
   private target?: Spawnable;
@@ -36,11 +36,13 @@ export class CameraTarget {
   private attached = true;
   private oldCDown = false;
   private oldMouseDown = false;
-  private intervalId = -1;
 
   private speed = 0;
   private scale = 1;
   private time = 0;
+
+  private shakeRemaining = 0;
+  private shakeCenter: [number, number] = [0, 0];
 
   constructor(private viewport: Viewport) {
     this.position = [
@@ -50,7 +52,20 @@ export class CameraTarget {
   }
 
   tick(dt: number) {
-    if (!this.controller || this.intervalId !== -1) {
+    if (this.shakeRemaining > 0) {
+      this.viewport.moveCenter(
+        this.shakeCenter[0] +
+          Math.random() * CameraTarget.shakeIntensity -
+          CameraTarget.shakeIntensity / 2,
+        this.shakeCenter[1] +
+          Math.random() * CameraTarget.shakeIntensity -
+          CameraTarget.shakeIntensity / 2
+      );
+      this.shakeRemaining--;
+      return;
+    }
+
+    if (!this.controller) {
       return;
     }
 
@@ -277,26 +292,8 @@ export class CameraTarget {
   }
 
   shake() {
-    window.clearInterval(this.intervalId);
-
     const center = this.viewport.center;
-
-    let shakes = CameraTarget.shakeAmount;
-    this.intervalId = window.setInterval(() => {
-      this.viewport.moveCenter(
-        center[0] +
-          Math.random() * CameraTarget.shakeIntensity -
-          CameraTarget.shakeIntensity / 2,
-        center[1] +
-          Math.random() * CameraTarget.shakeIntensity -
-          CameraTarget.shakeIntensity / 2
-      );
-
-      shakes--;
-      if (shakes <= 0) {
-        window.clearInterval(this.intervalId);
-        this.intervalId = -1;
-      }
-    }, CameraTarget.shakeInterval);
+    this.shakeCenter = [center[0], center[1]];
+    this.shakeRemaining = CameraTarget.shakeAmount;
   }
 }

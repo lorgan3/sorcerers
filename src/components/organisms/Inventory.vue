@@ -34,13 +34,13 @@ const availableList = ref<boolean[]>([]);
 const poll = () => {
   if (props.isOpen) {
     const mana = getManager().self.mana;
-    const executedSpells = getManager().self.executedSpells;
+    const executedSet = new Set(getManager().self.executedSpells);
     let changed = false;
 
     SPELLS.forEach((spell) => {
       const available =
         (spell.costMultiplier?.() || 1) * spell.cost <= mana &&
-        !executedSpells.includes(spell);
+        !executedSet.has(spell);
 
       if (availableList.value[spell.iconId] !== available) {
         availableList.value[spell.iconId] = available;
