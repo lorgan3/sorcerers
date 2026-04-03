@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef, triggerRef } from "vue";
 import { getManager, getServer } from "../../data/context";
 import { Player } from "../../data/network/player";
 import { Popup } from "../../data/network/types";
@@ -24,7 +24,7 @@ const { forceOpen } = defineProps<{
   forceOpen: boolean;
 }>();
 
-const elements = ref(
+const elements = shallowRef(
   Object.fromEntries(
     Object.values(Element).map((element) => [element, DEFAULT_ELEMENT_VALUE])
   ) as Record<Element, number>
@@ -55,7 +55,7 @@ const poll = () => {
     }
   }
   if (elementsChanged) {
-    elements.value = { ...currentElements };
+    triggerRef(elements);
   }
 
   if (turnTime.value !== data.turnTime) turnTime.value = data.turnTime;
