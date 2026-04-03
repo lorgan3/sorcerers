@@ -265,7 +265,16 @@ export class Client extends Manager {
         const damageSource = DAMAGE_SOURCES[message.kind].deserialize(
           message.data
         );
-        damageSource.damage();
+        damageSource.damage(true);
+
+        if (message.entities) {
+          for (const [id, ...data] of message.entities) {
+            const entity = getLevel().entityMap.get(id);
+            if (entity instanceof Character) {
+              entity.deserialize(data);
+            }
+          }
+        }
 
         if (
           damageSource
