@@ -32,14 +32,16 @@ const selectedSpell = ref(getManager()?.selectedSpell);
 const availableList = ref<boolean[]>([]);
 
 let cachedExecutedSpells: Spell[] | null = null;
+let cachedExecutedLength = 0;
 let cachedExecutedSet: Set<Spell> = new Set();
 
 const poll = () => {
   if (props.isOpen) {
     const mana = getManager().self.mana;
     const currentExecuted = getManager().self.executedSpells;
-    if (cachedExecutedSpells !== currentExecuted) {
+    if (cachedExecutedSpells !== currentExecuted || cachedExecutedLength !== currentExecuted.length) {
       cachedExecutedSpells = currentExecuted;
+      cachedExecutedLength = currentExecuted.length;
       cachedExecutedSet = new Set(currentExecuted);
     }
     let changed = false;
