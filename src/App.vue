@@ -17,6 +17,15 @@ import { RouterView } from "vue-router";
   --small-radius: 3px;
   --big-radius: 6px;
   --stroke-length: 43.425px;
+  --glow-warm: rgba(180, 120, 40, 0.3);
+  --glow-warm-soft: rgba(180, 120, 40, 0.1);
+  --border-accent: #80331e;
+  --border-accent-hover: #a04428;
+  --border-accent-faint: rgba(128, 51, 30, 0.4);
+  --parchment-light: #d8c4a4;
+  --parchment-dark: #c4a882;
+  --parchment-hover-light: #e0ccac;
+  --parchment-hover-dark: #ccb08a;
 }
 
 @property --pulse {
@@ -45,50 +54,142 @@ import { RouterView } from "vue-router";
   font-family: system-ui;
 }
 
+/* Themed scrollbars */
+* {
+  scrollbar-color: var(--background-dark) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--background-dark);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--highlight-background);
+}
+
 button {
   font-size: 28px;
   font-family: Eternal;
 }
 
 .primary {
-  background: var(--background);
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
   color: var(--primary);
-  border: 4px solid var(--highlight);
-  box-shadow: 2px 2px 2px var(--highlight), 0 0 5px inset var(--highlight);
-  border-radius: var(--big-radius);
+  border: 2px solid var(--border-accent);
+  border-radius: 2px;
+  box-shadow: 0 2px 5px rgba(30, 15, 5, 0.3);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
   letter-spacing: 1.2px;
   cursor: pointer;
-  padding: 5px 15px;
-  transition: 0.5s color;
+  padding: 8px 20px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.primary::before,
+.primary::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--border-accent-faint);
+  border-style: solid;
+  transition: all 0.3s ease;
+}
+
+.primary::before {
+  top: 3px;
+  left: 3px;
+  border-width: 2px 0 0 2px;
+}
+
+.primary::after {
+  bottom: 3px;
+  right: 3px;
+  border-width: 0 2px 2px 0;
 }
 
 .primary:not([disabled]):hover {
-  box-shadow: 0 0 5px inset var(--highlight);
-  position: relative;
-  top: 2px;
-  left: 2px;
+  background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
   color: var(--highlight);
+  border-color: var(--border-accent-hover);
+  box-shadow: 0 2px 5px rgba(30, 15, 5, 0.3), inset 0 0 20px var(--glow-warm-soft);
+}
+
+.primary:not([disabled]):hover::before,
+.primary:not([disabled]):hover::after {
+  width: 14px;
+  height: 14px;
+  border-color: var(--border-accent-hover);
 }
 
 .primary:focus-visible {
   outline: none;
-  border: 4px solid var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--glow-warm);
+}
+
+.primary[disabled] {
+  opacity: 0.5;
+  filter: saturate(0.6);
+  cursor: not-allowed;
 }
 
 .secondary {
   background: transparent;
   border: none;
-  text-decoration: underline;
+  text-decoration: none;
   border-radius: var(--big-radius);
   letter-spacing: 1.2px;
   cursor: pointer;
   padding: 5px 15px;
-  transition: 0.5s color, 0.25s background-color;
+  transition: 0.3s color;
+  position: relative;
+}
+
+.secondary::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 15px;
+  right: 15px;
+  height: 2px;
+  background: var(--border-accent);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
 .secondary:not([disabled]):hover {
-  background: var(--background);
   color: var(--highlight);
+}
+
+.secondary:not([disabled]):hover::after {
+  transform: scaleX(1);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Eternal;
+  font-size: 32px;
+  color: var(--border-accent);
+
+  &::before {
+    content: '◆';
+    font-size: 18px;
+    color: var(--border-accent);
+  }
 }
 
 .truncate {
@@ -153,6 +254,13 @@ button {
   to {
     transform: rotate(360deg);
   }
+}
+
+.spinner {
+  display: inline-block;
+  transform-origin: 50%;
+  animation: spin 0.8s linear infinite;
+  color: var(--border-accent);
 }
 
 @keyframes appear {
@@ -265,6 +373,16 @@ table {
   border-spacing: 0;
 }
 
+/* Global focus styles */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--glow-warm);
+}
+
 /* */
 h1,
 h2,
@@ -304,7 +422,7 @@ a {
   flex-direction: row;
   white-space: nowrap;
   position: relative;
-  padding-left: 30px;
+  padding-left: 38px;
   line-height: 25px;
 
   .label {
@@ -327,17 +445,23 @@ a {
     left: 0;
     height: 25px;
     width: 25px;
-    background-color: var(--background);
+    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+    border: 1px solid var(--border-accent-faint);
+    border-radius: 2px;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
   }
 
-  /* On mouse-over, add a grey background color */
+  /* On mouse-over, add glow */
   &:hover input ~ .checkmark {
-    background-color: var(--background-dark);
+    background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
+    box-shadow: 0 0 6px var(--glow-warm-soft);
   }
 
-  /* When the checkbox is checked, add a blue background */
+  /* When the checkbox is checked */
   input:checked ~ .checkmark {
-    background-color: var(--highlight-background);
+    background: linear-gradient(180deg, var(--highlight-background), var(--background-dark));
+    box-shadow: 0 0 6px var(--glow-warm-soft);
+    border-color: var(--border-accent);
   }
 
   /* Create the checkmark/indicator (hidden when not checked) */
