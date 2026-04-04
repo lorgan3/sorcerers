@@ -28,23 +28,24 @@ const isOpen = ref(defaultOpen);
 <style lang="scss" scoped>
 .title {
   cursor: pointer;
-  background: transparent;
-  border: none;
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  border: 1px solid var(--border-accent-faint);
+  border-radius: 4px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 0;
+  padding: 4px 8px;
   color: var(--border-accent);
-  transition: color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    color: var(--border-accent-hover);
+    border-color: var(--border-accent);
+    box-shadow: 0 0 6px var(--glow-warm-soft);
   }
 
   .icon {
     width: 16px;
     height: 16px;
-    transition: transform 0.3s ease;
   }
 }
 

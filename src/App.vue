@@ -259,8 +259,26 @@ button {
 .spinner {
   display: inline-block;
   transform-origin: 50%;
-  animation: spin 0.8s linear infinite;
-  color: var(--border-accent);
+  animation: spin 0.8s linear infinite, spinner-glow 4s ease-in-out infinite;
+}
+
+@keyframes spinner-glow {
+  0%, 100% {
+    color: #604f80;
+    text-shadow: 0 0 8px #604f8060;
+  }
+  25% {
+    color: #d70032;
+    text-shadow: 0 0 8px #d7003260;
+  }
+  50% {
+    color: #005fe8;
+    text-shadow: 0 0 8px #005fe860;
+  }
+  75% {
+    color: #009600;
+    text-shadow: 0 0 8px #00960060;
+  }
 }
 
 @keyframes appear {

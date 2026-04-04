@@ -146,7 +146,7 @@ onMounted(() => reset());
       </div>
       <img v-if="mapPath" :src="mapPath" />
       <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
-        <span class="icon icon--spinning">߷</span>
+        <span class="icon spinner">߷</span>
       </div>
       <input
         type="file"
@@ -271,15 +271,9 @@ select {
 }
 
 .icon {
-  display: inline-block;
-  transform-origin: 50%;
   line-height: 30px;
   width: 36px;
   height: 36px;
   font-size: 36px;
-
-  &--spinning {
-    animation: spin 0.5s linear infinite;
-  }
 }
 </style>
