@@ -54,6 +54,7 @@ export class ExplosiveDamage implements DamageSource {
   public readonly type = DamageSourceType.Explosive;
 
   public cause: Player | null = null;
+  public isFallDamage = false;
 
   constructor(
     public readonly x: number,

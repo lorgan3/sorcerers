@@ -1,5 +1,6 @@
 import { Force } from "../damage/targetList";
-import { DamageSource, DamageSourceType } from "../damage/types";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
+import { DamageSource } from "../damage/types";
 import { Character } from "../entity/character";
 import { MagicScroll } from "../entity/magicScroll";
 import { Potion } from "../entity/potion";
@@ -65,7 +66,7 @@ export class Stats {
     this.damageTaken += actualDamage;
     this.knockbackTaken += force?.power || 0;
 
-    if (damageSource.type === DamageSourceType.Falling) {
+    if (damageSource instanceof ExplosiveDamage && damageSource.isFallDamage) {
       this.fallDamageTaken += actualDamage;
     }
 

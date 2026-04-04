@@ -395,6 +395,7 @@ export class Server extends Manager {
       Math.max(1, velocity - 3) ** 2
     );
     damage.cause = character.lastDamageDealer || character.player;
+    damage.isFallDamage = true;
     this.damageQueue.push(damage);
   }
 
