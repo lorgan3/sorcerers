@@ -1,5 +1,5 @@
 import { Force } from "../damage/targetList";
-import { DamageSource } from "../damage/types";
+import { DamageSource, DamageSourceType } from "../damage/types";
 import { Character } from "../entity/character";
 import { MagicScroll } from "../entity/magicScroll";
 import { Potion } from "../entity/potion";
@@ -33,6 +33,17 @@ export class Stats {
   public potionsUsed = 0;
   public scrollsUsed = 0;
 
+  public distanceWalked = 0;
+  public meleeAttacks = 0;
+  public healingReceived = 0;
+  public killboxDeaths = 0;
+  public terrainDestroyed = 0;
+  public turnsPlayed = 0;
+  public totalTurnTime = 0;
+  public highestSingleHit = 0;
+  public fallDamageTaken = 0;
+  public unusedMana = 0;
+
   constructor(public readonly self: Player) {}
 
   registerCast(spell: Spell) {
@@ -54,8 +65,16 @@ export class Stats {
     this.damageTaken += actualDamage;
     this.knockbackTaken += force?.power || 0;
 
+    if (damageSource.type === DamageSourceType.Falling) {
+      this.fallDamageTaken += actualDamage;
+    }
+
     if (character.hp > 0 && damage > character.hp) {
       this.deaths++;
+
+      if (damage >= 999) {
+        this.killboxDeaths++;
+      }
 
       if (
         this.self.characters.every(
@@ -64,6 +83,7 @@ export class Stats {
         )
       ) {
         this.timeOfDeath = getManager().getTime();
+        this.unusedMana = this.self.mana;
       }
 
       if (damageSource.cause) {
@@ -75,6 +95,10 @@ export class Stats {
       damageSource.cause.stats.damageDealt += actualDamage;
       damageSource.cause.stats.knockbackDealt += force?.power || 0;
       damageSource.cause.stats.overkillDamage += damage - actualDamage;
+      damageSource.cause.stats.highestSingleHit = Math.max(
+        damageSource.cause.stats.highestSingleHit,
+        actualDamage
+      );
     }
 
     if (damageSource.cause === this.self) {
