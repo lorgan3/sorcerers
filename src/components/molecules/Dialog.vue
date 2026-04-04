@@ -98,18 +98,45 @@ dialog {
     background: url("../../assets/parchment.png");
     position: absolute;
     display: block;
-    border: 2px solid var(--primary);
-    rotate: 4deg;
     image-rendering: pixelated;
     background-size: 256px;
-    box-shadow: 0 0 16px inset var(--primary), 5px 5px 10px #00000069;
-    border-radius: var(--big-radius);
+    border: 3px solid var(--border-accent);
+    border-radius: 4px;
+    box-shadow:
+      0 0 20px inset rgba(64, 32, 32, 0.3),
+      0 4px 20px rgba(0, 0, 0, 0.4),
+      0 0 0 1px var(--border-accent-faint),
+      0 0 0 5px rgba(188, 168, 140, 0.4),
+      0 0 0 6px var(--border-accent-faint);
+    animation: dialog-scale-in 0.2s ease-out;
+  }
+
+  &:after {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid var(--border-accent-faint);
+    border-radius: 2px;
+    pointer-events: none;
+    animation: dialog-scale-in 0.2s ease-out;
+  }
+
+  @keyframes dialog-scale-in {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 
   .content {
-    container-type: normal;
-    padding: 2cqw 3cqh;
+    padding: 16px 20px;
     position: relative;
+    z-index: 1;
+    animation: dialog-scale-in 0.2s ease-out;
 
     &--ingame,
     &--ingame button {
@@ -129,8 +156,8 @@ dialog {
     }
 
     .scroller {
-      max-height: 60vh;
-      overflow: auto;
+      max-height: none;
+      overflow: visible;
       scrollbar-color: var(--background-dark) transparent;
       scrollbar-width: thin;
 

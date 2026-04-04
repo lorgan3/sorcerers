@@ -64,6 +64,13 @@ const { spell, animated, element1Filter, element2Filter } = defineProps<{
     calc(var(--row, 0) * var(--size));
   width: var(--size);
   height: var(--size);
+  border-radius: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) brightness(1.1);
+  }
 }
 
 .border {
@@ -72,7 +79,7 @@ const { spell, animated, element1Filter, element2Filter } = defineProps<{
   rect {
     fill: none;
     stroke: #000;
-    stroke-width: 3px;
+    stroke-width: 2px;
     stroke-dasharray: var(--stroke-length), var(--stroke-length);
     stroke-dashoffset: calc(var(--dash-offset, 0) * var(--stroke-length));
   }
