@@ -72,8 +72,16 @@ localStorage.setItem("Settings", JSON.stringify({
 ### Host page setup
 1. A room code is auto-generated (visible in `.key` span)
 2. One player (the host) is already present
-3. **Add local player:** Click the plus icon button next to the "Players" heading. **Important:** Do this BEFORE opening the settings dialog — if the settings dialog is open, the button click may not register. Verify the second player appears in the DOM before proceeding (`getByRole('heading', { name: 'TestPlayer (1)' })`)
-4. **Map selection:** `<select>` dropdown in the `MapSelect` component. Default maps are available. Pick the same map each time for consistency.
+3. **Add local player:** Click the plus icon button next to the "Players" heading. **Important:** This button doesn't work reliably inside `browser_run_code` with `getByRole`. Instead, use DOM click via `page.evaluate`:
+   ```js
+   await page.evaluate(() => {
+     const heading = Array.from(document.querySelectorAll('h2'))
+       .find(h => h.textContent?.includes('Players'));
+     heading?.querySelector('button')?.click();
+   });
+   ```
+   Alternatively, use `browser_click` with a snapshot ref. Always verify the second player appeared before proceeding.
+4. **Map selection:** `<select>` dropdown in the `MapSelect` component. **Recommended: Castle** — it has connected terrain with no water death gaps. Playground has two islands separated by water that kills on contact. Select via `page.locator('select').selectOption('Castle')`.
 5. **Edit game settings:** Click the edit icon next to "Settings" heading. Key fields:
    - Team size (`label="Team size"`) — set to 1 for faster testing
    - Turn duration (`label="Turn duration (seconds)"`) — 15s is good for testing
@@ -109,8 +117,23 @@ The game cycles through players. A popup (`.popup`) announces whose turn it is. 
   // ... repeat ...
   await page.keyboard.up('d'); // stop walking
   ```
-- **Important:** Do NOT use `keyboard.press('w')` while holding a direction — it does keydown+keyup too fast. Instead use `keyboard.down('w')` + wait + `keyboard.up('w')`.
-- **Know which direction to walk:** Check `.popup` text to see whose turn it is, then walk toward the opponent. Both players are local, so you control whoever is active.
+- **Know which direction to walk:** Both players are local — you control whoever is active. Use `Ctrl + mouse` to pan the camera and **visually locate the enemy** before walking. Take a screenshot to confirm direction. Walking blindly in the wrong direction will send the character off the map.
+- **Don't walk too far** — characters can walk off the map edges and die from fall damage or drowning. Walk in short bursts (2-3 seconds), screenshot, then continue.
+- **Turn detection pattern** for waiting between turns:
+  ```js
+  // Wait for current turn to end (timer hits 0)
+  for (let i = 0; i < 200; i++) {
+    await page.waitForTimeout(200);
+    const t = parseInt(await page.evaluate(() => document.querySelector('.timer')?.textContent) || '0');
+    if (t === 0) break;
+  }
+  // Wait for new turn to start (timer goes above 10)
+  for (let i = 0; i < 200; i++) {
+    await page.waitForTimeout(200);
+    const t = parseInt(await page.evaluate(() => document.querySelector('.timer')?.textContent) || '0');
+    if (t > 10) break; // new turn!
+  }
+  ```
 
 ### Spell inventory layout
 The inventory grid has two sections, both sorted by mana cost:
