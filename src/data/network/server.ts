@@ -395,6 +395,7 @@ export class Server extends Manager {
       Math.max(1, velocity - 3) ** 2
     );
     damage.cause = character.lastDamageDealer || character.player;
+    damage.isFallDamage = true;
     this.damageQueue.push(damage);
   }
 
@@ -635,6 +636,10 @@ export class Server extends Manager {
         return;
       }
 
+      if (this.activePlayer) {
+        const turnDuration = this.time - this.turnStartTime;
+        this.activePlayer.stats.totalTurnTime += turnDuration;
+      }
       this.turnStartTime = this.time;
       this._turnState = TurnState.Ongoing;
       this.randomizeElements();

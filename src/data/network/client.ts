@@ -57,6 +57,8 @@ export class Client extends Manager {
       Math.max(1, velocity - 3) ** 2
     );
 
+    damage.isFallDamage = true;
+
     // Required to build the target list
     damage.getTargets();
 

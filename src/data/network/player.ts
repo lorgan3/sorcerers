@@ -153,6 +153,7 @@ export class Player {
   }
 
   nextTurn() {
+    this.stats.turnsPlayed++;
     this.turn++;
     this.mana += MANA_BASE_GAIN * getManager().manaMultiplier;
 

@@ -17,6 +17,15 @@ export enum StatType {
   Kills,
   PotionsUsed,
   ScrollsUsed,
+  DistanceWalked,
+  MeleeAttacks,
+  HealingReceived,
+  KillboxDeaths,
+  TerrainDestroyed,
+  AverageTurnDuration,
+  HighestSingleHit,
+  FallDamageTaken,
+  UnusedMana,
 }
 
 export interface Value<T> {
@@ -55,10 +64,14 @@ export class AccumulatedStat<T> {
     }
 
     const lameStat = high === 0 || low === 0;
+    const boringStat = this.type === StatType.KnockbackTaken;
+    const funnyStat = this.type === StatType.FallDamageTaken || this.type === StatType.KillboxDeaths;
     this._rank =
       (Math.abs(high - low) / (high + low)) *
       (1 + Math.random() * 0.3 - 0.15) *
-      (lameStat ? 0.6 : 1);
+      (lameStat ? 0.6 : 1) *
+      (boringStat ? 0.4 : 1) *
+      (funnyStat ? 1.2 : 1);
     return this._rank;
   }
 
@@ -125,7 +138,7 @@ const ACCUMULATORS = {
   },
   [StatType.SelfDamage]: {
     accumulate: highestNumber(StatType.SelfDamage, "selfDamage"),
-    translate: (stat) => `${stat.name} did the most damage... to themselves.`,
+    translate: (stat) => `${stat.name} was their own worst enemy.`,
   },
   [StatType.OverkillDamage]: {
     accumulate: highestNumber(StatType.OverkillDamage, "overkillDamage"),
@@ -134,25 +147,25 @@ const ACCUMULATORS = {
   [StatType.DamageDealt]: {
     accumulate: highestNumber(StatType.DamageDealt, "damageDealt"),
     translate: (stat) =>
-      `${stat.name} came prepared and dealt the most damage.`,
+      `${stat.name} brought a nuke to a wand fight.`,
   },
   [StatType.KnockbackDealt]: {
     accumulate: highestNumber(StatType.KnockbackDealt, "knockbackDealt"),
-    translate: (stat) => `${stat.name} dealt the most knockback.`,
+    translate: (stat) => `${stat.name} sent everyone flying.`,
   },
   [StatType.DamageTaken]: {
     accumulate: highestNumber(StatType.DamageTaken, "damageTaken"),
-    translate: (stat) => `${stat.name} played tank and took the most damage.`,
+    translate: (stat) => `${stat.name} absorbed hits like a sponge.`,
   },
   [StatType.KnockbackTaken]: {
     accumulate: highestNumber(StatType.KnockbackTaken, "knockbackTaken"),
     translate: (stat) =>
-      `${stat.name} was a punching bag, getting knocked around the most.`,
+      `${stat.name} was a bouncing ball, getting knocked around the most.`,
   },
   [StatType.Deaths]: {
     accumulate: lowestNumber(StatType.Deaths, "deaths"),
     translate: (stat) =>
-      `${stat.name} takes good care of their sorcerers and lost the least.`,
+      `${stat.name} kept their sorcerers alive the longest.`,
   },
   [StatType.Kills]: {
     accumulate: (stats: Stats[]) => {
@@ -165,7 +178,7 @@ const ACCUMULATORS = {
       return values;
     },
     translate: (stat) =>
-      `${stat.name} was bloodthirsty killing the most sorcerers.`,
+      `${stat.name} killed the most sorcerers. Bloodthirsty.`,
   },
   [StatType.ElementUsage]: {
     accumulate: (stats: Stats[]) =>
@@ -219,10 +232,65 @@ const ACCUMULATORS = {
   [StatType.PotionsUsed]: {
     accumulate: highestNumber(StatType.PotionsUsed, "potionsUsed"),
     translate: (stat) =>
-      `${stat.name} was addicted to potions and drank the most.`,
+      `${stat.name} chugged potions like there's no tomorrow.`,
   },
   [StatType.ScrollsUsed]: {
     accumulate: highestNumber(StatType.ScrollsUsed, "scrollsUsed"),
-    translate: (stat) => `${stat.name} is a scholar and read the most scrolls.`,
+    translate: (stat) => `${stat.name} couldn't stop reading scrolls.`,
+  },
+  [StatType.DistanceWalked]: {
+    accumulate: highestNumber(StatType.DistanceWalked, "distanceWalked"),
+    translate: (stat) =>
+      `${stat.name} went on a lovely stroll across the battlefield.`,
+  },
+  [StatType.MeleeAttacks]: {
+    accumulate: highestNumber(StatType.MeleeAttacks, "meleeAttacks"),
+    translate: (stat) =>
+      `${stat.name} chose violence up close and personal.`,
+  },
+  [StatType.HealingReceived]: {
+    accumulate: highestNumber(StatType.HealingReceived, "healingReceived"),
+    translate: (stat) =>
+      `${stat.name} kept the potion industry in business.`,
+  },
+  [StatType.KillboxDeaths]: {
+    accumulate: highestNumber(StatType.KillboxDeaths, "killboxDeaths"),
+    translate: (stat) =>
+      `${stat.name}'s sorcerers kept falling off the map. Gravity wins again.`,
+  },
+  [StatType.TerrainDestroyed]: {
+    accumulate: highestNumber(StatType.TerrainDestroyed, "terrainDestroyed"),
+    translate: (stat) =>
+      `${stat.name} reshaped the landscape, leaving nothing but craters.`,
+  },
+  [StatType.AverageTurnDuration]: {
+    accumulate: (stats: Stats[]) => {
+      const values = stats.map((stat) => ({
+        player: stat.self,
+        value: stat.turnsPlayed > 0
+          ? stat.totalTurnTime / stat.turnsPlayed
+          : 0,
+      }));
+
+      values.sort((a, b) => b.value - a.value);
+      return values;
+    },
+    translate: (stat) =>
+      `${stat.name} took their sweet time every turn.`,
+  },
+  [StatType.HighestSingleHit]: {
+    accumulate: highestNumber(StatType.HighestSingleHit, "highestSingleHit"),
+    translate: (stat) =>
+      `${stat.name} landed a devastating blow of ${Math.round(stat.result as number)} damage.`,
+  },
+  [StatType.FallDamageTaken]: {
+    accumulate: highestNumber(StatType.FallDamageTaken, "fallDamageTaken"),
+    translate: (stat) =>
+      `${stat.name} should've packed a parachute.`,
+  },
+  [StatType.UnusedMana]: {
+    accumulate: highestNumber(StatType.UnusedMana, "unusedMana"),
+    translate: (stat) =>
+      `${stat.name} died with mana to spare. What a waste.`,
   },
 } satisfies Record<StatType, Accumulator<any>>;

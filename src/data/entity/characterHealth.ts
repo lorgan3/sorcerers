@@ -36,6 +36,7 @@ export class CharacterHealth {
     const oldHp = this._hp;
     const diff = hp - oldHp;
     if (diff > 0) {
+      this.character.player.stats.healingReceived += diff;
       getLevel().numberContainer.heal(diff, ...this.character.getCenter());
       this.lastReportedHp += diff;
       this.namePlate.text = `${this.namePlateName} ${Math.max(

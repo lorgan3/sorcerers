@@ -54,6 +54,7 @@ export class ExplosiveDamage implements DamageSource {
   public readonly type = DamageSourceType.Explosive;
 
   public cause: Player | null = null;
+  public isFallDamage = false;
 
   constructor(
     public readonly x: number,
@@ -83,6 +84,10 @@ export class ExplosiveDamage implements DamageSource {
       ]
     );
 
+    if (this.cause) {
+      this.cause.stats.terrainDestroyed += Math.PI * this.range * this.range;
+    }
+
     if (this.range <= 8) {
       ControllableSound.fromEntity(
         [this.x * 6, this.y * 6],
@@ -99,7 +104,7 @@ export class ExplosiveDamage implements DamageSource {
   }
 
   serialize() {
-    return [this.x, this.y, this.range, this.targets?.serialize()] as const;
+    return [this.x, this.y, this.range, this.targets?.serialize(), this.isFallDamage || undefined] as const;
   }
 
   getTargets(withNearbyEntities?: Level["withNearbyEntities"]) {
@@ -137,7 +142,7 @@ export class ExplosiveDamage implements DamageSource {
   }
 
   static deserialize(data: ReturnType<ExplosiveDamage["serialize"]>) {
-    return new ExplosiveDamage(
+    const damage = new ExplosiveDamage(
       data[0],
       data[1],
       data[2],
@@ -145,5 +150,7 @@ export class ExplosiveDamage implements DamageSource {
       DEFAULT_DAMAGE_MULTIPLIER,
       TargetList.deserialize(data[3])
     );
+    damage.isFallDamage = !!data[4];
+    return damage;
   }
 }
