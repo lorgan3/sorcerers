@@ -11,7 +11,7 @@ import credits from "../../../credits.json";
   </p>
   <div class="credits">
     <div class="section" v-for="{ section, authors } in credits">
-      <h2>{{ section }}</h2>
+      <h2 class="section-heading">{{ section }}</h2>
       <ul>
         <li class="item" v-for="{ author, items } in authors">
           <template v-for="(item, i) in items">
@@ -26,9 +26,7 @@ import credits from "../../../credits.json";
   </div>
 
   <div class="buttons">
-    <RouterLink to="/" v-slot="{ navigate }">
-      <button @click="navigate" class="secondary">Back</button>
-    </RouterLink>
+    <RouterLink to="/" class="secondary">Back</RouterLink>
   </div>
 </template>
 
@@ -40,6 +38,14 @@ import credits from "../../../credits.json";
 
   .section {
     flex: 1;
+
+    & + .section {
+      padding-top: 12px;
+      background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+      background-size: 100% 1px;
+      background-repeat: no-repeat;
+      background-position: top;
+    }
 
     .item {
       -webkit-line-clamp: 2;

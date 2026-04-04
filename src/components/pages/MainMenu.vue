@@ -14,52 +14,41 @@ const joinDialogOpen = ref(false);
   <div class="mainMenu">
     <ul class="list flex-list">
       <li>
-        <RouterLink to="/host" v-slot="{ navigate }">
-          <button class="primary" @click="navigate">Host</button>
-        </RouterLink>
+        <RouterLink to="/host" class="primary menu-button">Host</RouterLink>
       </li>
       <li>
-        <button class="primary" @click="joinDialogOpen = true">
+        <button class="primary menu-button" @click="joinDialogOpen = true">
           Join game
         </button>
       </li>
       <li>
-        <RouterLink to="/builder" v-slot="{ navigate }">
-          <button class="primary" @click="navigate">Builder</button>
-        </RouterLink>
+        <RouterLink to="/builder" class="primary menu-button">Builder</RouterLink>
       </li>
       <li>
-        <RouterLink to="/credits" v-slot="{ navigate }">
-          <button class="primary" @click="navigate">Credits</button>
-        </RouterLink>
+        <RouterLink to="/credits" class="primary menu-button">Credits</RouterLink>
       </li>
       <li>
         <a
           href="https://github.com/lorgan3/sorcerers"
           target="_blank"
           rel="noopener noreferrer"
+          class="primary menu-button"
         >
-          <button class="primary">
-            Issues/Feedback
-            <img class="github-icon" :src="github" />
-          </button>
+          Issues/Feedback
+          <img class="github-icon" :src="github" />
         </a>
       </li>
     </ul>
   </div>
   <div class="spellbooks">
     <Tooltip text="Spellbook" direction="top-center">
-      <RouterLink to="/spellbook" v-slot="{ navigate }">
-        <button class="secondary book-link" @click="navigate">
-          <img :src="book" />
-        </button>
+      <RouterLink to="/spellbook" class="book-link">
+        <img :src="book" />
       </RouterLink>
     </Tooltip>
     <Tooltip text="Settings" direction="top-center">
-      <RouterLink to="/settings" v-slot="{ navigate }">
-        <button class="secondary book-link" @click="navigate">
-          <img :src="settingsBook" />
-        </button>
+      <RouterLink to="/settings" class="book-link">
+        <img :src="settingsBook" />
       </RouterLink>
     </Tooltip>
   </div>
@@ -72,18 +61,24 @@ const joinDialogOpen = ref(false);
 <style lang="scss" scoped>
 .mainMenu {
   .list {
-    background: var(--background);
-    box-shadow: 0 0 10px inset var(--primary);
+    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+    border: 2px solid var(--border-accent);
+    box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3), inset 0 0 15px rgba(180, 120, 40, 0.08);
     padding: 30px;
-    border-radius: 10px;
+    border-radius: 4px;
 
-    button {
+    .menu-button {
+      display: block;
+      width: 100%;
       min-width: 400px;
-      max-width: 100%;
+      box-sizing: border-box;
       font-size: 32px;
+      font-family: Eternal;
       padding: 10px;
       letter-spacing: 1.5px;
       position: relative;
+      text-align: center;
+      text-decoration: none;
     }
   }
 }
@@ -92,8 +87,11 @@ const joinDialogOpen = ref(false);
   display: flex;
 
   .book-link {
+    display: inline-block;
     padding: 20px 0 15px;
     width: 70px;
+    cursor: pointer;
+    text-decoration: none;
 
     img {
       scale: 2;
