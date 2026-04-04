@@ -141,23 +141,23 @@ onBeforeUnmount(() => window.clearInterval(id));
         </li>
       </ul>
     </div>
-    <div class="timer socket divider-top">
+    <div class="timer socket">
       <span
         :class="{ text: true, timeout: turnTime < 10000 && turnTime > 0 }"
         >{{ Math.ceil(turnTime / 1000) }}</span
       >
     </div>
-    <div class="clock socket divider-top">
+    <div class="clock socket">
       <span
         :class="{ text: true, timeout: gameTime < 120000 && gameTime > 0 }"
         >{{ numberFormatter.format(gameTime) }}</span
       >
     </div>
-    <div class="mana socket divider-top">
+    <div class="mana socket">
       <span class="mana-bar" :style="{ '--value': (mana / MAX_MANA) * 100 }" />
       <span class="text">{{ Math.ceil(mana) }}</span>
     </div>
-    <div class="elements socket divider-top">
+    <div class="elements socket">
       <span
         class="element"
         v-for="(value, element) in elements"
@@ -319,6 +319,17 @@ onBeforeUnmount(() => window.clearInterval(id));
     font-family: Eternal;
     font-size: 22px;
     box-sizing: border-box;
+  }
+
+  .timer,
+  .clock,
+  .mana,
+  .elements {
+    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
+    padding-top: 10px;
   }
 
   .timer {
