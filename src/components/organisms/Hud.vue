@@ -192,15 +192,15 @@ onBeforeUnmount(() => window.clearInterval(id));
   flex-direction: column;
   align-items: center;
   font-size: 48px;
-  background: #b5a78a;
-  border: 4px solid #433e34;
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  border: 2px solid var(--border-accent);
   padding: 10px;
   width: 50%;
-  border-radius: 8px;
+  border-radius: 4px;
   pointer-events: none;
   animation: slide-in 0.5s 1;
   font-family: Eternal;
-  box-shadow: 5px 5px 10px #00000069;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-accent-faint), 0 0 0 5px rgba(188, 168, 140, 0.4), 0 0 0 6px var(--border-accent-faint);
 
   &--out {
     animation: slide-out 0.5s 1 forwards;
@@ -245,13 +245,13 @@ onBeforeUnmount(() => window.clearInterval(id));
   padding: 10px;
   gap: 10px;
   margin: 20px;
-  background: #b5a78a;
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
   width: 200px;
-  border: 4px solid #433e34;
-  border-radius: 8px;
+  border: 2px solid var(--border-accent);
+  border-radius: 4px;
   overflow: hidden;
   transition: all 0.5s;
-  box-shadow: 5px 5px 10px #00000069;
+  box-shadow: 0 2px 10px rgba(30, 15, 5, 0.4), inset 0 0 15px rgba(180, 120, 40, 0.08);
   .text {
     display: block;
     margin-bottom: -4px;
@@ -278,6 +278,8 @@ onBeforeUnmount(() => window.clearInterval(id));
 
       .name.active {
         font-weight: bold;
+        color: var(--border-accent);
+        text-shadow: 0 0 6px var(--glow-warm);
       }
 
       .characters {
@@ -285,13 +287,13 @@ onBeforeUnmount(() => window.clearInterval(id));
         flex-direction: row;
         gap: 6px;
         padding: 5px;
-        background: #9c917b;
-        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 4px;
 
         .hp {
           height: 5px;
           background: rgb(42, 60, 255);
-          box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+          box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4), 0 0 4px currentColor;
           border-radius: 4px;
           width: calc(
             calc(var(--hp) / var(--max-hp) / var(--team-size) * 100%) - 6px
@@ -310,8 +312,8 @@ onBeforeUnmount(() => window.clearInterval(id));
   }
 
   .socket {
-    background: #9c917b;
-    border-radius: 8px;
+    background: transparent;
+    border-radius: 4px;
     padding: 6px;
     text-align: center;
     font-family: Eternal;
@@ -322,27 +324,52 @@ onBeforeUnmount(() => window.clearInterval(id));
   .timer {
     grid-area: timer;
     width: 60px;
+    padding-top: 10px;
+    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
   }
 
   .clock {
     grid-area: clock;
     width: 130px;
+    padding-top: 10px;
+    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
+  }
+
+  .mana {
+    padding-top: 10px;
+    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
   }
 
   .elements {
     grid-area: elements;
     display: flex;
     justify-content: space-around;
+    padding-top: 10px;
+    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
 
     .element {
       position: relative;
-      height: 32px;
-      width: 32px;
+      height: 36px;
+      width: 36px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.1);
 
       img {
         position: absolute;
-        top: 0;
-        left: 0;
+        top: 2px;
+        left: 2px;
 
         &.background {
           transition: scale 0.2s;
@@ -374,7 +401,8 @@ onBeforeUnmount(() => window.clearInterval(id));
       display: block;
       width: 100%;
       height: 5px;
-      background: #564f43;
+      background: linear-gradient(180deg, #4a4238, #564f43);
+      border: 1px solid rgba(30, 15, 5, 0.3);
       border-radius: 4px;
 
       &::after {
@@ -384,7 +412,7 @@ onBeforeUnmount(() => window.clearInterval(id));
         width: calc(var(--value, 0) * 1%);
         background: rgb(42, 60, 255);
         filter: brightness(var(--pulse, 1));
-        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4), 0 0 6px rgba(42, 60, 255, 0.4);
         border-radius: 4px;
         translate: 0 -1px;
         transition: 0.3s width;
