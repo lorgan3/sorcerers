@@ -64,10 +64,14 @@ export class AccumulatedStat<T> {
     }
 
     const lameStat = high === 0 || low === 0;
+    const boringStat = this.type === StatType.KnockbackTaken;
+    const funnyStat = this.type === StatType.FallDamageTaken || this.type === StatType.KillboxDeaths;
     this._rank =
       (Math.abs(high - low) / (high + low)) *
       (1 + Math.random() * 0.3 - 0.15) *
-      (lameStat ? 0.6 : 1);
+      (lameStat ? 0.6 : 1) *
+      (boringStat ? 0.4 : 1) *
+      (funnyStat ? 1.2 : 1);
     return this._rank;
   }
 
