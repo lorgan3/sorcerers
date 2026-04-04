@@ -156,8 +156,8 @@ dialog {
     }
 
     .scroller {
-      max-height: none;
-      overflow: visible;
+      max-height: 60vh;
+      overflow: auto;
       scrollbar-color: var(--background-dark) transparent;
       scrollbar-width: thin;
 

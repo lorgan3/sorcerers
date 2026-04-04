@@ -177,6 +177,14 @@ button {
   transform: scaleX(1);
 }
 
+.divider-top {
+  background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: top;
+  padding-top: 10px;
+}
+
 .section-heading {
   display: flex;
   align-items: center;

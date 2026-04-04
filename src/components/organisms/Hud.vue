@@ -141,23 +141,23 @@ onBeforeUnmount(() => window.clearInterval(id));
         </li>
       </ul>
     </div>
-    <div class="timer socket">
+    <div class="timer socket divider-top">
       <span
         :class="{ text: true, timeout: turnTime < 10000 && turnTime > 0 }"
         >{{ Math.ceil(turnTime / 1000) }}</span
       >
     </div>
-    <div class="clock socket">
+    <div class="clock socket divider-top">
       <span
         :class="{ text: true, timeout: gameTime < 120000 && gameTime > 0 }"
         >{{ numberFormatter.format(gameTime) }}</span
       >
     </div>
-    <div class="mana socket">
+    <div class="mana socket divider-top">
       <span class="mana-bar" :style="{ '--value': (mana / MAX_MANA) * 100 }" />
       <span class="text">{{ Math.ceil(mana) }}</span>
     </div>
-    <div class="elements socket">
+    <div class="elements socket divider-top">
       <span
         class="element"
         v-for="(value, element) in elements"
@@ -324,40 +324,17 @@ onBeforeUnmount(() => window.clearInterval(id));
   .timer {
     grid-area: timer;
     width: 60px;
-    padding-top: 10px;
-    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-    background-size: 100% 1px;
-    background-repeat: no-repeat;
-    background-position: top;
   }
 
   .clock {
     grid-area: clock;
     width: 130px;
-    padding-top: 10px;
-    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-    background-size: 100% 1px;
-    background-repeat: no-repeat;
-    background-position: top;
-  }
-
-  .mana {
-    padding-top: 10px;
-    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-    background-size: 100% 1px;
-    background-repeat: no-repeat;
-    background-position: top;
   }
 
   .elements {
     grid-area: elements;
     display: flex;
     justify-content: space-around;
-    padding-top: 10px;
-    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-    background-size: 100% 1px;
-    background-repeat: no-repeat;
-    background-position: top;
 
     .element {
       position: relative;
