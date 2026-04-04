@@ -84,6 +84,15 @@ onMounted(() => {
   .highlight {
     animation: appear 0.5s var(--delay, 0s) forwards;
     opacity: 0;
+    padding: 4px 0;
+
+    & + .highlight {
+      background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+      background-size: 100% 1px;
+      background-repeat: no-repeat;
+      background-position: top;
+      padding-top: 8px;
+    }
   }
 }
 

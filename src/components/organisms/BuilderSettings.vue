@@ -115,10 +115,20 @@ label {
 }
 
 select {
-  background: var(--background);
-  box-shadow: 0 0 10px inset var(--primary);
-  height: 35px;
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  border: 1px solid var(--border-accent-faint);
   border-radius: var(--small-radius);
+  padding: 10px;
+  box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1);
   outline: none;
+  font-size: inherit;
+  font-family: inherit;
+  color: var(--primary);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+  &:focus {
+    border-color: var(--border-accent);
+    box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1), 0 0 8px var(--glow-warm-soft);
+  }
 }
 </style>
