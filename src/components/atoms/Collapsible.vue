@@ -34,10 +34,17 @@ const isOpen = ref(defaultOpen);
   flex-direction: row;
   align-items: center;
   padding: 0;
+  color: var(--border-accent);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--border-accent-hover);
+  }
 
   .icon {
     width: 16px;
     height: 16px;
+    transition: transform 0.3s ease;
   }
 }
 
