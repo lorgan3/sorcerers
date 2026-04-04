@@ -17,6 +17,15 @@ export enum StatType {
   Kills,
   PotionsUsed,
   ScrollsUsed,
+  DistanceWalked,
+  MeleeAttacks,
+  HealingReceived,
+  KillboxDeaths,
+  TerrainDestroyed,
+  AverageTurnDuration,
+  HighestSingleHit,
+  FallDamageTaken,
+  UnusedMana,
 }
 
 export interface Value<T> {
@@ -224,5 +233,60 @@ const ACCUMULATORS = {
   [StatType.ScrollsUsed]: {
     accumulate: highestNumber(StatType.ScrollsUsed, "scrollsUsed"),
     translate: (stat) => `${stat.name} couldn't stop reading scrolls.`,
+  },
+  [StatType.DistanceWalked]: {
+    accumulate: highestNumber(StatType.DistanceWalked, "distanceWalked"),
+    translate: (stat) =>
+      `${stat.name} went on a lovely stroll across the battlefield.`,
+  },
+  [StatType.MeleeAttacks]: {
+    accumulate: highestNumber(StatType.MeleeAttacks, "meleeAttacks"),
+    translate: (stat) =>
+      `${stat.name} chose violence up close and personal.`,
+  },
+  [StatType.HealingReceived]: {
+    accumulate: highestNumber(StatType.HealingReceived, "healingReceived"),
+    translate: (stat) =>
+      `${stat.name} kept the potion industry in business.`,
+  },
+  [StatType.KillboxDeaths]: {
+    accumulate: highestNumber(StatType.KillboxDeaths, "killboxDeaths"),
+    translate: (stat) =>
+      `${stat.name}'s sorcerers kept falling off the map. Gravity wins again.`,
+  },
+  [StatType.TerrainDestroyed]: {
+    accumulate: highestNumber(StatType.TerrainDestroyed, "terrainDestroyed"),
+    translate: (stat) =>
+      `${stat.name} reshaped the landscape, leaving nothing but craters.`,
+  },
+  [StatType.AverageTurnDuration]: {
+    accumulate: (stats: Stats[]) => {
+      const values = stats.map((stat) => ({
+        player: stat.self,
+        value: stat.turnsPlayed > 0
+          ? stat.totalTurnTime / stat.turnsPlayed
+          : 0,
+      }));
+
+      values.sort((a, b) => b.value - a.value);
+      return values;
+    },
+    translate: (stat) =>
+      `${stat.name} took their sweet time every turn.`,
+  },
+  [StatType.HighestSingleHit]: {
+    accumulate: highestNumber(StatType.HighestSingleHit, "highestSingleHit"),
+    translate: (stat) =>
+      `${stat.name} landed a devastating blow of ${Math.round(stat.result as number)} damage.`,
+  },
+  [StatType.FallDamageTaken]: {
+    accumulate: highestNumber(StatType.FallDamageTaken, "fallDamageTaken"),
+    translate: (stat) =>
+      `${stat.name} should've packed a parachute.`,
+  },
+  [StatType.UnusedMana]: {
+    accumulate: highestNumber(StatType.UnusedMana, "unusedMana"),
+    translate: (stat) =>
+      `${stat.name} died with mana to spare. What a waste.`,
   },
 } satisfies Record<StatType, Accumulator<any>>;
