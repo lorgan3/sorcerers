@@ -635,6 +635,10 @@ export class Server extends Manager {
         return;
       }
 
+      if (this.activePlayer) {
+        const turnDuration = this.time - this.turnStartTime;
+        this.activePlayer.stats.totalTurnTime += turnDuration;
+      }
       this.turnStartTime = this.time;
       this._turnState = TurnState.Ongoing;
       this.randomizeElements();
