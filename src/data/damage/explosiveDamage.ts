@@ -104,7 +104,7 @@ export class ExplosiveDamage implements DamageSource {
   }
 
   serialize() {
-    return [this.x, this.y, this.range, this.targets?.serialize()] as const;
+    return [this.x, this.y, this.range, this.targets?.serialize(), this.isFallDamage || undefined] as const;
   }
 
   getTargets(withNearbyEntities?: Level["withNearbyEntities"]) {
@@ -142,7 +142,7 @@ export class ExplosiveDamage implements DamageSource {
   }
 
   static deserialize(data: ReturnType<ExplosiveDamage["serialize"]>) {
-    return new ExplosiveDamage(
+    const damage = new ExplosiveDamage(
       data[0],
       data[1],
       data[2],
@@ -150,5 +150,7 @@ export class ExplosiveDamage implements DamageSource {
       DEFAULT_DAMAGE_MULTIPLIER,
       TargetList.deserialize(data[3])
     );
+    damage.isFallDamage = !!data[4];
+    return damage;
   }
 }
