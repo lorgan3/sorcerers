@@ -19,34 +19,31 @@ watch(
 <template>
   <div class="spell">
     <div class="top">
-      <div class="magic">
-        <span
-          v-if="spell.cost"
-          :class="{
-            cost: true,
-            positive: previewMultiplier < 1,
-            negative: previewMultiplier > 1,
-          }"
-          >{{ Math.ceil(spell.cost * previewMultiplier) }}</span
-        >
-        <span class="elements">
-          <img
-            v-for="element in spell.elements"
-            :src="ELEMENT_MAP[element]"
-            :alt="element"
-            :title="element"
-          />
-        </span>
-      </div>
-      <div class="range">
-        <img class="icon" :src="scaleIcon" /> {{ spell.range || "∞" }}
-      </div>
+      <span
+        v-if="spell.cost"
+        :class="{
+          cost: true,
+          positive: previewMultiplier < 1,
+          negative: previewMultiplier > 1,
+        }"
+        >{{ Math.ceil(spell.cost * previewMultiplier) }}</span
+      >
+      <span class="elements">
+        <img
+          v-for="element in spell.elements"
+          :src="ELEMENT_MAP[element]"
+          :alt="element"
+          :title="element"
+        />
+      </span>
     </div>
     <div class="details">
       <span class="name">
         <span>{{ spell.name }} </span>
       </span>
-      <span class="description">{{ spell.description }}</span>
+      <span class="description">
+        <img class="range-icon" :src="scaleIcon" /> {{ spell.range || "∞" }} · {{ spell.description }}
+      </span>
     </div>
   </div>
 </template>
@@ -59,22 +56,13 @@ watch(
   padding: 6px;
   width: 250px;
   gap: 6px;
-  height: 42px;
+  min-height: 42px;
 
   .top {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-
-    .magic {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 3px 0;
-      gap: 6px;
-      // width: 60px;
-      justify-content: space-evenly;
-    }
+    gap: 6px;
 
     .elements {
       display: flex;
@@ -90,23 +78,17 @@ watch(
     }
   }
 
-  .range {
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-
-    .icon {
-      width: 14px;
-      height: 14px;
-      filter: invert(1);
-    }
+  .range-icon {
+    width: 14px;
+    height: 14px;
+    filter: invert(1);
+    vertical-align: middle;
   }
 
   .cost {
     font-family: Eternal;
     font-size: 36px;
-    margin-bottom: -4px;
+    line-height: 1;
     animation: pulse 3s infinite;
     color: rgb(42, 60, 255);
     filter: brightness(var(--pulse, 1));

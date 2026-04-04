@@ -141,29 +141,41 @@ function handleDragLeave() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--background);
+    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
     cursor: pointer;
-    box-shadow: 0 0 10px inset var(--primary);
+    border: 1px solid var(--border-accent-faint);
     border-radius: var(--small-radius);
+    box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      border-color: var(--border-accent);
+      box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1), 0 0 8px var(--glow-warm-soft);
+    }
   }
 
   img {
     width: 100%;
     height: 100px;
     object-fit: cover;
-    box-shadow: 0 0 10px inset var(--primary);
+    border: 1px solid var(--border-accent-faint);
     border-radius: var(--small-radius);
+    box-shadow: 0 1px 4px rgba(30, 15, 5, 0.2);
     cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 
     &:hover {
       object-fit: contain;
+      border-color: var(--border-accent);
+      box-shadow: 0 1px 4px rgba(30, 15, 5, 0.2), 0 0 8px var(--glow-warm-soft);
     }
   }
 
   &--active {
     .placeholder,
     img {
-      box-shadow: 0 0 10px inset var(--highlight);
+      border-color: var(--border-accent-hover);
+      box-shadow: 0 0 10px var(--glow-warm);
     }
   }
 }

@@ -211,9 +211,10 @@ const getElementFilter = (element: Element) =>
   display: flex;
   flex-direction: column;
   gap: 3px;
-  border: 4px solid var(--primary);
-  border-radius: var(--small-radius);
-  background: var(--background);
+  border: 2px solid var(--border-accent);
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
   pointer-events: all;
   cursor: url("../../assets/pointer.png"), auto;
   padding: 6px;
@@ -241,7 +242,9 @@ const getElementFilter = (element: Element) =>
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: 0 0 10px -2px inset var(--highlight);
+  box-shadow: inset 0 0 6px rgba(30, 15, 5, 0.15);
+  border: 1px solid transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .wrapper {
@@ -253,9 +256,10 @@ const getElementFilter = (element: Element) =>
   }
 
   .inventory {
-    border: 4px solid var(--primary);
-    border-radius: var(--small-radius);
-    background: var(--background);
+    border: 2px solid var(--border-accent);
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+    box-shadow: -4px 0 15px rgba(30, 15, 5, 0.3);
     pointer-events: all;
     cursor: url("../../assets/pointer.png"), auto;
 
@@ -266,7 +270,7 @@ const getElementFilter = (element: Element) =>
     }
 
     .title {
-      color: var(--highlight);
+      color: var(--border-accent);
       font-family: Eternal;
       font-size: 24px;
       padding: 6px;
@@ -286,7 +290,8 @@ const getElementFilter = (element: Element) =>
         }
 
         &:hover {
-          background-color: var(--background-dark);
+          background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
+          box-shadow: inset 0 0 8px var(--glow-warm-soft);
         }
 
         .placeholder {

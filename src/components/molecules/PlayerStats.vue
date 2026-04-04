@@ -129,7 +129,11 @@ const grade = computed(() => {
   flex-direction: column;
   gap: 6px;
   padding: 3px;
-  border-left: 10px solid var(--color);
+  border-left: 4px solid var(--color);
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(30, 15, 5, 0.3);
+  padding: 8px;
   opacity: 0;
   animation: appear 0.5s var(--delay, 0s) forwards;
 
@@ -188,7 +192,7 @@ const grade = computed(() => {
           border-radius: 4px;
           position: relative;
           width: 100%;
-          background-color: var(--background);
+          background: rgba(0, 0, 0, 0.1);
 
           &::before {
             content: "";
@@ -200,7 +204,7 @@ const grade = computed(() => {
             animation-delay: calc(var(--efficiency, 0) * 1s);
             filter: brightness(var(--pulse, 1));
             background-color: var(--color, "#000");
-            box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+            box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4), 0 0 4px var(--color);
             border-radius: 4px;
             translate: 0 -1px;
           }

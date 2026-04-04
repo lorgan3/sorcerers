@@ -142,63 +142,71 @@ const handleSelectMap = async (config: Config, name: string) => {
 
 <template>
   <div class="host">
-    <div class="code flex-list">
-      <h2>
-        Room code: <span class="key">{{ key }}</span>
-      </h2>
-    </div>
+    <div class="columns">
+      <div class="column">
+        <div class="section">
+          <h2 class="section-heading">
+            Players
+            <IconButton
+              v-if="players.length < COLORS.length"
+              title="Add local player"
+              :onClick="() => handleAddLocalPlayer(settings.name)"
+              :icon="plus"
+            />
+          </h2>
 
-    <div class="flex-list flex-list--wide">
-      <h2>
-        Players
-        <IconButton
-          v-if="players.length < COLORS.length"
-          title="Add local player"
-          :onClick="() => handleAddLocalPlayer(settings.name)"
-          :icon="plus"
-        />
-      </h2>
+          <div class="teams">
+            <TeamDisplay
+              v-if="players.length === 0"
+              :player="{
+                name: settings.name,
+                color: COLORS.at(-1)!,
+                team: settings.team,
+              }"
+            />
+            <TeamDisplay
+              v-for="(player, index) in players"
+              :key="player.color + index"
+              :player="player"
+              :onDelete="index !== 0 ? () => handleKick(index) : undefined"
+              :onEdit="!player.connection ? handleEditPlayer : undefined"
+              :subTitle="!player.connection ? 'Local player' : ''"
+            />
+            <TeamDialog
+              v-if="editingPlayer"
+              :player="editingPlayer"
+              :onClose="handleClose"
+              :onSave="handleSave"
+            />
+          </div>
+        </div>
+      </div>
 
-      <div class="teams">
-        <TeamDisplay
-          v-if="players.length === 0"
-          :player="{
-            name: settings.name,
-            color: COLORS.at(-1)!,
-            team: settings.team,
-          }"
-        />
-        <TeamDisplay
-          v-for="(player, index) in players"
-          :key="player.color + index"
-          :player="player"
-          :onDelete="index !== 0 ? () => handleKick(index) : undefined"
-          :onEdit="!player.connection ? handleEditPlayer : undefined"
-          :subTitle="!player.connection ? 'Local player' : ''"
-        />
-        <TeamDialog
-          v-if="editingPlayer"
-          :player="editingPlayer"
-          :onClose="handleClose"
-          :onSave="handleSave"
-        />
+      <div class="column">
+        <div class="section">
+          <h2 class="section-heading">
+            Room code: <span class="key">{{ key }}</span>
+          </h2>
+        </div>
+
+        <div class="section">
+          <h2 class="section-heading">Map</h2>
+          <MapSelect :onEdit="handleSelectMap" defaultMap="Playground" />
+        </div>
+
+        <div class="section">
+          <GameSettingsComponent
+            :settings="gameSettings"
+            :onEdit="handleSaveSettings"
+          />
+        </div>
       </div>
     </div>
 
-    <label>
-      <h2>Map</h2>
-      <MapSelect :onEdit="handleSelectMap" defaultMap="Playground" />
-    </label>
-
-    <GameSettingsComponent
-      :settings="gameSettings"
-      :onEdit="handleSaveSettings"
-    />
-  </div>
-
-  <div class="buttons">
-    <button @click="handleStart" class="primary">Start</button>
-    <button @click="handleBack" class="secondary">Back</button>
+    <div class="buttons">
+      <button @click="handleStart" class="primary">Start</button>
+      <button @click="handleBack" class="secondary">Back</button>
+    </div>
   </div>
 </template>
 
@@ -209,16 +217,74 @@ const handleSelectMap = async (config: Config, name: string) => {
   gap: 20px;
 }
 
+.key {
+  letter-spacing: 3px;
+}
+
+.columns {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+
+  @media (max-width: 800px) {
+    flex-direction: column;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  // Vertical divider between columns
+  &::before {
+    content: '';
+    order: 1;
+    width: 1px;
+    align-self: stretch;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      var(--border-accent-faint) 15%,
+      var(--border-accent-faint) 85%,
+      transparent
+    );
+  }
+
+  .column:first-child {
+    order: 0;
+  }
+
+  .column:last-child {
+    order: 2;
+  }
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+
+  // Divider after section content, not after title
+  + .section::before {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+  }
+}
+
 .teams {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.settings {
-  max-width: 200px;
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 

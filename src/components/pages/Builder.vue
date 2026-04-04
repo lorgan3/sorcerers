@@ -397,6 +397,14 @@ const handleBBoxChange = (newBBox: BBox) => {
       gap: 6px;
     }
 
+    > .section + .section {
+      padding-top: 10px;
+      background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+      background-size: 100% 1px;
+      background-repeat: no-repeat;
+      background-position: top;
+    }
+
     .layer-title {
       display: flex;
       justify-content: space-between;

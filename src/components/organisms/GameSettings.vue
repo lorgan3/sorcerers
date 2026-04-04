@@ -27,7 +27,7 @@ const numberFormatter = new Intl.NumberFormat("en");
 
 <template>
   <section class="game-settings">
-    <h2>
+    <h2 class="section-heading">
       Settings
       <IconButton
         v-if="onEdit"

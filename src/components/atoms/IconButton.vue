@@ -21,17 +21,16 @@ const { onClick, icon, hoverIcon, title, className } = defineProps<{
 
 <style lang="scss" scoped>
 .icon-button {
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid transparent;
   margin: -4px 0;
-  padding: 0;
   cursor: pointer;
   font-size: 18px;
   vertical-align: middle;
-  border-radius: var(--big-radius);
+  border-radius: 3px;
   display: inline-flex;
-  padding: 3px;
-  transition: 0.2s background-color;
+  padding: 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 
   .icon {
     width: 16px;
@@ -44,11 +43,14 @@ const { onClick, icon, hoverIcon, title, className } = defineProps<{
 
   &:focus-visible {
     outline: none;
-    border: 4px solid var(--primary);
+    border-color: var(--border-accent);
+    box-shadow: 0 0 6px var(--glow-warm-soft);
   }
 
   &:hover {
-    background-color: var(--background-dark);
+    border-color: var(--border-accent);
+    box-shadow: 0 0 8px var(--glow-warm-soft);
+    background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
 
     .icon {
       &:not(:only-child) {

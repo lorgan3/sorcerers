@@ -49,23 +49,23 @@ const handleDelete = (event: Event) => {
 <style lang="scss" scoped>
 .team-display {
   min-width: 250px;
-  border: 4px solid #433e34;
+  border: 2px solid var(--border-accent);
   position: relative;
-  box-shadow: 5px 5px 10px #00000069;
-  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
+  border-radius: 4px;
   flex: 1;
   flex-grow: 0;
-  background: var(--background);
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
   overflow: hidden;
   white-space: nowrap;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 
   &.interactive {
     cursor: pointer;
 
     &:hover {
-      background: none;
-      box-shadow: none;
-      scale: 1.05;
+      box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3), 0 0 12px var(--glow-warm-soft);
+      transform: translateY(-2px);
     }
   }
 
@@ -112,8 +112,8 @@ const handleDelete = (event: Event) => {
     position: relative;
 
     li {
-      border: 1px solid var(--primary);
-      background: var(--background-dark);
+      border: 1px solid var(--border-accent-faint);
+      background: linear-gradient(180deg, var(--background), var(--background-dark));
       border-radius: var(--big-radius);
       text-align: center;
       margin: 3px;

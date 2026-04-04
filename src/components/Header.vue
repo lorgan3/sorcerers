@@ -5,6 +5,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { Music, playMusic, setVolume } from "../sound";
 import { defaults } from "../util/localStorage/settings";
 import { get } from "../util/localStorage";
+import ParticleBackground from "./atoms/ParticleBackground.vue";
 
 const route = useRoute();
 const settings = defaults(get("Settings"));
@@ -23,6 +24,7 @@ AssetsContainer.instance.onComplete(() => {
 
 <template>
   <div class="background background--padded">
+    <ParticleBackground />
     <div class="title-wrapper">
       <RouterLink to="/" v-slot="{ navigate }">
         <h1
@@ -59,8 +61,28 @@ AssetsContainer.instance.onComplete(() => {
   gap: 20px;
 
   &--padded {
-    box-shadow: 0 0 10vmin inset var(--primary);
-    padding: 7vmin 15vmin;
+    padding: 4vmin 10vmin;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      box-shadow: 0 0 10vmin inset var(--primary);
+      pointer-events: none;
+      z-index: 1;
+      animation: vignette-breathe 8s ease-in-out infinite;
+    }
+  }
+
+  @keyframes vignette-breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.85;
+    }
   }
 
   .title-wrapper {
@@ -74,25 +96,44 @@ AssetsContainer.instance.onComplete(() => {
 
     .title {
       font-size: 48px;
-      color: var(--primary);
+      color: var(--border-accent);
       user-select: none;
-      text-shadow: 0 0 0 var(--highlight);
-      transition: all 0.3s linear;
       font-weight: normal;
 
-      > * {
-        transition: 1s color;
-
-        &:hover {
-          color: var(--highlight);
-        }
-      }
 
       &--big {
         font-size: 20vw;
-        text-shadow: 0 0.5vw 0.5vw var(--highlight);
         letter-spacing: 0.5vw;
+        background: linear-gradient(
+          90deg,
+          var(--primary) 0%,
+          var(--primary) 35%,
+          var(--highlight) 50%,
+          var(--primary) 65%,
+          var(--primary) 100%
+        );
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shimmer 10s ease-in-out infinite;
       }
+
+      @keyframes shimmer {
+        0%,
+        40% {
+          background-position: 100% 0;
+        }
+        60%,
+        100% {
+          background-position: -100% 0;
+        }
+      }
+    }
+
+    h2 {
+      color: var(--border-accent);
+      font-size: 28px;
     }
   }
 
@@ -115,6 +156,7 @@ AssetsContainer.instance.onComplete(() => {
 }
 
 .book-link {
+  display: inline-block;
   padding: 20px 0 15px;
   width: 70px;
 

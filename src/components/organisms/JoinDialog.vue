@@ -68,7 +68,7 @@ const handleConnect = async () => {
         :text="status"
         to="#dialog"
       >
-        <span class="icon icon--spinning">߷</span>
+        <span class="icon spinner">߷</span>
       </Tooltip>
     </div>
     <button @click="handleConnect" class="primary join-button" :disabled="!key">
@@ -89,18 +89,12 @@ const handleConnect = async () => {
   }
 
   .icon {
-    display: inline-block;
-    transform-origin: 50%;
     line-height: 15px;
     width: 18px;
     height: 18px;
     font-size: 20px;
     margin-bottom: 10px;
     margin-left: 10px;
-
-    &--spinning {
-      animation: spin 0.5s linear infinite;
-    }
   }
 }
 
