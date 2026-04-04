@@ -83,6 +83,10 @@ export class ExplosiveDamage implements DamageSource {
       ]
     );
 
+    if (this.cause) {
+      this.cause.stats.terrainDestroyed += Math.PI * this.range * this.range;
+    }
+
     if (this.range <= 8) {
       ControllableSound.fromEntity(
         [this.x * 6, this.y * 6],
