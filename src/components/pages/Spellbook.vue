@@ -2,10 +2,11 @@
 import { Element } from "../../data/spells/types";
 import { SPELLS, Spell } from "../../data/spells";
 import { ELEMENT_MAP, ELEMENT_COLOR_MAP } from "../../graphics/elements";
-import { RouterLink } from "vue-router";
+import { useRouter } from "vue-router";
 import Tooltip from "../atoms/Tooltip.vue";
 import SpellDescription from "../molecules/SpellDescription.vue";
 
+const router = useRouter();
 const SPRITES_PER_ROW = 5;
 const elements = Object.keys(Element);
 
@@ -90,9 +91,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
   </div>
 
   <div>
-    <RouterLink to="/" v-slot="{ navigate }">
-      <button @click="navigate" class="secondary">Back</button>
-    </RouterLink>
+    <button @click="() => router.replace('/')" class="secondary">Back</button>
   </div>
 </template>
 

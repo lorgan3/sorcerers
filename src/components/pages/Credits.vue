@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import credits from "../../../credits.json";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 </script>
 
 <template>
@@ -26,9 +29,7 @@ import credits from "../../../credits.json";
   </div>
 
   <div class="buttons">
-    <RouterLink to="/" v-slot="{ navigate }">
-      <button @click="navigate" class="secondary">Back</button>
-    </RouterLink>
+    <button @click="() => router.replace('/')" class="secondary">Back</button>
   </div>
 </template>
 
