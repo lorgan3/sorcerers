@@ -17,7 +17,7 @@ Interactive reference for driving the Sorcerers game through Playwright MCP tool
 7. Optionally edit settings: team size 1, turn duration 15s, mana multiplier 2500%
 8. Click "Start"
 9. Wait for `.hud` to appear (game is ready)
-10. Play turns: move with A/D/W keys, right-click to open spell book, select a spell by bounding box click, aim and hold left-click to cast (use `browser_run_code` to batch the sequence)
+10. Play turns: walk toward the enemy (A/D + W to jump over terrain), right-click to open spell book, select a spell by bounding box click, aim and hold left-click to cast. Batch the full walk+cast sequence in one `browser_run_code` call.
 
 ---
 
@@ -72,7 +72,7 @@ localStorage.setItem("Settings", JSON.stringify({
 ### Host page setup
 1. A room code is auto-generated (visible in `.key` span)
 2. One player (the host) is already present
-3. **Add local player:** Click the plus icon button next to the "Players" heading
+3. **Add local player:** Click the plus icon button next to the "Players" heading. **Important:** Do this BEFORE opening the settings dialog — if the settings dialog is open, the button click may not register. Verify the second player appears in the DOM before proceeding (`getByRole('heading', { name: 'TestPlayer (1)' })`)
 4. **Map selection:** `<select>` dropdown in the `MapSelect` component. Default maps are available. Pick the same map each time for consistency.
 5. **Edit game settings:** Click the edit icon next to "Settings" heading. Key fields:
    - Team size (`label="Team size"`) — set to 1 for faster testing
@@ -94,7 +94,23 @@ The game cycles through players. A popup (`.popup`) announces whose turn it is. 
 - `A` — move left
 - `D` — move right
 - `W` — jump
-- Use `browser_press_key` for these
+- Characters **must walk toward each other** before attacking — spells are nearly impossible to land from across the map
+- The terrain is hilly — characters need to **jump (W) repeatedly while walking** to get over obstacles
+- Use `keyboard.down('d')` to hold a direction, then `keyboard.down('w')` / `keyboard.up('w')` to jump while moving:
+  ```js
+  await page.keyboard.down('d'); // hold walk direction
+  await page.keyboard.down('w'); // jump
+  await page.waitForTimeout(800);
+  await page.keyboard.up('w');
+  await page.waitForTimeout(400);
+  await page.keyboard.down('w'); // jump again
+  await page.waitForTimeout(800);
+  await page.keyboard.up('w');
+  // ... repeat ...
+  await page.keyboard.up('d'); // stop walking
+  ```
+- **Important:** Do NOT use `keyboard.press('w')` while holding a direction — it does keydown+keyup too fast. Instead use `keyboard.down('w')` + wait + `keyboard.up('w')`.
+- **Know which direction to walk:** Check `.popup` text to see whose turn it is, then walk toward the opponent. Both players are local, so you control whoever is active.
 
 ### Spell inventory layout
 The inventory grid has two sections, both sorted by mana cost:
@@ -143,21 +159,38 @@ async (page) => {
 - **Camera follows the active character.** The enemy may be off-screen. Use Ctrl + mouse to pan the camera and locate them before casting.
 
 ### Practical spell testing approach
-1. **Start with ArrowDown spells** (Babylon cost 16, Excalibur cost 30, or Bakuretsu cost 70) — they just need a click at the target position, no aiming direction needed
-2. Then try a **PoweredArcaneCircle spell** (Ignis cost 6) with the mouse positioned away from the character and a held click
-3. **Batch the full sequence in one `browser_run_code` call** to avoid running out of turn time:
+1. **Walk toward the enemy first** — spend most of the turn walking + jumping. Characters spawn far apart and spells will miss from across the map.
+2. **Use ArrowDown spells** (Babylon cost 16, Excalibur cost 30, or Bakuretsu cost 70) — they just need a click at the target position, no aiming direction needed. The targeting cursor (colored down-arrow) persists across turns if not fired, so you can select a spell on one turn and fire it on the next.
+3. Then try a **PoweredArcaneCircle spell** (Ignis cost 6) at close range with a held click.
+4. **Batch the full sequence in one `browser_run_code` call** to avoid running out of turn time:
    ```js
    async (page) => {
-     // Open inventory
+     // Step 1: Detect whose turn (check popup text)
+     const popup = await page.evaluate(() => document.querySelector('.popup')?.textContent || '');
+     const walkKey = popup.includes('Julil') ? 'a' : 'd'; // walk toward enemy
+     
+     // Step 2: Walk + jump toward enemy for ~5 seconds
+     await page.mouse.click(600, 400); // focus canvas
+     await page.keyboard.down(walkKey);
+     for (let i = 0; i < 4; i++) {
+       await page.keyboard.down('w');
+       await page.waitForTimeout(800);
+       await page.keyboard.up('w');
+       await page.waitForTimeout(400);
+     }
+     await page.keyboard.up(walkKey);
+     
+     // Step 3: Open inventory and select spell
      await page.mouse.click(600, 400, { button: 'right' });
-     await page.waitForTimeout(400);
-     // Select spell by bounding box
+     await page.waitForTimeout(500);
      const slot = page.locator('.inventory .grid .slot').nth(10); // Babylon
      const box = await slot.boundingBox();
      await page.mouse.click(box.x + box.width/2, box.y + box.height/2);
      await page.waitForTimeout(300);
-     // Aim and fire
-     await page.mouse.move(targetX, targetY);
+     
+     // Step 4: Screenshot to locate enemy, then aim and fire
+     await page.screenshot({ path: 'targeting.png', type: 'png' });
+     await page.mouse.move(targetX, targetY); // enemy position from screenshot
      await page.mouse.down();
      await page.waitForTimeout(100);
      await page.mouse.up();
@@ -244,7 +277,18 @@ await page.mouse.click(box.x + box.width/2, box.y + box.height/2);
 
 **Turn timing is tight:** Even 30s turns go fast when automating through Playwright. Batch the full open-inventory → select-spell → aim → cast sequence in a single `browser_run_code` call to avoid timeout. Setting turn duration to 45s (default) gives more breathing room.
 
-**Camera follows active character:** The enemy may be off-screen. Use Ctrl + mouse to pan and locate them. After casting, the camera may snap to the projectile or impact location.
+**Camera follows active character:** The enemy may be off-screen. Press `Ctrl` once to refocus on the active character. Hold `Ctrl` + move mouse to pan the camera freely.
+
+**Zooming:** Use `page.mouse.wheel(0, deltaY)` with the mouse over the canvas to zoom. `deltaY > 0` (scroll down) zooms **out**, `deltaY < 0` zooms **in**. Note: Pixi.js listens for wheel events via its own `FederatedWheelEvent` system — if `page.mouse.wheel()` doesn't work, dispatch directly on the canvas:
+```js
+await page.evaluate(() => {
+  const canvas = document.querySelector('canvas');
+  for (let i = 0; i < 15; i++) {
+    canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true }));
+  }
+});
+```
+Zooming out helps locate both characters before attacking.
 
 **Inventory polling:** The inventory component polls every 1000ms to update spell availability. After a turn starts, there may be up to 1s before spell lock states are accurate.
 
