@@ -125,7 +125,7 @@ const ACCUMULATORS = {
   },
   [StatType.SelfDamage]: {
     accumulate: highestNumber(StatType.SelfDamage, "selfDamage"),
-    translate: (stat) => `${stat.name} did the most damage... to themselves.`,
+    translate: (stat) => `${stat.name} was their own worst enemy.`,
   },
   [StatType.OverkillDamage]: {
     accumulate: highestNumber(StatType.OverkillDamage, "overkillDamage"),
@@ -134,25 +134,25 @@ const ACCUMULATORS = {
   [StatType.DamageDealt]: {
     accumulate: highestNumber(StatType.DamageDealt, "damageDealt"),
     translate: (stat) =>
-      `${stat.name} came prepared and dealt the most damage.`,
+      `${stat.name} brought a nuke to a wand fight.`,
   },
   [StatType.KnockbackDealt]: {
     accumulate: highestNumber(StatType.KnockbackDealt, "knockbackDealt"),
-    translate: (stat) => `${stat.name} dealt the most knockback.`,
+    translate: (stat) => `${stat.name} sent everyone flying.`,
   },
   [StatType.DamageTaken]: {
     accumulate: highestNumber(StatType.DamageTaken, "damageTaken"),
-    translate: (stat) => `${stat.name} played tank and took the most damage.`,
+    translate: (stat) => `${stat.name} absorbed hits like a sponge.`,
   },
   [StatType.KnockbackTaken]: {
     accumulate: highestNumber(StatType.KnockbackTaken, "knockbackTaken"),
     translate: (stat) =>
-      `${stat.name} was a punching bag, getting knocked around the most.`,
+      `${stat.name} was a bouncing ball, getting knocked around the most.`,
   },
   [StatType.Deaths]: {
     accumulate: lowestNumber(StatType.Deaths, "deaths"),
     translate: (stat) =>
-      `${stat.name} takes good care of their sorcerers and lost the least.`,
+      `${stat.name} kept their sorcerers alive the longest.`,
   },
   [StatType.Kills]: {
     accumulate: (stats: Stats[]) => {
@@ -165,7 +165,7 @@ const ACCUMULATORS = {
       return values;
     },
     translate: (stat) =>
-      `${stat.name} was bloodthirsty killing the most sorcerers.`,
+      `${stat.name} killed the most sorcerers. Bloodthirsty.`,
   },
   [StatType.ElementUsage]: {
     accumulate: (stats: Stats[]) =>
@@ -219,10 +219,10 @@ const ACCUMULATORS = {
   [StatType.PotionsUsed]: {
     accumulate: highestNumber(StatType.PotionsUsed, "potionsUsed"),
     translate: (stat) =>
-      `${stat.name} was addicted to potions and drank the most.`,
+      `${stat.name} chugged potions like there's no tomorrow.`,
   },
   [StatType.ScrollsUsed]: {
     accumulate: highestNumber(StatType.ScrollsUsed, "scrollsUsed"),
-    translate: (stat) => `${stat.name} is a scholar and read the most scrolls.`,
+    translate: (stat) => `${stat.name} couldn't stop reading scrolls.`,
   },
 } satisfies Record<StatType, Accumulator<any>>;
