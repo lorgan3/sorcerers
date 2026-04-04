@@ -26,7 +26,9 @@ import credits from "../../../credits.json";
   </div>
 
   <div class="buttons">
-    <RouterLink to="/" class="secondary">Back</RouterLink>
+    <RouterLink to="/" v-slot="{ navigate }">
+      <button @click="navigate" class="secondary">Back</button>
+    </RouterLink>
   </div>
 </template>
 
