@@ -138,6 +138,7 @@ export class CharacterMovement {
       controller.isKeyDown(Key.A)
     ) {
       this.character.body.walk(-1);
+      this.character.player.stats.distanceWalked++;
 
       if (this.character.body.grounded) {
         this.character.animate("Walk");
@@ -150,6 +151,7 @@ export class CharacterMovement {
       controller.isKeyDown(Key.D)
     ) {
       this.character.body.walk(1);
+      this.character.player.stats.distanceWalked++;
 
       if (this.character.body.grounded) {
         this.character.animate("Walk");

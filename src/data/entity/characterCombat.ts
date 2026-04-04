@@ -65,6 +65,7 @@ export class CharacterCombat {
   }
 
   melee(): void {
+    this.character.player.stats.meleeAttacks++;
     this.character.animate("Swing");
   }
 }
