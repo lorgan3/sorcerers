@@ -78,7 +78,7 @@ export class CharacterHealth {
     }
   }
 
-  damage(source: DamageSource, damage: number, force?: Force): void {
+  damage(source: DamageSource, damage: number, force?: Force, skipForce?: boolean): void {
     if (
       this.lastDamageTime !== -1 &&
       this.character.time <=
@@ -104,7 +104,7 @@ export class CharacterHealth {
       ControllableSound.fromEntity(this.character, Sound.Splat);
     }
 
-    if (force) {
+    if (force && !skipForce) {
       this.character.body.addAngularVelocity(force.power, force.direction);
     }
   }

@@ -48,7 +48,7 @@ describe("GenericDamage", () => {
 
       // Call damage with explicit entityMap (avoids needing mock context)
       targets.damage(damage, entityMap);
-      expect(entity.damage).toHaveBeenCalledWith(damage, 25, undefined);
+      expect(entity.damage).toHaveBeenCalledWith(damage, 25, undefined, undefined);
     });
   });
 

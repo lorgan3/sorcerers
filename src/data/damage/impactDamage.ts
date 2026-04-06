@@ -20,12 +20,12 @@ export class ImpactDamage implements DamageSource {
     public targets?: TargetList
   ) {}
 
-  damage() {
+  damage(skipForce?: boolean) {
     if (getLevel().terrain.subtractCircle(this.x, this.y, 8, circle16x16)) {
       ControllableSound.fromEntity([this.x * 6, this.y * 6], Sound.Stone);
     }
 
-    this.getTargets().damage(this);
+    this.getTargets().damage(this, undefined, skipForce);
   }
 
   serialize() {

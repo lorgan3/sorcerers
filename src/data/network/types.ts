@@ -94,6 +94,7 @@ export type Message =
       type: MessageType.SyncDamage;
       kind: DamageSourceType;
       data: any;
+      entities?: [number, ...any[]][];
     }
   | {
       type: MessageType.Popup;
