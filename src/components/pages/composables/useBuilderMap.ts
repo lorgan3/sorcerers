@@ -18,7 +18,10 @@ export function useBuilderMap(
   oldScale: Ref<number>
 ) {
   const buildConfig = (): Config => ({
-    terrain: { data: terrain.value.data, mask: mask.value.data },
+    terrain: {
+      data: terrain.value.data || mask.value.data,
+      mask: mask.value.data,
+    },
     background: background.value.data
       ? { data: background.value.data }
       : undefined,
