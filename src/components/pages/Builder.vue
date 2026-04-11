@@ -18,6 +18,7 @@ import download from "pixelarticons/svg/download.svg";
 import upload from "pixelarticons/svg/upload.svg";
 import Collapsible from "../atoms/Collapsible.vue";
 import WfcDialog, { type WfcSettings } from "../organisms/WfcDialog.vue";
+import AiAlignDialog from "../organisms/AiAlignDialog.vue";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
 import { useBuilderLadders } from "./composables/useBuilderLadders";
 import { useBuilderMap } from "./composables/useBuilderMap";
@@ -97,16 +98,20 @@ const handleWfcGenerated = (maskData: string) => {
   };
 };
 
-const AI_PROMPT = `Generate an image of a 2D side-view game terrain based on the attached black-and-white mask image. In the mask, black areas represent solid terrain and white areas represent empty sky or background.
+function buildAIPrompt(w: number, h: number): string {
+  return `Generate an image of a 2D side-view game terrain based on the attached black-and-white mask image. In the mask, black areas represent solid terrain and white areas represent empty sky or background.
+
+The output image must be exactly ${w}x${h} pixels — the same dimensions as the input mask.
 
 Create a textured terrain image that follows these rules:
 - The solid black areas should become detailed, textured <theme> terrain. Add surface detail, shading, and depth to make it look like a painted game environment.
 - The white empty areas should become a distinct, clearly different background — use a lighter sky or atmospheric background that is obviously not terrain. The background must have no transparency.
 - The boundary between terrain and background must be clearly visible with good contrast.
-- Keep the exact same dimensions and shape as the input mask. Do not add, remove, or reshape any terrain.
+- Keep the exact same dimensions and shape as the input mask. Do not add, remove, or reshape any terrain. Every black pixel must remain solid, every white pixel must remain background.
 - The output must be a fully opaque image with no transparency anywhere.
 - Use a pixel art or hand-painted 2D game art style.
 - This is a side-scrolling game map, so add appropriate environmental details like grass on top edges, rocky textures on sides, and darker shading underneath overhangs.`;
+}
 
 const handleExportMaskForAI = () => {
   if (!mask.value.data) return;
@@ -135,8 +140,8 @@ const handleExportMaskForAI = () => {
 
     dstCtx.putImageData(dstData, 0, 0);
 
-    // Copy prompt to clipboard
-    navigator.clipboard.writeText(AI_PROMPT);
+    // Copy prompt to clipboard with exact dimensions
+    navigator.clipboard.writeText(buildAIPrompt(image.width, image.height));
 
     dst.convertToBlob({ type: "image/png" }).then((blob) => {
       const url = URL.createObjectURL(blob);
@@ -155,64 +160,34 @@ const handleImportAITerrain = () => {
   aiTerrainInput.value?.click();
 };
 
+const aiAlignSrc = ref("");
+const showAiAlign = ref(false);
+
 const handleAITerrainFile = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file || !mask.value.data) return;
 
   const reader = new FileReader();
   reader.onload = () => {
-    const aiImage = new Image();
-    aiImage.src = reader.result as string;
-    aiImage.onload = () => {
-      const maskImage = new Image();
-      maskImage.src = mask.value.data;
-      maskImage.onload = () => {
-        const w = maskImage.width;
-        const h = maskImage.height;
-
-        // Read mask pixels
-        const maskCanvas = new OffscreenCanvas(w, h);
-        const maskCtx = maskCanvas.getContext("2d")!;
-        maskCtx.drawImage(maskImage, 0, 0);
-        const maskData = maskCtx.getImageData(0, 0, w, h).data;
-
-        // Draw AI image resized to mask dimensions
-        const canvas = new OffscreenCanvas(w, h);
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(aiImage, 0, 0, w, h);
-
-        // Desaturate pixels not on the wallmask
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-          if (maskData[i + 3] <= 128) {
-            // Not on mask — slightly desaturate
-            const gray =
-              data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11;
-            const mix = 0.3; // 30% toward gray
-            data[i] = Math.round(data[i] + (gray - data[i]) * mix);
-            data[i + 1] = Math.round(data[i + 1] + (gray - data[i + 1]) * mix);
-            data[i + 2] = Math.round(data[i + 2] + (gray - data[i + 2]) * mix);
-            data[i + 3] = 200;
-          }
-        }
-        ctx.putImageData(imageData, 0, 0);
-
-        canvas.convertToBlob({ type: "image/png" }).then((blob) => {
-          const blobReader = new FileReader();
-          blobReader.onload = () => {
-            terrain.value = {
-              data: blobReader.result as string,
-              visible: true,
-            };
-          };
-          blobReader.readAsDataURL(blob);
-        });
-      };
-    };
+    aiAlignSrc.value = reader.result as string;
+    showAiAlign.value = true;
   };
   reader.readAsDataURL(file);
   (event.target as HTMLInputElement).value = "";
+};
+
+const handleAiAlignConfirm = (result: {
+  terrain: string;
+  background: string;
+  mask: string;
+  width: number;
+  height: number;
+}) => {
+  terrain.value = { data: result.terrain, visible: true };
+  background.value = { data: result.background, visible: true };
+  mask.value = { data: result.mask, visible: true };
+  advancedSettings.value.bbox = BBox.create(result.width, result.height);
+  showAiAlign.value = false;
 };
 
 watch(
@@ -550,6 +525,13 @@ const handleBBoxChange = (newBBox: BBox) => {
       :settings="wfcSettings"
       :onGenerate="handleWfcGenerated"
       :onClose="() => (showWfcDialog = false)"
+    />
+    <AiAlignDialog
+      v-if="showAiAlign"
+      :maskSrc="mask.data"
+      :aiSrc="aiAlignSrc"
+      :onConfirm="handleAiAlignConfirm"
+      :onClose="() => (showAiAlign = false)"
     />
   </div>
 </template>

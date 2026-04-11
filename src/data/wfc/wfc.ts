@@ -80,10 +80,12 @@ function cellDensity(
 
   if (totalEdge === 0) return globalDensity;
 
-  // Weighted blend of edge densities
-  const edgeDensity =
+  // Weighted blend of edge densities, dampened to 10% strength
+  // relative to the global density slider
+  const rawEdgeDensity =
     (topI * edges.top + bottomI * edges.bottom + leftI * edges.left + rightI * edges.right) /
     totalEdge;
+  const edgeDensity = globalDensity + (rawEdgeDensity - globalDensity) * 0.33;
 
   // Global influence is what's left after edge influences (capped at 0)
   const globalI = Math.max(0, 1 - totalEdge);
