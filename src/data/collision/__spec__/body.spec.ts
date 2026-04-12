@@ -75,4 +75,57 @@ describe("body", () => {
     // Body must have passed x=50 — if stuck, x will be ~49.
     expect(x).toBeGreaterThan(52);
   });
+
+  test("Blocked by a wall taller than MAX_STEP", () => {
+    // 100x100 surface with a 4-pixel step at x=50 (too tall to step up).
+    // Ground at y=90 for x<50, then y=86 for x>=50.
+    const surface = CollisionMask.forRect(100, 100);
+    surface.subtract(CollisionMask.forRect(32, 90), 0, 0);
+    surface.subtract(CollisionMask.forRect(18, 90), 32, 0);
+    const clearRight = CollisionMask.forRect(50, 86);
+    surface.subtract(clearRight, 50, 0);
+
+    const mask = CollisionMask.forRect(1, 1);
+    const body = new Body(surface, { mask });
+
+    body.move(45, 89);
+    // @ts-expect-error - accessing private _grounded for test setup
+    body._grounded = true;
+
+    const dt = 1;
+    for (let i = 0; i < 60; i++) {
+      body.walk(1);
+      body.tick(dt);
+    }
+
+    const [x] = body.precisePosition;
+    // Body must NOT have passed the wall.
+    expect(x).toBeLessThan(50);
+  });
+
+  test("Walks up a 3-pixel step (MAX_STEP)", () => {
+    // 100x100 surface with a 3-pixel step at x=50.
+    // Ground at y=90 for x<50, then y=87 for x>=50.
+    const surface = CollisionMask.forRect(100, 100);
+    surface.subtract(CollisionMask.forRect(32, 90), 0, 0);
+    surface.subtract(CollisionMask.forRect(18, 90), 32, 0);
+    surface.subtract(CollisionMask.forRect(50, 87), 50, 0);
+
+    const mask = CollisionMask.forRect(1, 1);
+    const body = new Body(surface, { mask });
+
+    body.move(45, 89);
+    // @ts-expect-error - accessing private _grounded for test setup
+    body._grounded = true;
+
+    const dt = 1;
+    for (let i = 0; i < 60; i++) {
+      body.walk(1);
+      body.tick(dt);
+    }
+
+    const [x] = body.precisePosition;
+    // Body must have passed the 3-pixel step.
+    expect(x).toBeGreaterThan(52);
+  });
 });
