@@ -9,7 +9,7 @@
  * - per-edge solid ratios and suggested socket types
  */
 
-import Jimp from "jimp";
+import { Jimp } from "jimp";
 import path from "path";
 
 const TILE_SIZE = 80;
@@ -102,8 +102,8 @@ async function analyze(filePath: string): Promise<TileAnalysis> {
   const errors: string[] = [];
 
   const image = await Jimp.read(filePath);
-  const width = image.getWidth();
-  const height = image.getHeight();
+  const width = image.width;
+  const height = image.height;
 
   if (width !== TILE_SIZE || height !== TILE_SIZE) {
     errors.push(`Expected ${TILE_SIZE}x${TILE_SIZE}, got ${width}x${height}`);

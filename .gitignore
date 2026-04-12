@@ -8,3 +8,5 @@ dist
 public/old
 public/sfx/original
 public/sfx/original_done
+docs/superpowers
+.playwright-mcp
