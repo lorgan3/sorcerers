@@ -29,7 +29,7 @@ export interface HurtableEntity extends Spawnable {
   body: PhysicsBody;
   hp: number;
 
-  damage(source: DamageSource, damage: number, force?: Force): void;
+  damage(source: DamageSource, damage: number, force?: Force, skipForce?: boolean): void;
   die(): void;
 }
 

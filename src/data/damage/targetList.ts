@@ -28,13 +28,14 @@ export class TargetList {
 
   damage(
     source: DamageSource,
-    entityMap: Map<number, TickingEntity> = getLevel().entityMap
+    entityMap: Map<number, TickingEntity> = getLevel().entityMap,
+    skipForce?: boolean
   ) {
     for (let target of this.targets) {
       const entity = entityMap.get(target.entityId) as
         | HurtableEntity
         | undefined;
-      entity?.damage(source, target.damage, target.force);
+      entity?.damage(source, target.damage, target.force, skipForce);
     }
   }
 

@@ -466,8 +466,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.animator.setDefaultAnimation(AnimationState[state]);
   }
 
-  damage(source: DamageSource, damage: number, force?: Force) {
-    this.health.damage(source, damage, force);
+  damage(source: DamageSource, damage: number, force?: Force, skipForce?: boolean) {
+    this.health.damage(source, damage, force, skipForce);
   }
 
   setSpellSource(source: any, toggle = true) {
