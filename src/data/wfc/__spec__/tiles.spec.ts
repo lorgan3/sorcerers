@@ -32,13 +32,13 @@ describe("socketMultiplier", () => {
     expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SURFACE_LOW, CB)).toBe(0.6);
   });
 
-  test("all SURFACE types connect to SOLID with 0.3 multiplier", () => {
-    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SOLID, CB)).toBe(0.3);
-    expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SOLID, CB)).toBe(0.3);
-    expect(socketMultiplier(Socket.DOUBLE_SURFACE, Socket.SOLID, CB)).toBe(0.3);
-    expect(socketMultiplier(Socket.SOLID, Socket.SURFACE_LOW, CB)).toBe(0.3);
-    expect(socketMultiplier(Socket.SOLID, Socket.SURFACE_HIGH, CB)).toBe(0.3);
-    expect(socketMultiplier(Socket.SOLID, Socket.DOUBLE_SURFACE, CB)).toBe(0.3);
+  test("all SURFACE types connect to SOLID with 0.1 multiplier", () => {
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SOLID, CB)).toBe(0.1);
+    expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SOLID, CB)).toBe(0.1);
+    expect(socketMultiplier(Socket.DOUBLE_SURFACE, Socket.SOLID, CB)).toBe(0.1);
+    expect(socketMultiplier(Socket.SOLID, Socket.SURFACE_LOW, CB)).toBe(0.1);
+    expect(socketMultiplier(Socket.SOLID, Socket.SURFACE_HIGH, CB)).toBe(0.1);
+    expect(socketMultiplier(Socket.SOLID, Socket.DOUBLE_SURFACE, CB)).toBe(0.1);
   });
 
   test("DOUBLE_SURFACE connects to SURFACE_LOW and SURFACE_HIGH with 1.0", () => {
