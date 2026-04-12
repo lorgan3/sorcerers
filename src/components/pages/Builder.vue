@@ -13,7 +13,13 @@ import BuilderSettings, {
 import ImageInput from "../molecules/ImageInput.vue";
 import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
+import dice from "pixelarticons/svg/dice.svg";
+import download from "pixelarticons/svg/download.svg";
+import upload from "pixelarticons/svg/upload.svg";
 import Collapsible from "../atoms/Collapsible.vue";
+import WfcDialog, { type WfcSettings } from "../organisms/WfcDialog.vue";
+import AiAlignDialog from "../organisms/AiAlignDialog.vue";
+import type { LadderInfo } from "../../data/wfc/postProcess";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
 import { useBuilderLadders } from "./composables/useBuilderLadders";
 import { useBuilderMap } from "./composables/useBuilderMap";
@@ -68,6 +74,166 @@ watch(
   }
 );
 
+const showWfcDialog = ref(false);
+const wfcSettings = ref<WfcSettings>({
+  width: 10,
+  height: 4,
+  density: 60,
+  edgeTop: 25,
+  edgeBottom: 75,
+  edgeLeft: 0,
+  edgeRight: 0,
+  continuityBonus: 2,
+});
+
+const wfcLadders = ref<LadderInfo[]>([]);
+
+const handleWfcGenerated = (maskData: string, wfcLadderData: LadderInfo[]) => {
+  mask.value = { data: maskData, visible: true };
+  advancedSettings.value.customMask = true;
+  showWfcDialog.value = false;
+  wfcLadders.value = wfcLadderData;
+
+  // Clear existing ladders and overlays
+  ladders.value = [];
+  layers.value = [];
+
+  // Add WFC-generated ladders to the builder
+  for (const ladder of wfcLadderData) {
+    ladders.value.push(
+      new BBox(
+        ladder.x - ladder.width / 2,
+        ladder.y,
+        ladder.x + ladder.width / 2,
+        ladder.y + ladder.height,
+      ),
+    );
+  }
+
+  const image = new Image();
+  image.src = maskData;
+  image.onload = () => {
+    advancedSettings.value.bbox = BBox.create(image.width, image.height);
+  };
+};
+
+function buildAIPrompt(w: number, h: number): string {
+  return `Generate an image of a 2D side-view game terrain based on the attached black-and-white mask image. In the mask, black areas represent solid terrain and white areas represent empty sky or background.
+
+The output image must be exactly ${w}x${h} pixels — the same dimensions as the input mask.
+
+Create a textured terrain image that follows these rules:
+- The solid black areas should become detailed, textured <theme> terrain. Add surface detail, shading, and depth to make it look like a painted game environment.
+- The white empty areas should become a distinct, clearly different background — use a lighter sky or atmospheric background that is obviously not terrain. The background must have no transparency.
+- The boundary between terrain and background must be clearly visible with good contrast.
+- Keep the exact same dimensions and shape as the input mask. Do not add, remove, or reshape any terrain. Every black pixel must remain solid, every white pixel must remain background.
+- If there are brown rectangular areas in the image, these indicate ladder positions. Draw wooden ladders on these brown areas. The ladders should look like climbable wooden game ladders with rungs.
+- The output must be a fully opaque image with no transparency anywhere.
+- Use a pixel art or hand-painted 2D game art style.
+- This is a side-scrolling game map, so add appropriate environmental details like grass on top edges, rocky textures on sides, and darker shading underneath overhangs.`;
+}
+
+const handleExportMaskForAI = () => {
+  if (!mask.value.data) return;
+
+  const image = new Image();
+  image.src = mask.value.data;
+  image.onload = () => {
+    const src = new OffscreenCanvas(image.width, image.height);
+    const srcCtx = src.getContext("2d")!;
+    srcCtx.drawImage(image, 0, 0);
+
+    // Build export canvas: brown ladder rectangles behind the mask
+    const dst = new OffscreenCanvas(image.width, image.height);
+    const dstCtx = dst.getContext("2d")!;
+
+    // Start with white background
+    dstCtx.fillStyle = "#ffffff";
+    dstCtx.fillRect(0, 0, image.width, image.height);
+
+    // Draw brown rectangles at ladder positions
+    if (wfcLadders.value.length > 0) {
+      dstCtx.fillStyle = "#8B4513";
+      for (const ladder of wfcLadders.value) {
+        dstCtx.fillRect(
+          ladder.x - ladder.width / 2,
+          ladder.y,
+          ladder.width,
+          ladder.height,
+        );
+      }
+    }
+
+    // Draw mask on top: solid terrain = black, transparent areas show what's beneath
+    const srcData = srcCtx.getImageData(0, 0, image.width, image.height);
+    const dstData = dstCtx.getImageData(0, 0, image.width, image.height);
+    const srcPixels = srcData.data;
+    const dstPixels = dstData.data;
+
+    for (let i = 0; i < srcPixels.length; i += 4) {
+      const solid = srcPixels[i + 3] > 128;
+      if (solid) {
+        // Solid terrain = black, overwriting whatever was beneath
+        dstPixels[i] = 0;
+        dstPixels[i + 1] = 0;
+        dstPixels[i + 2] = 0;
+        dstPixels[i + 3] = 255;
+      }
+      // Non-solid areas keep whatever was drawn (white or brown)
+    }
+
+    dstCtx.putImageData(dstData, 0, 0);
+
+    // Copy prompt to clipboard with exact dimensions
+    navigator.clipboard.writeText(buildAIPrompt(image.width, image.height));
+
+    dst.convertToBlob({ type: "image/png" }).then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = `${name.value || "mask"}-ai.png`;
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  };
+};
+
+const aiTerrainInput = ref<HTMLInputElement>();
+
+const handleImportAITerrain = () => {
+  aiTerrainInput.value?.click();
+};
+
+const aiAlignSrc = ref("");
+const showAiAlign = ref(false);
+
+const handleAITerrainFile = (event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file || !mask.value.data) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    aiAlignSrc.value = reader.result as string;
+    showAiAlign.value = true;
+  };
+  reader.readAsDataURL(file);
+  (event.target as HTMLInputElement).value = "";
+};
+
+const handleAiAlignConfirm = (result: {
+  terrain: string;
+  background: string;
+  mask: string;
+  width: number;
+  height: number;
+}) => {
+  terrain.value = { data: result.terrain, visible: true };
+  background.value = { data: result.background, visible: true };
+  mask.value = { data: result.mask, visible: true };
+  advancedSettings.value.bbox = BBox.create(result.width, result.height);
+  showAiAlign.value = false;
+};
+
 watch(
   () => advancedSettings.value.scale,
   (scale) => {
@@ -113,6 +279,33 @@ const handleBBoxChange = (newBBox: BBox) => {
     <section class="controls flex-list">
       <Input label="Name" autofocus v-model="name" />
       <div class="section">
+        <h2>
+          Terrain
+          <IconButton
+            title="Generate wallmask"
+            :onClick="() => (showWfcDialog = true)"
+            :icon="dice"
+          />
+          <IconButton
+            v-if="mask.data"
+            title="Export mask for AI (copies prompt to clipboard)"
+            :onClick="handleExportMaskForAI"
+            :icon="download"
+          />
+          <IconButton
+            v-if="mask.data"
+            title="Import AI-generated terrain"
+            :onClick="handleImportAITerrain"
+            :icon="upload"
+          />
+          <input
+            ref="aiTerrainInput"
+            hidden
+            type="file"
+            accept="image/*"
+            @change="handleAITerrainFile"
+          />
+        </h2>
         <ImageInput
           name="Terrain"
           :onAdd="handleAddTerrain"
@@ -120,15 +313,16 @@ const handleBBoxChange = (newBBox: BBox) => {
           :onToggleVisibility="handleSetTerrainVisibility"
           clearable
         />
-        <ImageInput
-          v-if="advancedSettings.customMask"
-          name="Mask"
-          :onAdd="handleAddMask"
-          v-model="mask.data"
-          :onToggleVisibility="handleSetMaskVisibility"
-          clearable
-          defaultHidden
-        />
+        <div v-if="advancedSettings.customMask" class="mask-row">
+          <ImageInput
+            name="Mask"
+            :onAdd="handleAddMask"
+            v-model="mask.data"
+            :onToggleVisibility="handleSetMaskVisibility"
+            clearable
+            :defaultHidden="!mask.visible"
+          />
+        </div>
         <ImageInput
           name="Background"
           :onAdd="handleAddBackground"
@@ -197,7 +391,7 @@ const handleBBoxChange = (newBBox: BBox) => {
       ref="preview"
       @mousedown="handleCreateLadder"
     >
-      <div v-if="!terrain.data && !background.data" class="description">
+      <div v-if="!terrain.data && !background.data && !mask.data" class="description">
         <p>
           Building your own maps is very easy thanks to the builder. Only a
           terrain image is needed to start testing! All configuration options
@@ -370,6 +564,19 @@ const handleBBoxChange = (newBBox: BBox) => {
         draggable
       />
     </section>
+    <WfcDialog
+      v-if="showWfcDialog"
+      :settings="wfcSettings"
+      :onGenerate="handleWfcGenerated"
+      :onClose="() => (showWfcDialog = false)"
+    />
+    <AiAlignDialog
+      v-if="showAiAlign"
+      :maskSrc="mask.data"
+      :aiSrc="aiAlignSrc"
+      :onConfirm="handleAiAlignConfirm"
+      :onClose="() => (showAiAlign = false)"
+    />
   </div>
 </template>
 
@@ -395,6 +602,16 @@ const handleBBoxChange = (newBBox: BBox) => {
       display: flex;
       flex-direction: column;
       gap: 6px;
+    }
+
+    .mask-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+
+      > div {
+        flex: 1;
+      }
     }
 
     > .section + .section {
