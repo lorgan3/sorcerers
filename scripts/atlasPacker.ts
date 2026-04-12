@@ -91,7 +91,7 @@ const buildAtlas = async (name: string, resolution: number | null) => {
             return (extracted as any)
               .clone()
               .color([{ apply: "mix", params: [{ r, g, b }, 50] }])
-              .brightness(-0.1)
+              .brightness(0.9)
               .contrast(0.15) as JimpImage;
           });
         }
