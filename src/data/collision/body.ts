@@ -3,6 +3,7 @@ import { CollisionMask } from "./collisionMask";
 
 // Random value that determines how much gravity a body must receive before something is considered a collision with the ground/ceiling
 const COLLISION_TRIGGER = 7;
+const MAX_STEP = 3;
 
 const GRAVITY = 0.2;
 const AIR_CONTROL = 0.3;
@@ -288,20 +289,25 @@ export class Body implements PhysicsBody {
 
     // Check if we're going to hit a wall
     if (xDiff !== 0 && this.surface.collidesWith(this.mask, this.rX, this.rY)) {
-      const amount = Math.min(3, Math.ceil(Math.abs(xDiff)));
+      let stepped = false;
 
-      // Check if we can walk up steps <= 45 degrees.
-      if (
-        this.yVelocity >= -amount &&
-        !this.surface.collidesWith(this.mask, this.rX, this.rY - amount)
-      ) {
-        this.y = this.rY - amount;
+      // Scan for the minimum step-up that clears the obstacle.
+      for (let step = 1; step <= MAX_STEP; step++) {
+        if (!this.surface.collidesWith(this.mask, this.rX, this.rY - step)) {
+          // Only allow step-up when not moving upward faster than the step height.
+          if (this.yVelocity >= -step) {
+            this.y = this.rY - step;
+            this.rY = this.y;
+            this.yVelocity = 0;
+            this._grounded = true;
+            this.unmountLadder();
+            stepped = true;
+          }
+          break; // Found a clearable height — stop scanning regardless.
+        }
+      }
 
-        this.rY = this.y;
-        this.yVelocity = 0;
-        this._grounded = true;
-        this.unmountLadder();
-      } else {
+      if (!stepped) {
         let xCopy = xDiff;
 
         // We hit a wall, align with it.
