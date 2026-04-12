@@ -430,7 +430,6 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 1,
     density: 0.2,
-    avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
     id: "floorLadderHole",
@@ -535,7 +534,6 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 1.4,
     density: 0.2,
-    avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
     id: "doubleFloorLadder",

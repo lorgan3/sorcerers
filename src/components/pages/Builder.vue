@@ -91,12 +91,14 @@ const wfcSettings = ref<WfcSettings>({
 const wfcLadders = ref<LadderInfo[]>([]);
 
 const wfcGenerating = ref(false);
+let activeWorker: Worker | null = null;
 
 const generateWfc = () => {
   if (wfcGenerating.value) return;
   wfcGenerating.value = true;
   const s = wfcSettings.value;
   const worker = new WfcWorker();
+  activeWorker = worker;
   worker.postMessage({
     width: s.width,
     height: s.height,
@@ -112,6 +114,7 @@ const generateWfc = () => {
   });
   worker.onmessage = (e: MessageEvent) => {
     wfcGenerating.value = false;
+    activeWorker = null;
     worker.terminate();
     if (e.data.success && e.data.mask) {
       handleWfcGenerated(e.data.mask, e.data.ladders ?? []);
@@ -119,18 +122,26 @@ const generateWfc = () => {
   };
   worker.onerror = () => {
     wfcGenerating.value = false;
+    activeWorker = null;
     worker.terminate();
   };
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+  if (showWfcDialog.value || showAiAlign.value) return;
   if (e.key === "g" || e.key === "G") {
     generateWfc();
   }
 };
 onMounted(() => window.addEventListener("keydown", handleKeydown));
-onUnmounted(() => window.removeEventListener("keydown", handleKeydown));
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
+  if (activeWorker) {
+    activeWorker.terminate();
+    activeWorker = null;
+  }
+});
 
 const handleWfcGenerated = (maskData: string, wfcLadderData: LadderInfo[]) => {
   mask.value = { data: maskData, visible: true };

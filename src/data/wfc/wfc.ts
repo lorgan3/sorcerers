@@ -114,6 +114,19 @@ function cloneGrid(grid: Set<WfcTile>[][]): Set<WfcTile>[][] {
   return grid.map((row) => row.map((cell) => new Set(cell)));
 }
 
+function restoreGrid(
+  grid: Set<WfcTile>[][],
+  snapshot: Set<WfcTile>[][],
+  height: number,
+  width: number,
+): void {
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      grid[y][x] = new Set(snapshot[y][x]);
+    }
+  }
+}
+
 interface Snapshot {
   grid: Set<WfcTile>[][];
   cellIndex: [number, number];
@@ -331,9 +344,9 @@ function enforceMandatoryNeighbors(
 }
 
 /**
- * After propagation, scan the grid for any newly-collapsed cells (size === 1)
- * that have mandatory neighbors and enforce them. This handles the case where
- * propagation collapses a cell with mandatory neighbors indirectly.
+ * After propagation, enforce mandatory neighbors starting from a worklist of
+ * cells to check. When a cell is constrained, its neighbors are added to the
+ * worklist so we only re-check affected cells rather than scanning the full grid.
  * Returns false if a contradiction is found.
  */
 function enforceAllMandatory(
@@ -342,38 +355,65 @@ function enforceAllMandatory(
   height: number,
   continuityBonus: number,
   preventBlockages: boolean,
+  seedCells?: Array<[number, number]>,
 ): boolean {
-  let changed = true;
-  while (changed) {
-    changed = false;
+  const worklist: Array<[number, number]> = [];
+  const inWorklist = new Set<string>();
+
+  const enqueue = (x: number, y: number) => {
+    const key = `${x},${y}`;
+    if (!inWorklist.has(key)) {
+      inWorklist.add(key);
+      worklist.push([x, y]);
+    }
+  };
+
+  if (seedCells) {
+    for (const [x, y] of seedCells) enqueue(x, y);
+  } else {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        const cell = grid[y][x];
-        if (cell.size !== 1) continue;
-        const tile = [...cell][0];
-        if (!tile.mandatoryNeighbors) continue;
+        enqueue(x, y);
+      }
+    }
+  }
 
-        for (const { dx, dy, dir } of NEIGHBORS) {
-          const mandatoryIds = tile.mandatoryNeighbors[dir];
-          if (!mandatoryIds) continue;
+  let wi = 0;
+  while (wi < worklist.length) {
+    const [x, y] = worklist[wi++];
+    inWorklist.delete(`${x},${y}`);
 
-          const nx = x + dx;
-          const ny = y + dy;
-          if (nx < 0 || nx >= width || ny < 0 || ny >= height) return false;
+    const cell = grid[y][x];
+    if (cell.size !== 1) continue;
+    const tile = [...cell][0];
+    if (!tile.mandatoryNeighbors) continue;
 
-          const neighbor = grid[ny][nx];
-          const filtered = [...neighbor].filter((t) =>
-            mandatoryIds.includes(t.id),
-          );
-          if (filtered.length === 0) return false;
+    for (const { dx, dy, dir } of NEIGHBORS) {
+      const mandatoryIds = tile.mandatoryNeighbors[dir];
+      if (!mandatoryIds) continue;
 
-          if (filtered.length < neighbor.size) {
-            grid[ny][nx] = new Set(filtered);
-            changed = true;
-            // Propagate from the changed cell
-            if (!propagate(grid, [[nx, ny]], width, height, continuityBonus, preventBlockages)) {
-              return false;
-            }
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || nx >= width || ny < 0 || ny >= height) return false;
+
+      const neighbor = grid[ny][nx];
+      const filtered = [...neighbor].filter((t) =>
+        mandatoryIds.includes(t.id),
+      );
+      if (filtered.length === 0) return false;
+
+      if (filtered.length < neighbor.size) {
+        grid[ny][nx] = new Set(filtered);
+        if (!propagate(grid, [[nx, ny]], width, height, continuityBonus, preventBlockages)) {
+          return false;
+        }
+        // Propagation may have collapsed more cells — re-check neighbors
+        enqueue(nx, ny);
+        for (const { dx: dx2, dy: dy2 } of NEIGHBORS) {
+          const nnx = nx + dx2;
+          const nny = ny + dy2;
+          if (nnx >= 0 && nnx < width && nny >= 0 && nny < height) {
+            enqueue(nnx, nny);
           }
         }
       }
@@ -452,17 +492,18 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
 
     const mandatoryChanged = enforceMandatoryNeighbors(grid, cx, cy, width, height);
 
+    const changedCells = [[cx, cy] as [number, number], ...(mandatoryChanged ?? [])];
     let contradiction =
       mandatoryChanged === null ||
       !propagate(
         grid,
-        [[cx, cy], ...(mandatoryChanged ?? [])],
+        changedCells,
         width,
         height,
         continuityBonus,
         preventBlockages,
       ) ||
-      !enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages);
+      !enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages, changedCells);
 
     if (!contradiction) {
       stack.push(snapshot);
@@ -471,19 +512,15 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
 
     // Backtrack
     snapshot.excludedTiles.add(chosen.id);
+    let current = snapshot;
     let resolved = false;
 
     while (!resolved) {
-      const snap = snapshot;
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          grid[y][x] = new Set(snap.grid[y][x]);
-        }
-      }
+      restoreGrid(grid, current.grid, height, width);
 
-      const [bx, by] = snap.cellIndex;
+      const [bx, by] = current.cellIndex;
       const remaining = [...grid[by][bx]].filter(
-        (t) => !snap.excludedTiles.has(t.id),
+        (t) => !current.excludedTiles.has(t.id),
       );
 
       if (remaining.length > 0) {
@@ -504,35 +541,30 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
         grid[by][bx] = new Set([retryChosen]);
 
         const retryMandatory = enforceMandatoryNeighbors(grid, bx, by, width, height);
+        const changedCells = [[bx, by] as [number, number], ...(retryMandatory ?? [])];
         const retryOk =
           retryMandatory !== null &&
           propagate(
             grid,
-            [[bx, by], ...(retryMandatory ?? [])],
+            changedCells,
             width,
             height,
             continuityBonus,
             preventBlockages,
           ) &&
-          enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages);
+          enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages, changedCells);
 
         if (retryOk) {
-          stack.push(snapshot);
+          stack.push(current);
           resolved = true;
         } else {
-          snap.excludedTiles.add(retryChosen.id);
+          current.excludedTiles.add(retryChosen.id);
         }
       } else {
         if (stack.length === 0 || stack.length > MAX_BACKTRACK_DEPTH) {
           return null;
         }
-        const prevSnap = stack.pop()!;
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            grid[y][x] = new Set(prevSnap.grid[y][x]);
-          }
-        }
-        Object.assign(snapshot, prevSnap);
+        current = stack.pop()!;
       }
     }
   }

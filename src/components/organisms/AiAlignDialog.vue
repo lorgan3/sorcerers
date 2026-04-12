@@ -183,31 +183,19 @@ function handleConfirm() {
   }
   bCtx.putImageData(bgImgData, 0, 0);
 
-  Promise.all([
-    terrainCanvas.convertToBlob({ type: "image/png" }),
-    bgCanvas.convertToBlob({ type: "image/png" }),
-    maskCanvas.convertToBlob({ type: "image/png" }),
-  ]).then(([terrainBlob, bgBlob, maskBlob]) => {
-    const readers = [new FileReader(), new FileReader(), new FileReader()];
-    const urls: string[] = ["", "", ""];
-    let done = 0;
-    const finish = () => {
-      if (++done < 3) return;
-      props.onConfirm({
-        terrain: urls[0],
-        background: urls[1],
-        mask: urls[2],
-        width: cropW,
-        height: cropH,
-      });
-    };
-    [terrainBlob, bgBlob, maskBlob].forEach((blob, idx) => {
-      readers[idx].onload = () => {
-        urls[idx] = readers[idx].result as string;
-        finish();
-      };
-      readers[idx].readAsDataURL(blob);
+  const blobToDataUrl = (blob: Blob): Promise<string> =>
+    new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
     });
+
+  Promise.all([
+    terrainCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
+    bgCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
+    maskCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
+  ]).then(([terrain, background, mask]) => {
+    props.onConfirm({ terrain, background, mask, width: cropW, height: cropH });
   });
 }
 </script>
