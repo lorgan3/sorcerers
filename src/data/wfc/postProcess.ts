@@ -7,7 +7,7 @@ export interface LadderInfo {
   height: number;
 }
 
-const LADDER_WIDTH = 20; // pixels, centered in tile
+const LADDER_WIDTH = 14; // pixels, centered in tile
 
 /** Detect vertical runs of ladder tiles and return metadata */
 export function detectLadders(grid: WfcTile[][]): LadderInfo[] {

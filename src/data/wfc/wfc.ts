@@ -7,6 +7,7 @@ export interface WfcParams {
   density: number;
   edges: { top: number; bottom: number; left: number; right: number };
   continuityBonus: number;
+  preventBlockages: boolean;
   seed?: number;
 }
 
@@ -127,6 +128,7 @@ function neighborMultiplier(
   width: number,
   height: number,
   continuityBonus: number,
+  preventBlockages: boolean,
 ): number {
   let multiplier = 1;
 
@@ -144,6 +146,7 @@ function neighborMultiplier(
       tile.sockets[dir],
       nTile.sockets[opposite],
       continuityBonus,
+      preventBlockages,
     );
     multiplier *= Math.max(m, 0.01);
   }
@@ -160,6 +163,7 @@ function pickWeighted(
   width: number,
   height: number,
   continuityBonus: number,
+  preventBlockages: boolean,
   rng: () => number,
 ): WfcTile {
   const weights: number[] = [];
@@ -167,9 +171,9 @@ function pickWeighted(
   for (const tile of options) {
     const base =
       tile.weight *
-      neighborMultiplier(tile, cx, cy, grid, width, height, continuityBonus);
+      neighborMultiplier(tile, cx, cy, grid, width, height, continuityBonus, preventBlockages);
     const distance = Math.abs(tile.density - density);
-    const exponent = (1 - distance * 2) * 3.32;
+    const exponent = (1 - distance * 2) * 6.64;
     const w = base * Math.max(0.01, Math.pow(2, exponent));
     weights.push(w);
     total += w;
@@ -189,34 +193,33 @@ function applyEdgeConstraints(
   height: number,
 ): void {
   const constrain = (
-    x: number,
-    y: number,
+    cell: Set<WfcTile>,
     dir: Direction,
     edgeDensity: number,
   ) => {
-    const current = grid[y][x];
     let filtered: WfcTile[];
 
-    if (edgeDensity >= 0.75) {
-      filtered = [...current].filter((t) => t.sockets[dir] === Socket.SOLID);
-    } else if (edgeDensity <= 0.25) {
-      filtered = [...current].filter((t) => t.sockets[dir] === Socket.EMPTY);
+    if (edgeDensity >= 1.0) {
+      filtered = [...cell].filter((t) => t.id === "solid");
+    } else if (edgeDensity <= 0) {
+      filtered = [...cell].filter((t) => t.id === "empty");
     } else {
       return;
     }
 
     if (filtered.length > 0) {
-      grid[y][x] = new Set(filtered);
+      cell.clear();
+      for (const t of filtered) cell.add(t);
     }
   };
 
   for (let x = 0; x < width; x++) {
-    constrain(x, 0, "top", edges.top);
-    constrain(x, height - 1, "bottom", edges.bottom);
+    constrain(grid[0][x], "top", edges.top);
+    constrain(grid[height - 1][x], "bottom", edges.bottom);
   }
   for (let y = 0; y < height; y++) {
-    constrain(0, y, "left", edges.left);
-    constrain(width - 1, y, "right", edges.right);
+    constrain(grid[y][0], "left", edges.left);
+    constrain(grid[y][width - 1], "right", edges.right);
   }
 }
 
@@ -226,6 +229,7 @@ function propagate(
   width: number,
   height: number,
   continuityBonus: number,
+  preventBlockages: boolean,
 ): boolean {
   let qi = 0;
   while (qi < queue.length) {
@@ -250,7 +254,7 @@ function propagate(
         const nSocket = nTile.sockets[opposite];
         let compatible = false;
         for (const s of possibleSockets) {
-          if (socketMultiplier(s, nSocket, continuityBonus) > 0) {
+          if (socketMultiplier(s, nSocket, continuityBonus, preventBlockages) > 0) {
             compatible = true;
             break;
           }
@@ -258,7 +262,7 @@ function propagate(
         if (compatible && nTile.avoidSockets?.[opposite]) {
           const avoided = nTile.avoidSockets[opposite]!;
           const hasNonAvoided = [...possibleSockets].some(
-            (s) => !avoided.includes(s) && socketMultiplier(s, nSocket, continuityBonus) > 0,
+            (s) => !avoided.includes(s) && socketMultiplier(s, nSocket, continuityBonus, preventBlockages) > 0,
           );
           if (!hasNonAvoided) compatible = false;
         }
@@ -337,6 +341,7 @@ function enforceAllMandatory(
   width: number,
   height: number,
   continuityBonus: number,
+  preventBlockages: boolean,
 ): boolean {
   let changed = true;
   while (changed) {
@@ -366,7 +371,7 @@ function enforceAllMandatory(
             grid[ny][nx] = new Set(filtered);
             changed = true;
             // Propagate from the changed cell
-            if (!propagate(grid, [[nx, ny]], width, height, continuityBonus)) {
+            if (!propagate(grid, [[nx, ny]], width, height, continuityBonus, preventBlockages)) {
               return false;
             }
           }
@@ -378,7 +383,7 @@ function enforceAllMandatory(
 }
 
 function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
-  const { width, height, tiles, density, edges, continuityBonus } = params;
+  const { width, height, tiles, density, edges, continuityBonus, preventBlockages } = params;
 
   const grid: Set<WfcTile>[][] = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) =>
@@ -396,8 +401,8 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
       }
     }
   }
-  if (!propagate(grid, initQueue, width, height, continuityBonus)) return null;
-  if (!enforceAllMandatory(grid, width, height, continuityBonus)) return null;
+  if (!propagate(grid, initQueue, width, height, continuityBonus, preventBlockages)) return null;
+  if (!enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages)) return null;
 
   const stack: Snapshot[] = [];
 
@@ -439,6 +444,7 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
       width,
       height,
       continuityBonus,
+      preventBlockages,
       rng,
     );
 
@@ -454,8 +460,9 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
         width,
         height,
         continuityBonus,
+        preventBlockages,
       ) ||
-      !enforceAllMandatory(grid, width, height, continuityBonus);
+      !enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages);
 
     if (!contradiction) {
       stack.push(snapshot);
@@ -491,6 +498,7 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
           width,
           height,
           continuityBonus,
+          preventBlockages,
           rng,
         );
         grid[by][bx] = new Set([retryChosen]);
@@ -504,8 +512,9 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
             width,
             height,
             continuityBonus,
+            preventBlockages,
           ) &&
-          enforceAllMandatory(grid, width, height, continuityBonus);
+          enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages);
 
         if (retryOk) {
           stack.push(snapshot);

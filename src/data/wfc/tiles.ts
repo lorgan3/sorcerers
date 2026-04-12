@@ -79,8 +79,24 @@ export function socketMultiplier(
   a: Socket,
   b: Socket,
   continuityBonus: number,
+  preventBlockages = false,
 ): number {
-  const base = BASE_MATRIX[a][b];
+  let base = BASE_MATRIX[a][b];
+  if (preventBlockages) {
+    const S = Socket;
+    if (
+      (a === S.SURFACE_LOW && b === S.SOLID) ||
+      (a === S.SOLID && b === S.SURFACE_LOW) ||
+      (a === S.SURFACE_HIGH && b === S.SOLID) ||
+      (a === S.SOLID && b === S.SURFACE_HIGH) ||
+      (a === S.DOUBLE_SURFACE && b === S.SOLID) ||
+      (a === S.SOLID && b === S.DOUBLE_SURFACE) ||
+      (a === S.SURFACE_LOW && b === S.SURFACE_HIGH) ||
+      (a === S.SURFACE_HIGH && b === S.SURFACE_LOW)
+    ) {
+      base = 0;
+    }
+  }
   if (base === 0) return 0;
   return a === b ? base * continuityBonus : base;
 }
@@ -273,6 +289,7 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 2,
     density: 0.506,
+    avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SOLID] },
     mandatoryNeighbors: {
       top: [
         "rampEntry",
@@ -294,6 +311,7 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 0.7,
     density: 0.2,
+    avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SOLID] },
     mandatoryNeighbors: {
       top: [
         "rampEntry",
@@ -316,19 +334,20 @@ const BASE_TILES: WfcTile[] = [
     weight: 1,
     density: 0.228,
     avoidEdge: ["left", "right"],
+    avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
     id: "doubleSteepWall",
     imagePath: doubleSteepWallImg,
     sockets: {
-      top: Socket.DOUBLE_SURFACE,
+      top: Socket.EMPTY,
       right: Socket.SOLID,
       bottom: Socket.SOLID,
       left: Socket.SOLID,
     },
     weight: 1,
     density: 0.3,
-    avoidSockets: { bottom: [Socket.EMPTY] },
+    avoidSockets: { bottom: [Socket.SOLID] },
   },
   {
     id: "halfSolid",
@@ -341,7 +360,11 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 3,
     density: 0.55,
-    avoidSockets: { bottom: [Socket.EMPTY] },
+    avoidSockets: {
+      bottom: [Socket.EMPTY],
+      left: [Socket.SURFACE_LOW],
+      right: [Socket.SURFACE_LOW],
+    },
   },
   {
     id: "halfCeiling",
@@ -354,6 +377,7 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 0.7,
     density: 0.55,
+    avoidSockets: { left: [Socket.SURFACE_HIGH], right: [Socket.SURFACE_HIGH] },
   },
   {
     id: "floorBox",
@@ -538,6 +562,7 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 1,
     density: 0.671,
+    avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SURFACE_LOW] },
     mandatoryNeighbors: {
       top: [
         "rampEntry",
@@ -703,6 +728,7 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 1,
     density: 0.468,
+    avoidSockets: { bottom: [Socket.EMPTY] },
   },
 ];
 

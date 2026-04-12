@@ -36,6 +36,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 1, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
@@ -52,6 +53,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 1, left: 0.5, right: 0.5 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 123,
     };
     const result = solve(params);
@@ -68,6 +70,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 1, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
@@ -86,6 +89,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 0, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
@@ -104,6 +108,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 1, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 99,
     };
     const result1 = solve(params);
@@ -121,6 +126,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 1, left: 0.5, right: 0.5 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
@@ -147,6 +153,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 1, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
     };
     const result1 = solve({ ...base, seed: 100 });
     const result2 = solve({ ...base, seed: 200 });
@@ -182,6 +189,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 0, bottom: 0, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
@@ -215,6 +223,7 @@ describe("wfc solver", () => {
       density: 0.5,
       edges: { top: 1, bottom: 1, left: 1, right: 1 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
@@ -268,6 +277,7 @@ describe("wfc solver", () => {
         density: 0.5,
         edges: { top: 0, bottom: 1, left: 0, right: 0 },
         continuityBonus: 1.5,
+        preventBlockages: false,
         seed,
       });
       if (!result.success || !result.grid) continue;
@@ -321,6 +331,7 @@ describe("wfc solver", () => {
       density: 0.3,
       edges: { top: 0, bottom: 1, left: 0, right: 0 },
       continuityBonus: 1.5,
+      preventBlockages: false,
       seed: 42,
     });
     expect(result.success).toBe(true);

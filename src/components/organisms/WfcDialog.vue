@@ -16,6 +16,7 @@ export interface WfcSettings {
   edgeLeft: number;
   edgeRight: number;
   continuityBonus: number;
+  preventBlockages: boolean;
 }
 
 const { onGenerate, onClose, settings } = defineProps<{
@@ -43,6 +44,7 @@ const handleGenerate = () => {
       right: settings.edgeRight / 100,
     },
     continuityBonus: settings.continuityBonus,
+    preventBlockages: settings.preventBlockages,
   });
 
   worker.onmessage = (e: MessageEvent) => {
@@ -99,6 +101,11 @@ const handleGenerate = () => {
           class="slider"
         />
         <span class="slider-value">{{ settings.continuityBonus.toFixed(1) }}</span>
+      </label>
+
+      <label class="slider-label">
+        <span class="label">Reduce blockages</span>
+        <input type="checkbox" v-model="settings.preventBlockages" class="checkbox" />
       </label>
 
       <div class="edges-section">
@@ -215,6 +222,13 @@ const handleGenerate = () => {
     min-width: 36px;
     text-align: right;
     font-size: 13px;
+  }
+
+  .checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
   }
 }
 

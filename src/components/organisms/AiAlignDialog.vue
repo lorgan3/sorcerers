@@ -22,6 +22,9 @@ const offsetY = ref(0);
 const scaleX = ref(100);
 const scaleY = ref(100);
 
+const sharpen = ref(false);
+const darkenAmount = ref(30);
+
 const maskImg = ref<HTMLImageElement>();
 const aiImg = ref<HTMLImageElement>();
 const maskLoaded = ref(false);
@@ -84,7 +87,7 @@ watch(
     );
 
     // Draw mask outline on top (semi-transparent)
-    ctx.globalAlpha = 0.4;
+    ctx.globalAlpha = 0.6;
     ctx.drawImage(mi, 0, 0, mi.width * PREVIEW_SCALE, mi.height * PREVIEW_SCALE);
     ctx.globalAlpha = 1;
   },
@@ -116,7 +119,23 @@ function handleConfirm() {
   const aiCanvas = new OffscreenCanvas(cropW, cropH);
   const aCtx = aiCanvas.getContext("2d")!;
   aCtx.drawImage(ai, 0, 0, ai.width, ai.height, ox - x0, oy - y0, aiW, aiH);
+
   const aiData = aCtx.getImageData(0, 0, cropW, cropH);
+
+  if (sharpen.value) {
+    const blurCanvas = new OffscreenCanvas(cropW, cropH);
+    const blurCtx = blurCanvas.getContext("2d")!;
+    blurCtx.filter = "blur(1px)";
+    blurCtx.drawImage(aiCanvas, 0, 0);
+    const blurData = blurCtx.getImageData(0, 0, cropW, cropH).data;
+    const px = aiData.data;
+    const amount = 0.6;
+    for (let i = 0; i < px.length; i += 4) {
+      px[i] = Math.min(255, Math.max(0, Math.round(px[i] + (px[i] - blurData[i]) * amount)));
+      px[i + 1] = Math.min(255, Math.max(0, Math.round(px[i + 1] + (px[i + 1] - blurData[i + 1]) * amount)));
+      px[i + 2] = Math.min(255, Math.max(0, Math.round(px[i + 2] + (px[i + 2] - blurData[i + 2]) * amount)));
+    }
+  }
 
   // Draw cropped mask
   const maskCanvas = new OffscreenCanvas(cropW, cropH);
@@ -124,44 +143,41 @@ function handleConfirm() {
   mCtx.drawImage(mi, x0, y0, cropW, cropH, 0, 0, cropW, cropH);
   const maskData = mCtx.getImageData(0, 0, cropW, cropH).data;
 
-  // Terrain: only mask-overlapping pixels, rest transparent
+  // Terrain: only mask-overlapping pixels, darkened to stand out from background
   const terrainCanvas = new OffscreenCanvas(cropW, cropH);
   const tCtx = terrainCanvas.getContext("2d")!;
   const terrainImgData = tCtx.createImageData(cropW, cropH);
   const td = terrainImgData.data;
   const ad = aiData.data;
+  const darken = 1 - darkenAmount.value / 100;
 
   for (let i = 0; i < ad.length; i += 4) {
     if (maskData[i + 3] > 128) {
-      td[i] = ad[i];
-      td[i + 1] = ad[i + 1];
-      td[i + 2] = ad[i + 2];
+      td[i] = Math.round(ad[i] * darken);
+      td[i + 1] = Math.round(ad[i + 1] * darken);
+      td[i + 2] = Math.round(ad[i + 2] * darken);
       td[i + 3] = ad[i + 3];
     }
   }
   tCtx.putImageData(terrainImgData, 0, 0);
 
-  // Background: full image desaturated, mask areas desaturated 3x more
+  // Background: original AI image, mask areas lightened/washed out
   const bgCanvas = new OffscreenCanvas(cropW, cropH);
   const bCtx = bgCanvas.getContext("2d")!;
   const bgImgData = bCtx.createImageData(cropW, cropH);
   const bd = bgImgData.data;
-  const bgMix = 0.3;
-  const fgMix = 0.7;
 
   for (let i = 0; i < ad.length; i += 4) {
-    const gray = ad[i] * 0.3 + ad[i + 1] * 0.59 + ad[i + 2] * 0.11;
     const onMask = maskData[i + 3] > 128;
     if (onMask) {
-      // Mask areas: nearly white washed-out look
+      const gray = ad[i] * 0.3 + ad[i + 1] * 0.59 + ad[i + 2] * 0.11;
       bd[i] = Math.round(gray + (255 - gray) * 0.4);
       bd[i + 1] = Math.round(gray + (255 - gray) * 0.4);
       bd[i + 2] = Math.round(gray + (255 - gray) * 0.4);
     } else {
-      // Non-mask areas: light desaturation
-      bd[i] = Math.round(ad[i] + (gray - ad[i]) * bgMix);
-      bd[i + 1] = Math.round(ad[i + 1] + (gray - ad[i + 1]) * bgMix);
-      bd[i + 2] = Math.round(ad[i + 2] + (gray - ad[i + 2]) * bgMix);
+      bd[i] = ad[i];
+      bd[i + 1] = ad[i + 1];
+      bd[i + 2] = ad[i + 2];
     }
     bd[i + 3] = 255;
   }
@@ -228,6 +244,17 @@ function handleConfirm() {
         </label>
       </div>
 
+      <label class="control">
+        <span>Darken</span>
+        <input type="range" v-model.number="darkenAmount" :min="0" :max="80" />
+        <input type="number" v-model.number="darkenAmount" class="num" />
+        <span>%</span>
+      </label>
+      <label class="control checkbox-control">
+        <input type="checkbox" v-model="sharpen" />
+        <span>Sharpen</span>
+      </label>
+
       <div class="actions">
         <button class="primary" @click="handleConfirm">Confirm</button>
         <button class="secondary" @click="onClose">Cancel</button>
@@ -290,6 +317,17 @@ function handleConfirm() {
     border-radius: 3px;
     color: var(--primary);
     text-align: right;
+  }
+}
+
+.checkbox-control {
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
   }
 }
 

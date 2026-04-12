@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Map, Config, Layer } from "../../data/map";
 import Input from "../atoms/Input.vue";
 import BoundingBox from "../molecules/BoundingBox.vue";
@@ -20,6 +20,7 @@ import Collapsible from "../atoms/Collapsible.vue";
 import WfcDialog, { type WfcSettings } from "../organisms/WfcDialog.vue";
 import AiAlignDialog from "../organisms/AiAlignDialog.vue";
 import type { LadderInfo } from "../../data/wfc/postProcess";
+import WfcWorker from "../../data/wfc/wfc.worker?worker";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
 import { useBuilderLadders } from "./composables/useBuilderLadders";
 import { useBuilderMap } from "./composables/useBuilderMap";
@@ -84,9 +85,52 @@ const wfcSettings = ref<WfcSettings>({
   edgeLeft: 0,
   edgeRight: 0,
   continuityBonus: 2,
+  preventBlockages: true,
 });
 
 const wfcLadders = ref<LadderInfo[]>([]);
+
+const wfcGenerating = ref(false);
+
+const generateWfc = () => {
+  if (wfcGenerating.value) return;
+  wfcGenerating.value = true;
+  const s = wfcSettings.value;
+  const worker = new WfcWorker();
+  worker.postMessage({
+    width: s.width,
+    height: s.height,
+    density: s.density / 100,
+    edges: {
+      top: s.edgeTop / 100,
+      bottom: s.edgeBottom / 100,
+      left: s.edgeLeft / 100,
+      right: s.edgeRight / 100,
+    },
+    continuityBonus: s.continuityBonus,
+    preventBlockages: s.preventBlockages,
+  });
+  worker.onmessage = (e: MessageEvent) => {
+    wfcGenerating.value = false;
+    worker.terminate();
+    if (e.data.success && e.data.mask) {
+      handleWfcGenerated(e.data.mask, e.data.ladders ?? []);
+    }
+  };
+  worker.onerror = () => {
+    wfcGenerating.value = false;
+    worker.terminate();
+  };
+};
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+  if (e.key === "g" || e.key === "G") {
+    generateWfc();
+  }
+};
+onMounted(() => window.addEventListener("keydown", handleKeydown));
+onUnmounted(() => window.removeEventListener("keydown", handleKeydown));
 
 const handleWfcGenerated = (maskData: string, wfcLadderData: LadderInfo[]) => {
   mask.value = { data: maskData, visible: true };
@@ -229,7 +273,7 @@ const handleAiAlignConfirm = (result: {
 }) => {
   terrain.value = { data: result.terrain, visible: true };
   background.value = { data: result.background, visible: true };
-  mask.value = { data: result.mask, visible: true };
+  mask.value = { data: result.mask, visible: false };
   advancedSettings.value.bbox = BBox.create(result.width, result.height);
   showAiAlign.value = false;
 };
@@ -281,7 +325,9 @@ const handleBBoxChange = (newBBox: BBox) => {
       <div class="section">
         <h2>
           Terrain
+          <span v-if="wfcGenerating" class="spinner wfc-generating" title="Generating...">&#x07F7;</span>
           <IconButton
+            v-else
             title="Generate wallmask"
             :onClick="() => (showWfcDialog = true)"
             :icon="dice"
@@ -740,6 +786,19 @@ const handleBBoxChange = (newBBox: BBox) => {
         font-size: 14px;
       }
     }
+  }
+
+  .wfc-generating {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    padding: 4px;
+    margin: -4px 0;
+    font-size: 16px;
+    vertical-align: middle;
+    box-sizing: content-box;
   }
 }
 </style>
