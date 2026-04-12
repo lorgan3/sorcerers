@@ -1,15 +1,19 @@
-import Jimp from "jimp";
+import { Jimp } from "jimp";
 import { GifUtil } from "gifwrap";
 import { Block, GrowingPacker, Packer, Resolution } from "binpacking";
 import fs from "fs/promises";
 import { Atlas, Frame, extract } from "./util.ts";
 
+// Jimp v1's type system produces structurally incompatible generics under TS6.
+// Use a simplified type alias for Jimp instances in this build script.
+type JimpImage = ReturnType<typeof Jimp.fromBitmap>;
+
 interface SpriteBlock extends Block {
-  jimp: Jimp;
+  jimp: JimpImage;
   name: string;
   fit?: Resolution;
   animation?: string;
-  overlay?: Jimp;
+  overlay?: JimpImage;
 }
 
 const extractColors: Record<string, { from: number[]; to: string[] }> = {
@@ -46,15 +50,19 @@ const buildAtlas = async (name: string, resolution: number | null) => {
     const files = await fs.readdir(`${DIRECTORY}${folderName}`);
 
     for (let file of files) {
-      const frames: Jimp[] = [];
+      const loadedFrames: JimpImage[] = [];
       if (file.toLowerCase().endsWith("gif")) {
         const gif = await GifUtil.read(`${DIRECTORY}${folderName}/${file}`);
-        frames.push(
-          ...gif.frames.map((frame) => GifUtil.shareAsJimp(Jimp, frame))
+        loadedFrames.push(
+          ...gif.frames.map((frame: any) => {
+            const img = new Jimp({ width: frame.bitmap.width, height: frame.bitmap.height });
+            img.bitmap.data = frame.bitmap.data;
+            return img as JimpImage;
+          })
         );
       } else {
         try {
-          frames.push(await Jimp.read(`${DIRECTORY}${folderName}/${file}`));
+          loadedFrames.push(await Jimp.read(`${DIRECTORY}${folderName}/${file}`) as JimpImage);
         } catch {
           console.log(`Skipping ${file}`);
         }
@@ -63,26 +71,29 @@ const buildAtlas = async (name: string, resolution: number | null) => {
       const fileName = file.split(".")[0];
       const parts = fileName.split("_");
 
-      for (let i = 0; i < frames.length; i++) {
-        const frame = frames[i];
+      for (let i = 0; i < loadedFrames.length; i++) {
+        const frame = loadedFrames[i];
 
         const block = {
-          w: frame.getWidth() + MARGIN * 2,
-          h: frame.getHeight() + MARGIN * 2,
+          w: frame.width + MARGIN * 2,
+          h: frame.height + MARGIN * 2,
         };
 
         const config = extractColors[folderName];
-        let overlays: Jimp[] = [];
+        let overlays: JimpImage[] = [];
         if (config) {
-          const extracted = extract(frame, config.from).grayscale();
+          const extracted = extract(frame, config.from).greyscale();
 
-          overlays = config.to.map((color) =>
-            extracted
+          overlays = config.to.map((color) => {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            return (extracted as any)
               .clone()
-              .color([{ apply: "mix" as any, params: [color, 50] }])
+              .color([{ apply: "mix", params: [{ r, g, b }, 50] }])
               .brightness(-0.1)
-              .contrast(0.15)
-          );
+              .contrast(0.15) as JimpImage;
+          });
         }
 
         for (let j = 0; j < overlays.length || j < 1; j++) {
@@ -99,13 +110,13 @@ const buildAtlas = async (name: string, resolution: number | null) => {
           blocks.push({
             ...block,
             jimp: frame,
-            name: frames.length > 1 ? `${frameName}_${i + 1}` : frameName,
+            name: loadedFrames.length > 1 ? `${frameName}_${i + 1}` : frameName,
             ...(!isNaN(Number(parts[1])) && {
               animation: overlay
                 ? `${folder}_${parts[0]}_${j}`
                 : `${folder}_${parts[0]}`,
             }),
-            ...(frames.length > 1 && { animation: frameName }),
+            ...(loadedFrames.length > 1 && { animation: frameName }),
             overlay,
           });
         }
@@ -130,10 +141,10 @@ const buildAtlas = async (name: string, resolution: number | null) => {
       process.exit(1);
     }
 
-    let image: Jimp;
+    let image: JimpImage;
 
     try {
-      image = await Jimp.read(`${DIRECTORY}${name}/${atlas.meta.image}`);
+      image = await Jimp.read(`${DIRECTORY}${name}/${atlas.meta.image}`) as JimpImage;
     } catch (error) {
       console.error(`Failed to load image for atlas ${file}`, error);
       process.exit(1);
@@ -154,15 +165,15 @@ const buildAtlas = async (name: string, resolution: number | null) => {
           const name = `${atlasName}_${index++}`;
           animation.push(name);
 
-          const jimp = new Jimp(atlas.frame.w, atlas.frame.h).blit(
-            image,
-            0,
-            0,
-            i,
-            j,
-            atlas.frame.w,
-            atlas.frame.h
-          );
+          const jimp = new Jimp({ width: atlas.frame.w, height: atlas.frame.h }).blit({
+            src: image,
+            x: 0,
+            y: 0,
+            srcX: i,
+            srcY: j,
+            srcW: atlas.frame.w,
+            srcH: atlas.frame.h,
+          }) as JimpImage;
 
           blocks.push({
             name,
@@ -180,15 +191,15 @@ const buildAtlas = async (name: string, resolution: number | null) => {
 
     if (atlas.frames) {
       Object.entries(atlas.frames).forEach(([name, { frame }]) => {
-        const jimp = new Jimp(frame.w, frame.h).blit(
-          image,
-          0,
-          0,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h
-        );
+        const jimp = new Jimp({ width: frame.w, height: frame.h }).blit({
+          src: image,
+          x: 0,
+          y: 0,
+          srcX: frame.x,
+          srcY: frame.y,
+          srcW: frame.w,
+          srcH: frame.h,
+        }) as JimpImage;
 
         blocks.push({
           name,
@@ -208,12 +219,12 @@ const buildAtlas = async (name: string, resolution: number | null) => {
     packer = new Packer(resolution, resolution);
     packer.fit(blocks);
 
-    atlas = new Jimp(resolution, resolution);
+    atlas = new Jimp({ width: resolution, height: resolution });
   } else {
     packer = new GrowingPacker();
     packer.fit(blocks);
 
-    atlas = new Jimp(packer.root.w, packer.root.h);
+    atlas = new Jimp({ width: packer.root.w, height: packer.root.h });
   }
 
   for (let block of blocks) {
@@ -264,12 +275,12 @@ const buildAtlas = async (name: string, resolution: number | null) => {
       app: "https://github.com/lorgan3/sorcerers",
       version: "1.0",
       image: `${name}.png`,
-      size: { w: atlas.getWidth(), h: atlas.getHeight() },
+      size: { w: atlas.width, h: atlas.height },
     },
   };
 
   await Promise.all([
-    atlas.writeAsync(`./public/${name}.png`),
+    atlas.write(`./public/${name}.png` as `${string}.png`),
     fs.writeFile(`./public/${name}.json`, JSON.stringify(json, undefined, 2)),
   ]);
 };

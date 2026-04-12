@@ -305,7 +305,7 @@ export class Map {
       );
     }
 
-    return new Blob([data], {
+    return new Blob([new Uint8Array(data)], {
       type: "image/png",
     });
   }
