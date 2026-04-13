@@ -113,7 +113,7 @@ export async function gridToBlob(
 ): Promise<{ blob: Blob; ladders: LadderInfo[] }> {
   const raw = renderGrid(grid);
   const output = postProcess(raw);
-  const blob = await output.convertToBlob({ type: "image/webp" });
+  const blob = await output.convertToBlob({ type: "image/png" });
   const ladders = detectLadders(grid);
   return { blob, ladders };
 }

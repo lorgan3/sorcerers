@@ -206,7 +206,7 @@ function handleConfirm() {
   Promise.all([
     terrainCanvas.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }).then(blobToDataUrl),
     bgCanvas.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }).then(blobToDataUrl),
-    maskCanvas.convertToBlob({ type: "image/webp" }).then(blobToDataUrl),
+    maskCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
   ]).then(([terrain, background, mask]) => {
     props.onConfirm({ terrain, background, mask, width: cropW, height: cropH });
   });
