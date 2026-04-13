@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import Dialog from "../molecules/Dialog.vue";
+import { selectiveAverage, posterize } from "../../util/denoise";
+import { WEBP_QUALITY } from "../../data/map";
 
 const PREVIEW_SCALE = 6;
 
@@ -23,6 +25,7 @@ const scaleX = ref(100);
 const scaleY = ref(100);
 
 const sharpen = ref(false);
+const reducePalette = ref(false);
 const darkenAmount = ref(30);
 
 const maskImg = ref<HTMLImageElement>();
@@ -59,7 +62,7 @@ watch(
 const previewCanvas = ref<HTMLCanvasElement>();
 
 watch(
-  [maskLoaded, aiLoaded, offsetX, offsetY, scaleX, scaleY, previewCanvas],
+  [maskLoaded, aiLoaded, offsetX, offsetY, scaleX, scaleY, darkenAmount, previewCanvas],
   () => {
     const canvas = previewCanvas.value;
     const mi = maskImg.value;
@@ -86,8 +89,8 @@ watch(
       aiH * PREVIEW_SCALE
     );
 
-    // Draw mask outline on top (semi-transparent)
-    ctx.globalAlpha = 0.6;
+    // Draw mask on top — opacity driven by darken amount to emulate final terrain look
+    ctx.globalAlpha = darkenAmount.value / 100;
     ctx.drawImage(mi, 0, 0, mi.width * PREVIEW_SCALE, mi.height * PREVIEW_SCALE);
     ctx.globalAlpha = 1;
   },
@@ -135,6 +138,15 @@ function handleConfirm() {
       px[i + 1] = Math.min(255, Math.max(0, Math.round(px[i + 1] + (px[i + 1] - blurData[i + 1]) * amount)));
       px[i + 2] = Math.min(255, Math.max(0, Math.round(px[i + 2] + (px[i + 2] - blurData[i + 2]) * amount)));
     }
+
+    // Denoise: selective neighborhood average
+    const denoised = selectiveAverage(px, cropW, cropH);
+    aiData.data.set(denoised);
+  }
+
+  if (reducePalette.value) {
+    const posterized = posterize(aiData.data, cropW, cropH);
+    aiData.data.set(posterized);
   }
 
   // Draw cropped mask
@@ -191,9 +203,9 @@ function handleConfirm() {
     });
 
   Promise.all([
-    terrainCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
-    bgCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
-    maskCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
+    terrainCanvas.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }).then(blobToDataUrl),
+    bgCanvas.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }).then(blobToDataUrl),
+    maskCanvas.convertToBlob({ type: "image/webp" }).then(blobToDataUrl),
   ]).then(([terrain, background, mask]) => {
     props.onConfirm({ terrain, background, mask, width: cropW, height: cropH });
   });
@@ -207,40 +219,43 @@ function handleConfirm() {
         <canvas ref="previewCanvas" class="preview" />
       </div>
 
-      <div class="controls">
-        <label class="control">
-          <span>X offset</span>
-          <input type="range" v-model.number="offsetX" :min="-200" :max="200" />
-          <input type="number" v-model.number="offsetX" class="num" />
+      <div class="slider-row">
+        <label class="slider-label">
+          <span class="label">X offset</span>
+          <input type="range" v-model.number="offsetX" :min="-200" :max="200" class="slider" />
+          <span class="slider-value">{{ offsetX }}</span>
         </label>
-        <label class="control">
-          <span>Y offset</span>
-          <input type="range" v-model.number="offsetY" :min="-200" :max="200" />
-          <input type="number" v-model.number="offsetY" class="num" />
+        <label class="slider-label">
+          <span class="label">Y offset</span>
+          <input type="range" v-model.number="offsetY" :min="-200" :max="200" class="slider" />
+          <span class="slider-value">{{ offsetY }}</span>
         </label>
-        <label class="control">
-          <span>X scale</span>
-          <input type="range" v-model.number="scaleX" :min="50" :max="150" />
-          <input type="number" v-model.number="scaleX" class="num" />
-          <span>%</span>
+      </div>
+      <div class="slider-row">
+        <label class="slider-label">
+          <span class="label">X scale</span>
+          <input type="range" v-model.number="scaleX" :min="50" :max="150" class="slider" />
+          <span class="slider-value">{{ scaleX }}%</span>
         </label>
-        <label class="control">
-          <span>Y scale</span>
-          <input type="range" v-model.number="scaleY" :min="50" :max="150" />
-          <input type="number" v-model.number="scaleY" class="num" />
-          <span>%</span>
+        <label class="slider-label">
+          <span class="label">Y scale</span>
+          <input type="range" v-model.number="scaleY" :min="50" :max="150" class="slider" />
+          <span class="slider-value">{{ scaleY }}%</span>
         </label>
       </div>
 
-      <label class="control">
-        <span>Darken</span>
-        <input type="range" v-model.number="darkenAmount" :min="0" :max="80" />
-        <input type="number" v-model.number="darkenAmount" class="num" />
-        <span>%</span>
+      <label class="slider-label">
+        <span class="label">Darken</span>
+        <input type="range" v-model.number="darkenAmount" :min="0" :max="80" class="slider" />
+        <span class="slider-value">{{ darkenAmount }}%</span>
       </label>
-      <label class="control checkbox-control">
+      <label class="checkbox-control">
         <input type="checkbox" v-model="sharpen" />
         <span>Sharpen</span>
+      </label>
+      <label class="checkbox-control">
+        <input type="checkbox" v-model="reducePalette" />
+        <span>Reduce palette</span>
       </label>
 
       <div class="actions">
@@ -260,9 +275,9 @@ function handleConfirm() {
 }
 
 .preview-scroll {
-  max-width: 500px;
-  max-height: 300px;
   overflow: auto;
+  max-width: 600px;
+  max-height: 300px;
   border: 1px solid var(--border-accent-faint);
   border-radius: 4px;
   scrollbar-color: var(--background-dark) transparent;
@@ -274,46 +289,48 @@ function handleConfirm() {
   background: repeating-conic-gradient(#ccc 0% 25%, #eee 0% 50%) 0 0 / 16px 16px;
 }
 
-.controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.slider-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
 }
 
-.control {
+.slider-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: var(--primary);
 
-  span:first-child {
-    min-width: 55px;
+  .label {
+    font-family: Eternal;
+    font-size: 24px;
+    color: var(--primary);
+    min-width: 80px;
   }
 
-  input[type="range"] {
+  .slider {
     flex: 1;
     accent-color: var(--primary);
   }
 
-  .num {
-    width: 50px;
-    padding: 2px 4px;
-    font-size: 12px;
-    background: rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-accent-faint);
-    border-radius: 3px;
-    color: var(--primary);
+  .slider-value {
+    min-width: 36px;
     text-align: right;
+    font-size: 13px;
   }
 }
 
 .checkbox-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
+  font-family: Eternal;
+  font-size: 24px;
+  color: var(--primary);
 
   input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     accent-color: var(--primary);
     cursor: pointer;
   }
