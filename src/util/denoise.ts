@@ -65,7 +65,7 @@ export function posterize(
   const buf = new Float32Array(data.length);
   for (let i = 0; i < data.length; i++) buf[i] = data[i];
 
-  const out = new Uint8ClampedArray(data);
+  const out = new Uint8ClampedArray(data.length);
 
   for (let y = 0; y < height; y++) {
     // Serpentine: alternate scan direction per row to break regular patterns
@@ -76,6 +76,7 @@ export function posterize(
       const dir = leftToRight ? 1 : -1;
       const i = (y * width + x) * 4;
 
+      out[i + 3] = data[i + 3];
       for (let c = 0; c < 3; c++) {
         const old = buf[i + c];
         const quantized = Math.round(old / POSTERIZE_STEP) * POSTERIZE_STEP;

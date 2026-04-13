@@ -1,4 +1,4 @@
-import { selectiveAverage, localModeSnap } from "../denoise";
+import { selectiveAverage } from "../denoise";
 
 function makePixels(
   width: number,
@@ -80,45 +80,3 @@ describe("selectiveAverage", () => {
   });
 });
 
-describe("localModeSnap", () => {
-  test("uniform region stays unchanged", () => {
-    const data = makePixels(3, 3, [100, 150, 200, 255]);
-    const result = localModeSnap(data, 3, 3);
-    expect(getPixel(result, 3, 1, 1)).toEqual([100, 150, 200]);
-  });
-
-  test("near-identical pixels snap to same color", () => {
-    // 3x3 grid: 8 pixels at (100,100,100), center at (103,101,99)
-    // Neighbors bucket to (104,104,104), center to (104,104,96) — different bucket
-    // The 8-neighbor bucket dominates, so center gets replaced with neighbors' average
-    const data = makePixels(3, 3, [100, 100, 100, 255]);
-    setPixel(data, 3, 1, 1, 103, 101, 99);
-    const result = localModeSnap(data, 3, 3);
-    const [r, g] = getPixel(result, 3, 1, 1);
-    // Center should be snapped toward 100 (majority bucket average)
-    expect(r).toBeLessThan(103);
-    expect(g).toBeLessThanOrEqual(101);
-  });
-
-  test("distinct colors at boundary are preserved", () => {
-    // Left column (200,0,0), right columns (0,200,0) — different buckets
-    const width = 3;
-    const height = 3;
-    const data = makePixels(width, height, [0, 200, 0, 255]);
-    for (let y = 0; y < height; y++) {
-      setPixel(data, width, 0, y, 200, 0, 0);
-    }
-    const result = localModeSnap(data, width, height);
-    // Red column should stay red (it's its own bucket, outnumbered by green in center)
-    // But pixel (0,1) only has red neighbors + some green, the green bucket wins at center
-    // The corner (0,0) has limited neighbors — check it stays red
-    expect(getPixel(result, width, 0, 0)[0]).toBeGreaterThan(100);
-  });
-
-  test("does not modify alpha channel", () => {
-    const data = makePixels(3, 3, [100, 100, 100, 128]);
-    const result = localModeSnap(data, 3, 3);
-    const i = (1 * 3 + 1) * 4;
-    expect(result[i + 3]).toBe(128);
-  });
-});

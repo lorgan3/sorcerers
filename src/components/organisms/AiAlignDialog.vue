@@ -126,6 +126,11 @@ function handleConfirm() {
   const aiData = aCtx.getImageData(0, 0, cropW, cropH);
 
   if (sharpen.value) {
+    // Denoise first: smooth noise before sharpening to avoid amplifying it
+    const denoised = selectiveAverage(aiData.data, cropW, cropH);
+    aiData.data.set(denoised);
+    aCtx.putImageData(aiData, 0, 0);
+
     const blurCanvas = new OffscreenCanvas(cropW, cropH);
     const blurCtx = blurCanvas.getContext("2d")!;
     blurCtx.filter = "blur(1px)";
@@ -138,10 +143,6 @@ function handleConfirm() {
       px[i + 1] = Math.min(255, Math.max(0, Math.round(px[i + 1] + (px[i + 1] - blurData[i + 1]) * amount)));
       px[i + 2] = Math.min(255, Math.max(0, Math.round(px[i + 2] + (px[i + 2] - blurData[i + 2]) * amount)));
     }
-
-    // Denoise: selective neighborhood average
-    const denoised = selectiveAverage(px, cropW, cropH);
-    aiData.data.set(denoised);
   }
 
   if (reducePalette.value) {
