@@ -52,6 +52,8 @@ const LADDERS_KEY = "ladders";
 const VERSION = 1;
 const THUMBNAIL_SIZE = 100;
 
+export const WEBP_QUALITY = 0.9;
+
 export class Map {
   public static defaultScale = 6;
 
@@ -179,10 +181,10 @@ export class Map {
 
   async toConfig(forceMask?: boolean): Promise<Config> {
     const [terrain, background, ...layers] = await Promise.all([
-      this._terrain!.convertToBlob({ type: "image/png" }),
-      this._background?.convertToBlob({ type: "image/png" }),
+      this._terrain!.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }),
+      this._background?.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }),
       ...this._layers!.map((layer) =>
-        layer.data.convertToBlob({ type: "image/png" })
+        layer.data.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY })
       ),
     ]);
 
