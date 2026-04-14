@@ -294,8 +294,8 @@ export class Body implements PhysicsBody {
       // Scan for the minimum step-up that clears the obstacle.
       for (let step = 1; step <= MAX_STEP; step++) {
         if (!this.surface.collidesWith(this.mask, this.rX, this.rY - step)) {
-          // Only allow step-up when not moving upward faster than the step height.
-          if (this.yVelocity >= -step) {
+          // Only allow step-up when grounded (walking), not mid-jump.
+          if (this._grounded && this.yVelocity >= -step) {
             this.y = this.rY - step;
             this.rY = this.y;
             this.yVelocity = 0;
