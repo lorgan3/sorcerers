@@ -17,7 +17,7 @@ interface SpriteBlock extends Block {
 }
 
 const extractColors: Record<string, { from: number[]; to: string[] }> = {
-  "atlas/elf": {
+  "characters/elf": {
     from: [
       0x7e292cff, 0x7e4547ff, 0x7a272aff, 0x7a3d3fff, 0x7b282eff, 0x732325ff,
       0x782628ff, 0x722b2dff, 0x772527ff, 0x722c2eff, 0x722225ff, 0x671c1eff,
@@ -29,7 +29,7 @@ const extractColors: Record<string, { from: number[]; to: string[] }> = {
   },
 };
 
-const ATLASES = { atlas: null, backgrounds: null };
+const ATLASES = { characters: 2048, atlas: 1024, backgrounds: null };
 const DIRECTORY = "./public/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?
