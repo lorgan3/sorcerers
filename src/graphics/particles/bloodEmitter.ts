@@ -9,7 +9,7 @@ import { getLevel } from "../../data/context";
 const TINT_MAP: Partial<Record<EntityType, string>> = {
   [EntityType.Character]: "#b91e1e",
   [EntityType.Shield]: "#0690ce",
-  [EntityType.Acid]: "#3fba24",
+  [EntityType.AcidSpray]: "#3fba24",
 };
 
 export class BloodEmitter
