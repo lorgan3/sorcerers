@@ -29,7 +29,7 @@ import { Rock } from "./rock";
 import { Meteor } from "./meteor";
 import { FireWheel } from "./fireWheel";
 import { ChainLightning } from "./chainLightning";
-import { Acid } from "./acid";
+import { AcidSpray } from "./acidSpray";
 import { Teleport } from "./teleport";
 import { MindControl } from "./mindControl";
 import { Doragate } from "./doragate";
@@ -425,18 +425,23 @@ const LIGHTNING = spell(ArcaneCircle, {
   range: "S",
 });
 
-const ACID = spell(PoweredArcaneCircle, {
+const ACID = spell(ApplyCursor, {
   name: "Reamstroha",
-  description: "Create a ball of acid",
+  description: "Spray a stream of acid",
   elements: [Element.Life],
   cost: 18,
   data: {
-    projectile: Acid,
-    xOffset: 9,
-    yOffset: 12,
-    x: 1.5,
-    y: 6.5,
+    applyKeys: [Key.M1],
     turnState: TurnState.Attacked,
+    apply: (character: Character) => {
+      const [cx, cy] = character.body.precisePosition;
+      const rotation = getAngle(
+        cx * 6,
+        cy * 6,
+        ...character.player.controller.getMouse()
+      );
+      AcidSpray.cast(character, rotation);
+    },
   },
   iconId: 11,
   range: "L",
