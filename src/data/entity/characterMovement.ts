@@ -59,8 +59,7 @@ export class CharacterMovement {
       this.character.setSpellSource(null, false);
     }
 
-    const isUp =
-      controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W);
+    const isUp = controller.isKeyDown(Key.Up) || controller.isKeyDown(Key.W);
     if (!this.wings && foundLadder && isUp) {
       this.character.body.mountLadder();
     }
@@ -74,10 +73,7 @@ export class CharacterMovement {
       }
 
       if (isUp) {
-        if (
-          this.character.body.precisePosition[1] + 8 >
-          foundLadder.top
-        ) {
+        if (this.character.body.precisePosition[1] + 8 > foundLadder.top) {
           this.character.body.setLadderDirection(-1);
           this.character.animate("Climb");
         } else {
@@ -97,6 +93,7 @@ export class CharacterMovement {
         this.character.animate("Climb");
       } else {
         this.character.body.setLadderDirection(0);
+        this.character.animate("ClimbIdle");
       }
 
       this.wasUp = isUp;
@@ -133,10 +130,7 @@ export class CharacterMovement {
 
     this.character.updateLookDirection(controller);
 
-    if (
-      controller.isKeyDown(Key.Left) ||
-      controller.isKeyDown(Key.A)
-    ) {
+    if (controller.isKeyDown(Key.Left) || controller.isKeyDown(Key.A)) {
       this.character.body.walk(-1);
       this.character.player.stats.distanceWalked++;
 
@@ -146,10 +140,7 @@ export class CharacterMovement {
       }
     }
 
-    if (
-      controller.isKeyDown(Key.Right) ||
-      controller.isKeyDown(Key.D)
-    ) {
+    if (controller.isKeyDown(Key.Right) || controller.isKeyDown(Key.D)) {
       this.character.body.walk(1);
       this.character.player.stats.distanceWalked++;
 

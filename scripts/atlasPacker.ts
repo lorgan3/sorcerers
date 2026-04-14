@@ -17,7 +17,7 @@ interface SpriteBlock extends Block {
 }
 
 const extractColors: Record<string, { from: number[]; to: string[] }> = {
-  "atlas/elf": {
+  "characters/elf": {
     from: [
       0x7e292cff, 0x7e4547ff, 0x7a272aff, 0x7a3d3fff, 0x7b282eff, 0x732325ff,
       0x782628ff, 0x722b2dff, 0x772527ff, 0x722c2eff, 0x722225ff, 0x671c1eff,
@@ -29,7 +29,7 @@ const extractColors: Record<string, { from: number[]; to: string[] }> = {
   },
 };
 
-const ATLASES = { atlas: 2048, backgrounds: null };
+const ATLASES = { characters: 2048, atlas: 1024, backgrounds: null };
 const DIRECTORY = "./public/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?
@@ -55,14 +55,19 @@ const buildAtlas = async (name: string, resolution: number | null) => {
         const gif = await GifUtil.read(`${DIRECTORY}${folderName}/${file}`);
         loadedFrames.push(
           ...gif.frames.map((frame: any) => {
-            const img = new Jimp({ width: frame.bitmap.width, height: frame.bitmap.height });
+            const img = new Jimp({
+              width: frame.bitmap.width,
+              height: frame.bitmap.height,
+            });
             img.bitmap.data = frame.bitmap.data;
             return img as JimpImage;
-          })
+          }),
         );
       } else {
         try {
-          loadedFrames.push(await Jimp.read(`${DIRECTORY}${folderName}/${file}`) as JimpImage);
+          loadedFrames.push(
+            (await Jimp.read(`${DIRECTORY}${folderName}/${file}`)) as JimpImage,
+          );
         } catch {
           console.log(`Skipping ${file}`);
         }
@@ -129,7 +134,7 @@ const buildAtlas = async (name: string, resolution: number | null) => {
 
     try {
       atlas = JSON.parse(
-        (await fs.readFile(`${DIRECTORY}${name}/${file}`)).toString()
+        (await fs.readFile(`${DIRECTORY}${name}/${file}`)).toString(),
       );
     } catch (error) {
       console.error(`Failed to load atlas for ${file}`, error);
@@ -144,7 +149,9 @@ const buildAtlas = async (name: string, resolution: number | null) => {
     let image: JimpImage;
 
     try {
-      image = await Jimp.read(`${DIRECTORY}${name}/${atlas.meta.image}`) as JimpImage;
+      image = (await Jimp.read(
+        `${DIRECTORY}${name}/${atlas.meta.image}`,
+      )) as JimpImage;
     } catch (error) {
       console.error(`Failed to load image for atlas ${file}`, error);
       process.exit(1);
@@ -165,7 +172,10 @@ const buildAtlas = async (name: string, resolution: number | null) => {
           const name = `${atlasName}_${index++}`;
           animation.push(name);
 
-          const jimp = new Jimp({ width: atlas.frame.w, height: atlas.frame.h }).blit({
+          const jimp = new Jimp({
+            width: atlas.frame.w,
+            height: atlas.frame.h,
+          }).blit({
             src: image,
             x: 0,
             y: 0,
@@ -235,7 +245,7 @@ const buildAtlas = async (name: string, resolution: number | null) => {
         atlas.composite(
           block.overlay,
           block.fit!.x + MARGIN,
-          block.fit!.y + MARGIN
+          block.fit!.y + MARGIN,
         );
       }
 
@@ -264,7 +274,7 @@ const buildAtlas = async (name: string, resolution: number | null) => {
     frames.sort(
       (a, b) =>
         Number(a.split(".")[0].split("_").at(-1)) -
-        Number(b.split(".")[0].split("_").at(-1))
+        Number(b.split(".")[0].split("_").at(-1)),
     );
   }
 

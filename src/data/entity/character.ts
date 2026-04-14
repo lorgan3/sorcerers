@@ -62,6 +62,7 @@ export enum AnimationState {
   ReadIdle = "elf_readIdle",
   ReadDone = "elf_readDone",
   Climb = "elf_climb",
+  ClimbIdle = "elf_climbIdle",
 }
 
 const ANIMATION_CONFIG: Record<
@@ -157,14 +158,20 @@ const ANIMATION_CONFIG: Record<
     speed: -0.15,
   },
   [AnimationState.Climb]: {
-    name: "elf_idle",
+    name: "elf_climb",
     loop: true,
-    speed: 0.1,
+    speed: 0.06,
+    nextState: AnimationState.ClimbIdle,
     continuous: (entity) => {
       ControllableSound.fromEntity(entity, Sound.LadderClimb);
       return 22 + Math.random() * 5;
     },
     duration: CLIMB_DURATION,
+  },
+  [AnimationState.ClimbIdle]: {
+    name: "elf_climb",
+    loop: false,
+    speed: 0,
   },
 };
 
@@ -195,7 +202,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     public readonly player: Player,
     x: number,
     y: number,
-    public readonly characterName: string
+    public readonly characterName: string,
   ) {
     super();
 
@@ -213,17 +220,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
-    getLevel().terrain.characterMask.add(
-      this.body.mask,
-      ...this.body.position
-    );
+    getLevel().terrain.characterMask.add(this.body.mask, ...this.body.position);
 
-    const atlas = AssetsContainer.instance.assets!["atlas"];
+    const atlas = AssetsContainer.instance.assets!["characters"];
 
     this.animator = new Animator<AnimationState>(
       atlas.animations,
       this,
-      `_${COLORS.indexOf(this.player.color)}`
+      `_${COLORS.indexOf(this.player.color)}`,
     )
       .addAnimations(ANIMATION_CONFIG)
       .addAnimation(AnimationState.SpellIdle, {
@@ -231,21 +235,21 @@ export class Character extends Container implements HurtableEntity, Syncable {
         onStart: () => {
           this.particles = getLevel().backgroundParticles.replaceEmitter(
             createBackgroundParticles(this),
-            this.particles
+            this.particles,
           );
           this.foregroundParticles =
             getLevel().particleContainer.replaceEmitter(
               createWandParticles(this),
-              this.foregroundParticles
+              this.foregroundParticles,
             );
         },
         onEnd: () => {
           this.particles = getLevel().backgroundParticles.destroyEmitter(
-            this.particles!
+            this.particles!,
           );
           this.foregroundParticles =
             getLevel().particleContainer.destroyEmitter(
-              this.foregroundParticles!
+              this.foregroundParticles!,
             );
         },
       })
@@ -261,9 +265,9 @@ export class Character extends Container implements HurtableEntity, Syncable {
               Math.floor(cy / 6) - 6,
               direction,
               MELEE_POWER *
-                (0.7 + getManager().getElementValue(Element.Physical) * 0.3)
+                (0.7 + getManager().getElementValue(Element.Physical) * 0.3),
             ),
-            this.player
+            this.player,
           );
 
           this.animator.animate(AnimationState.SpellDone);
@@ -361,7 +365,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
       getLevel().terrain.characterMask.subtract(
         this.body.mask,
-        ...this.body.position
+        ...this.body.position,
       );
 
       if (this.body.tick(dt)) {
@@ -376,11 +380,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
           getLevel().terrain.killbox.collidesWith(
             this.body.mask,
             this.position.x,
-            this.position.y
+            this.position.y,
           )
         ) {
           getServer()?.damage(
-            new GenericDamage(new TargetList().add(this, 999))
+            new GenericDamage(new TargetList().add(this, 999)),
             // this.lastDamageDealer
           );
         }
@@ -388,11 +392,20 @@ export class Character extends Container implements HurtableEntity, Syncable {
 
       getLevel().terrain.characterMask.add(
         this.body.mask,
-        ...this.body.position
+        ...this.body.position,
       );
     }
 
     this.animator.tick(dt);
+
+    // Reset climb default when physics unmounts the ladder
+    if (
+      !this.body.onLadder &&
+      this.animator.animationState === AnimationState.ClimbIdle
+    ) {
+      this.animator.setDefaultAnimation(AnimationState.Idle);
+      this.animator.animate(AnimationState.Idle);
+    }
 
     if (
       !this.body.grounded &&
@@ -412,15 +425,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
   move(x: number, y: number) {
     getLevel().terrain.characterMask.subtract(
       this.body.mask,
-      ...this.body.position
+      ...this.body.position,
     );
 
     this.body.move(x, y);
 
-    getLevel().terrain.characterMask.add(
-      this.body.mask,
-      ...this.body.position
-    );
+    getLevel().terrain.characterMask.add(this.body.mask, ...this.body.position);
   }
 
   control(controller: Controller) {
@@ -444,7 +454,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
   /** Update look direction from controller mouse position. Used by CharacterMovement. */
   updateLookDirection(controller: Controller): void {
     this.lookDirection = Math.sign(
-      controller.getMouse()[0] - this.getCenter()[0]
+      controller.getMouse()[0] - this.getCenter()[0],
     );
     this.sprite.scale.x = 2 * this.lookDirection;
   }
@@ -491,15 +501,12 @@ export class Character extends Container implements HurtableEntity, Syncable {
   deserialize(data: any[]) {
     getLevel().terrain.characterMask.subtract(
       this.body.mask,
-      ...this.body.position
+      ...this.body.position,
     );
 
     this.body.deserialize(data);
 
-    getLevel().terrain.characterMask.add(
-      this.body.mask,
-      ...this.body.position
-    );
+    getLevel().terrain.characterMask.add(this.body.mask, ...this.body.position);
   }
 
   serializeCreate() {
