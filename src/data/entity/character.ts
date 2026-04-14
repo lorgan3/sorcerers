@@ -222,7 +222,7 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.position.set(x * 6, y * 6);
     getLevel().terrain.characterMask.add(this.body.mask, ...this.body.position);
 
-    const atlas = AssetsContainer.instance.assets!["atlas"];
+    const atlas = AssetsContainer.instance.assets!["characters"];
 
     this.animator = new Animator<AnimationState>(
       atlas.animations,

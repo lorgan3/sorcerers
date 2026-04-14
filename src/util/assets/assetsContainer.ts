@@ -15,14 +15,6 @@ export class AssetsContainer {
     AssetsContainer._instance = this;
 
     getAssets().then((assets) => {
-      // Merge the characters atlas into atlas so all code can access
-      // both spritesheets through a single assets["atlas"] key.
-      const characters = assets["characters"];
-      if (characters) {
-        const atlas = assets["atlas"];
-        Object.assign(atlas.textures, characters.textures);
-        Object.assign(atlas.animations, characters.animations);
-      }
       this.assets = assets;
 
       BitmapFont.install({
