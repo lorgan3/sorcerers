@@ -366,11 +366,4 @@ const handleGenerate = () => {
     }
   }
 }
-
-:deep(.image-select) {
-  .placeholder,
-  img {
-    box-sizing: border-box;
-  }
-}
 </style>

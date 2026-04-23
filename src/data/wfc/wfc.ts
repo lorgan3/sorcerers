@@ -439,15 +439,13 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
     ),
   );
 
-  applyEdgeConstraints(grid, edges, width, height);
-
-  // Hard-constrain empty mask cells to empty tiles
   if (densityMask) {
+    // Mask fully controls density; edge sliders are ignored in this mode.
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (!densityMask[y * width + x]) {
           const cell = grid[y][x];
-          const emptyOnly = [...cell].filter((t) => t.id === "empty");
+          const emptyOnly = [...cell].filter((t) => t.density === 0);
           if (emptyOnly.length > 0) {
             cell.clear();
             for (const t of emptyOnly) cell.add(t);
@@ -455,6 +453,8 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
         }
       }
     }
+  } else {
+    applyEdgeConstraints(grid, edges, width, height);
   }
 
   const initQueue: Array<[number, number]> = [];

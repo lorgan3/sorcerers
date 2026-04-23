@@ -140,6 +140,7 @@ function handleDragLeave() {
   .placeholder {
     width: 100%;
     height: 100px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -159,6 +160,7 @@ function handleDragLeave() {
   img {
     width: 100%;
     height: 100px;
+    box-sizing: border-box;
     object-fit: cover;
     border: 1px solid var(--border-accent-faint);
     border-radius: var(--small-radius);

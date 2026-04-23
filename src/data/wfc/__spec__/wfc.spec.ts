@@ -381,5 +381,80 @@ describe("solver with densityMask", () => {
     const emptyCount = result.grid!.flat().filter((t) => t.density === 0).length;
     expect(emptyCount).toBeGreaterThan(8);
   });
+
+  test("mask hard-constraint overrides edge constraints", () => {
+    // Edges would force the bottom row solid; the mask overrides to empty.
+    const width = 4;
+    const height = 4;
+    const mask = new Uint8Array(width * height); // all zeros => all empty
+    const params: WfcParams = {
+      width,
+      height,
+      tiles: testTiles,
+      density: 0.8,
+      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      continuityBonus: 1.5,
+      preventBlockages: false,
+      seed: 42,
+      densityMask: mask,
+    };
+    const result = solve(params);
+    expect(result.success).toBe(true);
+    for (const tile of result.grid![height - 1]) {
+      expect(tile.density).toBe(0);
+    }
+  });
+
+  test("intermediate mask values bias toward higher-density tiles", () => {
+    // Identical seed/edges; only the mask differs. A high-density mask should
+    // produce more solid tiles than a low-density mask.
+    const baseParams: Omit<WfcParams, "densityMask"> = {
+      width: 6,
+      height: 6,
+      tiles: testTiles,
+      density: 0.5,
+      edges: { top: 0, bottom: 0, left: 0, right: 0 },
+      continuityBonus: 1.5,
+      preventBlockages: false,
+      seed: 7,
+    };
+    const lowMask = new Uint8Array(36).fill(64); // ~25% density
+    const highMask = new Uint8Array(36).fill(220); // ~86% density
+
+    const lowResult = solve({ ...baseParams, densityMask: lowMask });
+    const highResult = solve({ ...baseParams, densityMask: highMask });
+    expect(lowResult.success).toBe(true);
+    expect(highResult.success).toBe(true);
+
+    const avg = (grid: WfcTile[][]) =>
+      grid.flat().reduce((s, t) => s + t.density, 0) / grid.flat().length;
+    expect(avg(highResult.grid!)).toBeGreaterThan(avg(lowResult.grid!));
+  });
+
+  test("hard-constraint matches any density-zero tile, not just id 'empty'", () => {
+    // Same shape as testTiles but the empty tile is renamed. The solver must
+    // still hard-constrain mask-zero cells to the density-zero tile.
+    const renamedTiles: WfcTile[] = testTiles.map((t) =>
+      t.id === "empty" ? { ...t, id: "void" } : t,
+    );
+    const mask = new Uint8Array(16); // all zeros
+    const params: WfcParams = {
+      width: 4,
+      height: 4,
+      tiles: renamedTiles,
+      density: 0.8,
+      edges: { top: 0, bottom: 0, left: 0, right: 0 },
+      continuityBonus: 1.5,
+      preventBlockages: false,
+      seed: 42,
+      densityMask: mask,
+    };
+    const result = solve(params);
+    expect(result.success).toBe(true);
+    for (const tile of result.grid!.flat()) {
+      expect(tile.density).toBe(0);
+      expect(tile.id).toBe("void");
+    }
+  });
 });
 
