@@ -1,8 +1,9 @@
 <!-- src/components/organisms/WfcDialog.vue -->
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import Dialog from "../molecules/Dialog.vue";
 import Input from "../atoms/Input.vue";
+import ImageInput from "../molecules/ImageInput.vue";
 import { TILE_SIZE_PX } from "../../data/wfc/tiles";
 import type { LadderInfo } from "../../data/wfc/postProcess";
 import WfcWorker from "../../data/wfc/wfc.worker?worker";
@@ -17,6 +18,9 @@ export interface WfcSettings {
   edgeRight: number;
   continuityBonus: number;
   preventBlockages: boolean;
+  densityMode: "edges" | "image";
+  densityMask: Uint8Array | null;
+  densityImageData: string;
 }
 
 const { onGenerate, onClose, settings } = defineProps<{
@@ -27,6 +31,45 @@ const { onGenerate, onClose, settings } = defineProps<{
 
 const generating = ref(false);
 const error = ref("");
+
+function processImageToMask() {
+  if (!settings.densityImageData || settings.densityMode !== "image") {
+    settings.densityMask = null;
+    return;
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = settings.width;
+    canvas.height = settings.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, settings.width, settings.height);
+
+    const imageData = ctx.getImageData(0, 0, settings.width, settings.height);
+    const mask = new Uint8Array(settings.width * settings.height);
+    for (let i = 0; i < mask.length; i++) {
+      const r = imageData.data[i * 4];
+      const g = imageData.data[i * 4 + 1];
+      const b = imageData.data[i * 4 + 2];
+      const a = imageData.data[i * 4 + 3];
+      // Darkness × opacity: white/transparent = 0, black opaque = 255
+      const brightness = (r + g + b) / 3;
+      mask[i] = Math.round((1 - brightness / 255) * (a / 255) * 255);
+    }
+    settings.densityMask = mask;
+  };
+  img.src = settings.densityImageData;
+}
+
+function handleImageAdd() {
+  processImageToMask();
+}
+
+watch(
+  () => [settings.width, settings.height],
+  () => processImageToMask(),
+);
 
 const handleGenerate = () => {
   generating.value = true;
@@ -45,6 +88,9 @@ const handleGenerate = () => {
     },
     continuityBonus: settings.continuityBonus,
     preventBlockages: settings.preventBlockages,
+    ...(settings.densityMode === "image" && settings.densityMask
+      ? { densityMask: settings.densityMask }
+      : {}),
   });
 
   worker.onmessage = (e: MessageEvent) => {
@@ -79,18 +125,6 @@ const handleGenerate = () => {
       </div>
 
       <label class="slider-label">
-        <span class="label">Density</span>
-        <input
-          type="range"
-          v-model.number="settings.density"
-          min="0"
-          max="100"
-          class="slider"
-        />
-        <span class="slider-value">{{ settings.density }}%</span>
-      </label>
-
-      <label class="slider-label">
         <span class="label">Continuity</span>
         <input
           type="range"
@@ -108,60 +142,98 @@ const handleGenerate = () => {
         <input type="checkbox" v-model="settings.preventBlockages" class="checkbox" />
       </label>
 
-      <div class="edges-section">
-        <span class="label">Edges</span>
-        <div class="edges-grid">
-          <label class="slider-label">
-            <span class="edge-label">Top</span>
-            <input
-              type="range"
-              v-model.number="settings.edgeTop"
-              min="0"
-              max="100"
-              class="slider"
-            />
-            <span class="slider-value">{{ settings.edgeTop }}%</span>
-          </label>
-          <label class="slider-label">
-            <span class="edge-label">Bottom</span>
-            <input
-              type="range"
-              v-model.number="settings.edgeBottom"
-              min="0"
-              max="100"
-              class="slider"
-            />
-            <span class="slider-value">{{ settings.edgeBottom }}%</span>
-          </label>
-          <label class="slider-label">
-            <span class="edge-label">Left</span>
-            <input
-              type="range"
-              v-model.number="settings.edgeLeft"
-              min="0"
-              max="100"
-              class="slider"
-            />
-            <span class="slider-value">{{ settings.edgeLeft }}%</span>
-          </label>
-          <label class="slider-label">
-            <span class="edge-label">Right</span>
-            <input
-              type="range"
-              v-model.number="settings.edgeRight"
-              min="0"
-              max="100"
-              class="slider"
-            />
-            <span class="slider-value">{{ settings.edgeRight }}%</span>
-          </label>
+      <div class="density-section">
+        <span class="section-title">Density</span>
+        <div class="density-mode-toggle">
+          <button
+            :class="['mode-btn', { active: settings.densityMode === 'edges' }]"
+            @click="settings.densityMode = 'edges'"
+          >
+            Sliders
+          </button>
+          <button
+            :class="['mode-btn', { active: settings.densityMode === 'image' }]"
+            @click="settings.densityMode = 'image'"
+          >
+            Mask
+          </button>
         </div>
+
+        <template v-if="settings.densityMode === 'edges'">
+          <label class="slider-label">
+            <span class="edge-label">Global</span>
+            <input
+              type="range"
+              v-model.number="settings.density"
+              min="0"
+              max="100"
+              class="slider"
+            />
+            <span class="slider-value">{{ settings.density }}%</span>
+          </label>
+          <div class="edges-grid">
+            <label class="slider-label">
+              <span class="edge-label">Top</span>
+              <input
+                type="range"
+                v-model.number="settings.edgeTop"
+                min="0"
+                max="100"
+                class="slider"
+              />
+              <span class="slider-value">{{ settings.edgeTop }}%</span>
+            </label>
+            <label class="slider-label">
+              <span class="edge-label">Bottom</span>
+              <input
+                type="range"
+                v-model.number="settings.edgeBottom"
+                min="0"
+                max="100"
+                class="slider"
+              />
+              <span class="slider-value">{{ settings.edgeBottom }}%</span>
+            </label>
+            <label class="slider-label">
+              <span class="edge-label">Left</span>
+              <input
+                type="range"
+                v-model.number="settings.edgeLeft"
+                min="0"
+                max="100"
+                class="slider"
+              />
+              <span class="slider-value">{{ settings.edgeLeft }}%</span>
+            </label>
+            <label class="slider-label">
+              <span class="edge-label">Right</span>
+              <input
+                type="range"
+                v-model.number="settings.edgeRight"
+                min="0"
+                max="100"
+                class="slider"
+              />
+              <span class="slider-value">{{ settings.edgeRight }}%</span>
+            </label>
+          </div>
+        </template>
+
+        <ImageInput
+          v-else
+          name="Density mask"
+          v-model="settings.densityImageData"
+          :onAdd="handleImageAdd"
+          clearable
+          hideTitle
+          :onClear="() => (settings.densityMask = null)"
+        />
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
-        <button class="primary" @click="handleGenerate" :disabled="generating">
+        <button class="primary" @click="handleGenerate" :disabled="generating || (settings.densityMode === 'image' && !settings.densityImageData)">
           <span v-if="generating" class="spinner-row">
             <span class="spinner">&#x07F7;</span>
             Generating...
@@ -232,16 +304,16 @@ const handleGenerate = () => {
   }
 }
 
-.edges-section {
+.density-section {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
 
-  > .label {
-    font-family: Eternal;
-    font-size: 24px;
-    color: var(--primary);
-  }
+.section-title {
+  font-family: Eternal;
+  font-size: 24px;
+  color: var(--primary);
 }
 
 .edges-grid {
@@ -266,5 +338,32 @@ const handleGenerate = () => {
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+.density-mode-toggle {
+  display: flex;
+  gap: 4px;
+
+  .mode-btn {
+    flex: 1;
+    padding: 6px 12px;
+    font-family: Eternal;
+    font-size: 20px;
+    color: var(--primary);
+    background: transparent;
+    border: 1px solid var(--primary);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+
+    &.active {
+      opacity: 1;
+      background: rgba(var(--primary-rgb), 0.15);
+    }
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }
 </style>

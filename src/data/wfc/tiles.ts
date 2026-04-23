@@ -209,6 +209,10 @@ import doubleRampStepFloorImg from "./tiles/doubleRampStepFloor.png";
 import emptyRampEntryImg from "./tiles/emptyRampEntry.png";
 import floorNarrowImg from "./tiles/floorNarrow.png";
 import highDipImg from "./tiles/highDip.png";
+import halfLadderImg from "./tiles/halfLadder.png";
+import doubleTubeBendImg from "./tiles/doubleTubeBend.png";
+import tubeBendImg from "./tiles/tubeBend.png";
+import tubeImg from "./tiles/tube.png";
 
 const BASE_TILES: WfcTile[] = [
   {
@@ -727,6 +731,56 @@ const BASE_TILES: WfcTile[] = [
     weight: 1,
     density: 0.468,
     avoidSockets: { bottom: [Socket.EMPTY] },
+  },
+  {
+    id: "halfLadder",
+    imagePath: halfLadderImg,
+    sockets: {
+      top: Socket.LADDER,
+      right: Socket.DOUBLE_SURFACE,
+      bottom: Socket.SOLID,
+      left: Socket.SOLID,
+    },
+    weight: 3,
+    density: 0.35,
+    avoidEdge: ["top"],
+  },
+  {
+    id: "doubleTubeBend",
+    imagePath: doubleTubeBendImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SOLID,
+      bottom: Socket.SOLID,
+      left: Socket.DOUBLE_SURFACE,
+    },
+    weight: 1,
+    density: 0.376,
+  },
+  {
+    id: "tubeBend",
+    imagePath: tubeBendImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SOLID,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_LOW,
+    },
+    weight: 1,
+    density: 0.46,
+    avoidSockets: { left: [Socket.SURFACE_HIGH] },
+  },
+  {
+    id: "tube",
+    imagePath: tubeImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SOLID,
+      bottom: Socket.EMPTY,
+      left: Socket.SOLID,
+    },
+    weight: 2,
+    density: 0.469,
   },
 ];
 

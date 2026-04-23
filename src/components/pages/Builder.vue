@@ -86,6 +86,9 @@ const wfcSettings = ref<WfcSettings>({
   edgeRight: 0,
   continuityBonus: 2,
   preventBlockages: true,
+  densityMode: "edges",
+  densityMask: null,
+  densityImageData: "",
 });
 
 const wfcLadders = ref<LadderInfo[]>([]);
@@ -111,6 +114,9 @@ const generateWfc = () => {
     },
     continuityBonus: s.continuityBonus,
     preventBlockages: s.preventBlockages,
+    ...(s.densityMode === "image" && s.densityMask
+      ? { densityMask: s.densityMask }
+      : {}),
   });
   worker.onmessage = (e: MessageEvent) => {
     wfcGenerating.value = false;
