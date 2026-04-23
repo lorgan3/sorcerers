@@ -4,6 +4,8 @@ atlas.json
 atlas.png
 backgrounds.json
 backgrounds.png
+characters.json
+characters.png
 dist
 public/old
 public/sfx/original
