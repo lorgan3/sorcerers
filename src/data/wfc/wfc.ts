@@ -9,6 +9,7 @@ export interface WfcParams {
   continuityBonus: number;
   preventBlockages: boolean;
   seed?: number;
+  densityMask?: Uint8Array;
 }
 
 export interface WfcResult {
@@ -423,7 +424,14 @@ function enforceAllMandatory(
 }
 
 function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
-  const { width, height, tiles, density, edges, continuityBonus, preventBlockages } = params;
+  const { width, height, tiles, density, edges, continuityBonus, preventBlockages, densityMask } = params;
+
+  const getDensity = (x: number, y: number): number => {
+    if (densityMask) {
+      return densityMask[y * width + x] / 255;
+    }
+    return cellDensity(x, y, width, height, density, edges);
+  };
 
   const grid: Set<WfcTile>[][] = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) =>
@@ -432,6 +440,22 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
   );
 
   applyEdgeConstraints(grid, edges, width, height);
+
+  // Hard-constrain empty mask cells to empty tiles
+  if (densityMask) {
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (!densityMask[y * width + x]) {
+          const cell = grid[y][x];
+          const emptyOnly = [...cell].filter((t) => t.id === "empty");
+          if (emptyOnly.length > 0) {
+            cell.clear();
+            for (const t of emptyOnly) cell.add(t);
+          }
+        }
+      }
+    }
+  }
 
   const initQueue: Array<[number, number]> = [];
   for (let y = 0; y < height; y++) {
@@ -467,7 +491,7 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
 
     const [cx, cy] = candidates[Math.floor(rng() * candidates.length)];
     const options = [...grid[cy][cx]];
-    const localDensity = cellDensity(cx, cy, width, height, density, edges);
+    const localDensity = getDensity(cx, cy);
 
     const snapshot: Snapshot = {
       grid: cloneGrid(grid),
@@ -525,7 +549,7 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
 
       if (remaining.length > 0) {
         grid[by][bx] = new Set(remaining);
-        const retryDensity = cellDensity(bx, by, width, height, density, edges);
+        const retryDensity = getDensity(bx, by);
         const retryChosen = pickWeighted(
           remaining,
           retryDensity,

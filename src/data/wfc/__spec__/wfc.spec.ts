@@ -337,3 +337,49 @@ describe("wfc solver", () => {
     expect(result.success).toBe(true);
   });
 });
+
+describe("solver with densityMask", () => {
+  test("solves a 4x4 grid with density mask", () => {
+    const mask = new Uint8Array([
+        0,   0, 0, 0,
+        0,   0, 0, 0,
+      255, 255, 0, 0,
+      255, 255, 0, 0,
+    ]);
+    const params: WfcParams = {
+      width: 4,
+      height: 4,
+      tiles: testTiles,
+      density: 0.8,
+      edges: { top: 0, bottom: 0, left: 0, right: 0 },
+      continuityBonus: 1.5,
+      preventBlockages: false,
+      seed: 42,
+      densityMask: mask,
+    };
+    const result = solve(params);
+    expect(result.success).toBe(true);
+    expect(result.grid!.length).toBe(4);
+    expect(result.grid![0].length).toBe(4);
+  });
+
+  test("fully empty mask produces mostly empty tiles", () => {
+    const mask = new Uint8Array(16); // all zeros
+    const params: WfcParams = {
+      width: 4,
+      height: 4,
+      tiles: testTiles,
+      density: 0.8,
+      edges: { top: 0, bottom: 0, left: 0, right: 0 },
+      continuityBonus: 1.5,
+      preventBlockages: false,
+      seed: 42,
+      densityMask: mask,
+    };
+    const result = solve(params);
+    expect(result.success).toBe(true);
+    const emptyCount = result.grid!.flat().filter((t) => t.density === 0).length;
+    expect(emptyCount).toBeGreaterThan(8);
+  });
+});
+

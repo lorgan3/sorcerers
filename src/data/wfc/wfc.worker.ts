@@ -9,6 +9,7 @@ export interface WfcWorkerInput {
   edges: { top: number; bottom: number; left: number; right: number };
   continuityBonus: number;
   preventBlockages: boolean;
+  densityMask?: Uint8Array;
 }
 
 export interface WfcWorkerOutput {
@@ -40,11 +41,11 @@ async function loadTileImages(tiles: WfcTile[]): Promise<WfcTile[]> {
 }
 
 self.onmessage = async (e: MessageEvent<WfcWorkerInput>) => {
-  const { width, height, density, edges, continuityBonus, preventBlockages } = e.data;
+  const { width, height, density, edges, continuityBonus, preventBlockages, densityMask } = e.data;
 
   const tiles = await loadTileImages(TILES);
 
-  const result = solve({ width, height, tiles, density, edges, continuityBonus, preventBlockages });
+  const result = solve({ width, height, tiles, density, edges, continuityBonus, preventBlockages, densityMask });
 
   if (!result.success || !result.grid) {
     self.postMessage({
