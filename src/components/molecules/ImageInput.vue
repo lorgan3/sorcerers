@@ -13,6 +13,7 @@ const {
   onClear,
   onToggleVisibility,
   defaultHidden,
+  hideTitle,
 } = defineProps<{
   name: string;
   modelValue: string;
@@ -21,6 +22,7 @@ const {
   clearable?: boolean;
   onToggleVisibility?: (visible: boolean) => void;
   defaultHidden?: boolean;
+  hideTitle?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -96,7 +98,7 @@ function handleDragLeave() {
 
 <template>
   <div>
-    <h3 class="image-select-title">
+    <h3 v-if="!hideTitle" class="image-select-title">
       {{ name }}
       <span class="image-select-buttons" v-if="modelValue">
         <IconButton
