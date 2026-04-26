@@ -213,6 +213,8 @@ import halfLadderImg from "./tiles/halfLadder.png";
 import doubleTubeBendImg from "./tiles/doubleTubeBend.png";
 import tubeBendImg from "./tiles/tubeBend.png";
 import tubeImg from "./tiles/tube.png";
+import ceilingRampImg from "./tiles/ceilingRamp.png";
+import halfCeilingRampImg from "./tiles/halfCeilingRamp.png";
 
 const BASE_TILES: WfcTile[] = [
   {
@@ -781,6 +783,64 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 2,
     density: 0.469,
+  },
+  {
+    id: "ceilingRamp",
+    imagePath: ceilingRampImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.SOLID,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 1,
+    density: 0.506,
+    avoidSockets: {
+      top: [
+        Socket.EMPTY,
+        Socket.SURFACE_LOW,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+        Socket.LADDER,
+      ],
+      right: [
+        Socket.EMPTY,
+        Socket.SURFACE_LOW,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+        Socket.LADDER,
+      ],
+    },
+    mandatoryNeighbors: { left: ["empty"] },
+  },
+  {
+    id: "halfCeilingRamp",
+    imagePath: halfCeilingRampImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.SOLID,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 1,
+    density: 0.2,
+    avoidSockets: {
+      top: [
+        Socket.EMPTY,
+        Socket.SURFACE_LOW,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+        Socket.LADDER,
+      ],
+      right: [
+        Socket.EMPTY,
+        Socket.SURFACE_LOW,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+        Socket.LADDER,
+      ],
+    },
+    mandatoryNeighbors: { left: ["empty"] },
   },
 ];
 
