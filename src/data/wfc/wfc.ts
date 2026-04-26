@@ -163,6 +163,10 @@ function neighborMultiplier(
       preventBlockages,
     );
     multiplier *= Math.max(m, 0.01);
+
+    if (tile.id === nTile.id && tile.id !== "solid" && tile.id !== "empty") {
+      multiplier *= 0.3;
+    }
   }
 
   return multiplier;
