@@ -530,6 +530,11 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
       !enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages, changedCells);
 
     if (!contradiction) {
+      // Mark `chosen` as explored at this decision point. If a deeper failure
+      // pops back to this snapshot, we'll try a different tile — never the
+      // same one — which prevents the backtrack from re-entering an identical
+      // path in a loop.
+      snapshot.excludedTiles.add(chosen.id);
       stack.push(snapshot);
       continue;
     }
@@ -579,6 +584,9 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
           enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages, changedCells);
 
         if (retryOk) {
+          // Same reason as the outer push: record the explored value before
+          // pushing so a later pop will try a different option.
+          current.excludedTiles.add(retryChosen.id);
           stack.push(current);
           resolved = true;
         } else {
