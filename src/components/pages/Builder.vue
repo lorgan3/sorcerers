@@ -94,6 +94,7 @@ const wfcSettings = ref<WfcSettings>({
 const wfcLadders = ref<LadderInfo[]>([]);
 
 const wfcGenerating = ref(false);
+const wfcInitialError = ref<string>("");
 let activeWorker: Worker | null = null;
 
 const generateWfc = () => {
@@ -102,6 +103,17 @@ const generateWfc = () => {
   const s = wfcSettings.value;
   const worker = new WfcWorker();
   activeWorker = worker;
+
+  const finish = (errMessage?: string) => {
+    wfcGenerating.value = false;
+    activeWorker = null;
+    worker.terminate();
+    if (errMessage) {
+      wfcInitialError.value = errMessage;
+      showWfcDialog.value = true;
+    }
+  };
+
   worker.postMessage({
     width: s.width,
     height: s.height,
@@ -119,18 +131,15 @@ const generateWfc = () => {
       : {}),
   });
   worker.onmessage = (e: MessageEvent) => {
-    wfcGenerating.value = false;
-    activeWorker = null;
-    worker.terminate();
+    if (e.data.type === "progress") return;
     if (e.data.success && e.data.mask) {
+      finish();
       handleWfcGenerated(e.data.mask, e.data.ladders ?? []);
+    } else {
+      finish(e.data.error ?? "Generation failed.");
     }
   };
-  worker.onerror = () => {
-    wfcGenerating.value = false;
-    activeWorker = null;
-    worker.terminate();
-  };
+  worker.onerror = () => finish("An unexpected error occurred.");
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -346,7 +355,7 @@ const handleBBoxChange = (newBBox: BBox) => {
           <IconButton
             v-else
             title="Generate wallmask"
-            :onClick="() => (showWfcDialog = true)"
+            :onClick="() => { wfcInitialError = ''; showWfcDialog = true; }"
             :icon="dice"
           />
           <IconButton
@@ -630,8 +639,9 @@ const handleBBoxChange = (newBBox: BBox) => {
     <WfcDialog
       v-if="showWfcDialog"
       :settings="wfcSettings"
+      :initialError="wfcInitialError"
       :onGenerate="handleWfcGenerated"
-      :onClose="() => (showWfcDialog = false)"
+      :onClose="() => { showWfcDialog = false; wfcInitialError = ''; }"
     />
     <AiAlignDialog
       v-if="showAiAlign"

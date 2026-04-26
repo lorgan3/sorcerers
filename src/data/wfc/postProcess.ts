@@ -88,14 +88,14 @@ export function postProcess(canvas: OffscreenCanvas): OffscreenCanvas {
   const smoothed = new OffscreenCanvas(width, height);
   const ctx = smoothed.getContext("2d")!;
 
-  ctx.filter = "blur(2px)";
+  ctx.filter = "blur(4px)";
   ctx.drawImage(canvas, 0, 0);
 
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {
     const alpha = data[i + 3];
-    const solid = alpha > 128;
+    const solid = alpha > 64;
     data[i] = 0;
     data[i + 1] = 0;
     data[i + 2] = 0;

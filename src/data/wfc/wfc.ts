@@ -10,12 +10,18 @@ export interface WfcParams {
   preventBlockages: boolean;
   seed?: number;
   densityMask?: Uint8Array;
+  /** Per-attempt wall-clock budget. Returns null if exceeded. */
+  maxTimeMs?: number;
 }
 
 export interface WfcResult {
   success: boolean;
   grid: WfcTile[][] | null;
 }
+
+/** Distinguishes "solver gave up because no solution" vs "solver ran out of time". */
+export const SOLVE_TIMEOUT = Symbol("wfc.timeout");
+export type SolveOnceResult = WfcTile[][] | null | typeof SOLVE_TIMEOUT;
 
 const OPPOSITE: Record<Direction, Direction> = {
   top: "bottom",
@@ -32,9 +38,9 @@ const NEIGHBORS: Array<{ dx: number; dy: number; dir: Direction }> = [
 ];
 
 const MAX_BACKTRACK_DEPTH = 200;
-const MAX_RETRIES = 10;
+export const MAX_RETRIES = 10;
 
-function createRng(seed: number): () => number {
+export function createRng(seed: number): () => number {
   let s = seed | 0;
   return () => {
     s = (s + 0x6d2b79f5) | 0;
@@ -163,6 +169,10 @@ function neighborMultiplier(
       preventBlockages,
     );
     multiplier *= Math.max(m, 0.01);
+
+    if (tile.id === nTile.id && tile.id !== "solid" && tile.id !== "empty") {
+      multiplier *= 0.3;
+    }
   }
 
   return multiplier;
@@ -423,8 +433,11 @@ function enforceAllMandatory(
   return true;
 }
 
-function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
-  const { width, height, tiles, density, edges, continuityBonus, preventBlockages, densityMask } = params;
+export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult {
+  const { width, height, tiles, density, edges, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
+  const startTime = maxTimeMs !== undefined ? performance.now() : 0;
+  const isOutOfTime = () =>
+    maxTimeMs !== undefined && performance.now() - startTime > maxTimeMs;
 
   const getDensity = (x: number, y: number): number => {
     if (densityMask) {
@@ -471,6 +484,7 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
   const stack: Snapshot[] = [];
 
   while (true) {
+    if (isOutOfTime()) return SOLVE_TIMEOUT;
     let minEntropy = Infinity;
     let candidates: Array<[number, number]> = [];
 
@@ -530,6 +544,11 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
       !enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages, changedCells);
 
     if (!contradiction) {
+      // Mark `chosen` as explored at this decision point. If a deeper failure
+      // pops back to this snapshot, we'll try a different tile — never the
+      // same one — which prevents the backtrack from re-entering an identical
+      // path in a loop.
+      snapshot.excludedTiles.add(chosen.id);
       stack.push(snapshot);
       continue;
     }
@@ -540,6 +559,7 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
     let resolved = false;
 
     while (!resolved) {
+      if (isOutOfTime()) return SOLVE_TIMEOUT;
       restoreGrid(grid, current.grid, height, width);
 
       const [bx, by] = current.cellIndex;
@@ -579,6 +599,9 @@ function solveOnce(params: WfcParams, rng: () => number): WfcTile[][] | null {
           enforceAllMandatory(grid, width, height, continuityBonus, preventBlockages, changedCells);
 
         if (retryOk) {
+          // Same reason as the outer push: record the explored value before
+          // pushing so a later pop will try a different option.
+          current.excludedTiles.add(retryChosen.id);
           stack.push(current);
           resolved = true;
         } else {
@@ -606,9 +629,9 @@ export function solve(params: WfcParams): WfcResult {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const seed = (params.seed ?? Date.now()) + attempt;
     const rng = createRng(seed);
-    const grid = solveOnce(params, rng);
-    if (grid) {
-      return { success: true, grid };
+    const result = solveOnce(params, rng);
+    if (result && result !== SOLVE_TIMEOUT) {
+      return { success: true, grid: result };
     }
   }
   return { success: false, grid: null };

@@ -23,14 +23,15 @@ export interface WfcSettings {
   densityImageData: string;
 }
 
-const { onGenerate, onClose, settings } = defineProps<{
+const { onGenerate, onClose, settings, initialError } = defineProps<{
   onGenerate: (maskData: string, ladders: LadderInfo[]) => void;
   onClose: () => void;
   settings: WfcSettings;
+  initialError?: string;
 }>();
 
 const generating = ref(false);
-const error = ref("");
+const error = ref(initialError ?? "");
 
 function processImageToMask() {
   if (!settings.densityImageData || settings.densityMode !== "image") {
@@ -76,6 +77,13 @@ const handleGenerate = () => {
   error.value = "";
 
   const worker = new WfcWorker();
+
+  const finish = (errMessage?: string) => {
+    generating.value = false;
+    worker.terminate();
+    if (errMessage) error.value = errMessage;
+  };
+
   worker.postMessage({
     width: settings.width,
     height: settings.height,
@@ -94,21 +102,16 @@ const handleGenerate = () => {
   });
 
   worker.onmessage = (e: MessageEvent) => {
-    generating.value = false;
-    worker.terminate();
-
+    if (e.data.type === "progress") return;
     if (e.data.success && e.data.mask) {
+      finish();
       onGenerate(e.data.mask, e.data.ladders ?? []);
     } else {
-      error.value = e.data.error ?? "Generation failed.";
+      finish(e.data.error ?? "Generation failed.");
     }
   };
 
-  worker.onerror = () => {
-    generating.value = false;
-    error.value = "An unexpected error occurred.";
-    worker.terminate();
-  };
+  worker.onerror = () => finish("An unexpected error occurred.");
 };
 </script>
 
