@@ -9,8 +9,8 @@ export class GenericDamage implements DamageSource {
 
   constructor(public targets: TargetList) {}
 
-  damage() {
-    this.targets.damage(this);
+  damage(skipForce?: boolean) {
+    this.targets.damage(this, undefined, skipForce);
   }
 
   serialize() {

@@ -8,7 +8,7 @@ export interface DamageSource {
 
   cause: Player | null;
 
-  damage(): void;
+  damage(skipForce?: boolean): void;
   serialize(): any;
   getTargets(): TargetList;
 }

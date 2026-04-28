@@ -49,7 +49,7 @@ describe("TargetList", () => {
       list.add(entity, 25);
       list.damage(source, entityMap);
 
-      expect(entity.damage).toHaveBeenCalledWith(source, 25, undefined);
+      expect(entity.damage).toHaveBeenCalledWith(source, 25, undefined, undefined);
     });
 
     it("applies damage with force when provided", () => {
@@ -62,7 +62,7 @@ describe("TargetList", () => {
       list.add(entity, 15, force);
       list.damage(source, entityMap);
 
-      expect(entity.damage).toHaveBeenCalledWith(source, 15, force);
+      expect(entity.damage).toHaveBeenCalledWith(source, 15, force, undefined);
     });
 
     it("skips entities not found in the entity map", () => {
@@ -91,8 +91,8 @@ describe("TargetList", () => {
       list.add(entity2, 20);
       list.damage(source, entityMap);
 
-      expect(entity1.damage).toHaveBeenCalledWith(source, 10, undefined);
-      expect(entity2.damage).toHaveBeenCalledWith(source, 20, undefined);
+      expect(entity1.damage).toHaveBeenCalledWith(source, 10, undefined, undefined);
+      expect(entity2.damage).toHaveBeenCalledWith(source, 20, undefined, undefined);
     });
   });
 

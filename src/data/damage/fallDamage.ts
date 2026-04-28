@@ -109,7 +109,7 @@ export class FallDamage implements DamageSource {
     public targets?: TargetList
   ) {}
 
-  damage() {
+  damage(skipForce?: boolean) {
     const data = SHAPES[this.shape];
 
     if (data.draw) {
@@ -120,7 +120,7 @@ export class FallDamage implements DamageSource {
       data.subtract.call(this, ctx)
     );
 
-    this.getTargets().damage(this);
+    this.getTargets().damage(this, undefined, skipForce);
   }
 
   getTargets() {
