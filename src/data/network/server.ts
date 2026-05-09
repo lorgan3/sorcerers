@@ -188,7 +188,7 @@ export class Server extends Manager {
     }
 
     let damageSource: DamageSource | undefined;
-    while ((damageSource = this.damageQueue.pop())) {
+    while ((damageSource = this.damageQueue.shift())) {
       this.damage(damageSource);
     }
 
