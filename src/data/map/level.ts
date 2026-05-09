@@ -275,11 +275,14 @@ export class Level {
       }
 
       if ("priority" in object) {
+        // Stable removal: joining clients rebuild syncables in insertion
+        // order (SyncPlayers + Spawn handshake), so the server must keep
+        // insertion order too. Swap-and-pop would silently desync the
+        // index-keyed EntityUpdate stream.
         const arr = this.syncables[object.priority];
         const index = arr.indexOf(object);
         if (index !== -1) {
-          arr[index] = arr[arr.length - 1];
-          arr.pop();
+          arr.splice(index, 1);
         }
       }
     }
