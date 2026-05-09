@@ -78,15 +78,19 @@ export class CharacterHealth {
     }
   }
 
-  damage(source: DamageSource, damage: number, force?: Force): void {
-    if (
+  isInvulnerable(): boolean {
+    return (
       this.lastDamageTime !== -1 &&
       this.character.time <=
         this.lastDamageTime + CharacterHealth.invulnerableTime
-    ) {
-      return;
-    }
+    );
+  }
 
+  damage(source: DamageSource, damage: number, force?: Force): void {
+    // Invulnerability filtering is applied server-side in Server.damage so
+    // that all peers receive a target list that already excludes invulnerable
+    // characters. Filtering here too would let server and client disagree
+    // about which damages "stuck" depending on local character.time.
     this.character.player.stats.registerDamage(
       source,
       this.character,

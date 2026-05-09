@@ -371,11 +371,19 @@ export class Server extends Manager {
   }
 
   damage(damageSource: DamageSource, cause?: Player | null) {
-    if (
-      damageSource
-        .getTargets()
-        .hasEntity(this.getActiveCharacter()!)
-    ) {
+    const targets = damageSource.getTargets();
+
+    // Server is authoritative on invulnerability so the broadcast carries
+    // the same target list that was applied here. Filtering on each peer
+    // independently desynced HP when adjacent damages straddled the 1-tick
+    // window differently across peers.
+    const entityMap = getLevel().entityMap;
+    targets.filter((target) => {
+      const entity = entityMap.get(target.entityId);
+      return !(entity instanceof Character) || !entity.isInvulnerable();
+    });
+
+    if (targets.hasEntity(this.getActiveCharacter()!)) {
       this.setTurnState(TurnState.Ending);
     }
 

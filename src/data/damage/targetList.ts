@@ -26,6 +26,10 @@ export class TargetList {
     return this;
   }
 
+  filter(predicate: (target: Target) => boolean) {
+    this.targets = this.targets.filter(predicate);
+  }
+
   damage(
     source: DamageSource,
     entityMap: Map<number, TickingEntity> = getLevel().entityMap
