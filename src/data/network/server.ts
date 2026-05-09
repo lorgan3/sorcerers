@@ -188,7 +188,7 @@ export class Server extends Manager {
     }
 
     let damageSource: DamageSource | undefined;
-    while ((damageSource = this.damageQueue.pop())) {
+    while ((damageSource = this.damageQueue.shift())) {
       this.damage(damageSource);
     }
 
@@ -252,9 +252,13 @@ export class Server extends Manager {
 
       connection.on("open", async () => {
         console.log("open");
-        player.reconnect(connection);
 
         if (this._started) {
+          // Defer player.reconnect(connection) until the snapshot has been
+          // sent. While player.connection is undefined, broadcast() and the
+          // tick loop skip this player, so no events can interleave with
+          // the handshake and arrive before the joining client has the
+          // entities they reference.
           connection.send({
             type: MessageType.StartGame,
             map: await getLevel().terrain.serialize(),
@@ -262,7 +266,8 @@ export class Server extends Manager {
           } satisfies Message);
 
           await player.ready;
-          this.syncSinglePlayer(player);
+
+          connection.send(this.buildSyncMessage(player));
 
           const activePlayerIndex = this.players.indexOf(this.activePlayer!);
           connection.send({
@@ -287,12 +292,17 @@ export class Server extends Manager {
             });
           }
 
-          this.broadcast({
+          connection.send({
             type: MessageType.Sink,
             level: getLevel().terrain.killbox.level,
-          });
-        } else if (onUpdate) {
-          onUpdate();
+          } satisfies Message);
+
+          player.reconnect(connection);
+        } else {
+          player.reconnect(connection);
+          if (onUpdate) {
+            onUpdate();
+          }
         }
       });
 
@@ -317,7 +327,10 @@ export class Server extends Manager {
         console.log("closed");
 
         if (!this._started) {
-          this.players.splice(this.players.indexOf(player));
+          const index = this.players.indexOf(player);
+          if (index !== -1) {
+            this.players.splice(index, 1);
+          }
           player.destroy();
           this.availableColors.push(player.color);
 
@@ -326,7 +339,10 @@ export class Server extends Manager {
           if (player.color) {
             this.disconnectedPlayers.push(player);
           } else {
-            this.players.splice(this.players.indexOf(player));
+            const index = this.players.indexOf(player);
+            if (index !== -1) {
+              this.players.splice(index, 1);
+            }
           }
 
           player.disconnect();
@@ -355,11 +371,19 @@ export class Server extends Manager {
   }
 
   damage(damageSource: DamageSource, cause?: Player | null) {
-    if (
-      damageSource
-        .getTargets()
-        .hasEntity(this.getActiveCharacter()!)
-    ) {
+    const targets = damageSource.getTargets();
+
+    // Server is authoritative on invulnerability so the broadcast carries
+    // the same target list that was applied here. Filtering on each peer
+    // independently desynced HP when adjacent damages straddled the 1-tick
+    // window differently across peers.
+    const entityMap = getLevel().entityMap;
+    targets.filter((target) => {
+      const entity = entityMap.get(target.entityId);
+      return !(entity instanceof Character) || !entity.isInvulnerable();
+    });
+
+    if (targets.hasEntity(this.getActiveCharacter()!)) {
       this.setTurnState(TurnState.Ending);
     }
 
@@ -504,15 +528,15 @@ export class Server extends Manager {
     }
   }
 
-  private syncSinglePlayer(player: Player) {
-    const response: Message = {
+  private buildSyncMessage(receiver: Player): Message {
+    return {
       type: MessageType.SyncPlayers,
       time: this.time,
       players: this.players.map((p) => ({
         name: p.name,
         team: p.team.serialize(),
         color: p.color,
-        you: p === player,
+        you: p === receiver,
         spell:
           p.selectedSpell === null ? null : SPELLS.indexOf(p.selectedSpell),
         characters: p.characters.map((character) => {
@@ -527,8 +551,10 @@ export class Server extends Manager {
         }),
       })),
     };
+  }
 
-    player.connection?.send(response);
+  private syncSinglePlayer(player: Player) {
+    player.connection?.send(this.buildSyncMessage(player));
   }
 
   private syncPlayers() {

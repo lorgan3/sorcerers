@@ -98,6 +98,7 @@ export class Body implements PhysicsBody {
       this.x,
       this.y,
       this._onLadder,
+      this.lastRollDirection,
     ];
   }
 
@@ -107,6 +108,7 @@ export class Body implements PhysicsBody {
     this.yVelocity = data[2];
     this.move(data[3], data[4]);
     this._onLadder = data[5];
+    this.lastRollDirection = data[6];
   }
 
   walk(direction: 1 | -1) {

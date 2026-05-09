@@ -480,6 +480,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.health.damage(source, damage, force);
   }
 
+  isInvulnerable() {
+    return this.health.isInvulnerable();
+  }
+
   setSpellSource(source: any, toggle = true) {
     this.combat.setSpellSource(source, toggle);
   }
