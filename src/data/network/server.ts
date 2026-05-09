@@ -327,7 +327,10 @@ export class Server extends Manager {
         console.log("closed");
 
         if (!this._started) {
-          this.players.splice(this.players.indexOf(player));
+          const index = this.players.indexOf(player);
+          if (index !== -1) {
+            this.players.splice(index, 1);
+          }
           player.destroy();
           this.availableColors.push(player.color);
 
@@ -336,7 +339,10 @@ export class Server extends Manager {
           if (player.color) {
             this.disconnectedPlayers.push(player);
           } else {
-            this.players.splice(this.players.indexOf(player));
+            const index = this.players.indexOf(player);
+            if (index !== -1) {
+              this.players.splice(index, 1);
+            }
           }
 
           player.disconnect();
