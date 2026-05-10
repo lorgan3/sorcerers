@@ -58,6 +58,10 @@ const numberFormatter = new Intl.NumberFormat("en");
         <h3>Item spawn chance</h3>
         {{ `${numberFormatter.format(settings.itemSpawnChance)}%` }}
       </li>
+      <li>
+        <h3>Visibility</h3>
+        {{ settings.isPrivate ? "Private" : "Public" }}
+      </li>
     </ul>
     <Dialog :open="isEditing" :onClose="handleClose" title="Edit settings">
       <div class="inputs">
