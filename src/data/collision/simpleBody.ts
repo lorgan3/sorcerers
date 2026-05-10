@@ -15,8 +15,8 @@ interface Config {
 }
 
 export class SimpleBody implements PhysicsBody {
-  private xVelocity = 0;
-  private yVelocity = 0;
+  public xVelocity = 0;
+  public yVelocity = 0;
 
   private x = 0;
   private y = 0;
