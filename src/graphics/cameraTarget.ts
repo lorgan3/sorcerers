@@ -6,8 +6,9 @@ import { getManager } from "../data/context";
 import { Viewport } from "../data/map/viewport";
 
 export class CameraTarget {
-  private static maxScale = 2;
-  private static minScale = 0.5;
+  private static maxScale = 4;
+  // Lower bound for zoom-out is computed dynamically per-resize from the
+  // world/screen ratio (see `connect`), so no static minScale constant.
 
   private static zoomSpeed = 0.01;
   private static maxZoomScale = 10;
@@ -260,8 +261,10 @@ export class CameraTarget {
     this.controller = controller;
 
     const zoom = (newScale: number) => {
-      const minScale = Math.max(
-        CameraTarget.minScale,
+      // Allow zooming out until the entire map fits on screen with letterbox borders
+      // on the larger screen dimension. Use min(...) of the two ratios so the smaller
+      // (more zoomed-out) ratio wins.
+      const minScale = Math.min(
         this.viewport.screenHeight / this.viewport.worldHeight,
         this.viewport.screenWidth / this.viewport.worldWidth
       );
@@ -306,23 +309,31 @@ export class CameraTarget {
   }
 
   private clamp(position: [number, number]): [number, number] {
-    return [
-      Math.max(
-        Math.min(
-          position[0],
-          this.viewport.worldWidth - this.viewport.screenWidth / 2 / this.scale
-        ),
-        this.viewport.screenWidth / 2 / this.scale
-      ),
-      Math.max(
-        Math.min(
-          position[1],
-          this.viewport.worldHeight -
-            this.viewport.screenHeight / 2 / this.scale
-        ),
-        this.viewport.screenHeight / 2 / this.scale
-      ),
-    ];
+    const halfScreenW = this.viewport.screenWidth / 2 / this.scale;
+    const halfScreenH = this.viewport.screenHeight / 2 / this.scale;
+
+    let x: number;
+    if (this.viewport.worldWidth * this.scale < this.viewport.screenWidth) {
+      // World narrower than screen — pin to world-center; viewport will letterbox.
+      x = this.viewport.worldWidth / 2;
+    } else {
+      x = Math.max(
+        Math.min(position[0], this.viewport.worldWidth - halfScreenW),
+        halfScreenW
+      );
+    }
+
+    let y: number;
+    if (this.viewport.worldHeight * this.scale < this.viewport.screenHeight) {
+      y = this.viewport.worldHeight / 2;
+    } else {
+      y = Math.max(
+        Math.min(position[1], this.viewport.worldHeight - halfScreenH),
+        halfScreenH
+      );
+    }
+
+    return [x, y];
   }
 
   shake() {

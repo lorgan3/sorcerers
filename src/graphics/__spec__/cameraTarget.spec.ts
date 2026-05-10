@@ -113,4 +113,30 @@ describe("CameraTarget", () => {
       expect(maxOvershoot).toBeLessThan(1);
     });
   });
+
+  describe("clamp under letterbox", () => {
+    it("centers x on world-center when zoomed out past horizontal fit", () => {
+      const ctlr = stubController();
+      const cam = new CameraTarget(makeViewport(4000, 2000, 1280, 720));
+      cam.connect(ctlr);
+
+      // Zoom out far enough that 4000 * scale < 1280 ⇒ scale < 0.32
+      cam["scale"] = 0.2;
+      cam["viewport"].setZoom(0.2);
+
+      const clamped = cam["clamp"]([100, 1000]);
+      expect(clamped[0]).toBe(2000); // world-x center
+    });
+
+    it("clamps normally on an axis where the world still overflows the screen", () => {
+      const ctlr = stubController();
+      const cam = new CameraTarget(makeViewport(4000, 2000, 1280, 720));
+      cam.connect(ctlr);
+
+      // At scale 1, world (4000) > screen (1280) on x — should clamp normally.
+      const clamped = cam["clamp"]([0, 1000]);
+      // Min allowed x = screenW / 2 / scale = 640 at scale 1
+      expect(clamped[0]).toBe(640);
+    });
+  });
 });
