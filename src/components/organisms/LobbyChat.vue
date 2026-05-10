@@ -61,7 +61,7 @@ const handleChatMessage = (_entry: ChatEntry, byMe: boolean) => {
   }
 
   nextTick(() => {
-    if (wasAtBottom.value) scrollToBottom();
+    if (!isOpen.value || wasAtBottom.value) scrollToBottom();
   });
 };
 
@@ -83,6 +83,13 @@ watch(isOpen, (open) => {
       scrollToBottom();
       inputEl.value?.focus();
     });
+  } else {
+    // The panel's height transitions from 400px → 36px over 300ms.
+    // scrollToBottom needs to run *after* the messages container has
+    // shrunk; otherwise scrollTop clamps to 0 against the open-state
+    // clientHeight and the latest line ends up off-screen.
+    nextTick(scrollToBottom);
+    window.setTimeout(scrollToBottom, 350);
   }
 });
 
@@ -168,9 +175,10 @@ const containerClass = computed(() => ({
   right: 24px;
   bottom: 0;
   width: 340px;
-  height: 400px;
+  height: 36px;
   box-sizing: border-box;
   z-index: 50;
+  overflow: hidden;
 
   background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
   border: 2px solid var(--border-accent);
@@ -179,19 +187,18 @@ const containerClass = computed(() => ({
     0 2px 5px rgba(30, 15, 5, 0.3),
     0 -4px 20px rgba(0, 0, 0, 0.3);
 
-  transform: translateY(calc(100% - 18px));
-  transition: transform 0.3s ease-out;
+  transition: height 0.3s ease-out;
 
   display: flex;
   flex-direction: column;
 
   &:not(.lobby-chat--open):hover {
-    transform: translateY(calc(100% - 24px));
+    height: 42px;
   }
 }
 
 .lobby-chat--open {
-  transform: translateY(0);
+  height: 400px;
 }
 
 .lobby-chat--flash {
@@ -203,13 +210,11 @@ const containerClass = computed(() => ({
     box-shadow:
       0 2px 5px rgba(30, 15, 5, 0.3),
       0 -4px 20px rgba(0, 0, 0, 0.3);
-    transform: translateY(calc(100% - 18px));
   }
   50% {
     box-shadow:
       0 2px 5px rgba(30, 15, 5, 0.3),
       0 -4px 30px rgba(255, 220, 140, 0.6);
-    transform: translateY(calc(100% - 28px));
   }
 }
 
@@ -226,7 +231,7 @@ const containerClass = computed(() => ({
   top: 0;
   left: 0;
   width: 100%;
-  height: 18px;
+  height: 100%;
   background: none;
   border: none;
   cursor: pointer;
@@ -247,6 +252,14 @@ const containerClass = computed(() => ({
   padding: 8px 12px;
   scrollbar-color: var(--border-accent-faint) transparent;
   scrollbar-width: thin;
+}
+
+.lobby-chat:not(.lobby-chat--open) .messages {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .message {
