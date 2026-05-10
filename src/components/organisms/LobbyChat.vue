@@ -167,6 +167,7 @@ const containerClass = computed(() => ({
   bottom: 0;
   width: 340px;
   height: 400px;
+  box-sizing: border-box;
   z-index: 50;
 
   background: url("../../assets/parchment.png");

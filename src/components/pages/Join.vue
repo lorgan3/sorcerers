@@ -78,6 +78,10 @@ const handleConnect = () => {
           team.value.setSize(message.settings.teamSize);
           break;
 
+        case MessageType.Chat:
+          Client.instance.ingestChat(message);
+          break;
+
         case MessageType.StartGame:
           onPlay(
             key.value,

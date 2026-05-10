@@ -404,18 +404,21 @@ export class Client extends Manager {
         }
         break;
 
-      case MessageType.Chat: {
-        const byMe =
-          !!this._self &&
-          message.author === this._self.name &&
-          message.color === this._self.color;
-        this.appendChat(message.author, message.color, message.text, byMe);
+      case MessageType.Chat:
+        this.ingestChat(message);
         break;
-      }
 
       default:
         console.error("invalid message", message);
     }
+  }
+
+  ingestChat(message: Extract<Message, { type: MessageType.Chat }>): void {
+    const byMe =
+      !!this._self &&
+      message.author === this._self.name &&
+      message.color === this._self.color;
+    this.appendChat(message.author, message.color, message.text, byMe);
   }
 
   broadcast(message: Message) {
