@@ -28,6 +28,8 @@ export enum MessageType {
   Sink,
   Cast,
   EndGame,
+  Chat,
+  ChatRequest,
 }
 
 export type Message =
@@ -165,6 +167,16 @@ export type Message =
   | {
       type: MessageType.EndGame;
       stats: any[];
+    }
+  | {
+      type: MessageType.Chat;
+      author: string;
+      color: string;
+      text: string;
+    }
+  | {
+      type: MessageType.ChatRequest;
+      text: string;
     };
 
 export interface Popup {
@@ -181,4 +193,11 @@ export enum TurnState {
   Killing,
   Finished,
   Rising,
+}
+
+export interface ChatEntry {
+  id: number;
+  author: string;
+  color: string;
+  text: string;
 }

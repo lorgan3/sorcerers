@@ -1,6 +1,7 @@
 import Peer from "peerjs";
+import { ref, type Ref } from "vue";
 import { Player } from "./player";
-import { Popup, TurnState } from "./types";
+import { Popup, TurnState, ChatEntry } from "./types";
 import { KeyboardController } from "../controller/keyboardController";
 import { Spell, getSpellCost } from "../spells";
 import { Cursor } from "../../graphics/cursor/types";
@@ -49,6 +50,11 @@ export abstract class Manager {
   protected cursor: Cursor | null = null;
   private popups: Popup[] = [];
   protected stats: AccumulatedStat<unknown>[] | null = null;
+
+  public readonly chatLog: Ref<ChatEntry[]> = ref([]);
+  public onChatMessage?: (entry: ChatEntry, byMe: boolean) => void;
+  private chatIdCounter = 0;
+  private static readonly CHAT_HISTORY_LIMIT = 200;
 
   constructor(public readonly peer?: Peer) {
     Manager._instance = this;
@@ -344,6 +350,24 @@ export abstract class Manager {
       getLevel().setBrowserCursorVisibility(true);
     }
   }
+
+  protected appendChat(author: string, color: string, text: string, byMe: boolean) {
+    const entry: ChatEntry = {
+      id: ++this.chatIdCounter,
+      author,
+      color,
+      text,
+    };
+
+    this.chatLog.value.push(entry);
+    if (this.chatLog.value.length > Manager.CHAT_HISTORY_LIMIT) {
+      this.chatLog.value.shift();
+    }
+
+    this.onChatMessage?.(entry, byMe);
+  }
+
+  abstract sendChat(text: string): void;
 
   abstract isTrusted(character: Character): boolean;
 }

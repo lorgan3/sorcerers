@@ -15,6 +15,7 @@ import TeamDialog from "../organisms/TeamDialog.vue";
 import { IPlayer } from "../types";
 import GameSettingsComponent from "../organisms/GameSettings.vue";
 import { Team } from "../../data/team";
+import LobbyChat from "../organisms/LobbyChat.vue";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -75,6 +76,10 @@ const handleConnect = () => {
           gameSettings.value = message.settings;
 
           team.value.setSize(message.settings.teamSize);
+          break;
+
+        case MessageType.Chat:
+          Client.instance.ingestChat(message);
           break;
 
         case MessageType.StartGame:
@@ -185,6 +190,8 @@ const handleSave = (name: string, characters: string[]) => {
       </div>
 
       <GameSettingsComponent :settings="gameSettings" :map="map" />
+
+      <LobbyChat v-if="Client.instance" :manager="Client.instance" />
     </template>
 
     <div v-else class="options flex-list">

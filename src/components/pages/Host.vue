@@ -21,6 +21,7 @@ import {
   LobbyAnnouncement,
   type LobbyEntry,
 } from "../../data/network/lobbyAnnouncement";
+import LobbyChat from "../organisms/LobbyChat.vue";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -275,6 +276,8 @@ const handleSelectMap = async (config: Config, name: string) => {
       <button @click="handleStart" class="primary">Start</button>
       <button @click="handleBack" class="secondary">Back</button>
     </div>
+
+    <LobbyChat v-if="getServer()" :manager="getServer()!" />
   </div>
 </template>
 

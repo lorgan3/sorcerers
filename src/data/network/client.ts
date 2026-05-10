@@ -409,8 +409,27 @@ export class Client extends Manager {
     }
   }
 
+  ingestChat(message: Extract<Message, { type: MessageType.Chat }>): void {
+    const byMe =
+      !!this._self &&
+      message.author === this._self.name &&
+      message.color === this._self.color;
+    this.appendChat(message.author, message.color, message.text, byMe);
+  }
+
   broadcast(message: Message) {
     this.connection?.send(message);
+  }
+
+  sendChat(text: string): void {
+    const trimmed = text.trim().slice(0, 200);
+    if (!trimmed) {
+      return;
+    }
+    this.connection?.send({
+      type: MessageType.ChatRequest,
+      text: trimmed,
+    });
   }
 
   isTrusted(character: Character) {

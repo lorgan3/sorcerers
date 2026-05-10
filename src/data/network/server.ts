@@ -525,6 +525,23 @@ export class Server extends Manager {
 
       case MessageType.ClientReady:
         player.resolveReady();
+        break;
+
+      case MessageType.ChatRequest: {
+        const text = (message.text ?? "").trim().slice(0, 200);
+        if (!text || !player.color) {
+          return;
+        }
+        const stamped: Message = {
+          type: MessageType.Chat,
+          author: player.name,
+          color: player.color,
+          text,
+        };
+        this.broadcast(stamped);
+        this.appendChat(stamped.author, stamped.color, stamped.text, player === this._self);
+        break;
+      }
     }
   }
 
@@ -726,6 +743,22 @@ export class Server extends Manager {
     for (let player of this.players) {
       player.connection?.send(message);
     }
+  }
+
+  sendChat(text: string): void {
+    const trimmed = text.trim().slice(0, 200);
+    if (!trimmed || !this._self) {
+      return;
+    }
+
+    const stamped: Message = {
+      type: MessageType.Chat,
+      author: this._self.name,
+      color: this._self.color,
+      text: trimmed,
+    };
+    this.broadcast(stamped);
+    this.appendChat(stamped.author, stamped.color, stamped.text, true);
   }
 
   create<T extends Spawnable>(entity: T) {
