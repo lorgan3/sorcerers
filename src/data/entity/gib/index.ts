@@ -13,6 +13,7 @@ export interface GibConfig {
   bloody?: boolean;
 }
 
+const NORMAL_GRAVITY = 0.25;
 const OFF_MAP_BUFFER = 20;
 const SURFACE_BAND = 2;
 const SURFACE_X_DRAG = 0.92;
@@ -61,7 +62,7 @@ export class Gib extends Sprite implements TickingEntity {
     this.body = new SimpleBody(getLevel().terrain.collisionMask, {
       mask,
       bounciness: -0.7,
-      gravity: 0.25,
+      gravity: NORMAL_GRAVITY,
       friction: 0.96,
       onCollide: () => {
         this.groundContactTime = GROUND_CONTACT_TICKS;
@@ -72,7 +73,12 @@ export class Gib extends Sprite implements TickingEntity {
     this.position.set(offsetX, offsetY);
 
     if (maskSprite) {
-      maskSprite.position.set(-offsetX, -offsetY);
+      // Compensate for the parent's center anchor so the mask sprite still
+      // aligns with the gib's top-left.
+      maskSprite.position.set(
+        -offsetX - this.width / 2,
+        -offsetY - this.height / 2
+      );
 
       this.addChild(maskSprite);
     }
@@ -89,27 +95,30 @@ export class Gib extends Sprite implements TickingEntity {
   }
 
   tick(dt: number) {
-    this.body.tick(dt);
-
     const level = getLevel();
     const killboxLevel = level.terrain.killbox.level;
+
+    // Decide regime from pre-tick position so gravity is correct *during*
+    // body.tick — avoids applying then cancelling it.
+    const [, preY] = this.body.precisePosition;
+    const depth = preY + this.body.mask.height - killboxLevel;
+    const inSurfaceBand = depth > 0 && depth <= SURFACE_BAND;
+    this.body.gravity = inSurfaceBand ? 0 : NORMAL_GRAVITY;
+
+    this.body.tick(dt);
+
     let [x, y] = this.body.precisePosition;
 
-    const depth = y + this.body.mask.height - killboxLevel;
     if (depth > SURFACE_BAND) {
       this.inSurface = false;
-      this.body.yVelocity -= this.deepBuoyancy * dt;
-      this.body.yVelocity *= DEEP_Y_DRAG;
-      this.body.xVelocity *= DEEP_X_DRAG;
-      this.body.active = 1;
+      this.body.addVelocity(0, -this.deepBuoyancy * dt);
+      this.body.damp(DEEP_X_DRAG, DEEP_Y_DRAG, dt);
     } else if (depth > 0) {
       this.inSurface = true;
       const targetY = killboxLevel - this.body.mask.height;
-      this.body.yVelocity -= this.body.gravity * dt;
-      this.body.yVelocity *= SURFACE_YV_DAMP;
-      y = y + (targetY - y) * SURFACE_LERP * dt;
+      y = y + (targetY - y) * (1 - Math.pow(1 - SURFACE_LERP, dt));
       this.body.move(x, y);
-      this.body.xVelocity *= SURFACE_X_DRAG;
+      this.body.damp(SURFACE_X_DRAG, SURFACE_YV_DAMP, dt);
       this.body.active = 1;
     } else {
       this.inSurface = false;
@@ -122,7 +131,7 @@ export class Gib extends Sprite implements TickingEntity {
       : depth > 0
         ? WATER_SPIN_DRAG
         : AIR_SPIN_DRAG;
-    this.angularVelocity *= spinDrag;
+    this.angularVelocity *= Math.pow(spinDrag, dt);
     this.rotation += this.angularVelocity * dt;
     if (this.groundContactTime > 0) {
       this.groundContactTime -= dt;

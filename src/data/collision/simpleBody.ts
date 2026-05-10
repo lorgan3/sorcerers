@@ -15,8 +15,8 @@ interface Config {
 }
 
 export class SimpleBody implements PhysicsBody {
-  public xVelocity = 0;
-  public yVelocity = 0;
+  private xVelocity = 0;
+  private yVelocity = 0;
 
   private x = 0;
   private y = 0;
@@ -90,6 +90,11 @@ export class SimpleBody implements PhysicsBody {
     this.xVelocity = Math.cos(direction) * power;
     this.yVelocity = Math.sin(direction) * power;
     this.active = 1;
+  }
+
+  damp(xFactor: number, yFactor: number, dt: number) {
+    this.xVelocity *= Math.pow(xFactor, dt);
+    this.yVelocity *= Math.pow(yFactor, dt);
   }
 
   move(x: number, y: number) {
