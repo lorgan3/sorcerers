@@ -15,13 +15,13 @@ export async function joinByKey(
   key: string,
   { router, onError }: JoinByKeyOptions
 ): Promise<void> {
-  const settings = defaults(get("Settings"));
-
-  if (!Client.instance) {
-    await createClient();
-  }
-
   try {
+    const settings = defaults(get("Settings"));
+
+    if (!Client.instance) {
+      await createClient();
+    }
+
     await Client.instance.join(
       PEER_ID_PREFIX + key,
       settings.name || "Player",

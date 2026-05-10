@@ -113,13 +113,21 @@ const buildEntry = (): LobbyEntry => ({
 
 const startAnnouncement = async () => {
   if (announced) return;
-  announced = true;
-  await announcement.start(buildEntry());
+  try {
+    await announcement.start(buildEntry());
+    announced = true;
+  } catch (e) {
+    console.error("Failed to announce lobby", e);
+  }
 };
 const stopAnnouncement = async () => {
   if (!announced) return;
   announced = false;
-  await announcement.stop();
+  try {
+    await announcement.stop();
+  } catch (e) {
+    console.error("Failed to stop lobby announcement", e);
+  }
 };
 const pushAnnouncement = () => {
   if (!announced) return;
@@ -129,8 +137,7 @@ const pushAnnouncement = () => {
 watch(
   () => gameSettings.value.isPrivate,
   (isPrivate) => {
-    if (isPrivate) stopAnnouncement();
-    else startAnnouncement();
+    (isPrivate ? stopAnnouncement() : startAnnouncement()).catch(() => {});
   }
 );
 

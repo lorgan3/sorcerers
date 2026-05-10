@@ -38,19 +38,31 @@ export class LobbyAnnouncement {
   private disconnectHandler: ReturnType<typeof onDisconnect> | null = null;
 
   async start(initial: LobbyEntry): Promise<void> {
-    this.snapshot = { ...initial };
-    this.ref = dbRef(database, `${LOBBIES_PATH}/${initial.joinKey}`);
-    this.disconnectHandler = onDisconnect(this.ref);
+    if (this.ref) return;
 
-    await this.disconnectHandler.remove();
-    await this.write();
-    this.scheduleHeartbeat();
+    const ref = dbRef(database, `${LOBBIES_PATH}/${initial.joinKey}`);
+    const handler = onDisconnect(ref);
+
+    try {
+      await handler.remove();
+      this.snapshot = { ...initial };
+      this.ref = ref;
+      this.disconnectHandler = handler;
+      await this.write();
+      this.scheduleHeartbeat();
+    } catch (e) {
+      this.snapshot = null;
+      this.ref = null;
+      this.disconnectHandler = null;
+      handler.cancel().catch(() => {});
+      throw e;
+    }
   }
 
   update(patch: Partial<LobbyEntry>): void {
     if (!this.snapshot || !this.ref) return;
     this.snapshot = { ...this.snapshot, ...patch };
-    this.write();
+    this.write().catch((e) => console.error("Lobby announcement update failed", e));
     this.scheduleHeartbeat();
   }
 
@@ -59,20 +71,27 @@ export class LobbyAnnouncement {
       clearInterval(this.intervalHandle);
       this.intervalHandle = null;
     }
-    if (this.disconnectHandler) {
-      await this.disconnectHandler.cancel();
-      this.disconnectHandler = null;
-    }
-    if (this.ref) {
-      await remove(this.ref);
-      this.ref = null;
-    }
+    const handler = this.disconnectHandler;
+    const ref = this.ref;
+    this.disconnectHandler = null;
+    this.ref = null;
     this.snapshot = null;
+
+    // Run cleanup steps independently — one failing must not prevent the others.
+    const results = await Promise.allSettled([
+      handler ? handler.cancel() : Promise.resolve(),
+      ref ? remove(ref) : Promise.resolve(),
+    ]);
+    for (const r of results) {
+      if (r.status === "rejected") {
+        console.error("Lobby announcement stop failed", r.reason);
+      }
+    }
   }
 
-  private write(): void {
+  private async write(): Promise<void> {
     if (!this.snapshot || !this.ref) return;
-    set(this.ref, {
+    await set(this.ref, {
       ...this.snapshot,
       lastUpdatedAt: serverTimestamp() as unknown as number,
     });
@@ -82,7 +101,11 @@ export class LobbyAnnouncement {
     if (this.intervalHandle !== null) {
       clearInterval(this.intervalHandle);
     }
-    this.intervalHandle = setInterval(() => this.write(), HEARTBEAT_INTERVAL_MS);
+    this.intervalHandle = setInterval(() => {
+      this.write().catch((e) =>
+        console.error("Lobby announcement heartbeat failed", e)
+      );
+    }, HEARTBEAT_INTERVAL_MS);
   }
 }
 
@@ -126,6 +149,10 @@ export async function sweepStaleLobbies(): Promise<void> {
         typeof entry.lastUpdatedAt !== "number" ||
         entry.lastUpdatedAt < cutoff
     )
-    .map(([key]) => remove(dbRef(database, `${LOBBIES_PATH}/${key}`)));
+    .map(([key]) =>
+      remove(dbRef(database, `${LOBBIES_PATH}/${key}`)).catch((e) =>
+        console.error(`Failed to sweep stale lobby ${key}`, e)
+      )
+    );
   await Promise.all(removals);
 }
