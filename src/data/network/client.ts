@@ -404,6 +404,15 @@ export class Client extends Manager {
         }
         break;
 
+      case MessageType.Chat: {
+        const byMe =
+          !!this._self &&
+          message.author === this._self.name &&
+          message.color === this._self.color;
+        this.appendChat(message.author, message.color, message.text, byMe);
+        break;
+      }
+
       default:
         console.error("invalid message", message);
     }
@@ -411,6 +420,19 @@ export class Client extends Manager {
 
   broadcast(message: Message) {
     this.connection?.send(message);
+  }
+
+  sendChat(text: string): void {
+    const trimmed = text.trim().slice(0, 200);
+    if (!trimmed) {
+      return;
+    }
+    this.connection?.send({
+      type: MessageType.Chat,
+      author: "",
+      color: "",
+      text: trimmed,
+    });
   }
 
   isTrusted(character: Character) {
