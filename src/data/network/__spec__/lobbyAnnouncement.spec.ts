@@ -121,3 +121,96 @@ describe("LobbyAnnouncement", () => {
     expect(fbDb.remove).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("subscribeToPublicLobbies", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("filters out entries older than 30s and entries with missing fields", async () => {
+    const { subscribeToPublicLobbies, STALE_THRESHOLD_MS } = await import(
+      "../lobbyAnnouncement"
+    );
+
+    const now = Date.now();
+    const snapshot = {
+      val: () => ({
+        "1111": { ...baseEntry, joinKey: "1111", lastUpdatedAt: now },
+        "2222": {
+          ...baseEntry,
+          joinKey: "2222",
+          lastUpdatedAt: now - STALE_THRESHOLD_MS - 5_000,
+        },
+        "3333": null,
+      }),
+    };
+
+    const onValueMock = fbDb.onValue as unknown as ReturnType<typeof vi.fn>;
+    onValueMock.mockImplementation((_ref, cb: any) => {
+      cb(snapshot);
+      return () => {};
+    });
+
+    const received: any[] = [];
+    const unsub = subscribeToPublicLobbies((lobbies) => received.push(lobbies));
+    expect(received[0]).toHaveLength(1);
+    expect(received[0][0].joinKey).toBe("1111");
+    unsub();
+  });
+
+  it("returns the unsubscribe handler from onValue", async () => {
+    const { subscribeToPublicLobbies } = await import("../lobbyAnnouncement");
+    const unsubInner = vi.fn();
+    (fbDb.onValue as any).mockImplementation(() => unsubInner);
+
+    const unsub = subscribeToPublicLobbies(() => {});
+    unsub();
+    expect(unsubInner).toHaveBeenCalled();
+  });
+});
+
+describe("sweepStaleLobbies", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("removes only entries older than 30s, runs once per process", async () => {
+    const { sweepStaleLobbies, STALE_THRESHOLD_MS } = await import(
+      "../lobbyAnnouncement"
+    );
+
+    const now = Date.now();
+    const data = {
+      "1111": { ...baseEntry, joinKey: "1111", lastUpdatedAt: now },
+      "2222": {
+        ...baseEntry,
+        joinKey: "2222",
+        lastUpdatedAt: now - STALE_THRESHOLD_MS - 1_000,
+      },
+      "3333": {
+        ...baseEntry,
+        joinKey: "3333",
+        lastUpdatedAt: now - STALE_THRESHOLD_MS - 60_000,
+      },
+    };
+
+    (fbDb.get as any).mockResolvedValue({ val: () => data });
+    const refMock = fbDb.ref as unknown as ReturnType<typeof vi.fn>;
+    refMock.mockClear();
+    refMock.mockReturnValue(fakeRef);
+
+    await sweepStaleLobbies();
+
+    // ref called for: lobbies root + 2 stale children
+    const removedPaths = refMock.mock.calls.map((c) => c[1]);
+    expect(removedPaths).toContain("lobbies/2222");
+    expect(removedPaths).toContain("lobbies/3333");
+    expect(removedPaths).not.toContain("lobbies/1111");
+
+    // Second invocation does nothing (idempotent guard)
+    refMock.mockClear();
+    (fbDb.get as any).mockClear();
+    await sweepStaleLobbies();
+    expect(fbDb.get).not.toHaveBeenCalled();
+  });
+});

@@ -3,6 +3,8 @@ import {
   set,
   remove,
   onDisconnect,
+  onValue,
+  get,
   serverTimestamp,
   type DatabaseReference,
 } from "firebase/database";
@@ -82,4 +84,48 @@ export class LobbyAnnouncement {
     }
     this.intervalHandle = setInterval(() => this.write(), HEARTBEAT_INTERVAL_MS);
   }
+}
+
+export function subscribeToPublicLobbies(
+  callback: (lobbies: LobbyEntry[]) => void
+): () => void {
+  const lobbiesRef = dbRef(database, LOBBIES_PATH);
+  return onValue(lobbiesRef, (snapshot) => {
+    const value = snapshot.val() as Record<string, LobbyEntry | null> | null;
+    if (!value) {
+      callback([]);
+      return;
+    }
+    const cutoff = Date.now() - STALE_THRESHOLD_MS;
+    const lobbies = Object.values(value).filter(
+      (entry): entry is LobbyEntry =>
+        !!entry &&
+        typeof entry.lastUpdatedAt === "number" &&
+        entry.lastUpdatedAt > cutoff
+    );
+    callback(lobbies);
+  });
+}
+
+let hasSwept = false;
+
+export async function sweepStaleLobbies(): Promise<void> {
+  if (hasSwept) return;
+  hasSwept = true;
+
+  const lobbiesRef = dbRef(database, LOBBIES_PATH);
+  const snapshot = await get(lobbiesRef);
+  const value = snapshot.val() as Record<string, LobbyEntry | null> | null;
+  if (!value) return;
+
+  const cutoff = Date.now() - STALE_THRESHOLD_MS;
+  const removals = Object.entries(value)
+    .filter(
+      ([, entry]) =>
+        !entry ||
+        typeof entry.lastUpdatedAt !== "number" ||
+        entry.lastUpdatedAt < cutoff
+    )
+    .map(([key]) => remove(dbRef(database, `${LOBBIES_PATH}/${key}`)));
+  await Promise.all(removals);
 }
