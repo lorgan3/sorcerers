@@ -3,20 +3,17 @@ import { ref, watch } from "vue";
 import Dialog from "../molecules/Dialog.vue";
 import Input from "../atoms/Input.vue";
 import { createClient } from "../../data/network";
-import { LAST_GAME_KEY, PEER_ID_PREFIX } from "../../data/network/constants";
-import { defaults } from "../../util/localStorage/settings";
-import { get } from "../../util/localStorage";
+import { LAST_GAME_KEY } from "../../data/network/constants";
 import { Client } from "../../data/network/client";
-import { Team } from "../../data/team";
 import Tooltip from "../atoms/Tooltip.vue";
 import { useRouter } from "vue-router";
+import { joinByKey } from "../../data/network/joinByKey";
 
 const props = defineProps<{
   open: boolean;
   onClose: () => void;
 }>();
 
-const settings = defaults(get("Settings"));
 const key = ref(sessionStorage.getItem(LAST_GAME_KEY) || ("" as string));
 const status = ref("");
 const error = ref(false);
@@ -43,17 +40,15 @@ const handleConnect = async () => {
   error.value = false;
 
   try {
-    await Client.instance.join(
-      PEER_ID_PREFIX + key.value,
-      settings.name || "Player",
-      settings.team || Team.random()
-    );
-
-    sessionStorage.setItem(LAST_GAME_KEY, key.value);
-    router.replace(`/join/${key.value}`);
+    await joinByKey(key.value, {
+      router,
+      onError: () => {
+        status.value = "";
+        error.value = true;
+      },
+    });
   } catch {
-    status.value = "";
-    error.value = true;
+    // onError already updated state
   }
 };
 </script>
