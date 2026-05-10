@@ -39,23 +39,26 @@ const numberFormatter = new Intl.NumberFormat("en");
 </script>
 
 <template>
-  <ul v-if="lobbies.length > 0" class="server-list">
-    <li v-for="entry in lobbies" :key="entry.joinKey">
-      <button
-        class="primary entry"
-        :disabled="entry.playerCount >= entry.maxPlayers"
-        @click="handleJoin(entry)"
-      >
-        <span class="host">{{ entry.hostName }}</span>
-        <span class="map">{{ entry.mapName.replace("_", " ") || "—" }}</span>
-        <span class="meta">
-          {{ entry.playerCount }}/{{ entry.maxPlayers }} ·
-          team {{ entry.gameSettings.teamSize }} ·
-          {{ numberFormatter.format(entry.gameSettings.turnLength) }}s turn
-        </span>
-      </button>
-    </li>
-  </ul>
+  <section v-if="lobbies.length > 0" class="server-list">
+    <h2>Public games</h2>
+    <ul>
+      <li v-for="entry in lobbies" :key="entry.joinKey">
+        <button
+          class="primary entry"
+          :disabled="entry.playerCount >= entry.maxPlayers"
+          @click="handleJoin(entry)"
+        >
+          <span class="host">{{ entry.hostName }}</span>
+          <span class="map">{{ entry.mapName.replace("_", " ") || "—" }}</span>
+          <span class="meta">
+            {{ entry.playerCount }}/{{ entry.maxPlayers }} ·
+            team {{ entry.gameSettings.teamSize }} ·
+            {{ numberFormatter.format(entry.gameSettings.turnLength) }}s turn
+          </span>
+        </button>
+      </li>
+    </ul>
+  </section>
 </template>
 
 <style lang="scss" scoped>
@@ -63,12 +66,13 @@ const numberFormatter = new Intl.NumberFormat("en");
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 30px;
   min-width: 320px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-  border: 2px solid var(--border-accent);
-  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3), inset 0 0 15px rgba(180, 120, 40, 0.08);
-  border-radius: 4px;
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
   .entry {
     display: flex;
