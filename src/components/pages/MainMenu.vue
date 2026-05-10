@@ -5,40 +5,44 @@ import { RouterLink } from "vue-router";
 import Tooltip from "../atoms/Tooltip.vue";
 import { ref } from "vue";
 import JoinDialog from "../organisms/JoinDialog.vue";
+import ServerList from "../organisms/ServerList.vue";
 import github from "pixelarticons/svg/github-2.svg";
 
 const joinDialogOpen = ref(false);
 </script>
 
 <template>
-  <div class="mainMenu">
-    <ul class="list flex-list">
-      <li>
-        <RouterLink to="/host" class="primary menu-button">Host</RouterLink>
-      </li>
-      <li>
-        <button class="primary menu-button" @click="joinDialogOpen = true">
-          Join game
-        </button>
-      </li>
-      <li>
-        <RouterLink to="/builder" class="primary menu-button">Builder</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="/credits" class="primary menu-button">Credits</RouterLink>
-      </li>
-      <li>
-        <a
-          href="https://github.com/lorgan3/sorcerers"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="primary menu-button"
-        >
-          Issues/Feedback
-          <img class="github-icon" :src="github" />
-        </a>
-      </li>
-    </ul>
+  <div class="main-menu-row">
+    <div class="mainMenu">
+      <ul class="list flex-list">
+        <li>
+          <RouterLink to="/host" class="primary menu-button">Host</RouterLink>
+        </li>
+        <li>
+          <button class="primary menu-button" @click="joinDialogOpen = true">
+            Join game
+          </button>
+        </li>
+        <li>
+          <RouterLink to="/builder" class="primary menu-button">Builder</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/credits" class="primary menu-button">Credits</RouterLink>
+        </li>
+        <li>
+          <a
+            href="https://github.com/lorgan3/sorcerers"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="primary menu-button"
+          >
+            Issues/Feedback
+            <img class="github-icon" :src="github" />
+          </a>
+        </li>
+      </ul>
+    </div>
+    <ServerList />
   </div>
   <div class="spellbooks">
     <Tooltip text="Spellbook" direction="top-center">
@@ -59,6 +63,13 @@ const joinDialogOpen = ref(false);
 </template>
 
 <style lang="scss" scoped>
+.main-menu-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
 .mainMenu {
   .list {
     background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
