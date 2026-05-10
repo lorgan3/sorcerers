@@ -20,10 +20,16 @@ const SURFACE_LERP = 0.1;
 const SURFACE_YV_DAMP = 0.5;
 const SURFACE_BOB_SPEED = 0.05;
 const SURFACE_BOB_AMPLITUDE = 3;
-const DEEP_BUOYANCY = 0.35;
+const DEEP_BUOYANCY_MIN = 0.3;
+const DEEP_BUOYANCY_MAX = 0.4;
 const DEEP_Y_DRAG = 0.85;
 const DEEP_X_DRAG = 0.85;
 const BLEED_DURATION = 90;
+const SPIN_RANGE = 0.25;
+const AIR_SPIN_DRAG = 0.99;
+const WATER_SPIN_DRAG = 0.92;
+const GROUND_SPIN_DRAG = 0.6;
+const GROUND_CONTACT_TICKS = 3;
 
 export class Gib extends Sprite implements TickingEntity {
   public readonly body: SimpleBody;
@@ -33,6 +39,10 @@ export class Gib extends Sprite implements TickingEntity {
   private bleedTime: number;
   private bobTime = Math.random() * Math.PI * 2;
   private inSurface = false;
+  private angularVelocity = (Math.random() - 0.5) * 2 * SPIN_RANGE;
+  private groundContactTime = 0;
+  private deepBuoyancy =
+    DEEP_BUOYANCY_MIN + Math.random() * (DEEP_BUOYANCY_MAX - DEEP_BUOYANCY_MIN);
 
   constructor({
     texture,
@@ -53,7 +63,11 @@ export class Gib extends Sprite implements TickingEntity {
       bounciness: -0.7,
       gravity: 0.25,
       friction: 0.96,
+      onCollide: () => {
+        this.groundContactTime = GROUND_CONTACT_TICKS;
+      },
     });
+    this.anchor.set(0.5, 0.5);
     this.scale.set(2);
     this.position.set(offsetX, offsetY);
 
@@ -70,6 +84,10 @@ export class Gib extends Sprite implements TickingEntity {
     }
   }
 
+  spin(amount: number) {
+    this.angularVelocity += amount;
+  }
+
   tick(dt: number) {
     this.body.tick(dt);
 
@@ -80,7 +98,7 @@ export class Gib extends Sprite implements TickingEntity {
     const depth = y + this.body.mask.height - killboxLevel;
     if (depth > SURFACE_BAND) {
       this.inSurface = false;
-      this.body.yVelocity -= DEEP_BUOYANCY * dt;
+      this.body.yVelocity -= this.deepBuoyancy * dt;
       this.body.yVelocity *= DEEP_Y_DRAG;
       this.body.xVelocity *= DEEP_X_DRAG;
       this.body.active = 1;
@@ -97,13 +115,28 @@ export class Gib extends Sprite implements TickingEntity {
       this.inSurface = false;
     }
 
-    let displayY = y * 6;
+    const grounded =
+      this.groundContactTime > 0 || this.body.active === 0;
+    const spinDrag = grounded
+      ? GROUND_SPIN_DRAG
+      : depth > 0
+        ? WATER_SPIN_DRAG
+        : AIR_SPIN_DRAG;
+    this.angularVelocity *= spinDrag;
+    this.rotation += this.angularVelocity * dt;
+    if (this.groundContactTime > 0) {
+      this.groundContactTime -= dt;
+    }
+
+    const halfW = this.width / 2;
+    const halfH = this.height / 2;
+    let displayY = y * 6 + halfH;
     if (depth > 0) {
       this.bobTime += dt * SURFACE_BOB_SPEED;
       displayY += Math.sin(this.bobTime) * SURFACE_BOB_AMPLITUDE;
     }
 
-    this.position.set(x * 6, displayY);
+    this.position.set(x * 6 + halfW, displayY);
 
     if (
       x < -OFF_MAP_BUFFER ||

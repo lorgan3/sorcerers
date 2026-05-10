@@ -42,7 +42,8 @@ const SMOKE_TRIGGER = 2;
 const KICK_VELOCITY_THRESHOLD_SQUARED = 0.04;
 const KICK_RADIUS_SQUARED = 30 * 30;
 const KICK_SCALE = 0.5;
-const KICK_LIFT = 0.08;
+const KICK_LIFT = 0.6;
+const KICK_SPIN = 0.3;
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
 const PAGE_READ_DURATION = 60;
@@ -358,14 +359,15 @@ export class Character extends Container implements HurtableEntity, Syncable {
   }
 
   private kickNearbyGibs() {
-    const speedSquared =
-      this.body.xVelocity ** 2 + this.body.yVelocity ** 2;
-    if (speedSquared < KICK_VELOCITY_THRESHOLD_SQUARED) {
+    const xSpeedSquared = this.body.xVelocity ** 2;
+    if (xSpeedSquared < KICK_VELOCITY_THRESHOLD_SQUARED) {
       return;
     }
 
     const cx = this.position.x + 18;
     const cy = this.position.y + 72;
+    const xV = this.body.xVelocity;
+    const xVAbs = Math.abs(xV);
 
     for (const entity of getLevel().entities) {
       if (!(entity instanceof Gib)) continue;
@@ -375,10 +377,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
       const distSquared = dx * dx + dy * dy;
       if (distSquared >= KICK_RADIUS_SQUARED) continue;
 
-      entity.body.addVelocity(
-        this.body.xVelocity * KICK_SCALE,
-        this.body.yVelocity * KICK_SCALE - KICK_LIFT
-      );
+      entity.body.addVelocity(xV * KICK_SCALE, -xVAbs * KICK_LIFT);
+      entity.spin(Math.sign(xV) * xVAbs * KICK_SPIN);
       entity.bleed();
     }
   }
