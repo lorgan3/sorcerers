@@ -1,4 +1,6 @@
-import { Application, Container, TextureStyle } from "pixi.js";
+import { Application, Assets, Container, TextureStyle } from "pixi.js";
+import { Vignette } from "../../graphics/vignette";
+import vignetteUrl from "../../assets/vignette.png";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Server } from "../network/server";
@@ -44,6 +46,7 @@ export class Level {
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
+  private vignette?: Vignette;
 
   private layers: Record<Layer, Container> = {
     [Layer.Background]: this.backgroundContainer,
@@ -97,6 +100,17 @@ export class Level {
     this.cameraTarget = new CameraTarget(this.viewport);
     this.app.stage.addChild(this.viewport, this.numberContainer);
 
+    // Loaded asynchronously alongside Pixi init. Inserted at numberContainer's
+    // index so it sits above the viewport (covering world content) but below
+    // damage numbers, which should remain readable through the vignette.
+    Assets.load(vignetteUrl).then((tex) => {
+      const numberContainerIndex = this.app.stage.children.indexOf(
+        this.numberContainer
+      );
+      this.vignette = new Vignette(tex, window.innerWidth, window.innerHeight);
+      this.app.stage.addChildAt(this.vignette, numberContainerIndex);
+    });
+
     this.terrain = new Terrain(map);
 
     if (map.parallax.name) {
@@ -131,6 +145,7 @@ export class Level {
   private resize = () => {
     this.app.resize();
     this.viewport.resize(window.innerWidth, window.innerHeight);
+    this.vignette?.resize(window.innerWidth, window.innerHeight);
   };
 
   destroy() {
@@ -220,6 +235,12 @@ export class Level {
     }
 
     this.cameraTarget.tick(dt);
+
+    if (this.vignette) {
+      this.vignette.setVisible(this.cameraTarget.isDetached);
+      this.vignette.tick(dt);
+    }
+
     this.terrain.flush();
   }
 
