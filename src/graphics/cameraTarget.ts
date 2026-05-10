@@ -209,6 +209,17 @@ export class CameraTarget {
     );
   }
 
+  get isDetached(): boolean {
+    return !this.attached;
+  }
+
+  recenter() {
+    this.attached = true;
+    // Reset speed so pan to active character starts from zero — produces a clean
+    // accelerate-from-rest motion rather than continuing whatever drift was active.
+    this.speed = 0;
+  }
+
   setTarget(target: Spawnable, callback?: () => void) {
     if (this.highlightQueue.length > 0) {
       this.highlightQueue.splice(0, 1, { target, callback });
