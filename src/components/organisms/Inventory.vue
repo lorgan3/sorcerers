@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { SPELLS, Spell } from "../../data/spells";
-import { getLevel, getManager, getServer } from "../../data/context";
+import {
+  getContextOrNull,
+  getLevel,
+  getManager,
+  getServer,
+} from "../../data/context";
 import { onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
 import { Client } from "../../data/network/client";
 import { Message, MessageType } from "../../data/network/types";
@@ -72,21 +77,6 @@ const poll = () => {
   }
 };
 
-const pollDetach = () => {
-  const manager = getManager();
-  if (!manager) return;
-
-  const data = manager.getHudData();
-  if (cameraDetached.value !== data.cameraDetached) {
-    cameraDetached.value = data.cameraDetached;
-  }
-
-  const activeName = data.activePlayer?.activeCharacter?.characterName ?? "";
-  if (activeCharacterName.value !== activeName) {
-    activeCharacterName.value = activeName;
-  }
-};
-
 const crystalBallTooltip = computed(() => {
   if (!cameraDetached.value) {
     return "Hold ctrl or middle mouse for free camera";
@@ -96,15 +86,35 @@ const crystalBallTooltip = computed(() => {
     : "Click to refocus the camera";
 });
 
+const refreshActiveName = () => {
+  activeCharacterName.value =
+    getManager().getActivePlayer()?.activeCharacter?.characterName ?? "";
+};
+
 let id = -1;
-let detachId = -1;
+let unsubscribeAttach: (() => void) | null = null;
+const trySubscribeCamera = () => {
+  if (unsubscribeAttach) return;
+  const cameraTarget = getContextOrNull()?.level?.cameraTarget;
+  if (!cameraTarget) return;
+  cameraDetached.value = cameraTarget.isDetached;
+  if (cameraDetached.value) refreshActiveName();
+  unsubscribeAttach = cameraTarget.addAttachListener((detached) => {
+    cameraDetached.value = detached;
+    if (detached) refreshActiveName();
+  });
+};
+
 onMounted(() => {
-  id = window.setInterval(poll, 1000);
-  detachId = window.setInterval(pollDetach, 100);
+  id = window.setInterval(() => {
+    poll();
+    trySubscribeCamera();
+  }, 1000);
+  trySubscribeCamera();
 });
 onBeforeUnmount(() => {
   window.clearInterval(id);
-  window.clearInterval(detachId);
+  unsubscribeAttach?.();
 });
 
 watch(
@@ -142,8 +152,6 @@ const handleClick = (spell?: Spell) => {
 };
 
 const handleRecenter = (event: MouseEvent) => {
-  // Only react when actually detached — otherwise let the click bubble normally
-  // (parent .controls also has a mousedown that opens the inventory).
   if (!cameraDetached.value) return;
 
   event.stopPropagation();
