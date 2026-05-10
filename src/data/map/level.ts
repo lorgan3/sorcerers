@@ -1,5 +1,6 @@
 import { Application, Container, TextureStyle } from "pixi.js";
 import { Vignette } from "../../graphics/vignette";
+import { Letterbox } from "../../graphics/letterbox";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Server } from "../network/server";
@@ -46,6 +47,7 @@ export class Level {
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
   private vignette: Vignette;
+  private letterbox: Letterbox;
 
   private layers: Record<Layer, Container> = {
     [Layer.Background]: this.backgroundContainer,
@@ -98,7 +100,14 @@ export class Level {
 
     this.cameraTarget = new CameraTarget(this.viewport);
     this.vignette = new Vignette(window.innerWidth, window.innerHeight);
-    this.app.stage.addChild(this.viewport, this.numberContainer, this.vignette);
+    this.letterbox = new Letterbox(this.viewport);
+    this.cameraTarget.addZoomListener(() => this.letterbox.update());
+    this.app.stage.addChild(
+      this.viewport,
+      this.numberContainer,
+      this.letterbox,
+      this.vignette
+    );
 
     this.terrain = new Terrain(map);
 
@@ -135,6 +144,7 @@ export class Level {
     this.app.resize();
     this.viewport.resize(window.innerWidth, window.innerHeight);
     this.vignette.resize(window.innerWidth, window.innerHeight);
+    this.letterbox.update();
   };
 
   destroy() {
