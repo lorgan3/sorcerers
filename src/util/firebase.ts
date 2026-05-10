@@ -5,7 +5,8 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyCLAKR-zmb0Mk_mBFLIIZhSDYU8kdv-vKw",
   authDomain: "sorcerers-9534c.firebaseapp.com",
-  databaseURL: "https://sorcerers-9534c-default-rtdb.firebaseio.com",
+  databaseURL:
+    "https://sorcerers-9534c-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "sorcerers-9534c",
   storageBucket: "sorcerers-9534c.appspot.com",
   messagingSenderId: "788369848487",
