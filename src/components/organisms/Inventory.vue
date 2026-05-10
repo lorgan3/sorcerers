@@ -176,9 +176,10 @@ const getElementFilter = (element: Element) =>
           :class="{ control: true, 'crystal-ball': true, slot: true, scrying: cameraDetached }"
           @mousedown="handleRecenter"
         >
-          <span class="glyph glyph-1">ᚨ</span>
-          <span class="glyph glyph-2">ᚹ</span>
-          <span class="glyph glyph-3">ᚱ</span>
+          <img class="glyph glyph-1" src="../../assets/icons/arcane_bright.png" />
+          <img class="glyph glyph-2" src="../../assets/icons/elemental_bright.png" />
+          <img class="glyph glyph-3" src="../../assets/icons/life_bright.png" />
+          <img class="glyph glyph-4" src="../../assets/icons/physical_bright.png" />
         </div>
       </Tooltip>
       <Tooltip
@@ -305,21 +306,22 @@ const getElementFilter = (element: Element) =>
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 0;
-        height: 0;
+        width: 16px;
+        height: 16px;
+        margin: -8px 0 0 -8px;
         pointer-events: none;
-        color: var(--glow-mystic);
-        font-family: Eternal;
-        font-size: 14px;
-        text-shadow: 0 0 4px var(--glow-mystic);
+        image-rendering: pixelated;
+        filter: drop-shadow(0 0 4px var(--glow-mystic));
         opacity: 0;
         transition: opacity 0.3s ease;
         transform-origin: center;
-        animation: scrying-orbit 4s linear infinite;
+        animation: scrying-orbit 5s linear infinite;
       }
 
-      .glyph-2 { animation-duration: 5.5s; animation-direction: reverse; }
-      .glyph-3 { animation-duration: 6.5s; }
+      .glyph-1 { animation-delay: 0s; }
+      .glyph-2 { animation-delay: -1.25s; }
+      .glyph-3 { animation-delay: -2.5s; }
+      .glyph-4 { animation-delay: -3.75s; }
     }
 
     &.spell-book {
@@ -403,7 +405,7 @@ const getElementFilter = (element: Element) =>
 }
 
 @keyframes scrying-orbit {
-  0%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(28px) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg) translateX(28px) rotate(-360deg); }
+  0%   { transform: rotate(0deg)   translateX(28px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
 }
 </style>
