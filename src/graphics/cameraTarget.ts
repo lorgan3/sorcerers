@@ -5,10 +5,11 @@ import { getDistance } from "../util/math";
 import { getManager } from "../data/context";
 import { Viewport } from "../data/map/viewport";
 
+export type AttachListener = (detached: boolean) => void;
+export type ZoomListener = (scale: number) => void;
+
 export class CameraTarget {
   private static maxScale = 4;
-  // Lower bound for zoom-out is computed dynamically per-resize from the
-  // world/screen ratio (see `connect`), so no static minScale constant.
 
   private static zoomSpeed = 0.01;
   private static maxZoomScale = 10;
@@ -16,9 +17,6 @@ export class CameraTarget {
   private static continueDelay = 120;
 
   private static deadzone = 100;
-  // Cap on per-frame velocity (screen-pixels/frame at scale 1). Pans longer
-  // than (maxPanSpeed * accel-time) cruise at this speed instead of growing
-  // without bound, which is what makes time-to-target scale with distance.
   private static maxPanSpeed = 30;
   private static acceleration = 0.7;
   private static manualAcceleration = 0.35;
@@ -37,9 +35,21 @@ export class CameraTarget {
   private position: [number, number];
   private lastTargetPosition: [number, number] = [0, 0];
 
-  private attached = true;
+  private _attached = true;
+  private attachListeners: AttachListener[] = [];
+  private zoomListeners: ZoomListener[] = [];
   private oldCDown = false;
   private oldMouseDown = false;
+
+  private get attached() {
+    return this._attached;
+  }
+
+  private set attached(value: boolean) {
+    if (this._attached === value) return;
+    this._attached = value;
+    for (const listener of this.attachListeners) listener(!value);
+  }
 
   private speed = 0;
   private scale = 1;
@@ -171,8 +181,6 @@ export class CameraTarget {
       ? CameraTarget.acceleration
       : CameraTarget.manualAcceleration;
 
-    // Kinematic stopping distance under baseAcc:
-    //   v² = 2·a·d  ⇒  d = v²/(2a)
     const brakeDist = (this.speed * this.speed) / (2 * baseAcc);
 
     let acc: number;
@@ -184,11 +192,8 @@ export class CameraTarget {
       acc = 0;
     }
 
-    // Existing kinematic integration: displacement = v·dt + ½·a·dt²
     const idt = (dt * dt) / 2;
-    let speed = this.speed * dt + acc * idt;
-
-    if (speed < 0) speed = 0;
+    let step = Math.max(0, this.speed * dt + acc * idt);
 
     if (adx === 0 && ady === 0) {
       this.speed = 0;
@@ -196,8 +201,8 @@ export class CameraTarget {
     }
 
     const sum = adx + ady;
-    const sx = sum ? (speed * adx) / sum : 0;
-    const sy = sum ? (speed * ady) / sum : 0;
+    const sx = sum ? (step * adx) / sum : 0;
+    const sy = sum ? (step * ady) / sum : 0;
     this.speed = Math.max(0, this.speed + acc * dt);
 
     if (adx > sx && adx > 1) {
@@ -226,10 +231,24 @@ export class CameraTarget {
     return !this.attached;
   }
 
+  addAttachListener(listener: AttachListener): () => void {
+    this.attachListeners.push(listener);
+    return () => {
+      const index = this.attachListeners.indexOf(listener);
+      if (index !== -1) this.attachListeners.splice(index, 1);
+    };
+  }
+
+  addZoomListener(listener: ZoomListener): () => void {
+    this.zoomListeners.push(listener);
+    return () => {
+      const index = this.zoomListeners.indexOf(listener);
+      if (index !== -1) this.zoomListeners.splice(index, 1);
+    };
+  }
+
   recenter() {
     this.attached = true;
-    // Reset speed so pan to active character starts from zero — produces a clean
-    // accelerate-from-rest motion rather than continuing whatever drift was active.
     this.speed = 0;
   }
 
@@ -261,9 +280,6 @@ export class CameraTarget {
     this.controller = controller;
 
     const zoom = (newScale: number) => {
-      // Allow zooming out until the entire map fits on screen with letterbox borders
-      // on the larger screen dimension. Use min(...) of the two ratios so the smaller
-      // (more zoomed-out) ratio wins.
       const minScale = Math.min(
         this.viewport.screenHeight / this.viewport.worldHeight,
         this.viewport.screenWidth / this.viewport.worldWidth
@@ -294,6 +310,8 @@ export class CameraTarget {
         this.controller!.mouseMove(x + dx2, y + dy2);
         this.viewport.moveCenter(...this.position);
       }
+
+      for (const listener of this.zoomListeners) listener(this.scale);
     };
 
     controller.addScrollListener((event) => {
@@ -314,7 +332,6 @@ export class CameraTarget {
 
     let x: number;
     if (this.viewport.worldWidth * this.scale < this.viewport.screenWidth) {
-      // World narrower than screen — pin to world-center; viewport will letterbox.
       x = this.viewport.worldWidth / 2;
     } else {
       x = Math.max(
