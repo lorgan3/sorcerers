@@ -19,6 +19,8 @@ import { RouterView } from "vue-router";
   --stroke-length: 43.425px;
   --glow-warm: rgba(180, 120, 40, 0.3);
   --glow-warm-soft: rgba(180, 120, 40, 0.1);
+  --glow-mystic: rgba(106, 140, 255, 0.5);
+  --glow-mystic-soft: rgba(106, 140, 255, 0.15);
   --border-accent: #80331e;
   --border-accent-hover: #a04428;
   --border-accent-faint: rgba(128, 51, 30, 0.4);

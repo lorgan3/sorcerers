@@ -1,4 +1,6 @@
 import { Application, Container, TextureStyle } from "pixi.js";
+import { Vignette } from "../../graphics/vignette";
+import { Letterbox } from "../../graphics/letterbox";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Server } from "../network/server";
@@ -44,6 +46,8 @@ export class Level {
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
+  private vignette: Vignette;
+  private letterbox: Letterbox;
 
   private layers: Record<Layer, Container> = {
     [Layer.Background]: this.backgroundContainer,
@@ -95,7 +99,15 @@ export class Level {
     );
 
     this.cameraTarget = new CameraTarget(this.viewport);
-    this.app.stage.addChild(this.viewport, this.numberContainer);
+    this.vignette = new Vignette(window.innerWidth, window.innerHeight);
+    this.letterbox = new Letterbox(this.viewport);
+    this.cameraTarget.addZoomListener(() => this.letterbox.update());
+    this.app.stage.addChild(
+      this.viewport,
+      this.numberContainer,
+      this.letterbox,
+      this.vignette
+    );
 
     this.terrain = new Terrain(map);
 
@@ -131,6 +143,8 @@ export class Level {
   private resize = () => {
     this.app.resize();
     this.viewport.resize(window.innerWidth, window.innerHeight);
+    this.vignette.resize(window.innerWidth, window.innerHeight);
+    this.letterbox.update();
   };
 
   destroy() {
@@ -220,6 +234,10 @@ export class Level {
     }
 
     this.cameraTarget.tick(dt);
+
+    this.vignette.setVisible(this.cameraTarget.isDetached);
+    this.vignette.tick(dt);
+
     this.terrain.flush();
   }
 
