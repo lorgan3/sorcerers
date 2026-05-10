@@ -15,7 +15,10 @@ export class CameraTarget {
   private static continueDelay = 120;
 
   private static deadzone = 100;
-  private static maxSpeedFactor = 0.2;
+  // Cap on per-frame velocity (screen-pixels/frame at scale 1). Pans longer
+  // than (maxPanSpeed * accel-time) cruise at this speed instead of growing
+  // without bound, which is what makes time-to-target scale with distance.
+  private static maxPanSpeed = 30;
   private static acceleration = 0.7;
   private static manualAcceleration = 0.35;
 
@@ -157,25 +160,34 @@ export class CameraTarget {
     const dy = (position[1] - this.position[1]) * this.scale;
     const adx = Math.abs(dx);
     const ady = Math.abs(dy);
-    const distance = Math.sqrt(dx ** 2 + dy ** 2);
-    const maxSpeed = distance * CameraTarget.maxSpeedFactor;
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (this.speed === 0 && distance <= CameraTarget.deadzone) {
       return;
     }
 
-    const idt = Math.pow(dt, 2) / 2;
-    let speed = this.speed * dt;
-    let acc = 0;
+    const baseAcc = this.attached
+      ? CameraTarget.acceleration
+      : CameraTarget.manualAcceleration;
 
-    if (this.speed < maxSpeed) {
-      acc = this.attached
-        ? CameraTarget.acceleration
-        : CameraTarget.manualAcceleration;
+    // Kinematic stopping distance under baseAcc:
+    //   v² = 2·a·d  ⇒  d = v²/(2a)
+    const brakeDist = (this.speed * this.speed) / (2 * baseAcc);
+
+    let acc: number;
+    if (distance <= brakeDist) {
+      acc = -baseAcc;
+    } else if (this.speed < CameraTarget.maxPanSpeed) {
+      acc = baseAcc;
     } else {
-      acc = maxSpeed - this.speed;
+      acc = 0;
     }
-    speed += acc * idt;
+
+    // Existing kinematic integration: displacement = v·dt + ½·a·dt²
+    const idt = (dt * dt) / 2;
+    let speed = this.speed * dt + acc * idt;
+
+    if (speed < 0) speed = 0;
 
     if (adx === 0 && ady === 0) {
       this.speed = 0;
@@ -185,7 +197,7 @@ export class CameraTarget {
     const sum = adx + ady;
     const sx = sum ? (speed * adx) / sum : 0;
     const sy = sum ? (speed * ady) / sum : 0;
-    this.speed += acc * dt;
+    this.speed = Math.max(0, this.speed + acc * dt);
 
     if (adx > sx && adx > 1) {
       this.position[0] += Math.sign(dx) * sx;
