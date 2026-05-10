@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { get, set } from "../../util/localStorage";
 import { GameSettings, defaults } from "../../util/localStorage/settings";
 import { MessageType } from "../../data/network/types";
@@ -17,6 +17,10 @@ import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
 import { useHostServer } from "./composables/useHostServer";
 import { useHostPlayers } from "./composables/useHostPlayers";
+import {
+  LobbyAnnouncement,
+  type LobbyEntry,
+} from "../../data/network/lobbyAnnouncement";
 
 const { onPlay } = defineProps<{
   onPlay: (key: string, map: Map | Config, settings: GameSettings) => void;
@@ -72,6 +76,8 @@ const updateLobby = debounce(() => {
       settings: gameSettings.value,
     });
   }
+
+  pushAnnouncement();
 }, 200);
 
 const {
@@ -85,6 +91,56 @@ const {
   handleSave,
 } = useHostPlayers(updateLobby, gameSettings);
 
+const announcement = new LobbyAnnouncement();
+let announced = false;
+
+const buildEntry = (): LobbyEntry => ({
+  joinKey: key.value,
+  hostName: players.value[0]?.name ?? settings.name,
+  mapName: mapContainer.name,
+  playerCount: players.value.length,
+  maxPlayers: COLORS.length,
+  gameSettings: {
+    turnLength: gameSettings.value.turnLength,
+    gameLength: gameSettings.value.gameLength,
+    teamSize: gameSettings.value.teamSize,
+    manaMultiplier: gameSettings.value.manaMultiplier,
+    itemSpawnChance: gameSettings.value.itemSpawnChance,
+    trustClient: gameSettings.value.trustClient,
+  },
+  lastUpdatedAt: 0,
+});
+
+const startAnnouncement = async () => {
+  if (announced) return;
+  try {
+    await announcement.start(buildEntry());
+    announced = true;
+  } catch (e) {
+    console.error("Failed to announce lobby", e);
+  }
+};
+const stopAnnouncement = async () => {
+  if (!announced) return;
+  announced = false;
+  try {
+    await announcement.stop();
+  } catch (e) {
+    console.error("Failed to stop lobby announcement", e);
+  }
+};
+const pushAnnouncement = () => {
+  if (!announced) return;
+  announcement.update(buildEntry());
+};
+
+watch(
+  () => gameSettings.value.isPrivate,
+  (isPrivate) => {
+    (isPrivate ? stopAnnouncement() : startAnnouncement()).catch(() => {});
+  }
+);
+
 onMounted(async () => {
   promise.value = createServer(settings.name, team.value, (server) => {
     const player = server.addPlayer(settings.name, team.value);
@@ -94,12 +150,21 @@ onMounted(async () => {
 
   await promise.value;
   updateLobby();
+
+  if (!gameSettings.value.isPrivate) {
+    await startAnnouncement();
+  }
+});
+
+onUnmounted(() => {
+  stopAnnouncement();
 });
 
 const handleBack = () => {
   if (serverStarting.value) {
     return;
   }
+  stopAnnouncement();
   destroyServer();
   router.replace("/");
 };
@@ -111,6 +176,7 @@ const handleStart = async () => {
   await promise.value;
 
   serverStarting.value = true;
+  await stopAnnouncement();
   set("Settings", {
     ...settings,
     name: players.value[0].name,
@@ -130,6 +196,7 @@ const handleSaveSettings = (settings: GameSettings) => {
   gameSettings.value = settings;
 
   updateLobby();
+  pushAnnouncement();
 };
 
 const handleSelectMap = async (config: Config, name: string) => {
@@ -137,6 +204,7 @@ const handleSelectMap = async (config: Config, name: string) => {
   mapContainer.name = name;
 
   updateLobby();
+  pushAnnouncement();
 };
 </script>
 

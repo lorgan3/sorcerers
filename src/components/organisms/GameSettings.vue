@@ -58,6 +58,10 @@ const numberFormatter = new Intl.NumberFormat("en");
         <h3>Item spawn chance</h3>
         {{ `${numberFormatter.format(settings.itemSpawnChance)}%` }}
       </li>
+      <li>
+        <h3>Visibility</h3>
+        {{ settings.isPrivate ? "Private" : "Public" }}
+      </li>
     </ul>
     <Dialog :open="isEditing" :onClose="handleClose" title="Edit settings">
       <div class="inputs">
@@ -89,6 +93,17 @@ const numberFormatter = new Intl.NumberFormat("en");
           :min="0"
           :max="400"
         />
+        <label class="input-label checkbox-label">
+          <input type="checkbox" v-model="editedSettings.isPrivate" />
+          <span class="checkmark"></span>
+          <Tooltip
+            text="Hides this game from the main menu server browser"
+            direction="center-right"
+            to="#dialog"
+          >
+            <span class="label">Private game</span>
+          </Tooltip>
+        </label>
         <label class="input-label checkbox-label">
           <input type="checkbox" v-model="editedSettings.trustClient" />
           <span class="checkmark"></span>

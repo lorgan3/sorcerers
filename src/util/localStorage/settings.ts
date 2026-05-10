@@ -8,6 +8,7 @@ export interface GameSettings {
   teamSize: number;
   manaMultiplier: number;
   itemSpawnChance: number;
+  isPrivate: boolean;
 }
 
 export interface Settings {
@@ -48,6 +49,10 @@ export const settingsReviver = (key: string, value: any): any => {
     return assertNumber(value, 0, 500);
   }
 
+  if (key === "isPrivate") {
+    return typeof value === "boolean" ? value : false;
+  }
+
   return value;
 };
 
@@ -78,6 +83,7 @@ export const defaults = (settings?: Partial<Settings> | null): Settings => {
       teamSize: 4,
       manaMultiplier: 100,
       itemSpawnChance: 100,
+      isPrivate: false,
       ...gameSettings,
     },
     ...rest,
