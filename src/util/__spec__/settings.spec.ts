@@ -3,27 +3,27 @@ import { defaults, settingsReviver } from "../localStorage/settings";
 
 describe("settings", () => {
   describe("defaults", () => {
-    it("defaults isPublic to false when no settings stored", () => {
+    it("defaults isPrivate to false (public) when no settings stored", () => {
       const s = defaults();
-      expect(s.gameSettings.isPublic).toBe(false);
+      expect(s.gameSettings.isPrivate).toBe(false);
     });
 
-    it("preserves isPublic when stored as true", () => {
-      const s = defaults({ gameSettings: { isPublic: true } as any });
-      expect(s.gameSettings.isPublic).toBe(true);
+    it("preserves isPrivate when stored as true", () => {
+      const s = defaults({ gameSettings: { isPrivate: true } as any });
+      expect(s.gameSettings.isPrivate).toBe(true);
     });
   });
 
   describe("settingsReviver", () => {
-    it("coerces non-boolean isPublic to false", () => {
-      expect(settingsReviver("isPublic", "yes")).toBe(false);
-      expect(settingsReviver("isPublic", 1)).toBe(false);
-      expect(settingsReviver("isPublic", null)).toBe(false);
+    it("coerces non-boolean isPrivate to false", () => {
+      expect(settingsReviver("isPrivate", "yes")).toBe(false);
+      expect(settingsReviver("isPrivate", 1)).toBe(false);
+      expect(settingsReviver("isPrivate", null)).toBe(false);
     });
 
-    it("preserves boolean isPublic", () => {
-      expect(settingsReviver("isPublic", true)).toBe(true);
-      expect(settingsReviver("isPublic", false)).toBe(false);
+    it("preserves boolean isPrivate", () => {
+      expect(settingsReviver("isPrivate", true)).toBe(true);
+      expect(settingsReviver("isPrivate", false)).toBe(false);
     });
   });
 });

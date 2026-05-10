@@ -127,10 +127,10 @@ const pushAnnouncement = () => {
 };
 
 watch(
-  () => gameSettings.value.isPublic,
-  (isPublic) => {
-    if (isPublic) startAnnouncement();
-    else stopAnnouncement();
+  () => gameSettings.value.isPrivate,
+  (isPrivate) => {
+    if (isPrivate) stopAnnouncement();
+    else startAnnouncement();
   }
 );
 
@@ -144,7 +144,7 @@ onMounted(async () => {
   await promise.value;
   updateLobby();
 
-  if (gameSettings.value.isPublic) {
+  if (!gameSettings.value.isPrivate) {
     await startAnnouncement();
   }
 });

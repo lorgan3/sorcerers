@@ -90,14 +90,14 @@ const numberFormatter = new Intl.NumberFormat("en");
           :max="400"
         />
         <label class="input-label checkbox-label">
-          <input type="checkbox" v-model="editedSettings.isPublic" />
+          <input type="checkbox" v-model="editedSettings.isPrivate" />
           <span class="checkmark"></span>
           <Tooltip
-            text="Lists this game in the main menu server browser"
+            text="Hides this game from the main menu server browser"
             direction="center-right"
             to="#dialog"
           >
-            <span class="label">Public game</span>
+            <span class="label">Private game</span>
           </Tooltip>
         </label>
         <label class="input-label checkbox-label">
