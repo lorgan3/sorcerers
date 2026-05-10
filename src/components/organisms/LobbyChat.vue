@@ -23,6 +23,7 @@ const inputEl = ref<HTMLInputElement | null>(null);
 const wasAtBottom = ref(true);
 let lastSoundAt = 0;
 let flashTimeout: number | undefined;
+let resizeObserver: ResizeObserver | undefined;
 
 const handleScroll = () => {
   const el = messageList.value;
@@ -32,7 +33,10 @@ const handleScroll = () => {
 
 const scrollToBottom = () => {
   const el = messageList.value;
-  if (el) el.scrollTop = el.scrollHeight;
+  if (el) {
+    el.scrollTop = el.scrollHeight;
+    wasAtBottom.value = true;
+  }
 };
 
 const playPop = () => {
@@ -67,7 +71,22 @@ const handleChatMessage = (_entry: ChatEntry, byMe: boolean) => {
 
 onMounted(() => {
   props.manager.onChatMessage = handleChatMessage;
-  nextTick(scrollToBottom);
+  nextTick(() => {
+    scrollToBottom();
+    if (messageList.value && typeof ResizeObserver !== "undefined") {
+      // Re-pin to bottom on every clientHeight change (open/close
+      // transitions, hover, etc). Without this, growing the container
+      // (e.g. on hover) lets the browser clamp scrollTop down to fit
+      // the bigger window — and that smaller scrollTop sticks when the
+      // container shrinks back, leaving the last line off-center.
+      resizeObserver = new ResizeObserver(() => {
+        if (!isOpen.value || wasAtBottom.value) {
+          scrollToBottom();
+        }
+      });
+      resizeObserver.observe(messageList.value);
+    }
+  });
 });
 
 onUnmounted(() => {
@@ -75,6 +94,7 @@ onUnmounted(() => {
     props.manager.onChatMessage = undefined;
   }
   if (flashTimeout) window.clearTimeout(flashTimeout);
+  resizeObserver?.disconnect();
 });
 
 watch(isOpen, (open) => {
@@ -83,13 +103,6 @@ watch(isOpen, (open) => {
       scrollToBottom();
       inputEl.value?.focus();
     });
-  } else {
-    // The panel's height transitions from 400px → 36px over 300ms.
-    // scrollToBottom needs to run *after* the messages container has
-    // shrunk; otherwise scrollTop clamps to 0 against the open-state
-    // clientHeight and the latest line ends up off-screen.
-    nextTick(scrollToBottom);
-    window.setTimeout(scrollToBottom, 350);
   }
 });
 
