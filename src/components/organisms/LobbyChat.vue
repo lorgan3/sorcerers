@@ -178,7 +178,6 @@ const containerClass = computed(() => ({
   height: 36px;
   box-sizing: border-box;
   z-index: 50;
-  overflow: hidden;
 
   background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
   border: 2px solid var(--border-accent);
@@ -249,7 +248,7 @@ const containerClass = computed(() => ({
 .messages {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 8px 12px;
+  padding: 4px 12px;
   scrollbar-color: var(--border-accent-faint) transparent;
   scrollbar-width: thin;
 }
@@ -267,6 +266,10 @@ const containerClass = computed(() => ({
   word-wrap: break-word;
   line-height: 1.3;
   color: var(--primary);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .author {
