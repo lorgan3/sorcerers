@@ -166,7 +166,7 @@ const getElementFilter = (element: Element) =>
       >
         <div
           :class="{ control: true, 'crystal-ball': true, slot: true, scrying: cameraDetached }"
-          @click="handleRecenter"
+          @mousedown="handleRecenter"
         >
           <span class="glyph glyph-1">ᚨ</span>
           <span class="glyph glyph-2">ᚹ</span>

@@ -100,15 +100,14 @@ export class Level {
     this.cameraTarget = new CameraTarget(this.viewport);
     this.app.stage.addChild(this.viewport, this.numberContainer);
 
-    // Loaded asynchronously alongside Pixi init. Inserted at numberContainer's
-    // index so it sits above the viewport (covering world content) but below
-    // damage numbers, which should remain readable through the vignette.
+    // Loaded asynchronously alongside Pixi init. Sits on app.stage above the
+    // viewport so it stays in screen-space (no scale/translate with the camera).
+    // Damage numbers live inside viewport, so they end up below the vignette —
+    // acceptable since the texture is transparent in the center where they
+    // mostly appear.
     Assets.load(vignetteUrl).then((tex) => {
-      const numberContainerIndex = this.app.stage.children.indexOf(
-        this.numberContainer
-      );
       this.vignette = new Vignette(tex, window.innerWidth, window.innerHeight);
-      this.app.stage.addChildAt(this.vignette, numberContainerIndex);
+      this.app.stage.addChild(this.vignette);
     });
 
     this.terrain = new Terrain(map);
