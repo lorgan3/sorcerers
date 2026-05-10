@@ -34,10 +34,16 @@ import { getLevel, getManager, getServer } from "../context";
 import { CharacterHealth } from "./characterHealth";
 import { CharacterCombat } from "./characterCombat";
 import { CharacterMovement } from "./characterMovement";
+import { Gib } from "./gib";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
 const SMOKE_TRIGGER = 2;
+const KICK_VELOCITY_THRESHOLD_SQUARED = 0.04;
+const KICK_RADIUS_SQUARED = 30 * 30;
+const KICK_SCALE = 0.5;
+const KICK_LIFT = 0.6;
+const KICK_SPIN = 0.3;
 const WALK_DURATION = 20;
 const MELEE_DURATION = 50;
 const PAGE_READ_DURATION = 60;
@@ -352,6 +358,31 @@ export class Character extends Container implements HurtableEntity, Syncable {
     return [this.position.x + 18, this.position.y + 48];
   }
 
+  private kickNearbyGibs() {
+    const xSpeedSquared = this.body.xVelocity ** 2;
+    if (xSpeedSquared < KICK_VELOCITY_THRESHOLD_SQUARED) {
+      return;
+    }
+
+    const cx = this.position.x + 18;
+    const cy = this.position.y + 72;
+    const xV = this.body.xVelocity;
+    const xVAbs = Math.abs(xV);
+
+    for (const entity of getLevel().entities) {
+      if (!(entity instanceof Gib)) continue;
+
+      const dx = entity.position.x - cx;
+      const dy = entity.position.y - cy;
+      const distSquared = dx * dx + dy * dy;
+      if (distSquared >= KICK_RADIUS_SQUARED) continue;
+
+      entity.body.addVelocity(xV * KICK_SCALE, -xVAbs * KICK_LIFT);
+      entity.spin(Math.sign(xV) * xVAbs * KICK_SPIN);
+      entity.bleed();
+    }
+  }
+
   tick(dt: number) {
     this._time += dt;
     if (this._time > this.lastActiveTime + Character.maxInactiveTime) {
@@ -394,6 +425,8 @@ export class Character extends Container implements HurtableEntity, Syncable {
         this.body.mask,
         ...this.body.position,
       );
+
+      this.kickNearbyGibs();
     }
 
     this.animator.tick(dt);

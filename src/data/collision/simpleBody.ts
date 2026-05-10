@@ -92,6 +92,11 @@ export class SimpleBody implements PhysicsBody {
     this.active = 1;
   }
 
+  damp(xFactor: number, yFactor: number, dt: number) {
+    this.xVelocity *= Math.pow(xFactor, dt);
+    this.yVelocity *= Math.pow(yFactor, dt);
+  }
+
   move(x: number, y: number) {
     this.x = x;
     this.y = y;
