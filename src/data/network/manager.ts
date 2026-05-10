@@ -211,6 +211,7 @@ export abstract class Manager {
       activePlayer: this.activePlayer,
       mana: this._self?.mana || 0,
       stats: this.stats,
+      cameraDetached: getContextOrNull()?.level?.cameraTarget.isDetached ?? false,
     };
   }
 
