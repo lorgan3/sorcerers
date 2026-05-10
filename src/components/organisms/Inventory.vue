@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SPELLS, Spell } from "../../data/spells";
-import { getManager, getServer } from "../../data/context";
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { getLevel, getManager, getServer } from "../../data/context";
+import { onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
 import { Client } from "../../data/network/client";
 import { Message, MessageType } from "../../data/network/types";
 import Tooltip from "../atoms/Tooltip.vue";
@@ -30,6 +30,8 @@ const sections = {
 
 const selectedSpell = ref(getManager()?.selectedSpell);
 const availableList = ref<boolean[]>([]);
+const cameraDetached = ref(false);
+const activeCharacterName = ref<string>("");
 
 let cachedExecutedSpells: Spell[] | null = null;
 let cachedExecutedLength = 0;
@@ -70,9 +72,40 @@ const poll = () => {
   }
 };
 
+const pollDetach = () => {
+  const manager = getManager();
+  if (!manager) return;
+
+  const data = manager.getHudData();
+  if (cameraDetached.value !== data.cameraDetached) {
+    cameraDetached.value = data.cameraDetached;
+  }
+
+  const activeName = data.activePlayer?.activeCharacter?.characterName ?? "";
+  if (activeCharacterName.value !== activeName) {
+    activeCharacterName.value = activeName;
+  }
+};
+
+const crystalBallTooltip = computed(() => {
+  if (!cameraDetached.value) {
+    return "Hold ctrl or middle mouse for free camera";
+  }
+  return activeCharacterName.value
+    ? `Click to refocus on ${activeCharacterName.value}`
+    : "Click to refocus the camera";
+});
+
 let id = -1;
-onMounted(() => (id = window.setInterval(poll, 1000)));
-onBeforeUnmount(() => window.clearInterval(id));
+let detachId = -1;
+onMounted(() => {
+  id = window.setInterval(poll, 1000);
+  detachId = window.setInterval(pollDetach, 100);
+});
+onBeforeUnmount(() => {
+  window.clearInterval(id);
+  window.clearInterval(detachId);
+});
 
 watch(
   () => props.isOpen,
@@ -108,6 +141,15 @@ const handleClick = (spell?: Spell) => {
   }
 };
 
+const handleRecenter = (event: MouseEvent) => {
+  // Only react when actually detached — otherwise let the click bubble normally
+  // (parent .controls also has a mousedown that opens the inventory).
+  if (!cameraDetached.value) return;
+
+  event.stopPropagation();
+  getLevel().cameraTarget.recenter();
+};
+
 const getElementFilter = (element: Element) =>
   `brightness(${
     0.1 + Math.min(1, getManager().getElementValue(element) / 1.3)
@@ -119,10 +161,17 @@ const getElementFilter = (element: Element) =>
     <div class="controls" @mousedown="props.setInventoryState(true)">
       <Tooltip
         direction="center-left"
-        text="Hold ctrl or middle mouse for free camera"
+        :text="crystalBallTooltip"
         width="240px"
       >
-        <div class="control crystal-ball slot"></div>
+        <div
+          :class="{ control: true, 'crystal-ball': true, slot: true, scrying: cameraDetached }"
+          @click="handleRecenter"
+        >
+          <span class="glyph glyph-1">ᚨ</span>
+          <span class="glyph glyph-2">ᚹ</span>
+          <span class="glyph glyph-3">ᚱ</span>
+        </div>
       </Tooltip>
       <Tooltip
         v-if="!selectedSpell"
@@ -228,6 +277,41 @@ const getElementFilter = (element: Element) =>
 
     &.crystal-ball {
       background-image: url("../../assets/icons/crystal_ball.png");
+      position: relative;
+      transition: filter 0.3s ease, box-shadow 0.3s ease;
+
+      &.scrying {
+        cursor: pointer;
+        box-shadow:
+          0 0 6px var(--glow-mystic),
+          0 0 14px var(--glow-mystic-soft),
+          inset 0 0 6px var(--glow-mystic-soft);
+        animation: scrying-pulse 1.6s ease-in-out infinite;
+
+        .glyph {
+          opacity: 1;
+        }
+      }
+
+      .glyph {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+        color: var(--glow-mystic);
+        font-family: Eternal;
+        font-size: 14px;
+        text-shadow: 0 0 4px var(--glow-mystic);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        transform-origin: center;
+        animation: scrying-orbit 4s linear infinite;
+      }
+
+      .glyph-2 { animation-duration: 5.5s; animation-direction: reverse; }
+      .glyph-3 { animation-duration: 6.5s; }
     }
 
     &.spell-book {
@@ -303,5 +387,15 @@ const getElementFilter = (element: Element) =>
       }
     }
   }
+}
+
+@keyframes scrying-pulse {
+  0%, 100% { filter: brightness(1.0); }
+  50%      { filter: brightness(1.35); }
+}
+
+@keyframes scrying-orbit {
+  0%   { transform: translate(-50%, -50%) rotate(0deg)   translateX(28px) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) translateX(28px) rotate(-360deg); }
 }
 </style>
