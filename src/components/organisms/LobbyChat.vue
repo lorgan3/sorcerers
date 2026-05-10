@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { sound } from "@pixi/sound";
+import closeIcon from "pixelarticons/svg/close.svg";
 import { Sound, getRandomSound } from "../../sound";
 import { Manager } from "../../data/network/manager";
 import type { ChatEntry } from "../../data/network/types";
 import ChatParticles from "../molecules/ChatParticles.vue";
+import IconButton from "../atoms/IconButton.vue";
 
 const props = defineProps<{
   manager: Manager;
@@ -118,45 +120,45 @@ const containerClass = computed(() => ({
 
     <button
       v-if="!isOpen"
-      class="slice"
+      class="open-trigger"
       type="button"
       @click="open"
       title="Open chat"
-    >
-      <span class="slice-label">Chat</span>
-    </button>
+    />
 
-    <template v-else>
-      <div class="header">
-        <h3>Chat</h3>
-        <button class="close" type="button" @click="close" title="Close chat">×</button>
-      </div>
+    <IconButton
+      v-else
+      class="close-btn"
+      :icon="closeIcon"
+      title="Close chat"
+      :onClick="close"
+    />
+
+    <div
+      ref="messageList"
+      class="messages"
+      @scroll="handleScroll"
+    >
       <div
-        ref="messageList"
-        class="messages"
-        @scroll="handleScroll"
+        v-for="msg in messages"
+        :key="msg.id"
+        class="message"
       >
-        <div
-          v-for="msg in messages"
-          :key="msg.id"
-          class="message"
-        >
-          <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
-          {{ msg.text }}
-        </div>
+        <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
+        {{ msg.text }}
       </div>
-      <div class="input-row">
-        <input
-          ref="inputEl"
-          v-model="draft"
-          class="input"
-          type="text"
-          maxlength="200"
-          placeholder="type a message…"
-          @keydown="handleKey"
-        />
-      </div>
-    </template>
+    </div>
+
+    <div v-if="isOpen" class="input-row">
+      <input
+        ref="inputEl"
+        v-model="draft"
+        class="input"
+        type="text"
+        maxlength="200"
+        @keydown="handleKey"
+      />
+    </div>
   </div>
 </template>
 
@@ -170,21 +172,22 @@ const containerClass = computed(() => ({
   box-sizing: border-box;
   z-index: 50;
 
-  background: url("../../assets/parchment.png");
-  background-size: 256px;
-  image-rendering: pixelated;
-  border: 3px solid var(--border-accent);
+  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  border: 2px solid var(--border-accent);
   border-radius: 4px 4px 0 0;
   box-shadow:
-    0 0 20px inset rgba(64, 32, 32, 0.3),
-    0 -4px 20px rgba(0, 0, 0, 0.4),
-    0 0 0 1px var(--border-accent-faint);
+    0 2px 5px rgba(30, 15, 5, 0.3),
+    0 -4px 20px rgba(0, 0, 0, 0.3);
 
-  transform: translateY(calc(100% - 28px));
+  transform: translateY(calc(100% - 18px));
   transition: transform 0.3s ease-out;
 
   display: flex;
   flex-direction: column;
+
+  &:not(.lobby-chat--open):hover {
+    transform: translateY(calc(100% - 24px));
+  }
 }
 
 .lobby-chat--open {
@@ -198,17 +201,15 @@ const containerClass = computed(() => ({
 @keyframes chat-flash {
   0%, 100% {
     box-shadow:
-      0 0 20px inset rgba(64, 32, 32, 0.3),
-      0 -4px 20px rgba(0, 0, 0, 0.4),
-      0 0 0 1px var(--border-accent-faint);
-    transform: translateY(calc(100% - 28px));
+      0 2px 5px rgba(30, 15, 5, 0.3),
+      0 -4px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(calc(100% - 18px));
   }
   50% {
     box-shadow:
-      0 0 20px inset rgba(64, 32, 32, 0.3),
-      0 -4px 30px rgba(255, 220, 140, 0.5),
-      0 0 0 1px var(--border-accent-faint);
-    transform: translateY(calc(100% - 36px));
+      0 2px 5px rgba(30, 15, 5, 0.3),
+      0 -4px 30px rgba(255, 220, 140, 0.6);
+    transform: translateY(calc(100% - 28px));
   }
 }
 
@@ -220,49 +221,24 @@ const containerClass = computed(() => ({
   pointer-events: none;
 }
 
-.slice {
+.open-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 28px;
+  height: 18px;
   background: none;
   border: none;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  color: var(--border-accent);
-  font-size: 14px;
+  padding: 0;
+  z-index: 2;
 }
 
-.slice-label {
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.header {
-  flex: 0 0 auto;
-  height: 36px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-accent-faint);
-}
-
-.header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: var(--border-accent);
-}
-
-.close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--border-accent);
-  padding: 0 4px;
+.close-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
 }
 
 .messages {
@@ -277,6 +253,7 @@ const containerClass = computed(() => ({
   margin-bottom: 4px;
   word-wrap: break-word;
   line-height: 1.3;
+  color: var(--primary);
 }
 
 .author {
@@ -292,13 +269,14 @@ const containerClass = computed(() => ({
 
 .input {
   width: 100%;
+  box-sizing: border-box;
   padding: 6px 8px;
   font-family: inherit;
   font-size: 14px;
   background: rgba(255, 250, 230, 0.6);
   border: 1px solid var(--border-accent-faint);
   border-radius: 2px;
-  color: inherit;
+  color: var(--primary);
   outline: none;
 
   &:focus {
