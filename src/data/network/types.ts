@@ -29,6 +29,7 @@ export enum MessageType {
   Cast,
   EndGame,
   Chat,
+  ChatRequest,
 }
 
 export type Message =
@@ -171,6 +172,10 @@ export type Message =
       type: MessageType.Chat;
       author: string;
       color: string;
+      text: string;
+    }
+  | {
+      type: MessageType.ChatRequest;
       text: string;
     };
 

@@ -404,10 +404,6 @@ export class Client extends Manager {
         }
         break;
 
-      case MessageType.Chat:
-        this.ingestChat(message);
-        break;
-
       default:
         console.error("invalid message", message);
     }
@@ -431,9 +427,7 @@ export class Client extends Manager {
       return;
     }
     this.connection?.send({
-      type: MessageType.Chat,
-      author: "",
-      color: "",
+      type: MessageType.ChatRequest,
       text: trimmed,
     });
   }

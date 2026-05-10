@@ -527,7 +527,7 @@ export class Server extends Manager {
         player.resolveReady();
         break;
 
-      case MessageType.Chat: {
+      case MessageType.ChatRequest: {
         const text = (message.text ?? "").trim().slice(0, 200);
         if (!text || !player.color) {
           return;
