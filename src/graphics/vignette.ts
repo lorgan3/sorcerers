@@ -1,18 +1,37 @@
 import { Sprite, Texture } from "pixi.js";
 
 export class Vignette extends Sprite {
-  // Linear easing toward the visible/hidden alpha. Ticks per frame; ~12
-  // frames at 60fps to fully fade in/out.
   private static fadeStep = 1 / 12;
   private static visibleAlpha = 1;
+  private static textureSize = 512;
 
   private targetAlpha = 0;
 
-  constructor(texture: Texture, screenWidth: number, screenHeight: number) {
-    super(texture);
+  constructor(screenWidth: number, screenHeight: number) {
+    super(Vignette.buildTexture());
     this.alpha = 0;
     this.eventMode = "none";
     this.resize(screenWidth, screenHeight);
+  }
+
+  private static buildTexture(): Texture {
+    const size = Vignette.textureSize;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, cx * 1.05);
+    gradient.addColorStop(0, "rgba(20, 30, 70, 0)");
+    gradient.addColorStop(0.55, "rgba(20, 30, 70, 0)");
+    gradient.addColorStop(1, "rgba(20, 30, 70, 0.6)");
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    return Texture.from(canvas);
   }
 
   resize(screenWidth: number, screenHeight: number) {

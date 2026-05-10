@@ -1,6 +1,5 @@
-import { Application, Assets, Container, TextureStyle } from "pixi.js";
+import { Application, Container, TextureStyle } from "pixi.js";
 import { Vignette } from "../../graphics/vignette";
-import vignetteUrl from "../../assets/vignette.png";
 import { Terrain } from "./terrain";
 import { CollisionMask } from "../collision/collisionMask";
 import { Server } from "../network/server";
@@ -46,7 +45,7 @@ export class Level {
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
-  private vignette?: Vignette;
+  private vignette: Vignette;
 
   private layers: Record<Layer, Container> = {
     [Layer.Background]: this.backgroundContainer,
@@ -98,17 +97,8 @@ export class Level {
     );
 
     this.cameraTarget = new CameraTarget(this.viewport);
-    this.app.stage.addChild(this.viewport, this.numberContainer);
-
-    // Loaded asynchronously alongside Pixi init. Sits on app.stage above the
-    // viewport so it stays in screen-space (no scale/translate with the camera).
-    // Damage numbers live inside viewport, so they end up below the vignette —
-    // acceptable since the texture is transparent in the center where they
-    // mostly appear.
-    Assets.load(vignetteUrl).then((tex) => {
-      this.vignette = new Vignette(tex, window.innerWidth, window.innerHeight);
-      this.app.stage.addChild(this.vignette);
-    });
+    this.vignette = new Vignette(window.innerWidth, window.innerHeight);
+    this.app.stage.addChild(this.viewport, this.numberContainer, this.vignette);
 
     this.terrain = new Terrain(map);
 
@@ -144,7 +134,7 @@ export class Level {
   private resize = () => {
     this.app.resize();
     this.viewport.resize(window.innerWidth, window.innerHeight);
-    this.vignette?.resize(window.innerWidth, window.innerHeight);
+    this.vignette.resize(window.innerWidth, window.innerHeight);
   };
 
   destroy() {
@@ -235,10 +225,8 @@ export class Level {
 
     this.cameraTarget.tick(dt);
 
-    if (this.vignette) {
-      this.vignette.setVisible(this.cameraTarget.isDetached);
-      this.vignette.tick(dt);
-    }
+    this.vignette.setVisible(this.cameraTarget.isDetached);
+    this.vignette.tick(dt);
 
     this.terrain.flush();
   }
