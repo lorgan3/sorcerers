@@ -137,9 +137,10 @@ export class Path {
         const atLaunchPoint = pastEdge >= -1;
         const fastEnough = speedAlong >= MIN_LAUNCH_SPEED;
 
-        // Panic-fire fallback: if we've overshot the edge and are about to fall,
-        // jump anyway — better than walking off into the gap with no upward momentum.
-        const overshot = pastEdge > 4;
+        // Panic-fire fallback: if we've overshot the edge AND are still going
+        // forward, jump anyway. Don't fire when reversed — that'd just launch
+        // backward off the cliff.
+        const overshot = pastEdge > 4 && speedAlong > 0;
 
         if ((atLaunchPoint && fastEnough) || overshot) {
           commands.push({ type: CommandType.KeyDown, key: Key.Up });
@@ -167,15 +168,20 @@ export class Path {
           const distToLaunch = (newEdge.from.x - (x + 3)) * md;
           const speedAlong = this.character.body.xVelocity * md;
 
+          // Only pre-roll when effectively stationary or moving the wrong way.
+          // If already moving forward (even slowly), natural acceleration will
+          // bring us to speed before launch — pre-rolling would waste momentum.
           if (
-            speedAlong < MIN_LAUNCH_SPEED &&
+            speedAlong < 0.1 &&
             distToLaunch > 0 &&
             distToLaunch < runUpDistanceFromRest()
           ) {
             // Walk backwards until we have enough room to accelerate.
             const needed = runUpDistanceFromRest() - Math.max(0, distToLaunch);
-            // Convert to frames: at terminal velocity 0.667 px/frame, frames = needed / 0.667.
-            // But we're walking backwards from rest, so it takes longer. Use a 1.5x safety margin.
+            // Convert pixels-to-walk-back into frames. Terminal velocity is ~0.667 px/frame,
+            // so `needed / 0.667 ≈ needed * 1.5` frames at top speed.
+            // We're walking backwards from rest so the average velocity is lower — this
+            // conversion already accounts for that, no extra margin needed.
             this.prerollFrames = Math.ceil(needed * 1.5);
           }
         }
