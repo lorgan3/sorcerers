@@ -3,6 +3,7 @@ import { Command, CommandType, Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { getLevel } from "../context";
 import { Edge, EdgeType } from "./edge";
+import { MIN_LAUNCH_SPEED } from "./physics";
 
 export class Path {
   private static WALKING_NEXT_DISTANCE = 12;
@@ -106,11 +107,28 @@ export class Path {
         } else {
           commands.push({ type: CommandType.KeyDown, key: Key.Up });
         }
-      } else if (
-        destination.type === EdgeType.Jump &&
-        (Math.abs(x - destination.from.x) < 3 || distance > this.lastDistance)
-      ) {
-        commands.push({ type: CommandType.KeyDown, key: Key.Up });
+      } else if (destination.type === EdgeType.Jump) {
+        // Movement direction: +1 if walking right (to.x > from.x), -1 if walking left.
+        const md = Math.sign(destination.to.x - destination.from.x);
+
+        // How far the character is past from.x in the movement direction.
+        // Negative means still approaching; positive means at/past the edge.
+        const pastEdge = (x + 3 - destination.from.x) * md;
+
+        // xVelocity component in the movement direction.
+        const speedAlong = this.character.body.xVelocity * md;
+
+        // Launch when at-or-past the edge AND moving along the path at enough speed.
+        const atLaunchPoint = pastEdge >= -1;
+        const fastEnough = speedAlong >= MIN_LAUNCH_SPEED;
+
+        // Panic-fire fallback: if we've overshot the edge and are about to fall,
+        // jump anyway — better than walking off into the gap with no upward momentum.
+        const overshot = pastEdge > 4;
+
+        if ((atLaunchPoint && fastEnough) || overshot) {
+          commands.push({ type: CommandType.KeyDown, key: Key.Up });
+        }
       }
 
       this.lastX = x;
