@@ -44,3 +44,29 @@ export const getWord = () => {
   const word = syllables.join("");
   return word[0].toUpperCase() + word.slice(1);
 };
+
+const BOT_NAMES = [
+  "Sir Clanks-a-Lot",
+  "Gandalf.exe",
+  "AutoMage",
+  "Botric the Bland",
+  "Lagron the Grey",
+  "YeetBeard the Wise",
+  "Elf.exe",
+  "The Iron Peasant",
+  "QuestBot3000",
+  "Dumbldork",
+  "Goblin.exe",
+  "Beepus the Brave",
+  "Knightmare Fuel",
+  "Wand Error 404",
+  "Sir Miss-a-Lot",
+  "Botilda the Slightly Magical",
+  "ManaFried",
+  "The Looter King",
+  "AutoNecroMancer",
+  "PotionMotion",
+];
+
+export const getBotName = () =>
+  BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
