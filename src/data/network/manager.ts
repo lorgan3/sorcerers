@@ -10,6 +10,7 @@ import { HurtableEntity } from "../entity/types";
 import { MagicScroll } from "../entity/magicScroll";
 import { Key } from "../controller/controller";
 import { NetworkController } from "../controller/networkController";
+import { AiController } from "../controller/aiController";
 import { ActivePointer } from "../../graphics/ActivePointer";
 import { Character } from "../entity/character";
 import { minutesToMs, secondsToMs } from "../../util/time";
@@ -88,10 +89,14 @@ export abstract class Manager {
   }
 
   tick(dt: number) {
+    if (
+      this.activePlayer?.controller instanceof NetworkController ||
+      this.activePlayer?.controller instanceof AiController
+    ) {
+      this.activePlayer.controller.tick(dt);
+    }
+
     if (this.cursor) {
-      if (this.activePlayer!.controller instanceof NetworkController) {
-        this.activePlayer!.controller.tick(dt);
-      }
       this.cursor.tick(dt, this.activePlayer!.controller);
     }
 
@@ -265,6 +270,10 @@ export abstract class Manager {
 
     if (this.activePlayer.controller.isKeyDown(Key.Inventory)) {
       this.activePlayer.activeCharacter.openSpellBook();
+    }
+
+    if (this.activePlayer.controller instanceof AiController) {
+      this.activePlayer.controller.onStart();
     }
 
     if (this.activePlayer === this._self) {
