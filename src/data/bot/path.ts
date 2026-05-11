@@ -3,7 +3,7 @@ import { Command, CommandType, Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { getLevel } from "../context";
 import { Edge, EdgeType } from "./edge";
-import { MIN_LAUNCH_SPEED } from "./physics";
+import { MIN_LAUNCH_SPEED, runUpDistanceFromRest } from "./physics";
 
 export class Path {
   private static WALKING_NEXT_DISTANCE = 12;
@@ -15,6 +15,11 @@ export class Path {
   private lastDistance = Infinity;
   private bustedTimer = Path.BUSTED_TIMER;
   private stuckFrames = 0;
+
+  // When entering a Jump edge with low speed and short approach distance,
+  // we may need to walk backwards first to gain run-up. Counts down each tick;
+  // when > 0, override the walk direction.
+  private prerollFrames = 0;
 
   private pause = false;
 
@@ -79,7 +84,17 @@ export class Path {
     }
 
     if (!hasArrived) {
-      if (
+      // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
+      if (this.prerollFrames > 0) {
+        this.prerollFrames--;
+        const md = Math.sign(destination.to.x - destination.from.x);
+        // md is the JUMP direction; pre-roll walks the OPPOSITE way.
+        if (md > 0) {
+          commands.push({ type: CommandType.KeyDown, key: Key.Left });
+        } else if (md < 0) {
+          commands.push({ type: CommandType.KeyDown, key: Key.Right });
+        }
+      } else if (
         destination.to.x > x + offset &&
         (sameDirection || this.character.body.xVelocity < 0.35)
       ) {
@@ -142,6 +157,28 @@ export class Path {
 
       if (!this.done) {
         getLevel().debugLayer.highlightEdge(this.edges[this.pathIndex]);
+
+        // If the new edge is a Jump and we're starting cold (low speed, short distance
+        // to from.x), schedule a backwards pre-roll. We walk away from from.x for
+        // enough frames to build run-up distance.
+        const newEdge = this.edges[this.pathIndex];
+        if (newEdge?.type === EdgeType.Jump) {
+          const md = Math.sign(newEdge.to.x - newEdge.from.x);
+          const distToLaunch = (newEdge.from.x - (x + 3)) * md;
+          const speedAlong = this.character.body.xVelocity * md;
+
+          if (
+            speedAlong < MIN_LAUNCH_SPEED &&
+            distToLaunch > 0 &&
+            distToLaunch < runUpDistanceFromRest()
+          ) {
+            // Walk backwards until we have enough room to accelerate.
+            const needed = runUpDistanceFromRest() - Math.max(0, distToLaunch);
+            // Convert to frames: at terminal velocity 0.667 px/frame, frames = needed / 0.667.
+            // But we're walking backwards from rest, so it takes longer. Use a 1.5x safety margin.
+            this.prerollFrames = Math.ceil(needed * 1.5);
+          }
+        }
       }
     } else {
       this.lastDistance = distance;
