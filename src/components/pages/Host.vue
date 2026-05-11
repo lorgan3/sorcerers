@@ -14,7 +14,9 @@ import GameSettingsComponent from "../organisms/GameSettings.vue";
 import MapSelect from "../organisms/MapSelect.vue";
 import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
-import plus from "pixelarticons/svg/plus.svg";
+import human from "pixelarticons/svg/user-plus.svg";
+import bot from "pixelarticons/svg/contact-plus.svg";
+import { AiController } from "../../data/controller/aiController";
 import { useHostServer } from "./composables/useHostServer";
 import { useHostPlayers } from "./composables/useHostPlayers";
 import {
@@ -86,6 +88,7 @@ const {
   localPlayers,
   editingPlayer,
   handleAddLocalPlayer,
+  handleAddBot,
   handleKick,
   handleEditPlayer,
   handleClose,
@@ -220,7 +223,13 @@ const handleSelectMap = async (config: Config, name: string) => {
               v-if="players.length < COLORS.length"
               title="Add local player"
               :onClick="() => handleAddLocalPlayer(settings.name)"
-              :icon="plus"
+              :icon="human"
+            />
+            <IconButton
+              v-if="players.length < COLORS.length"
+              title="Add bot"
+              :onClick="handleAddBot"
+              :icon="bot"
             />
           </h2>
 
@@ -239,7 +248,13 @@ const handleSelectMap = async (config: Config, name: string) => {
               :player="player"
               :onDelete="index !== 0 ? () => handleKick(index) : undefined"
               :onEdit="!player.connection ? handleEditPlayer : undefined"
-              :subTitle="!player.connection ? 'Local player' : ''"
+              :subTitle="
+                !player.connection
+                  ? player.controller instanceof AiController
+                    ? 'Bot'
+                    : 'Local player'
+                  : ''
+              "
             />
             <TeamDialog
               v-if="editingPlayer"

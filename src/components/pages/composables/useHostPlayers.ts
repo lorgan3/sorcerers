@@ -4,6 +4,8 @@ import { Team } from "../../../data/team";
 import { getServer } from "../../../data/context";
 import { GameSettings } from "../../../util/localStorage/settings";
 import { IPlayer } from "../../types";
+import { AiController } from "../../../data/controller/aiController";
+import { getBotName } from "../../../util/word";
 
 export function useHostPlayers(
   updateLobby: () => void,
@@ -19,6 +21,13 @@ export function useHostPlayers(
       `${baseName} (${players.value?.length})`,
       team
     );
+    localPlayers.value.push(player.color);
+    updateLobby();
+  };
+
+  const handleAddBot = () => {
+    const team = Team.random(gameSettings.value.teamSize);
+    const player = getServer()!.addBot(getBotName(), team);
     localPlayers.value.push(player.color);
     updateLobby();
   };
@@ -62,9 +71,12 @@ export function useHostPlayers(
     localPlayers,
     editingPlayer,
     handleAddLocalPlayer,
+    handleAddBot,
     handleKick,
     handleEditPlayer,
     handleClose,
     handleSave,
   };
 }
+
+export { AiController };
