@@ -41,6 +41,21 @@ export enum Key {
   Inventory = "Inventory",
 }
 
+export enum CommandType {
+  ResetKeys,
+  KeyDown,
+  KeyUp,
+  KeyPress,
+  MouseMove,
+}
+
+export type Command =
+  | { type: CommandType.ResetKeys }
+  | { type: CommandType.KeyDown; key: Key }
+  | { type: CommandType.KeyUp; key: Key }
+  | { type: CommandType.KeyPress; key: Key }
+  | { type: CommandType.MouseMove; x: number; y: number };
+
 export const keys = Object.values(Key);
 export const keySet = new Set<string>(keys);
 
