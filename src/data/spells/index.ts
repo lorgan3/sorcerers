@@ -73,7 +73,7 @@ export const MELEE = spell(ApplyCursor, {
   range: "S",
 });
 
-const FIREBALL = spell(PoweredArcaneCircle, {
+export const FIREBALL = spell(PoweredArcaneCircle, {
   name: "Ignis",
   description: "Fireball!",
   elements: [Element.Arcane],
@@ -142,7 +142,7 @@ const SHIELD = spell(ArcaneCircle, {
   range: "S",
 });
 
-const BAKURETSU = spell(ArrowDown, {
+export const BAKURETSU = spell(ArrowDown, {
   name: "Bakuretsu",
   description: "Ekusuuu ploooooooosion",
   elements: [Element.Elemental, Element.Arcane],
@@ -159,7 +159,7 @@ const BAKURETSU = spell(ArrowDown, {
   range: null,
 });
 
-const ZOLTRAAK = spell(ArcaneCircle, {
+export const ZOLTRAAK = spell(ArcaneCircle, {
   name: "Zoltraak",
   description: "Ordinary offensive magic",
   elements: [Element.Arcane],
