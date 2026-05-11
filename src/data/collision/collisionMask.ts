@@ -163,6 +163,57 @@ export class CollisionMask {
     return !!(trow[xScaled] & bits);
   }
 
+  collidesWithLine(x0: number, y0: number, x1: number, y1: number) {
+    let dx = Math.abs(x1 - x0);
+    let dy = Math.abs(y1 - y0);
+
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    const isSteep = dy > dx;
+    if (isSteep) {
+      [dx, dy] = [dy, dx];
+    }
+
+    // Double the error term for comparison to avoid floating-point
+    let err2: number;
+    let x = x0;
+    let y = y0;
+    for (let i = 0; i <= dx; i++) {
+      if (this.collidesWithPoint(x, y)) {
+        return true;
+      }
+
+      // Update error term
+      err2 = 2 * err;
+
+      if (isSteep) {
+        // y is the driving axis
+        if (err2 > -dx) {
+          err -= dx;
+          x += sx;
+        }
+        if (err2 < dy) {
+          err += dy;
+          y += sy;
+        }
+      } else {
+        // x is the driving axis
+        if (err2 > -dy) {
+          err -= dy;
+          x += sx;
+        }
+        if (err2 < dx) {
+          err += dx;
+          y += sy;
+        }
+      }
+    }
+
+    return false;
+  }
+
   add(other: CollisionMask, dx: number, dy: number) {
     const x1 = Math.max(dx, 0);
     const y1 = Math.max(dy, 0);
