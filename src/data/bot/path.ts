@@ -25,7 +25,9 @@ export class Path {
 
   constructor(private character: Character, public readonly edges: Edge[]) {
     getLevel().debugLayer.drawPath(this);
-    getLevel().debugLayer.highlightEdge(this.edges[this.pathIndex]);
+    if (this.edges.length > 0) {
+      getLevel().debugLayer.highlightEdge(this.edges[this.pathIndex]);
+    }
   }
 
   get stuck() {
