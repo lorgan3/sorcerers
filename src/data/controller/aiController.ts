@@ -2,7 +2,7 @@ import { InvalidStrategyError } from "../bot/strategies/invalidStrategyError";
 import { Strategy } from "../bot/strategies/strategy";
 import { Targeting } from "../bot/targeting";
 
-import { Server } from "../network/server";
+import { getManager } from "../context";
 import { Command, CommandType, Controller, Key, keyMap } from "./controller";
 
 export class AiController implements Controller {
@@ -60,7 +60,8 @@ export class AiController implements Controller {
       } catch (error) {
         if (error instanceof InvalidStrategyError) {
           console.warn(error);
-          this.strategy = this.strategies[0];
+          this.strategies.shift();
+          this.strategy = this.strategies[0] ?? null;
         } else {
           throw error;
         }
@@ -69,24 +70,9 @@ export class AiController implements Controller {
   }
 
   onStart() {
-    const self = Server.instance.getActiveCharacter()!;
+    const self = getManager().getActiveCharacter()!;
     this.strategies = Targeting.evaluateStrategies(self);
     this.strategy = this.strategies[0];
-  }
-
-  getNextStrategy(): Strategy {
-    while (this.strategies.length > 0) {
-      const strategy = this.strategies[0];
-      const evaluation = strategy.getNextEvaluation();
-
-      if (!evaluation) {
-        return strategy;
-      }
-
-      this.strategies.pop();
-    }
-
-    throw new Error("No strategies left");
   }
 
   addKeyListener(key: Key, fn: () => void) {

@@ -46,7 +46,7 @@ export abstract class Strategy {
     );
 
     while (this.evaluations.length > 0) {
-      const evaluation = this.evaluations.pop()!;
+      const evaluation = this.evaluations.shift()!;
       const paths = evaluation
         .to!.map((to) => Pathfinding.findPath(from, to))
         .sort((a, b) => {
@@ -82,6 +82,10 @@ export abstract class Strategy {
   abstract get destinationReached(): boolean;
 
   tick(dt: number): Command[] {
+    if (this.evaluation === null) {
+      throw InvalidStrategyError.becauseNoReachableTarget();
+    }
+
     this.time += dt;
 
     switch (this.state) {

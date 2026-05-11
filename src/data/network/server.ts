@@ -369,7 +369,12 @@ export class Server extends Manager {
       throw new Error("Cannot kick the host!");
     }
 
-    if (localIndex > 0) {
+    if (player.controller instanceof AiController) {
+      this.players.splice(this.players.indexOf(player), 1);
+      player.destroy();
+      this.availableColors.push(player.color);
+      this.syncPlayers();
+    } else if (localIndex > 0) {
       this.localPlayers.splice(localIndex, 1);
 
       this.players.splice(this.players.indexOf(player), 1);

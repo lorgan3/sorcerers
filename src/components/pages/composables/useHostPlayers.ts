@@ -4,7 +4,6 @@ import { Team } from "../../../data/team";
 import { getServer } from "../../../data/context";
 import { GameSettings } from "../../../util/localStorage/settings";
 import { IPlayer } from "../../types";
-import { AiController } from "../../../data/controller/aiController";
 import { getBotName } from "../../../util/word";
 
 export function useHostPlayers(
@@ -78,5 +77,3 @@ export function useHostPlayers(
     handleSave,
   };
 }
-
-export { AiController };

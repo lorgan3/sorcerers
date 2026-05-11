@@ -10,4 +10,8 @@ export class InvalidStrategyError extends Error {
   static becausePathStuck() {
     return new this("we keep getting stuck");
   }
+
+  static becauseNoReachableTarget() {
+    return new InvalidStrategyError("No reachable target for this strategy");
+  }
 }
