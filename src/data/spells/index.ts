@@ -59,7 +59,7 @@ function spell<TData>(
 export const getSpellCost = (spell: Spell) =>
   spell.cost * (spell.costMultiplier?.() || 1);
 
-const MELEE = spell(ApplyCursor, {
+export const MELEE = spell(ApplyCursor, {
   name: "Melee",
   description: "For less gifted sorcerers",
   elements: [Element.Physical],

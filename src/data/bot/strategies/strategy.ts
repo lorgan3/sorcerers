@@ -1,0 +1,159 @@
+import { Command, CommandType, Key, keyMap } from "../../controller/controller";
+import { Character } from "../../entity/character";
+import { getServer } from "../../context";
+import { Spell } from "../../spells";
+import { Cluster } from "../cluster";
+import { Graph } from "../graph";
+import { Node } from "../node";
+import { Path } from "../path";
+import { Pathfinding, PathResult } from "../pathfinding";
+import { InvalidStrategyError } from "./invalidStrategyError";
+
+export interface Evaluation {
+  target: Cluster;
+  path?: PathResult;
+  to?: Node[];
+  value: number;
+}
+
+enum State {
+  Selecting,
+  Moving,
+  Casting,
+  Done,
+}
+
+export abstract class Strategy {
+  protected evaluations: Evaluation[] = [];
+  protected evaluation: Evaluation | null = null;
+  private state: State = State.Selecting;
+  private time = 0;
+  private stuckCounter = 0;
+
+  protected follower: Path | null = null;
+  protected graph: Graph | null = null;
+
+  constructor(protected character: Character) {}
+
+  abstract evaluate(graph: Graph, targets: Character[]): void;
+
+  getNextEvaluation() {
+    // Child class should populate evaluations first.
+    const myPosition = this.character.body.position;
+    const from = this.graph!.getClosestNode(
+      myPosition[0] + 3,
+      myPosition[1] + 8
+    );
+
+    while (this.evaluations.length > 0) {
+      const evaluation = this.evaluations.pop()!;
+      const paths = evaluation
+        .to!.map((to) => Pathfinding.findPath(from, to))
+        .sort((a, b) => {
+          if (!a.success) {
+            return 1;
+          }
+
+          if (!b.success) {
+            return -1;
+          }
+
+          return a.totalCost - b.totalCost;
+        });
+
+      const path = paths[0];
+      if (path?.success) {
+        this.evaluation = {
+          target: evaluation.target,
+          path,
+          value: evaluation.value,
+        };
+
+        break;
+      }
+    }
+
+    this.stuckCounter = 0;
+    return this.evaluation;
+  }
+
+  abstract execute(dt: number): Command[] | null;
+
+  abstract get destinationReached(): boolean;
+
+  tick(dt: number): Command[] {
+    this.time += dt;
+
+    switch (this.state) {
+      case State.Selecting:
+        if (this.time < 120) {
+          return [{ type: CommandType.KeyDown, key: Key.Inventory }];
+        }
+
+        getServer()!.selectSpell(
+          (this.constructor as StrategyConstructor).spell,
+          this.character.player
+        );
+
+        this.state = State.Moving;
+        if (this.path.success) {
+          this.follower = new Path(this.character, this.path.path);
+        }
+        break;
+
+      case State.Moving:
+        if (this.destinationReached) {
+          this.state = State.Casting;
+        }
+
+        if (this.follower!.stuck) {
+          this.stuckCounter++;
+          if (this.stuckCounter > 3) {
+            throw InvalidStrategyError.becausePathStuck();
+          }
+
+          const myPosition = this.character.body.position;
+          this.evaluation!.path = Pathfinding.findPath(
+            this.graph!.getClosestNode(myPosition[0] + 3, myPosition[1] + 8),
+            this.path.path!.at(-1)!.to
+          );
+
+          if (this.path.success) {
+            this.follower = new Path(this.character, this.path.path);
+          } else {
+            throw InvalidStrategyError.becausePathNotFound();
+          }
+        }
+
+        return this.follower!.getCommand(dt);
+
+      case State.Casting:
+        const commands = this.execute(dt);
+
+        if (commands) {
+          return commands;
+        }
+
+        this.state = State.Done;
+        break;
+    }
+
+    return [];
+  }
+
+  get path() {
+    return this.evaluation!.path!;
+  }
+
+  get value() {
+    return this.evaluation!.value;
+  }
+
+  get target() {
+    return this.evaluation!.target;
+  }
+}
+
+export type StrategyConstructor = (new (character: Character) => Strategy) & {
+  spell: Spell;
+};
