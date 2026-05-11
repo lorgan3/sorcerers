@@ -5,6 +5,7 @@ import { Terrain } from "../map/terrain";
 import { probeX } from "../map/utils";
 import { Edge, EdgeType } from "./edge";
 import { Node, NodeType } from "./node";
+import { MAX_JUMP_DISTANCE, MAX_JUMP_HEIGHT } from "./physics";
 
 interface EdgeWithCost {
   edge: Edge;
@@ -12,9 +13,11 @@ interface EdgeWithCost {
 }
 
 export class Graph {
-  public static JUMP_HEIGHT = 26;
-  public static JUMP_DISTANCE = 24;
-  public static DIAGONAL_DISTANCE = 28;
+  // Use Math.floor for a conservative upper bound: don't let the graph generate
+  // jumps that exceed what the body can actually clear.
+  public static JUMP_HEIGHT = Math.floor(MAX_JUMP_HEIGHT);
+  public static JUMP_DISTANCE = MAX_JUMP_DISTANCE;
+  public static DIAGONAL_DISTANCE = MAX_JUMP_DISTANCE + 4;
 
   public static FALL_LIMIT = 60;
   public static CHARACTER_HEIGHT = 16;
