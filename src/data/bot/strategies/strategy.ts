@@ -150,7 +150,11 @@ export abstract class Strategy {
   }
 
   get value() {
-    return this.evaluation!.value;
+    return this.evaluation?.value ?? -Infinity;
+  }
+
+  hasEvaluation(): boolean {
+    return this.evaluation !== null;
   }
 
   get target() {

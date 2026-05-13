@@ -30,8 +30,8 @@ export class Targeting {
 
         return strategy;
       })
-      .filter(Boolean)
-      .sort((a, b) => b!.value - a!.value);
+      .filter((strategy) => strategy.hasEvaluation())
+      .sort((a, b) => b.value - a.value);
 
     return strategies;
   }
