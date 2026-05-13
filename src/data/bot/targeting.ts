@@ -1,12 +1,23 @@
 import { Character } from "../entity/character";
 import { getLevel } from "../context";
 import { Melee } from "./strategies/melee";
+import { Bakuretsu } from "./strategies/bakuretsu";
+import { Fireball } from "./strategies/fireball";
+import { Zoltraak } from "./strategies/zoltraak";
 import { StrategyConstructor } from "./strategies/strategy";
 
 export class Targeting {
   private static MAX_TARGETING_RANGE = 2000 * 6;
 
-  private static strategies: StrategyConstructor[] = [Melee];
+  // Order doesn't matter — Targeting.evaluateStrategies sorts by computed value.
+  // For MVP all four strategies score similarly (Melee = 100 for kill / 10 otherwise,
+  // others fixed at 50). M4 will replace these with real damage-based scoring.
+  private static strategies: StrategyConstructor[] = [
+    Melee,
+    Bakuretsu,
+    Fireball,
+    Zoltraak,
+  ];
 
   static evaluateStrategies(self: Character) {
     const graph = getLevel().buildGraph(self);
