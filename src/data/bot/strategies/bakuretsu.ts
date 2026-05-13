@@ -16,9 +16,9 @@ export class Bakuretsu extends RangedStrategy {
   execute(_dt: number): Command[] | null {
     this.castFrames++;
 
-    const targetCenter = this.evaluation!.target.position;
+    const [centerX, centerY] = this.evaluation!.target.centerScreen;
 
-    // Frame 1: set mouse to target's screen-x (cursor's x maps to projectile spawn x).
+    // Frame 1: set mouse to target's screen-x center (cursor's x maps to projectile spawn x).
     // The y component is irrelevant for Bakuretsu (always falls from sky).
     // Single M1 keypress immediately fires the ArrowDown cursor.
     if (this.castFrames === 1) {
@@ -26,8 +26,8 @@ export class Bakuretsu extends RangedStrategy {
         { type: CommandType.ResetKeys },
         {
           type: CommandType.MouseMove,
-          x: targetCenter[0] * 6,
-          y: targetCenter[1] * 6,
+          x: centerX,
+          y: centerY,
         },
         { type: CommandType.KeyPress, key: Key.M1 },
       ];

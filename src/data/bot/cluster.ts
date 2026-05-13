@@ -8,6 +8,15 @@ export class Cluster {
     return this.characters[0].body.precisePosition;
   }
 
+  /**
+   * Screen-pixel center of the primary character. Use this for mouse aim —
+   * the cursor's atan2 angle computation expects mouse coords in the same
+   * screen-px space as the character's center.
+   */
+  get centerScreen(): [number, number] {
+    return this.characters[0].getCenter();
+  }
+
   static onCharacter(character: Character, range?: number) {
     if (!range) {
       return new Cluster([character]);

@@ -19,9 +19,9 @@ export class Fireball extends RangedStrategy {
   execute(_dt: number): Command[] | null {
     this.castFrames++;
 
-    const targetCenter = this.evaluation!.target.position;
-    const mouseX = targetCenter[0] * 6;
-    const mouseY = targetCenter[1] * 6 - AIM_LIFT_PIXELS;
+    const [centerX, centerY] = this.evaluation!.target.centerScreen;
+    const mouseX = centerX;
+    const mouseY = centerY - AIM_LIFT_PIXELS;
 
     // Phase 1: hold M1 with mouse pointed slightly above target.
     if (this.castFrames <= HOLD_TICKS) {

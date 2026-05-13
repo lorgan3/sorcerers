@@ -14,9 +14,7 @@ export class Zoltraak extends RangedStrategy {
   execute(_dt: number): Command[] | null {
     this.castFrames++;
 
-    const targetCenter = this.evaluation!.target.position;
-    const mouseX = targetCenter[0] * 6;
-    const mouseY = targetCenter[1] * 6;
+    const [mouseX, mouseY] = this.evaluation!.target.centerScreen;
 
     // Phase 1: hold M1 with mouse pointed at target so the cursor aims correctly.
     if (this.castFrames <= HOLD_TICKS) {
