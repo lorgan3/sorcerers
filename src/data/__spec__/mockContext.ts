@@ -12,9 +12,11 @@ export interface MockLevel {
   entities: Set<TickingEntity>;
   entityMap: Map<number, TickingEntity>;
   hurtables: Set<HurtableEntity>;
+  gibs: Set<unknown>;
   add: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
   withNearbyEntities: ReturnType<typeof vi.fn>;
+  withNearbyGibs: ReturnType<typeof vi.fn>;
   particleContainer: {
     addEmitter: ReturnType<typeof vi.fn>;
     destroyEmitter: ReturnType<typeof vi.fn>;
@@ -49,9 +51,11 @@ export function createMockLevel(): MockLevel {
     entities: new Set(),
     entityMap: new Map(),
     hurtables: new Set(),
+    gibs: new Set(),
     add: vi.fn(),
     remove: vi.fn(),
     withNearbyEntities: vi.fn(),
+    withNearbyGibs: vi.fn(),
     particleContainer: {
       addEmitter: vi.fn(),
       destroyEmitter: vi.fn(),

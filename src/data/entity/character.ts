@@ -34,13 +34,12 @@ import { getLevel, getManager, getServer } from "../context";
 import { CharacterHealth } from "./characterHealth";
 import { CharacterCombat } from "./characterCombat";
 import { CharacterMovement } from "./characterMovement";
-import { Gib } from "./gib";
 
 // Start bouncing when impact is greater than this value
 const BOUNCE_TRIGGER = 3.8;
 const SMOKE_TRIGGER = 2;
 const KICK_VELOCITY_THRESHOLD_SQUARED = 0.04;
-const KICK_RADIUS_SQUARED = 30 * 30;
+const KICK_RADIUS = 30;
 const KICK_SCALE = 0.5;
 const KICK_LIFT = 0.6;
 const KICK_SPIN = 0.3;
@@ -369,18 +368,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
     const xV = this.body.xVelocity;
     const xVAbs = Math.abs(xV);
 
-    for (const entity of getLevel().entities) {
-      if (!(entity instanceof Gib)) continue;
-
-      const dx = entity.position.x - cx;
-      const dy = entity.position.y - cy;
-      const distSquared = dx * dx + dy * dy;
-      if (distSquared >= KICK_RADIUS_SQUARED) continue;
-
-      entity.body.addVelocity(xV * KICK_SCALE, -xVAbs * KICK_LIFT);
-      entity.spin(Math.sign(xV) * xVAbs * KICK_SPIN);
-      entity.bleed();
-    }
+    getLevel().withNearbyGibs(cx, cy, KICK_RADIUS, (gib) => {
+      gib.body.addVelocity(xV * KICK_SCALE, -xVAbs * KICK_LIFT);
+      gib.spin(Math.sign(xV) * xVAbs * KICK_SPIN);
+      gib.bleed();
+    });
   }
 
   tick(dt: number) {

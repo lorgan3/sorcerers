@@ -27,6 +27,7 @@ import { Viewport } from "./viewport";
 import { Manager } from "../network/manager";
 import { ellipse9x16 } from "../collision/precomputed/circles";
 import { getContextOrNull } from "../context";
+import { Gib } from "../entity/gib";
 
 TextureStyle.defaultOptions.scaleMode = "nearest";
 
@@ -62,6 +63,7 @@ export class Level {
   public readonly entities = new Set<TickingEntity>();
   public readonly entityMap = new Map<number, TickingEntity>();
   public readonly hurtables = new Set<HurtableEntity>();
+  public readonly gibs = new Set<Gib>();
   public readonly syncables: Record<Priority, Syncable[]> = {
     [Priority.Dynamic]: [],
     [Priority.Low]: [],
@@ -267,6 +269,10 @@ export class Level {
       if ("priority" in object) {
         this.syncables[object.priority].push(object);
       }
+
+      if (object instanceof Gib) {
+        this.gibs.add(object);
+      }
     }
   }
 
@@ -303,6 +309,10 @@ export class Level {
           arr.splice(index, 1);
         }
       }
+
+      if (object instanceof Gib) {
+        this.gibs.delete(object);
+      }
     }
   }
 
@@ -318,6 +328,24 @@ export class Level {
       const distanceSquared = (ex - x) ** 2 + (ey - y) ** 2;
       if (distanceSquared < rangeSquared) {
         if (fn(entity, distanceSquared)) {
+          return;
+        }
+      }
+    }
+  }
+
+  withNearbyGibs(
+    x: number,
+    y: number,
+    range: number,
+    fn: (gib: Gib, distanceSquared: number) => void | boolean
+  ) {
+    const rangeSquared = range ** 2;
+    for (let gib of this.gibs) {
+      const [gx, gy] = gib.getCenter();
+      const distanceSquared = (gx - x) ** 2 + (gy - y) ** 2;
+      if (distanceSquared < rangeSquared) {
+        if (fn(gib, distanceSquared)) {
           return;
         }
       }
