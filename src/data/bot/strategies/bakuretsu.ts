@@ -8,6 +8,7 @@ import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { RangedStrategy } from "./rangedStrategy";
 import { collectAllies, predictExplosiveDamage, scoreCandidate } from "./scoring";
+import { probeX } from "../../map/utils";
 
 export class Bakuretsu extends RangedStrategy {
   public static spell = BAKURETSU;
@@ -26,6 +27,7 @@ export class Bakuretsu extends RangedStrategy {
     const myPosition = this.character.body.precisePosition;
     const myNode = graph.getClosestNode(myPosition[0] + 3, myPosition[1] + 8);
     const currentMana = this.character.player.mana;
+    const surface = getLevel().terrain.collisionMask;
 
     // Collect every character in a wide area to score self + teammate damage.
     const everyone: Character[] = [];
@@ -41,9 +43,12 @@ export class Bakuretsu extends RangedStrategy {
     this.evaluations = targets
       .slice(0, 3)
       .map((target) => {
-        // Impact lands at target's feet x, on the ground.
+        // Bakuretsu falls from the sky and detonates wherever it hits ground
+        // beneath the target's x — mirror that with probeX. If there's no ground
+        // below (target is over a void), the impact lands at the bottom of the map
+        // and the damage prediction falls naturally to 0.
         const targetFeetXGame = target.body.position[0] + 3;
-        const targetFeetYGame = target.body.position[1] + 16;
+        const targetFeetYGame = probeX(surface, targetFeetXGame);
 
         const enemyDamage = this.predictDamage(target, targetFeetXGame, targetFeetYGame);
 
