@@ -233,7 +233,25 @@ export function installDebugApi(): void {
           // dump shows position, velocity, current edge — all the state
           // needed to triage the failure mode.
           if (adjustedReason !== "arrived") {
-            const snapshot = win.debug!.path!();
+            // Build the snapshot from our local `path` ref. Reading via
+            // win.debug.path() would hit AiController.getFollower(),
+            // which may already have been swapped by reevaluate() after
+            // our path went stuck — giving a misleading "edge 0/1" log.
+            const remaining = path.remainingNodes;
+            const snapshot: PathSnapshot = {
+              edges: path.edges.map((e) => ({
+                type: e.type,
+                fromX: e.from.x,
+                fromY: e.from.y,
+                toX: e.to.x,
+                toY: e.to.y,
+                cost: e.cost,
+              })),
+              currentIndex: path.edges.length - remaining,
+              remaining,
+              done: path.done,
+              stuck: path.stuck,
+            };
             logFailureSummary(
               adjustedReason,
               { x: cx, y: cy },
