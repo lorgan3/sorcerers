@@ -26,6 +26,7 @@ import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { getAccumulatedStats } from "./statsAccumulator";
 import { AiController } from "../controller/aiController";
+import { getActiveScenario } from "../bot/sandbox";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -135,14 +136,18 @@ export class Server extends Manager {
       await Promise.all(this.players.map((player) => player.ready));
     }
 
+    const sandbox = getActiveScenario();
     for (let player of this.players) {
       for (let i = 0; i < this.settings.teamSize; i++) {
+        const pos: [number, number] = sandbox
+          ? [sandbox.scenario.spawn.x, sandbox.scenario.spawn.y]
+          : getLevel().getRandomSpawnLocation();
         player.addCharacter(
           new Character(
             player,
-            ...getLevel().getRandomSpawnLocation(),
-            player.team.characters[i]
-          )
+            ...pos,
+            player.team.characters[i],
+          ),
         );
       }
     }
