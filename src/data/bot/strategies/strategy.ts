@@ -26,7 +26,7 @@ enum State {
 export abstract class Strategy {
   protected evaluations: Evaluation[] = [];
   protected evaluation: Evaluation | null = null;
-  private state: State = State.Selecting;
+  protected state: State = State.Selecting;
   private time = 0;
   private stuckCounter = 0;
 
@@ -159,6 +159,10 @@ export abstract class Strategy {
 
   get target() {
     return this.evaluation!.target;
+  }
+
+  get isDone(): boolean {
+    return this.state === State.Done;
   }
 }
 

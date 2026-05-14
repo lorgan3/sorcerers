@@ -1,9 +1,26 @@
+import { getLevel, getManager } from "../context";
 import { InvalidStrategyError } from "../bot/strategies/invalidStrategyError";
 import { Strategy } from "../bot/strategies/strategy";
 import { Targeting } from "../bot/targeting";
+import { Path } from "../bot/path";
+import { Pathfinding } from "../bot/pathfinding";
 
-import { getManager } from "../context";
 import { Command, CommandType, Controller, Key, keyMap } from "./controller";
+
+// When all strategies have no reachable target, the bot walks to a random
+// graph node within this range and re-evaluates. Squared distances in
+// game-unit space (graph nodes are in game units).
+const WANDER_MIN_DIST_SQ = 30 * 30;
+const WANDER_MAX_DIST_SQ = 150 * 150;
+
+// Cap on wander iterations per turn to prevent runaway loops. The game's
+// turn timer ultimately bounds this too, but having a hard ceiling keeps
+// behavior predictable.
+const MAX_WANDERS_PER_TURN = 5;
+
+// Number of random graph nodes to consider when picking a wander destination.
+// Keeping this small bounds the work done in startWander().
+const WANDER_CANDIDATE_SAMPLE = 20;
 
 export class AiController implements Controller {
   public pressedKeys = 0;
@@ -12,6 +29,8 @@ export class AiController implements Controller {
   private eventHandlers = new Map<Key, Set<() => void>>();
   private strategies: Strategy[] = [];
   private strategy: Strategy | null = null;
+  private wanderFollower: Path | null = null;
+  private wanderCount = 0;
 
   destroy() {}
 
@@ -48,7 +67,7 @@ export class AiController implements Controller {
     return [this.pressedKeys, ...this.mouse];
   }
 
-  deserialize(buffer: [number, number, number]) {
+  deserialize(_buffer: [number, number, number]) {
     throw new Error("Ai controller cannot be deserialized");
   }
 
@@ -57,22 +76,41 @@ export class AiController implements Controller {
       try {
         const commands = this.strategy.tick(dt);
         this.parseCommands(commands);
+
+        // Strategy reached Done state — cast already happened (or no-op done).
+        // Don't advance further; let the turn timer end the turn.
+        if (this.strategy.isDone) {
+          this.strategy = null;
+        }
       } catch (error) {
         if (error instanceof InvalidStrategyError) {
           console.warn(error);
           this.strategies.shift();
           this.strategy = this.strategies[0] ?? null;
+          if (!this.strategy) {
+            this.startWander();
+          }
         } else {
           throw error;
         }
+      }
+      return;
+    }
+
+    if (this.wanderFollower) {
+      const commands = this.wanderFollower.getCommand(dt);
+      this.parseCommands(commands);
+
+      if (this.wanderFollower.done || this.wanderFollower.stuck) {
+        this.wanderFollower = null;
+        this.reevaluate();
       }
     }
   }
 
   onStart() {
-    const self = getManager().getActiveCharacter()!;
-    this.strategies = Targeting.evaluateStrategies(self);
-    this.strategy = this.strategies[0];
+    this.wanderCount = 0;
+    this.reevaluate();
   }
 
   addKeyListener(key: Key, fn: () => void) {
@@ -87,6 +125,65 @@ export class AiController implements Controller {
 
   removeKeyListener(key: Key, fn: () => void) {
     this.eventHandlers.get(key)?.delete(fn);
+  }
+
+  private reevaluate() {
+    const self = getManager().getActiveCharacter();
+    if (!self) {
+      return;
+    }
+
+    this.strategies = Targeting.evaluateStrategies(self);
+    if (this.strategies.length > 0) {
+      this.strategy = this.strategies[0];
+    } else {
+      this.startWander();
+    }
+  }
+
+  private startWander() {
+    this.strategy = null;
+    this.wanderFollower = null;
+
+    if (this.wanderCount >= MAX_WANDERS_PER_TURN) {
+      return;
+    }
+    this.wanderCount++;
+
+    const self = getManager().getActiveCharacter();
+    if (!self) {
+      return;
+    }
+
+    const graph = getLevel().getGraph();
+    if (!graph) {
+      return;
+    }
+
+    const myPos = self.body.precisePosition;
+    const myNode = graph.getClosestNode(myPos[0] + 3, myPos[1] + 8);
+
+    // Sample a handful of random nodes and pick the first one within the
+    // wander distance band that yields a successful path.
+    const nodes = graph.getNodes();
+    for (let i = 0; i < WANDER_CANDIDATE_SAMPLE; i++) {
+      const dest = nodes[Math.floor(Math.random() * nodes.length)];
+      if (dest === myNode) continue;
+
+      const dx = dest.x - myNode.x;
+      const dy = dest.y - myNode.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < WANDER_MIN_DIST_SQ || distSq > WANDER_MAX_DIST_SQ) {
+        continue;
+      }
+
+      const result = Pathfinding.findPath(myNode, dest);
+      if (result.success) {
+        this.wanderFollower = new Path(self, result.path);
+        return;
+      }
+    }
+    // Couldn't find a viable wander destination — give up for this turn.
   }
 
   private parseCommands(commands: Command[]) {

@@ -9,7 +9,7 @@ const HOLD_TICKS = 50;
 // Aim slightly above the target's center to compensate for gravity drop during the
 // projectile's flight. Tuned empirically — bots overshoot by a few pixels otherwise,
 // but anything is better than aiming flat into the ground.
-const AIM_LIFT_PIXELS = 30;
+const AIM_LIFT_PIXELS = 60;
 
 // Fireball is a short-to-medium range spell. Don't even attempt it past this distance
 // (screen pixels) — the projectile arc would fall short.
