@@ -69,10 +69,10 @@ describe("scoreCandidate", () => {
       spellCost: 0,
       currentMana: 100,
     })!;
-    // (50 - 0) / (0 + 5) = 10
-    // (50 - 20) / (0 + 5) = 6
-    expect(noFriendly).toBeCloseTo(10);
-    expect(withFriendly).toBeCloseTo(6);
+    // (50 - 0) / (0 + COST_FLOOR)
+    // (50 - 20) / (0 + COST_FLOOR)
+    expect(noFriendly).toBeCloseTo(50 / COST_FLOOR);
+    expect(withFriendly).toBeCloseTo(30 / COST_FLOOR);
   });
 
   it("adds kill bonus when enemy damage >= target hp", () => {
