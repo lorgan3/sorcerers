@@ -42,7 +42,12 @@ interface DebugWindow extends Window {
 }
 
 interface GraphSnapshot {
-  nodes: Array<{ x: number; y: number; type: number; edges: number }>;
+  nodes: Array<{
+    x: number;
+    y: number;
+    type: number;
+    edges: Array<{ toX: number; toY: number; type: EdgeType }>;
+  }>;
 }
 
 interface PathSnapshot {
@@ -350,6 +355,27 @@ export function installDebugApi(): void {
 
   win.debug.lastDamage = (): LastDamage | null => getLastDamage();
 
+  // @ts-expect-error — quick diagnostic helper
+  win.debug.state = () => {
+    const ctx = getContextOrNull();
+    const manager = ctx?.manager;
+    const player = manager?.getActivePlayer();
+    const character = manager?.getActiveCharacter();
+    const controller = player?.controller as { pressedKeys?: number; getFollower?: () => unknown };
+    return {
+      turnState: manager?.turnState,
+      isControlling: manager?.isControlling(),
+      activeCharName: character?.characterName,
+      activeCharHp: character?.hp,
+      bodyGrounded: character?.body.grounded,
+      bodyXVel: character?.body.xVelocity,
+      bodyYVel: character?.body.yVelocity,
+      pressedKeys: controller?.pressedKeys,
+      followerInstalled: !!controller?.getFollower?.(),
+      animationBlocking: character?.isAnimationBlocking?.(),
+    };
+  };
+
   win.debug.graph = (): GraphSnapshot | null => {
     const graph = getContextOrNull()?.level?.getGraph();
     if (!graph) return null;
@@ -358,7 +384,11 @@ export function installDebugApi(): void {
         x: n.x,
         y: n.y,
         type: n.type,
-        edges: n.edges.length,
+        edges: n.edges.map((e) => ({
+          toX: e.to.x,
+          toY: e.to.y,
+          type: e.type,
+        })),
       })),
     };
   };

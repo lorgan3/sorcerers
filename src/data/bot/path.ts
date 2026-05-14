@@ -6,7 +6,10 @@ import { Edge, EdgeType } from "./edge";
 import { MIN_LAUNCH_SPEED, runUpDistanceFromRest } from "./physics";
 
 export class Path {
-  private static WALKING_NEXT_DISTANCE = 12;
+  // Squared distance — body counts as arrived when within sqrt(36) = 6 px of
+  // the destination. Previously 12 (sqrt = 3.5), which was too tight for the
+  // body's normal physics drift to hit reliably after a Walk completes.
+  private static WALKING_NEXT_DISTANCE = 36;
   private static BUSTED_TIMER = 120;
   // Frames spent stationary before nudging Up. Compared against `dt`-accumulated
   // `stuckFrames`, so the threshold is in 60Hz-equivalent frames.
@@ -16,6 +19,11 @@ export class Path {
   private lastX = 0;
   private lastY = 0;
   private lastDistance = Infinity;
+  // Best (smallest) squared distance to the current edge's destination since
+  // entering this edge. Used to reset bustedTimer on progress — a slow but
+  // steady walk shouldn't be marked stuck just because it takes >2 seconds
+  // to cover one edge.
+  private bestDistance = Infinity;
   private bustedTimer = Path.BUSTED_TIMER;
   private stuckFrames = 0;
 
@@ -70,6 +78,14 @@ export class Path {
       destination.to.x,
       destination.to.y
     );
+
+    // Reset busted timer whenever the body gets closer to the destination
+    // than it has been since entering this edge. Keeps slow-but-steady
+    // walks alive while still firing on genuine no-progress stalls.
+    if (distance < this.bestDistance) {
+      this.bestDistance = distance;
+      this.bustedTimer = Path.BUSTED_TIMER;
+    }
 
     let hasArrived = false;
 
@@ -158,6 +174,7 @@ export class Path {
 
     if (hasArrived) {
       this.lastDistance = Infinity;
+      this.bestDistance = Infinity;
       this.pathIndex++;
       this.bustedTimer = Path.BUSTED_TIMER;
 

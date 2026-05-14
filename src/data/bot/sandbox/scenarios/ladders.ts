@@ -10,8 +10,8 @@ export const ladders: Scenario = {
   tiles: [
     ["empty", "empty", "empty", "empty", "empty"],
     ["solid", "solid", "floorLadderTop", "solid", "solid"],
-    ["empty", "empty", "halfLadder_m", "empty", "empty"],
-    ["empty", "empty", "halfLadder_m", "empty", "empty"],
+    ["empty", "empty", "floorLadderHole", "empty", "empty"],
+    ["empty", "empty", "floorLadderHole", "empty", "empty"],
     ["solid", "solid", "floorLadder", "solid", "solid"],
   ],
   spawn: { x: 60, y: 304 },
