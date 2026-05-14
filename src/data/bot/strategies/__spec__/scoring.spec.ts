@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   COST_FLOOR,
   KILL_BONUS,
@@ -32,6 +32,10 @@ describe("scoreCandidate", () => {
   beforeEach(() => {
     // Disable jitter for deterministic assertions.
     vi.spyOn(Math, "random").mockReturnValue(0);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("returns null when an ally would be killed", () => {

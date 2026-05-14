@@ -26,6 +26,16 @@ export function scoreCandidate(input: ScoreInput): number | null {
   return efficiency * reserveScale + Math.random() * JITTER;
 }
 
+/**
+ * HP damage falloff for an explosive impact, mirroring `ExplosiveDamage.getTargets()`.
+ *
+ * IMPORTANT: callers must pass the spell's `nominalRadius + 5` as `range`.
+ * The real engine adds +5 game units to the spell's `range` field when collecting
+ * targets and computing falloff (see `explosiveDamage.ts:118-130`). Passing the
+ * raw nominal radius will under-predict damage at the blast fringe.
+ *
+ * `distance` and `range` must be in the same units (game units recommended).
+ */
 export function predictExplosiveDamage(
   distance: number,
   range: number,
