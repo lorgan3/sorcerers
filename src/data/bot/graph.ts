@@ -26,9 +26,14 @@ export class Graph {
 
   private nodes = new Map<string, Node>();
   private surface: CollisionMask;
+  private killboxLevel: number;
 
   constructor(private terrain: Terrain) {
     this.surface = terrain.characterMask;
+    // Nodes at or below the killbox level are useless — a character standing
+    // there dies the moment it arrives. The killbox rises during the game but
+    // the graph is rebuilt every turn, so this reflects the current level.
+    this.killboxLevel = terrain.killbox.level;
   }
 
   build() {
@@ -36,7 +41,7 @@ export class Graph {
       let y = probeX(this.surface, x);
 
       // Check vertical rows
-      while (y < this.surface.height) {
+      while (y < this.surface.height && y < this.killboxLevel) {
         let offset = 0;
 
         const isEdge = this.checkEdge(x, y);
@@ -72,7 +77,7 @@ export class Graph {
       const multi = ladder.width > Graph.RESOLUTION;
       let y = Math.floor(ladder.top);
       let top = true;
-      while (y < ladder.bottom) {
+      while (y < ladder.bottom && y < this.killboxLevel) {
         if (multi) {
           for (let x = Math.floor(ladder.left); x < ladder.right; x++) {
             if (!this.surface.collidesWith(rectangle6x16, x, y)) {
