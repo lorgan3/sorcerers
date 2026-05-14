@@ -401,6 +401,28 @@ export function installDebugApi(): void {
     return { x: n.x, y: n.y, type: n.type, edges: n.edges.length };
   };
 
+  // @ts-expect-error — diagnostic helper for terrain alpha
+  win.debug.alpha = (
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  ) => {
+    const level = getContextOrNull()?.level;
+    if (!level) return null;
+    const mask = level.terrain.characterMask;
+    const rows: string[] = [];
+    rows.push("    " + Array.from({ length: maxX - minX + 1 }, (_, i) => (minX + i) % 10).join(""));
+    for (let y = minY; y <= maxY; y++) {
+      let row = String(y).padStart(3, " ") + " ";
+      for (let x = minX; x <= maxX; x++) {
+        row += mask.collidesWithPoint(x, y) ? "#" : ".";
+      }
+      rows.push(row);
+    }
+    return rows.join("\n");
+  };
+
   win.debug.path = (): PathSnapshot | null => {
     const controller = getContextOrNull()?.manager?.getActivePlayer()?.controller;
     if (!controller || !("getFollower" in controller)) return null;
