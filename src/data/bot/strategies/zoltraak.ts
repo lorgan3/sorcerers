@@ -73,7 +73,7 @@ export class Zoltraak extends RangedStrategy {
         let killsAlly = false;
 
         for (const c of allCharacters) {
-          if (!this.isOnBeam(myCenter, targetCenter, c.getCenter())) continue;
+          if (!Zoltraak.isOnBeam(myCenter, targetCenter, c.getCenter())) continue;
           const d = this.predictDamage(c);
 
           if (c.player === this.character.player) {
@@ -124,7 +124,7 @@ export class Zoltraak extends RangedStrategy {
    * BEAM_HALF_WIDTH_SCREEN perpendicular distance AND between 0 and BEAM_LENGTH_SCREEN along
    * the beam.
    */
-  private isOnBeam(
+  static isOnBeam(
     from: [number, number],
     aimedAt: [number, number],
     point: [number, number]
