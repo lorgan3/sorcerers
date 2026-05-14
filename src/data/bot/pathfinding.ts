@@ -155,7 +155,13 @@ export class Pathfinding {
   }
 
   /**
-   * Reconstruct the path from goal to start
+   * Reconstruct the path from goal to start.
+   *
+   * Walks the parent chain backward and pushes edges in reverse order
+   * (O(1) per push), then reverses once at the end. The preroll detour
+   * is also pushed in reverse (currentEdge → reverseEdge → extraEdge),
+   * which yields the correct forward order [extraEdge, reverseEdge,
+   * currentEdge, ...] after the final reverse.
    */
   private static reconstructPath(goalNode: AStarNode) {
     const path: Edge[] = [];
@@ -163,10 +169,11 @@ export class Pathfinding {
 
     while (currentNode?.edge) {
       const currentEdge = currentNode.edge;
-      path.unshift(currentEdge);
+      path.push(currentEdge);
       currentNode = currentNode.parent;
 
-      // If the direction changed, try first walking a bit further to build momentum for the upcoming jump.
+      // If the direction changed, try first walking a bit further to build
+      // momentum for the upcoming jump.
       if (currentNode?.edge && currentEdge.type === EdgeType.Jump) {
         const currentDir = Math.sign(currentEdge.from.x - currentEdge.to.x);
         const newDir = Math.sign(
@@ -179,15 +186,19 @@ export class Pathfinding {
           );
 
           if (extraEdge) {
-            path.unshift(
-              extraEdge.to.edges.find((edge) => edge.to === currentEdge.from)!
-            );
-            path.unshift(extraEdge);
+            const reverseEdge = extraEdge.to.edges.find(
+              (edge) => edge.to === currentEdge.from
+            )!;
+            // Push in reverse-of-forward order; the final reverse() flips it
+            // back to [extraEdge, reverseEdge, currentEdge, ...].
+            path.push(reverseEdge);
+            path.push(extraEdge);
           }
         }
       }
     }
 
+    path.reverse();
     return path;
   }
 
