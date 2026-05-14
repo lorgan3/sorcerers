@@ -8,6 +8,9 @@ import { MIN_LAUNCH_SPEED, runUpDistanceFromRest } from "./physics";
 export class Path {
   private static WALKING_NEXT_DISTANCE = 12;
   private static BUSTED_TIMER = 120;
+  // Frames spent stationary before nudging Up. Compared against `dt`-accumulated
+  // `stuckFrames`, so the threshold is in 60Hz-equivalent frames.
+  private static STUCK_FRAMES_THRESHOLD = 2;
 
   private pathIndex = 0;
   private lastX = 0;
@@ -17,8 +20,8 @@ export class Path {
   private stuckFrames = 0;
 
   // When entering a Jump edge with low speed and short approach distance,
-  // we may need to walk backwards first to gain run-up. Counts down each tick;
-  // when > 0, override the walk direction.
+  // we may need to walk backwards first to gain run-up. Counts down by `dt`
+  // each tick; when > 0, override the walk direction.
   private prerollFrames = 0;
 
   private pause = false;
@@ -88,7 +91,7 @@ export class Path {
     if (!hasArrived) {
       // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
       if (this.prerollFrames > 0) {
-        this.prerollFrames--;
+        this.prerollFrames -= dt;
         const md = Math.sign(destination.to.x - destination.from.x);
         // md is the JUMP direction; pre-roll walks the OPPOSITE way.
         if (md > 0) {
@@ -106,12 +109,12 @@ export class Path {
       }
 
       if (this.lastX === x && this.lastY === y) {
-        this.stuckFrames++;
+        this.stuckFrames += dt;
       } else {
         this.stuckFrames = 0;
       }
 
-      if (this.stuckFrames > 2) {
+      if (this.stuckFrames > Path.STUCK_FRAMES_THRESHOLD) {
         commands.push({ type: CommandType.KeyPress, key: Key.Up });
       } else if (
         destination.type === EdgeType.Climb ||

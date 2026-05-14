@@ -100,33 +100,37 @@ export class Melee extends Strategy {
     );
   }
 
-  private castFrames = 0;
+  // Aim/swing is a logical 2-step sequence (one controlContinuous between them),
+  // so we count calls — not dt — for the steps themselves. The tail uses dt so
+  // wall-clock behaviour is independent of frame rate.
+  private castStep = 0;
+  private castTime = 0;
 
-  execute(_dt: number): Command[] | null {
-    this.castFrames++;
+  execute(dt: number): Command[] | null {
+    this.castStep++;
+    this.castTime += dt;
     const targetPosition = this.evaluation!.target.position;
     const mouseX = targetPosition[0] * 6;
     const mouseY = targetPosition[1] * 6;
 
-    // Frame 1: clear lingering keys and aim at target so the character
+    // Step 1: clear lingering keys and aim at target so the character
     // updates its look direction in this tick's controlContinuous.
-    if (this.castFrames === 1) {
+    if (this.castStep === 1) {
       return [
         { type: CommandType.ResetKeys },
         { type: CommandType.MouseMove, x: mouseX, y: mouseY },
       ];
     }
 
-    // Frame 2: swing. lookDirection has now been updated from the new mouse position.
-    if (this.castFrames === 2) {
+    // Step 2: swing. lookDirection has now been updated from the new mouse position.
+    if (this.castStep === 2) {
       return [
         { type: CommandType.MouseMove, x: mouseX, y: mouseY },
         { type: CommandType.KeyPress, key: Key.M1 },
       ];
     }
 
-    // Frame 3+: done.
-    if (this.castFrames > 5) {
+    if (this.castTime > 5) {
       return null;
     }
 

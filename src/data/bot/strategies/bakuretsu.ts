@@ -88,19 +88,20 @@ export class Bakuretsu extends RangedStrategy {
     return predictExplosiveDamage(distance, Bakuretsu.BLAST_RADIUS_GAME, damageMultiplier);
   }
 
-  // Track how many frames we've spent in the cast sequence so we know when to finish.
-  private castFrames = 0;
+  private pressed = false;
+  private castTime = 0;
 
-  execute(_dt: number): Command[] | null {
-    this.castFrames++;
+  execute(dt: number): Command[] | null {
+    this.castTime += dt;
 
     const [centerX, centerY] = this.evaluation!.target.centerScreen;
 
-    // Frame 1: set mouse to target's screen-x center (cursor's x maps to projectile spawn x).
+    // First call: press M1 (cursor's x maps to projectile spawn x).
     // Add a small random horizontal offset so explosions don't always land directly on
     // the target's head — gives the bot a bit of imperfection / variety.
     // The y component is irrelevant for Bakuretsu (always falls from sky).
-    if (this.castFrames === 1) {
+    if (!this.pressed) {
+      this.pressed = true;
       const offsetX = (Math.random() - 0.5) * 60; // ±30 screen px = ±5 game units
       return [
         { type: CommandType.ResetKeys },
@@ -113,8 +114,8 @@ export class Bakuretsu extends RangedStrategy {
       ];
     }
 
-    // Cast already issued — release any held keys and finish.
-    if (this.castFrames > 5) {
+    // Cast already issued — idle a few frames so the cursor's tick observes it, then finish.
+    if (this.castTime > 5) {
       return null;
     }
 

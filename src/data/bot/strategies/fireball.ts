@@ -128,20 +128,25 @@ export class Fireball extends RangedStrategy {
     return predictExplosiveDamage(distance, Fireball.BLAST_RADIUS_GAME, damageMultiplier);
   }
 
-  private castFrames = 0;
+  // PoweredArcaneCircle charges power by ~0.1 * dt per tick, so total charge is
+  // proportional to accumulated time, not call count. Track dt so we hold for the
+  // same wall-clock duration regardless of frame rate.
+  private castTime = 0;
+  private released = false;
 
-  execute(_dt: number): Command[] | null {
-    this.castFrames++;
+  execute(dt: number): Command[] | null {
+    const justStarted = this.castTime === 0;
+    this.castTime += dt;
 
     const [centerX, centerY] = this.evaluation!.target.centerScreen;
     const mouseX = centerX;
     const mouseY = centerY - AIM_LIFT_PIXELS;
 
     // Phase 1: hold M1 with mouse pointed slightly above target.
-    if (this.castFrames <= HOLD_TICKS) {
+    if (this.castTime < HOLD_TICKS) {
       const commands: Command[] = [];
 
-      if (this.castFrames === 1) {
+      if (justStarted) {
         commands.push({ type: CommandType.ResetKeys });
       }
 
@@ -157,8 +162,9 @@ export class Fireball extends RangedStrategy {
       return commands;
     }
 
-    // Phase 2: release M1 → fire at current power.
-    if (this.castFrames === HOLD_TICKS + 1) {
+    // Phase 2: first tick past HOLD_TICKS — release M1 to fire at the charged power.
+    if (!this.released) {
+      this.released = true;
       return [
         { type: CommandType.KeyUp, key: Key.M1 },
         {
@@ -170,7 +176,7 @@ export class Fireball extends RangedStrategy {
     }
 
     // Phase 3: idle so the cursor observes M1 released.
-    if (this.castFrames > HOLD_TICKS + 5) {
+    if (this.castTime > HOLD_TICKS + 5) {
       return null;
     }
 

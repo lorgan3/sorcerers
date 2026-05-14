@@ -153,20 +153,24 @@ export class Zoltraak extends RangedStrategy {
     return perpX * perpX + perpY * perpY <= BEAM_HALF_WIDTH_SCREEN * BEAM_HALF_WIDTH_SCREEN;
   }
 
-  private castFrames = 0;
+  // Hold duration is wall-clock-equivalent (matches a normal player cast), so
+  // accumulate dt rather than counting calls.
+  private castTime = 0;
+  private released = false;
 
-  execute(_dt: number): Command[] | null {
-    this.castFrames++;
+  execute(dt: number): Command[] | null {
+    const justStarted = this.castTime === 0;
+    this.castTime += dt;
 
     const targetCenter = this.evaluation!.target.centerScreen;
     const mouseX = targetCenter[0];
     const mouseY = targetCenter[1];
 
     // Phase 1: hold M1 with mouse pointed at target so the cursor aims correctly.
-    if (this.castFrames <= HOLD_TICKS) {
+    if (this.castTime < HOLD_TICKS) {
       const commands: Command[] = [];
 
-      if (this.castFrames === 1) {
+      if (justStarted) {
         commands.push({ type: CommandType.ResetKeys });
       }
 
@@ -182,8 +186,9 @@ export class Zoltraak extends RangedStrategy {
       return commands;
     }
 
-    // Phase 2: release M1 → cursor fires.
-    if (this.castFrames === HOLD_TICKS + 1) {
+    // Phase 2: first tick past HOLD_TICKS — release M1 so the cursor fires.
+    if (!this.released) {
+      this.released = true;
       return [
         { type: CommandType.KeyUp, key: Key.M1 },
         {
@@ -195,7 +200,7 @@ export class Zoltraak extends RangedStrategy {
     }
 
     // Phase 3: cast issued; idle for a few frames so the cursor's tick observes M1 released.
-    if (this.castFrames > HOLD_TICKS + 5) {
+    if (this.castTime > HOLD_TICKS + 5) {
       return null;
     }
 
