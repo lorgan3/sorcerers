@@ -1,7 +1,7 @@
 import Peer from "peerjs";
 import { MessageType, Message, Popup, TurnState } from "./types";
 import { Player } from "./player";
-import { Character } from "../entity/character";
+import { BOUNCE_TRIGGER, Character } from "../entity/character";
 import { KeyboardController } from "../controller/keyboardController";
 import { Manager } from "./manager";
 import { getLevel, setFallbackServer } from "../context";
@@ -26,7 +26,7 @@ import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { getAccumulatedStats } from "./statsAccumulator";
 import { AiController } from "../controller/aiController";
-import { getActiveScenario } from "../bot/sandbox";
+import { getActiveScenario, setLastDamage } from "../bot/sandbox";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -432,6 +432,30 @@ export class Server extends Manager {
     }
 
     const velocity = character.body.velocity;
+
+    // Capture impact state for the sandbox before the body bounces. The
+    // body's xVelocity/yVelocity here are pre-bounce — by the time the
+    // followPath rAF poll sees `character.hp < startHp`, they've already
+    // been mutated, so this hook is the only place to read them clean.
+    if (getActiveScenario() && this.getActiveCharacter() === character) {
+      const xv = character.body.xVelocity;
+      const yv = character.body.yVelocity;
+      const xCross = Math.abs(xv) > BOUNCE_TRIGGER;
+      const yCross = Math.abs(yv) > BOUNCE_TRIGGER;
+      setLastDamage({
+        x,
+        y,
+        xVelocity: xv,
+        yVelocity: yv,
+        velocity,
+        trigger: xCross && yCross ? "both" : xCross ? "x" : "y",
+        bounceThreshold: BOUNCE_TRIGGER,
+        hpBefore: character.hp,
+        predictedDamage: Math.max(1, velocity - 3) ** 2,
+        timestamp: performance.now(),
+      });
+    }
+
     const damage = new ExplosiveDamage(
       x + 3,
       y + 8 + character.body.yVelocity,

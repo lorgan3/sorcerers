@@ -1,15 +1,17 @@
 import type { CollisionMask } from "../../collision/collisionMask";
-import type { Loaded } from "./types";
+import type { LastDamage, Loaded } from "./types";
 
 let active: Loaded | null = null;
 let originalMask: CollisionMask | null = null;
 let paused = false;
+let lastDamage: LastDamage | null = null;
 
 export function setActiveScenario(loaded: Loaded | null): void {
   active = loaded;
   if (!loaded) {
     originalMask = null;
     paused = false;
+    lastDamage = null;
   }
 }
 
@@ -41,4 +43,17 @@ export function setSandboxPaused(value: boolean): void {
 
 export function isSandboxPaused(): boolean {
   return paused;
+}
+
+/**
+ * Most recent damage event captured at the impact point (inside
+ * `Server.dealFallDamage`, before the body bounces). Cleared on `runAll`
+ * start so each run starts with a clean slate.
+ */
+export function setLastDamage(damage: LastDamage | null): void {
+  lastDamage = damage;
+}
+
+export function getLastDamage(): LastDamage | null {
+  return lastDamage;
 }

@@ -1,13 +1,23 @@
 import { getContextOrNull } from "../../context";
+import { EdgeType } from "../edge";
 import { Pathfinding } from "../pathfinding";
 import { Path } from "../path";
 import {
   getActiveScenario,
+  getLastDamage,
   getOriginalMask,
   isSandboxPaused,
+  setLastDamage,
   setSandboxPaused,
 } from "./state";
-import type { FollowResult, FollowReason, Pt, RunAllResult, TargetResult } from "./types";
+import type {
+  FollowResult,
+  FollowReason,
+  LastDamage,
+  Pt,
+  RunAllResult,
+  TargetResult,
+} from "./types";
 
 interface DebugWindow extends Window {
   debug?: {
@@ -24,7 +34,24 @@ interface DebugWindow extends Window {
     runAll?: (opts?: { timeoutMsPerTarget?: number }) => Promise<RunAllResult>;
     resume?: () => boolean;
     paused?: () => boolean;
+    lastDamage?: () => LastDamage | null;
+    path?: () => PathSnapshot | null;
   };
+}
+
+interface PathSnapshot {
+  edges: Array<{
+    type: EdgeType;
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+    cost: number;
+  }>;
+  currentIndex: number;
+  remaining: number;
+  done: boolean;
+  stuck: boolean;
 }
 
 /**
@@ -183,6 +210,8 @@ export function installDebugApi(): void {
           // the moment. window.debug.resume() or the next runAll() clears
           // the flag.
           if (reason === "dead" || reason === "damaged") {
+            const snapshot = win.debug!.path!();
+            logDamageSummary({ x: cx, y: cy }, character.hp, snapshot);
             setSandboxPaused(true);
           }
           const distSq = (to.x - cx) ** 2 + (to.y - cy) ** 2;
@@ -219,9 +248,11 @@ export function installDebugApi(): void {
     }
 
     // Fresh slate: restore the terrain (in case a previous run carved a
-    // crater) and clear any pause flag from a previous damage event.
+    // crater) and clear any pause + last-damage record from a previous
+    // damage event.
     restoreOriginalMask();
     setSandboxPaused(false);
+    setLastDamage(null);
 
     const results: TargetResult[] = [];
     const summary = { ...emptySummary };
@@ -261,4 +292,71 @@ export function installDebugApi(): void {
   };
 
   win.debug.paused = (): boolean => isSandboxPaused();
+
+  win.debug.lastDamage = (): LastDamage | null => getLastDamage();
+
+  win.debug.path = (): PathSnapshot | null => {
+    const controller = getContextOrNull()?.manager?.getActivePlayer()?.controller;
+    if (!controller || !("getFollower" in controller)) return null;
+    const path = (controller as { getFollower: () => Path | null }).getFollower();
+    if (!path) return null;
+    const remaining = path.remainingNodes;
+    const currentIndex = path.edges.length - remaining;
+    return {
+      edges: path.edges.map((e) => ({
+        type: e.type,
+        fromX: e.from.x,
+        fromY: e.from.y,
+        toX: e.to.x,
+        toY: e.to.y,
+        cost: e.cost,
+      })),
+      currentIndex,
+      remaining,
+      done: path.done,
+      stuck: path.stuck,
+    };
+  };
+}
+
+/**
+ * Console-log a structured summary of the moment damage triggered. Called
+ * by `followPath` right before it pauses the simulation.
+ */
+function logDamageSummary(
+  endedAt: Pt,
+  hpAfter: number,
+  pathSnapshot: PathSnapshot | null,
+): void {
+  const damage = getLastDamage();
+  const lines: string[] = ["[sandbox] damage event — simulation paused"];
+  if (damage) {
+    lines.push(
+      `  impact pos:      (${damage.x.toFixed(1)}, ${damage.y.toFixed(1)})`,
+      `  impact velocity: x=${damage.xVelocity.toFixed(2)}  y=${damage.yVelocity.toFixed(2)}  |v|=${damage.velocity.toFixed(2)}`,
+      `  trigger:         ${damage.trigger}-axis crossed BOUNCE_TRIGGER ${damage.bounceThreshold}`,
+      `  hp:              ${damage.hpBefore} → ${hpAfter}  (predicted -${damage.predictedDamage.toFixed(1)})`,
+    );
+  } else {
+    lines.push(
+      `  hp:              now ${hpAfter} (no LastDamage record — non-fall source?)`,
+    );
+  }
+  lines.push(`  ended at:        (${endedAt.x.toFixed(1)}, ${endedAt.y.toFixed(1)})`);
+  if (pathSnapshot) {
+    const cur = pathSnapshot.edges[pathSnapshot.currentIndex];
+    lines.push(
+      `  path:            edge ${pathSnapshot.currentIndex}/${pathSnapshot.edges.length}, ${pathSnapshot.remaining} remaining`,
+    );
+    if (cur) {
+      lines.push(
+        `  current edge:    ${cur.type} (${cur.fromX},${cur.fromY}) → (${cur.toX},${cur.toY})`,
+      );
+    }
+  }
+  lines.push(
+    `  inspect with window.debug.lastDamage() / .path() / .character()`,
+    `  resume with window.debug.resume() or call window.debug.runAll() to start fresh`,
+  );
+  console.warn(lines.join("\n"));
 }

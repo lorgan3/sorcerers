@@ -37,7 +37,7 @@ import { CharacterMovement } from "./characterMovement";
 import { Gib } from "./gib";
 
 // Start bouncing when impact is greater than this value
-const BOUNCE_TRIGGER = 3.8;
+export const BOUNCE_TRIGGER = 3.8;
 const SMOKE_TRIGGER = 2;
 const KICK_VELOCITY_THRESHOLD_SQUARED = 0.04;
 const KICK_RADIUS_SQUARED = 30 * 30;

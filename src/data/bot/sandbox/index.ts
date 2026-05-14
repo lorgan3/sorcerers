@@ -7,5 +7,7 @@ export {
   getOriginalMask,
   setSandboxPaused,
   isSandboxPaused,
+  setLastDamage,
+  getLastDamage,
 } from "./state";
 export * from "./types";

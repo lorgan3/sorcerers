@@ -47,6 +47,29 @@ export interface TargetResult extends FollowResult {
   toY: number;
 }
 
+/**
+ * Snapshot of the moment the bot triggered fall damage. Captured inside
+ * `Server.dealFallDamage` before the body bounces, so velocity reflects
+ * the impact, not the rebound.
+ */
+export interface LastDamage {
+  /** Body top-left at impact. */
+  x: number;
+  y: number;
+  xVelocity: number;
+  yVelocity: number;
+  /** Body.velocity (magnitude) — drives ExplosiveDamage radius + power. */
+  velocity: number;
+  /** Which axis crossed BOUNCE_TRIGGER; "both" if both did. */
+  trigger: "x" | "y" | "both";
+  bounceThreshold: number;
+  hpBefore: number;
+  /** What `Server.dealFallDamage` will queue as the hp damage. */
+  predictedDamage: number;
+  /** `performance.now()` at impact. */
+  timestamp: number;
+}
+
 export interface RunAllResult {
   scenario: string;
   results: TargetResult[];
