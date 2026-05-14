@@ -82,7 +82,7 @@ export class Bakuretsu extends RangedStrategy {
    * Predicted HP damage to `target` if Bakuretsu impacts at (impactXGame, impactYGame).
    * Mirrors ExplosiveDamage's distance falloff formula using Bakuretsu's spell args.
    */
-  predictDamage(target: Character, impactXGame: number, impactYGame: number): number {
+  private predictDamage(target: Character, impactXGame: number, impactYGame: number): number {
     const [cxScreen, cyScreen] = target.getCenter();
     const cxGame = cxScreen / 6;
     const cyGame = cyScreen / 6;
