@@ -48,6 +48,10 @@ export class Fireball extends RangedStrategy {
     const surface = getLevel().terrain.collisionMask;
     const currentMana = this.character.player.mana;
 
+    // Bot is intentionally NOT excluded — point-blank fireballs land within blast
+    // radius of the caster, and that self-blast should penalise the choice. Unlike
+    // Zoltraak (where t=0 puts the bot on its own beam as a false positive), here
+    // the bot only counts when it's geometrically within ~21 game units of the impact.
     const everyone: Character[] = [];
     getLevel().withNearbyEntities(
       myCenter[0],
