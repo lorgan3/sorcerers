@@ -25,6 +25,7 @@ export interface Loaded {
 export type FollowReason =
   | "arrived"
   | "stuck"
+  | "drift"
   | "dead"
   | "damaged"
   | "timeout"
@@ -77,6 +78,7 @@ export interface RunAllResult {
     total: number;
     arrived: number;
     stuck: number;
+    drift: number;
     dead: number;
     damaged: number;
     timeout: number;

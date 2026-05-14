@@ -193,6 +193,11 @@ export function installDebugApi(): void {
     const startHp = character.hp;
     const NODE_ARRIVAL_RADIUS_SQ = 14 * 14;
 
+    // Drift threshold: if the body is farther than this from the current
+    // edge's target node, the follower has lost its way (jumped wrong,
+    // fell off the platform, drifted on a slope).
+    const DRIFT_DISTANCE_SQ = 50 * 50;
+
     return new Promise<FollowResult>((resolve) => {
       const tick = () => {
         const elapsed = performance.now() - start;
@@ -200,26 +205,48 @@ export function installDebugApi(): void {
 
         let reason: FollowReason | null = null;
         if (character.hp <= 0) reason = "dead";
+        // External pause (Server.dealFallDamage hook fired before the body
+        // bounced) — surface as "damaged" so the user can inspect.
+        else if (isSandboxPaused()) reason = "damaged";
         else if (character.hp < startHp) reason = "damaged";
         else if (path.done) reason = "arrived";
         else if (path.stuck) reason = "stuck";
         else if (elapsed > timeoutMs) reason = "timeout";
+        else {
+          // Drift check — body wandered far from the current edge target.
+          const remaining = path.remainingNodes;
+          if (remaining > 0) {
+            const currentEdge = path.edges[path.edges.length - remaining];
+            const distSq =
+              (cx - currentEdge.to.x) ** 2 + (cy - currentEdge.to.y) ** 2;
+            if (distSq > DRIFT_DISTANCE_SQ) reason = "drift";
+          }
+        }
 
         if (reason !== null) {
-          // Damage events freeze the simulation so the user can inspect
-          // the moment. window.debug.resume() or the next runAll() clears
-          // the flag.
-          if (reason === "dead" || reason === "damaged") {
-            const snapshot = win.debug!.path!();
-            logDamageSummary({ x: cx, y: cy }, character.hp, snapshot);
-            setSandboxPaused(true);
-          }
           const distSq = (to.x - cx) ** 2 + (to.y - cy) ** 2;
           const arrivedAtNode = distSq <= NODE_ARRIVAL_RADIUS_SQ;
-          const success = reason === "arrived" && arrivedAtNode;
+          const adjustedReason: FollowReason =
+            reason === "arrived" && !arrivedAtNode ? "stuck" : reason;
+          // Anything except a clean arrival pauses the simulation so the
+          // user can inspect why the follower failed. The console.warn
+          // dump shows position, velocity, current edge — all the state
+          // needed to triage the failure mode.
+          if (adjustedReason !== "arrived") {
+            const snapshot = win.debug!.path!();
+            logFailureSummary(
+              adjustedReason,
+              { x: cx, y: cy },
+              character.hp,
+              snapshot,
+              to,
+            );
+            setSandboxPaused(true);
+          }
+          const success = adjustedReason === "arrived";
           resolve({
             success,
-            reason: reason === "arrived" && !arrivedAtNode ? "stuck" : reason,
+            reason: adjustedReason,
             startedAt,
             endedAt: { x: cx, y: cy },
             distanceToTarget: Math.hypot(toX - cx, toY - cy),
@@ -240,7 +267,7 @@ export function installDebugApi(): void {
   ): Promise<RunAllResult> => {
     const active = getActiveScenario();
     const emptySummary = {
-      total: 0, arrived: 0, stuck: 0, dead: 0,
+      total: 0, arrived: 0, stuck: 0, drift: 0, dead: 0,
       damaged: 0, timeout: 0, noPath: 0,
     };
     if (!active) {
@@ -272,6 +299,7 @@ export function installDebugApi(): void {
       switch (followed.reason) {
         case "arrived": summary.arrived++; break;
         case "stuck": summary.stuck++; break;
+        case "drift": summary.drift++; break;
         case "dead": summary.dead++; break;
         case "damaged": summary.damaged++; break;
         case "timeout": summary.timeout++; break;
@@ -320,37 +348,45 @@ export function installDebugApi(): void {
 }
 
 /**
- * Console-log a structured summary of the moment damage triggered. Called
- * by `followPath` right before it pauses the simulation.
+ * Console-log a structured summary of why the follower failed. Called by
+ * `followPath` right before it pauses the simulation.
  */
-function logDamageSummary(
+function logFailureSummary(
+  reason: FollowReason,
   endedAt: Pt,
   hpAfter: number,
   pathSnapshot: PathSnapshot | null,
+  goal: { x: number; y: number },
 ): void {
-  const damage = getLastDamage();
-  const lines: string[] = ["[sandbox] damage event — simulation paused"];
-  if (damage) {
-    lines.push(
-      `  impact pos:      (${damage.x.toFixed(1)}, ${damage.y.toFixed(1)})`,
-      `  impact velocity: x=${damage.xVelocity.toFixed(2)}  y=${damage.yVelocity.toFixed(2)}  |v|=${damage.velocity.toFixed(2)}`,
-      `  trigger:         ${damage.trigger}-axis crossed BOUNCE_TRIGGER ${damage.bounceThreshold}`,
-      `  hp:              ${damage.hpBefore} → ${hpAfter}  (predicted -${damage.predictedDamage.toFixed(1)})`,
-    );
-  } else {
-    lines.push(
-      `  hp:              now ${hpAfter} (no LastDamage record — non-fall source?)`,
-    );
+  const lines: string[] = [
+    `[sandbox] follow failed (${reason}) — simulation paused`,
+  ];
+  if (reason === "damaged" || reason === "dead") {
+    const damage = getLastDamage();
+    if (damage) {
+      lines.push(
+        `  impact pos:      (${damage.x.toFixed(1)}, ${damage.y.toFixed(1)})`,
+        `  impact velocity: x=${damage.xVelocity.toFixed(2)}  y=${damage.yVelocity.toFixed(2)}  |v|=${damage.velocity.toFixed(2)}`,
+        `  trigger:         ${damage.trigger}-axis crossed BOUNCE_TRIGGER ${damage.bounceThreshold}`,
+        `  hp:              ${damage.hpBefore} (damage prevented in sandbox) — predicted -${damage.predictedDamage.toFixed(1)}`,
+      );
+    } else {
+      lines.push(`  hp:              now ${hpAfter} (no LastDamage record)`);
+    }
   }
   lines.push(`  ended at:        (${endedAt.x.toFixed(1)}, ${endedAt.y.toFixed(1)})`);
+  lines.push(`  goal node:       (${goal.x}, ${goal.y})  dist=${Math.hypot(goal.x - endedAt.x, goal.y - endedAt.y).toFixed(1)}`);
   if (pathSnapshot) {
     const cur = pathSnapshot.edges[pathSnapshot.currentIndex];
     lines.push(
       `  path:            edge ${pathSnapshot.currentIndex}/${pathSnapshot.edges.length}, ${pathSnapshot.remaining} remaining`,
     );
     if (cur) {
+      const dToFrom = Math.hypot(endedAt.x - cur.fromX, endedAt.y - cur.fromY).toFixed(1);
+      const dToTo = Math.hypot(endedAt.x - cur.toX, endedAt.y - cur.toY).toFixed(1);
       lines.push(
         `  current edge:    ${cur.type} (${cur.fromX},${cur.fromY}) → (${cur.toX},${cur.toY})`,
+        `                   distance from body: to-from=${dToFrom}  to-to=${dToTo}`,
       );
     }
   }

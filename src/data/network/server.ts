@@ -26,7 +26,11 @@ import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { getAccumulatedStats } from "./statsAccumulator";
 import { AiController } from "../controller/aiController";
-import { getActiveScenario, setLastDamage } from "../bot/sandbox";
+import {
+  getActiveScenario,
+  setLastDamage,
+  setSandboxPaused,
+} from "../bot/sandbox";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -433,10 +437,11 @@ export class Server extends Manager {
 
     const velocity = character.body.velocity;
 
-    // Capture impact state for the sandbox before the body bounces. The
-    // body's xVelocity/yVelocity here are pre-bounce — by the time the
-    // followPath rAF poll sees `character.hp < startHp`, they've already
-    // been mutated, so this hook is the only place to read them clean.
+    // Sandbox: record the impact and pause the simulation BEFORE the
+    // damage is applied. The terrain is never carved (so the map stays
+    // clean for the next runAll) and the character's hp is left alone.
+    // The velocities here are pre-bounce — the only chance to read them
+    // clean.
     if (getActiveScenario() && this.getActiveCharacter() === character) {
       const xv = character.body.xVelocity;
       const yv = character.body.yVelocity;
@@ -454,6 +459,8 @@ export class Server extends Manager {
         predictedDamage: Math.max(1, velocity - 3) ** 2,
         timestamp: performance.now(),
       });
+      setSandboxPaused(true);
+      return;
     }
 
     const damage = new ExplosiveDamage(
