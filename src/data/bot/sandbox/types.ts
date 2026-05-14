@@ -26,6 +26,7 @@ export type FollowReason =
   | "arrived"
   | "stuck"
   | "dead"
+  | "damaged"
   | "timeout"
   | "no-path";
 
@@ -54,6 +55,7 @@ export interface RunAllResult {
     arrived: number;
     stuck: number;
     dead: number;
+    damaged: number;
     timeout: number;
     noPath: number;
   };

@@ -16,7 +16,12 @@ import "./util/firebase";
 import { GameSettings, defaults } from "./util/localStorage/settings";
 import { Server } from "./data/network/server";
 import { Team } from "./data/team";
-import { loadScenario, SCENARIOS, setActiveScenario } from "./data/bot/sandbox";
+import {
+  loadScenario,
+  SCENARIOS,
+  setActiveScenario,
+  setOriginalMask,
+} from "./data/bot/sandbox";
 import { setBotDebugEnabled } from "./data/bot/debug";
 
 new AssetsContainer();
@@ -93,6 +98,9 @@ const routes: RouteRecordRaw[] = [
       setBotDebugEnabled(true);
 
       selectedMap = await Map.fromConfig(loaded.config);
+      // Snapshot the pristine collision mask so runAll can restore the
+      // terrain when a previous run carved a crater (e.g. fall damage).
+      setOriginalMask(selectedMap.collisionMask.clone());
       selectedSettings = {
         ...defaults().gameSettings,
         teamSize: 1,

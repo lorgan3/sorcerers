@@ -10,6 +10,7 @@ import Peer from "peerjs";
 import { Client } from "./client";
 import { GameSettings } from "../../util/localStorage/settings";
 import { setGameContext } from "../context";
+import { isSandboxPaused } from "../bot/sandbox";
 
 export const connect = async (
   target: HTMLElement,
@@ -21,13 +22,14 @@ export const connect = async (
   const controller = new KeyboardController(level.viewport);
 
   const ticker: TickerCallback<null> = (ticker) => {
+    if (isSandboxPaused()) return;
     Manager.instance.tick(ticker.deltaTime);
   };
 
-  let fixedTick = window.setInterval(
-    () => Manager.instance.fixedTick(FIXED_INTERVAL),
-    FIXED_INTERVAL
-  );
+  let fixedTick = window.setInterval(() => {
+    if (isSandboxPaused()) return;
+    Manager.instance.fixedTick(FIXED_INTERVAL);
+  }, FIXED_INTERVAL);
 
   setGameContext({
     level,

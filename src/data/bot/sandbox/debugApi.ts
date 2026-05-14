@@ -1,7 +1,12 @@
 import { getContextOrNull } from "../../context";
 import { Pathfinding } from "../pathfinding";
 import { Path } from "../path";
-import { getActiveScenario } from "./state";
+import {
+  getActiveScenario,
+  getOriginalMask,
+  isSandboxPaused,
+  setSandboxPaused,
+} from "./state";
 import type { FollowResult, FollowReason, Pt, RunAllResult, TargetResult } from "./types";
 
 interface DebugWindow extends Window {
@@ -17,7 +22,24 @@ interface DebugWindow extends Window {
       opts?: { timeoutMs?: number }
     ) => Promise<FollowResult>;
     runAll?: (opts?: { timeoutMsPerTarget?: number }) => Promise<RunAllResult>;
+    resume?: () => boolean;
+    paused?: () => boolean;
   };
+}
+
+/**
+ * Swap the live terrain collision masks for clones of the pristine snapshot.
+ * The visual texture is left alone — sandbox cares about path correctness,
+ * not aesthetics — so a previous run's crater may still be visible until the
+ * next full route enter.
+ */
+function restoreOriginalMask(): boolean {
+  const snap = getOriginalMask();
+  const level = getContextOrNull()?.level;
+  if (!snap || !level) return false;
+  level.terrain.collisionMask = snap.clone();
+  level.terrain.characterMask = snap.clone();
+  return true;
 }
 
 /**
@@ -141,6 +163,7 @@ export function installDebugApi(): void {
     (controller as { installFollower: (p: Path) => void }).installFollower(path);
 
     const start = performance.now();
+    const startHp = character.hp;
     const NODE_ARRIVAL_RADIUS_SQ = 14 * 14;
 
     return new Promise<FollowResult>((resolve) => {
@@ -150,11 +173,18 @@ export function installDebugApi(): void {
 
         let reason: FollowReason | null = null;
         if (character.hp <= 0) reason = "dead";
+        else if (character.hp < startHp) reason = "damaged";
         else if (path.done) reason = "arrived";
         else if (path.stuck) reason = "stuck";
         else if (elapsed > timeoutMs) reason = "timeout";
 
         if (reason !== null) {
+          // Damage events freeze the simulation so the user can inspect
+          // the moment. window.debug.resume() or the next runAll() clears
+          // the flag.
+          if (reason === "dead" || reason === "damaged") {
+            setSandboxPaused(true);
+          }
           const distSq = (to.x - cx) ** 2 + (to.y - cy) ** 2;
           const arrivedAtNode = distSq <= NODE_ARRIVAL_RADIUS_SQ;
           const success = reason === "arrived" && arrivedAtNode;
@@ -180,16 +210,21 @@ export function installDebugApi(): void {
     opts: { timeoutMsPerTarget?: number } = {},
   ): Promise<RunAllResult> => {
     const active = getActiveScenario();
+    const emptySummary = {
+      total: 0, arrived: 0, stuck: 0, dead: 0,
+      damaged: 0, timeout: 0, noPath: 0,
+    };
     if (!active) {
-      return {
-        scenario: "none",
-        results: [],
-        summary: { total: 0, arrived: 0, stuck: 0, dead: 0, timeout: 0, noPath: 0 },
-      };
+      return { scenario: "none", results: [], summary: emptySummary };
     }
 
+    // Fresh slate: restore the terrain (in case a previous run carved a
+    // crater) and clear any pause flag from a previous damage event.
+    restoreOriginalMask();
+    setSandboxPaused(false);
+
     const results: TargetResult[] = [];
-    const summary = { total: 0, arrived: 0, stuck: 0, dead: 0, timeout: 0, noPath: 0 };
+    const summary = { ...emptySummary };
 
     for (const target of active.scenario.targets) {
       win.debug!.reset!();
@@ -207,11 +242,23 @@ export function installDebugApi(): void {
         case "arrived": summary.arrived++; break;
         case "stuck": summary.stuck++; break;
         case "dead": summary.dead++; break;
+        case "damaged": summary.damaged++; break;
         case "timeout": summary.timeout++; break;
         case "no-path": summary.noPath++; break;
       }
+
+      // A damage event freezes the simulation — don't push the bot through
+      // the rest of the targets while the user is inspecting the state.
+      if (isSandboxPaused()) break;
     }
 
     return { scenario: active.scenario.name, results, summary };
   };
+
+  win.debug.resume = (): boolean => {
+    setSandboxPaused(false);
+    return true;
+  };
+
+  win.debug.paused = (): boolean => isSandboxPaused();
 }

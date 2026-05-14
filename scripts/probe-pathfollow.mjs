@@ -65,7 +65,10 @@ function fmtTable(allResults) {
       all.push({
         scenario: s,
         results: [],
-        summary: { total: 0, arrived: 0, stuck: 0, dead: 0, timeout: 0, noPath: 0 },
+        summary: {
+          total: 0, arrived: 0, stuck: 0, dead: 0,
+          damaged: 0, timeout: 0, noPath: 0,
+        },
       });
     }
   }
@@ -78,11 +81,11 @@ function fmtTable(allResults) {
     "",
     "## Summary",
     "",
-    "| scenario | arrived | stuck | dead | timeout | no-path |",
-    "|----------|---------|-------|------|---------|---------|",
+    "| scenario | arrived | stuck | dead | damaged | timeout | no-path |",
+    "|----------|---------|-------|------|---------|---------|---------|",
     ...all.map(
       ({ scenario, summary }) =>
-        `| ${scenario} | ${summary.arrived} | ${summary.stuck} | ${summary.dead} | ${summary.timeout} | ${summary.noPath} |`,
+        `| ${scenario} | ${summary.arrived} | ${summary.stuck} | ${summary.dead} | ${summary.damaged} | ${summary.timeout} | ${summary.noPath} |`,
     ),
     "",
     "## Detail",
