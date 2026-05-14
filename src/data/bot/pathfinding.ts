@@ -130,28 +130,10 @@ export class Pathfinding {
     };
   }
 
-  /**
-   * Calculate heuristic distance between two nodes
-   * Uses Manhattan distance with some adjustments for movement type
-   */
   private static calculateHeuristic(from: Node, to: Node): number {
     const dx = Math.abs(to.x - from.x);
     const dy = Math.abs(to.y - from.y);
-
-    // Base Manhattan distance
-    let heuristic = dx + dy;
-
-    // // Add penalty for height differences (jumping/falling costs more)
-    // if (dy > 0) {
-    //   heuristic += dy * 2; // Vertical movement is more expensive
-    // }
-
-    // // Add penalty for different node types
-    // if (from.type !== to.type) {
-    //   heuristic += 5; // Transitioning between ground/ladder/air costs more
-    // }
-
-    return heuristic;
+    return dx + dy;
   }
 
   /**

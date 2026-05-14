@@ -10,8 +10,6 @@ export class Targeting {
   private static MAX_TARGETING_RANGE = 2000 * 6;
 
   // Order doesn't matter — Targeting.evaluateStrategies sorts by computed value.
-  // For MVP all four strategies score similarly (Melee = 100 for kill / 10 otherwise,
-  // others fixed at 50). M4 will replace these with real damage-based scoring.
   private static strategies: StrategyConstructor[] = [
     Melee,
     Bakuretsu,
