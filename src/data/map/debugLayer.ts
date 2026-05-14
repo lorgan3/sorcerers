@@ -2,11 +2,13 @@ import { Graphics, Text } from "pixi.js";
 import { Graph } from "../bot/graph";
 import { Edge, EdgeType } from "../bot/edge";
 import { Path } from "../bot/path";
+import { BOT_DEBUG_ENABLED } from "../bot/debug";
 
 export class DebugLayer extends Graphics {
   private graph: Graph | null = null;
 
   draw(graph: Graph) {
+    if (!BOT_DEBUG_ENABLED) return;
     this.clear();
     this.graph = graph;
 
@@ -21,6 +23,7 @@ export class DebugLayer extends Graphics {
   }
 
   drawPath(path: Path) {
+    if (!BOT_DEBUG_ENABLED) return;
     this.removeChildren();
 
     let i = 1;
@@ -38,6 +41,7 @@ export class DebugLayer extends Graphics {
   }
 
   highlightEdge(edge: Edge) {
+    if (!BOT_DEBUG_ENABLED) return;
     this.draw(this.graph!);
     this.drawEdge(edge, 3);
 
