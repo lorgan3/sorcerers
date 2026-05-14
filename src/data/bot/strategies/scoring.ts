@@ -1,6 +1,6 @@
 import { Character } from "../../entity/character";
 
-export const COST_FLOOR = 5;
+export const COST_FLOOR = 15;
 export const KILL_BONUS = 50;
 export const MIN_RESERVE = 5;
 export const JITTER = 5;
