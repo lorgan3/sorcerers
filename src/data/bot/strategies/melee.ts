@@ -83,16 +83,36 @@ export class Melee extends Strategy {
     );
   }
 
-  execute(dt: number): Command[] | null {
+  private castFrames = 0;
+
+  execute(_dt: number): Command[] | null {
+    this.castFrames++;
     const targetPosition = this.evaluation!.target.position;
-    return [
-      { type: CommandType.ResetKeys },
-      {
-        type: CommandType.MouseMove,
-        x: targetPosition[0] * 6,
-        y: targetPosition[1] * 6,
-      },
-      { type: CommandType.KeyPress, key: Key.M1 },
-    ];
+    const mouseX = targetPosition[0] * 6;
+    const mouseY = targetPosition[1] * 6;
+
+    // Frame 1: clear lingering keys and aim at target so the character
+    // updates its look direction in this tick's controlContinuous.
+    if (this.castFrames === 1) {
+      return [
+        { type: CommandType.ResetKeys },
+        { type: CommandType.MouseMove, x: mouseX, y: mouseY },
+      ];
+    }
+
+    // Frame 2: swing. lookDirection has now been updated from the new mouse position.
+    if (this.castFrames === 2) {
+      return [
+        { type: CommandType.MouseMove, x: mouseX, y: mouseY },
+        { type: CommandType.KeyPress, key: Key.M1 },
+      ];
+    }
+
+    // Frame 3+: done.
+    if (this.castFrames > 5) {
+      return null;
+    }
+
+    return [];
   }
 }

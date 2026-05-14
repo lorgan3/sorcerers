@@ -41,9 +41,11 @@ export abstract class RangedStrategy extends Strategy {
         }
 
         if (this.requiresLineOfSight()) {
-          // Line of sight is checked in the terrain's "characterMask" coordinate space,
-          // which is game units (1/6 of screen pixels). Centers are in screen units.
-          const surface = getLevel().terrain.characterMask;
+          // LOS uses the terrain-only collisionMask, NOT characterMask. characterMask
+          // includes character bodies — a line from the bot's own center would always
+          // collide with the bot's own body on the first step, falsely reporting "no LOS".
+          // Coords are in game units (1/6 of screen pixels).
+          const surface = getLevel().terrain.collisionMask;
           if (
             surface.collidesWithLine(
               Math.round(myCenter[0] / 6),
@@ -57,9 +59,9 @@ export abstract class RangedStrategy extends Strategy {
         }
 
         // Damage-based heuristic value: prefer kill shots over scratches.
-        // Real scoring lives in M4; this is just enough to make the strategy
-        // bid against Melee.
-        const value = 50;
+        // Real scoring lives in M4. For now, add jitter so we don't always
+        // pick the same ranged strategy via stable-sort tiebreak.
+        const value = 50 + Math.random() * 20;
 
         return {
           target: Cluster.onCharacter(target),
