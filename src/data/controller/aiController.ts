@@ -23,6 +23,7 @@ const WANDER_FALLBACK_MAX_SQ = 300 * 300;
 const MAX_WANDERS_PER_TURN = 5;
 
 export class AiController implements Controller {
+  public readonly isBot = true;
   public pressedKeys = 0;
   private mouse: [number, number] = [0, 0];
 

@@ -16,7 +16,6 @@ import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
 import human from "pixelarticons/svg/user-plus.svg";
 import bot from "pixelarticons/svg/contact-plus.svg";
-import { AiController } from "../../data/controller/aiController";
 import { useHostServer } from "./composables/useHostServer";
 import { useHostPlayers } from "./composables/useHostPlayers";
 import {
@@ -250,7 +249,7 @@ const handleSelectMap = async (config: Config, name: string) => {
               :onEdit="!player.connection ? handleEditPlayer : undefined"
               :subTitle="
                 !player.connection
-                  ? player.controller instanceof AiController
+                  ? player.controller.isBot
                     ? 'Bot'
                     : 'Local player'
                   : ''

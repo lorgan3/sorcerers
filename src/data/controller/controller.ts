@@ -3,6 +3,7 @@ export interface Controller {
   getMouse(): [number, number];
   getLocalMouse(): [number, number];
 
+  readonly isBot: boolean;
   pressedKeys: number;
   serialize(): [number, number, number];
   deserialize(buffer: [number, number, number]): void;

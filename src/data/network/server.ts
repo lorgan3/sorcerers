@@ -232,7 +232,7 @@ export class Server extends Manager {
         this.isControlling() &&
         (this.activePlayer === this._self ||
           !this.settings.trustClient ||
-          this.activePlayer.controller instanceof AiController)
+          this.activePlayer.controller.isBot)
       ) {
         this.activePlayer.activeCharacter.control(this.activePlayer.controller);
       }
@@ -369,7 +369,7 @@ export class Server extends Manager {
       throw new Error("Cannot kick the host!");
     }
 
-    if (player.controller instanceof AiController) {
+    if (player.controller.isBot) {
       this.players.splice(this.players.indexOf(player), 1);
       player.destroy();
       this.availableColors.push(player.color);
@@ -879,7 +879,7 @@ export class Server extends Manager {
     return (
       character.player === this._self ||
       !this.settings.trustClient ||
-      character.player.controller instanceof AiController
+      character.player.controller.isBot
     );
   }
 }
