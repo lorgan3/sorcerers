@@ -121,87 +121,120 @@ export class Graph {
   }
 
   private connectNodes() {
-    const nodes = this.getNodes();
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        let from = nodes[i];
-        let to = nodes[j];
+    const RESOLUTION = Graph.RESOLUTION;
+    const K = Math.ceil(Graph.JUMP_DISTANCE / RESOLUTION);
 
-        const xDiff = Math.abs(to.x - from.x);
-        if (xDiff <= Graph.JUMP_DISTANCE) {
-          let yDiff = from.y - to.y;
+    // 1D x-bin all nodes.
+    const bins = new Map<number, Node[]>();
+    for (const node of this.nodes.values()) {
+      const bin = Math.floor(node.x / RESOLUTION);
+      let arr = bins.get(bin);
+      if (!arr) {
+        arr = [];
+        bins.set(bin, arr);
+      }
+      arr.push(node);
+    }
 
-          if (yDiff < 0) {
-            yDiff = -yDiff;
-            [from, to] = [to, from];
-          }
-
-          if (this.surface.collidesWithLine(from.x, from.y, to.x, to.y)) {
-            continue;
-          }
-
-          if (
-            xDiff > 0 &&
-            (from.type === NodeType.Regular || to.type === NodeType.Regular) &&
-            Math.abs(yDiff) < Graph.RESOLUTION + 1
-          ) {
-            if (xDiff <= Graph.RESOLUTION + 1) {
-              to.connect(from, EdgeType.Walk);
-            }
-
-            continue;
-          }
-
-          const distance = getDistance(from.x, from.y, to.x, to.y);
-          if (from.type === NodeType.Ladder && to.isLadder()) {
-            if (distance < Graph.DIAGONAL_DISTANCE) {
-              to.connect(from, EdgeType.Climb);
-            }
-
-            continue;
-          }
-
-          if (xDiff <= 1) {
-            continue;
-          }
-
-          if (from.type === NodeType.Ladder && to.type === NodeType.Ladder) {
-            continue;
-          }
-
-          if (from.type === NodeType.Ladder) {
-            [from, to] = [to, from];
-          }
-
-          if (
-            yDiff < Graph.JUMP_HEIGHT &&
-            (from.y > to.y || distance > 6) &&
-            distance < Graph.DIAGONAL_DISTANCE
-          ) {
-            to.connect(from, EdgeType.Jump);
-          } else {
-            if (to.type === NodeType.Ladder) {
-              // Ladders should be climbed, not abused as fall targets.
-              // After the swap on line 170, `to` can be either side:
-              //   - upper ladder + lower non-ladder: a fall edge would go DOWN
-              //     off the ladder. Reject — the bot should climb down instead.
-              //   - lower ladder + upper non-ladder: a fall edge would land ON
-              //     the ladder. Allow shallow drops only; steep diagonals are
-              //     better handled by the ladder itself.
-              const ladderIsBelow = to.y > from.y;
-              if (!ladderIsBelow) {
-                continue;
-              }
-              const dropSlope = (to.y - from.y) / Math.abs(from.x - to.x);
-              if (dropSlope > 1) {
-                continue;
-              }
-            }
-
-            to.connect(from, EdgeType.Fall);
+    // Iterate bins in sorted order so cross-bin pairs are visited from low
+    // to high — each pair appears exactly once (own bin via index ordering,
+    // higher bins via forward-only scan).
+    const sortedBins = [...bins.keys()].sort((a, b) => a - b);
+    for (const bin of sortedBins) {
+      const here = bins.get(bin)!;
+      for (let i = 0; i < here.length; i++) {
+        // Within-bin pairs (j > i so each pair visited once).
+        for (let j = i + 1; j < here.length; j++) {
+          this.tryConnect(here[i], here[j]);
+        }
+        // Cross-bin pairs to the next K bins.
+        for (let offset = 1; offset <= K; offset++) {
+          const neighbours = bins.get(bin + offset);
+          if (!neighbours) continue;
+          for (const other of neighbours) {
+            this.tryConnect(here[i], other);
           }
         }
       }
+    }
+  }
+
+  private tryConnect(a: Node, b: Node) {
+    let from = a;
+    let to = b;
+
+    const xDiff = Math.abs(to.x - from.x);
+    if (xDiff > Graph.JUMP_DISTANCE) {
+      return;
+    }
+
+    let yDiff = from.y - to.y;
+    if (yDiff < 0) {
+      yDiff = -yDiff;
+      [from, to] = [to, from];
+    }
+
+    if (this.surface.collidesWithLine(from.x, from.y, to.x, to.y)) {
+      return;
+    }
+
+    if (
+      xDiff > 0 &&
+      (from.type === NodeType.Regular || to.type === NodeType.Regular) &&
+      Math.abs(yDiff) < Graph.RESOLUTION + 1
+    ) {
+      if (xDiff <= Graph.RESOLUTION + 1) {
+        to.connect(from, EdgeType.Walk);
+      }
+      return;
+    }
+
+    const distance = getDistance(from.x, from.y, to.x, to.y);
+    if (from.type === NodeType.Ladder && to.isLadder()) {
+      if (distance < Graph.DIAGONAL_DISTANCE) {
+        to.connect(from, EdgeType.Climb);
+      }
+      return;
+    }
+
+    if (xDiff <= 1) {
+      return;
+    }
+
+    if (from.type === NodeType.Ladder && to.type === NodeType.Ladder) {
+      return;
+    }
+
+    if (from.type === NodeType.Ladder) {
+      [from, to] = [to, from];
+    }
+
+    if (
+      yDiff < Graph.JUMP_HEIGHT &&
+      (from.y > to.y || distance > 6) &&
+      distance < Graph.DIAGONAL_DISTANCE
+    ) {
+      to.connect(from, EdgeType.Jump);
+    } else {
+      if (to.type === NodeType.Ladder) {
+        // Ladders should be climbed, not abused as fall targets.
+        // After the swap above, `to` can be either side:
+        //   - upper ladder + lower non-ladder: a fall edge would go DOWN
+        //     off the ladder. Reject — the bot should climb down instead.
+        //   - lower ladder + upper non-ladder: a fall edge would land ON
+        //     the ladder. Allow shallow drops only; steep diagonals are
+        //     better handled by the ladder itself.
+        const ladderIsBelow = to.y > from.y;
+        if (!ladderIsBelow) {
+          return;
+        }
+        const dropSlope = (to.y - from.y) / Math.abs(from.x - to.x);
+        if (dropSlope > 1) {
+          return;
+        }
+      }
+
+      to.connect(from, EdgeType.Fall);
     }
   }
 
