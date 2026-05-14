@@ -1,4 +1,4 @@
-import { getSquareDistance } from "../../util/math";
+import { getDistance } from "../../util/math";
 import { Graph } from "./graph";
 import { Node } from "./node";
 
@@ -20,7 +20,11 @@ export class Edge {
     this.to = to;
     this.type = type;
 
-    const distance = getSquareDistance(to.x, to.y, from.x, from.y);
+    // Use Euclidean (not squared) so g-cost is comparable to the Manhattan
+    // heuristic in Pathfinding; that makes Manhattan slightly inadmissible
+    // (Manhattan ≥ Euclidean), which lets A* run as weighted A* — fewer
+    // node expansions at the cost of occasionally suboptimal paths.
+    const distance = getDistance(to.x, to.y, from.x, from.y);
     if (type === EdgeType.Walk || type === EdgeType.Climb) {
       this.cost = distance;
     } else if (type === EdgeType.Jump) {
