@@ -8,6 +8,7 @@ import { Cluster } from "../cluster";
 import { EdgeType } from "../edge";
 import { Graph } from "../graph";
 import { Evaluation, Strategy } from "./strategy";
+import { scoreCandidate } from "./scoring";
 
 export class Melee extends Strategy {
   public static spell = MELEE;
@@ -43,18 +44,31 @@ export class Melee extends Strategy {
           return null;
         }
 
-        const damage =
-          20 * (0.7 + getManager().getElementValue(Element.Physical) * 0.3);
-        let value = damage >= target.hp ? 100 : 10;
+        const damage = this.predictDamage(target);
+        const currentMana = this.character.player.mana;
 
-        if (value !== 100) {
+        // Melee has no AOE — friendly damage is always 0.
+        const value = scoreCandidate({
+          enemyDamage: damage,
+          friendlyDamage: 0,
+          killsAlly: false,
+          targetHp: target.hp,
+          spellCost: Melee.spell.cost,
+          currentMana,
+        });
+
+        if (value === null) return null;
+
+        // Preserve the existing "fall off ledge for a kill shot" behavior:
+        // if not a kill from the safe tile, look for a falling approach.
+        if (damage < target.hp) {
           const edges = graph.findEdges(
             Math.random() < 0.5 ? leftTo : rightTo,
             {
               type: EdgeType.Fall,
               maxCost: 20,
               allowedTypes: [EdgeType.Climb, EdgeType.Walk],
-            }
+            },
           );
 
           if (edges.length > 0) {
@@ -62,7 +76,6 @@ export class Melee extends Strategy {
             const direction = edge.to.getDirection(leftTo);
 
             to = direction === -1 ? [rightTo] : [leftTo];
-            value = 100;
           }
         }
 
@@ -72,6 +85,10 @@ export class Melee extends Strategy {
       .sort((a, b) => b!.value - a!.value) as Evaluation[];
 
     this.getNextEvaluation();
+  }
+
+  private predictDamage(_target: Character): number {
+    return 20 * (0.7 + getManager().getElementValue(Element.Physical) * 0.3);
   }
 
   get destinationReached() {
