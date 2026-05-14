@@ -1,7 +1,5 @@
-// Mirrors the constants in src/data/collision/body.ts.
-// Kept in sync by hand — if body.ts is retuned, update these AND the tests in
-// __spec__/physics.spec.ts. The tests simulate the actual body integration
-// and will fail loudly if the derivations drift.
+// Mirrors the constants in src/data/collision/body.ts. If body.ts is retuned,
+// update these — physics-spec tests will fail loudly if the simulation drifts.
 const GRAVITY = 0.2;
 const JUMP_STRENGTH = 3.3;
 const SPEED = 0.08;
@@ -12,30 +10,70 @@ const AIR_FRICTION = 0.98;
 // Walking terminal velocity: equilibrium of v = v * f + a, so v = a / (1 - f).
 export const WALK_TERMINAL_VELOCITY = SPEED / (1 - GROUND_FRICTION);
 
-// Time from launch to apex, in frames: yVelocity hits 0 when -JUMP_STRENGTH + GRAVITY*t = 0.
-export const APEX_FRAMES = JUMP_STRENGTH / GRAVITY;
+/**
+ * Faithful one-frame body.ts integration step (dt = 1, in-air): friction first,
+ * then compute diff = v + a/2, then update velocity by a.
+ * Kept private — tests in __spec__/physics.spec.ts mirror this to verify the
+ * derived constants below stay honest.
+ */
+function airStep(
+  state: { x: number; y: number; xv: number; yv: number },
+  walkDirection: -1 | 0 | 1,
+) {
+  const xv = state.xv * AIR_FRICTION;
+  const yv = state.yv * AIR_FRICTION;
+  const xAcc = walkDirection * SPEED * AIR_CONTROL;
+  const yAcc = GRAVITY;
+  return {
+    x: state.x + xv + xAcc * 0.5,
+    y: state.y + yv + yAcc * 0.5,
+    xv: xv + xAcc,
+    yv: yv + yAcc,
+  };
+}
 
-// Total airtime is symmetric — apex going up, then apex going down to start height.
-// In practice the character lands slightly lower than launch on a jump that crosses a gap,
-// so this is a conservative upper bound on airtime.
-export const AIRTIME_FRAMES = APEX_FRAMES * 2;
+/**
+ * Simulate a jump and return (apexFrame, airtimeFrames, peakHeight, distanceAtLanding)
+ * with the given launch velocity. dx walks +1 throughout (full air-control input).
+ */
+function simulateJump(launchX: number) {
+  let s = { x: 0, y: 0, xv: launchX, yv: -JUMP_STRENGTH };
+  let peak = 0;
+  let apexFrame = 0;
+  for (let frame = 1; frame <= 120; frame++) {
+    s = airStep(s, 1);
+    if (s.y < peak) {
+      peak = s.y;
+      apexFrame = frame;
+    }
+    if (s.y > 0) {
+      return {
+        apexFrame,
+        airtimeFrames: frame,
+        peakHeight: -peak,
+        distance: s.x,
+      };
+    }
+  }
+  // Shouldn't happen with reasonable JUMP_STRENGTH/GRAVITY.
+  return { apexFrame, airtimeFrames: 120, peakHeight: -peak, distance: s.x };
+}
 
-// Peak height above launch point, derived from kinematic equations.
-// y(t) = -JUMP_STRENGTH*t + 0.5*GRAVITY*t^2. At apex t = APEX_FRAMES, |y| = JUMP_STRENGTH^2 / (2 * GRAVITY).
-export const MAX_JUMP_HEIGHT = (JUMP_STRENGTH * JUMP_STRENGTH) / (2 * GRAVITY);
+const STANDING_JUMP = simulateJump(0);
+const RUNNING_JUMP = simulateJump(WALK_TERMINAL_VELOCITY);
 
-// Maximum horizontal jump distance, assuming launch at WALK_TERMINAL_VELOCITY and holding the
-// air-control input for the duration of the flight. Computed by simulating the body integration.
-// We do this with a small closed-form approximation rather than running a full simulation:
-//   - During flight, xVelocity decays by AIR_FRICTION per frame and gains AIR_CONTROL*SPEED per frame.
-//   - The air-control input (AIR_CONTROL * SPEED per frame) more than compensates for AIR_FRICTION
-//     at low speeds, so the body actually accelerates during flight. Simulation gives ~27px.
-//   - The factor 1.2 undershoots the simulation slightly, giving a conservative floor (~26px)
-//     while staying within ±30% of actual simulated distance.
-// For graph planning we want a CONSERVATIVE upper bound: round down to integer pixels.
-export const MAX_JUMP_DISTANCE = Math.floor(
-  WALK_TERMINAL_VELOCITY * AIRTIME_FRAMES * 1.2
-);
+// Frame at which yVelocity crosses zero in the friction-included simulation.
+export const APEX_FRAMES = STANDING_JUMP.apexFrame;
+
+// Total airtime from launch to landing back at y=0.
+export const AIRTIME_FRAMES = STANDING_JUMP.airtimeFrames;
+
+// Peak height above launch point, in pixels (rounded down for conservative graph planning).
+export const MAX_JUMP_HEIGHT = Math.floor(STANDING_JUMP.peakHeight);
+
+// Maximum horizontal jump distance from a running launch at WALK_TERMINAL_VELOCITY,
+// holding air-control for the full flight. Rounded down for conservative graph planning.
+export const MAX_JUMP_DISTANCE = Math.floor(RUNNING_JUMP.distance);
 
 // Minimum launch xVelocity required to reach a jump's nominal max distance with margin.
 // Below this threshold, the bot should walk longer before launching.

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  AIRTIME_FRAMES,
   APEX_FRAMES,
   MAX_JUMP_DISTANCE,
   MAX_JUMP_HEIGHT,
@@ -9,15 +8,51 @@ import {
   runUpDistanceFromRest,
 } from "../physics";
 
-// These mirror the constants in body.ts. If body.ts is retuned, both these constants
-// and the values in physics.ts need to be updated. The "real" tests simulate the
-// integration to verify the derivations are consistent.
+// Mirrors the constants in src/data/collision/body.ts. If body.ts is retuned,
+// update these AND the values in physics.ts.
 const GRAVITY = 0.2;
 const JUMP_STRENGTH = 3.3;
 const SPEED = 0.08;
 const GROUND_FRICTION = 0.88;
 const AIR_FRICTION = 0.98;
 const AIR_CONTROL = 0.3;
+
+/**
+ * One in-air integration step matching body.ts:tick(dt=1) exactly:
+ *   1) friction multiplies current velocity
+ *   2) compute diff = v * dt + acc * dt^2 / 2 using the post-friction velocity
+ *   3) displace by diff
+ *   4) update velocity by acc * dt
+ *
+ * Returns the new state. Walk direction +1 means "hold right air-control input".
+ */
+function airStep(
+  state: { x: number; y: number; xv: number; yv: number },
+  walkDirection: -1 | 0 | 1,
+) {
+  // 1) friction (air, since we're in the air)
+  let xv = state.xv * AIR_FRICTION;
+  let yv = state.yv * AIR_FRICTION;
+
+  // 2) acceleration this frame
+  const xAcc = walkDirection * SPEED * AIR_CONTROL;
+  const yAcc = GRAVITY;
+
+  // 3) displacement (dt = 1, idt = 0.5)
+  const xDiff = xv * 1 + xAcc * 0.5;
+  const yDiff = yv * 1 + yAcc * 0.5;
+
+  // 4) velocity update for next frame
+  xv += xAcc;
+  yv += yAcc;
+
+  return {
+    x: state.x + xDiff,
+    y: state.y + yDiff,
+    xv,
+    yv,
+  };
+}
 
 describe("physics", () => {
   it("walking terminal velocity matches simulation", () => {
@@ -28,52 +63,47 @@ describe("physics", () => {
     expect(WALK_TERMINAL_VELOCITY).toBeCloseTo(v, 3);
   });
 
-  it("apex frames is the integer time when yVelocity reaches zero", () => {
+  it("apex frames is the integer frame count when yVelocity crosses zero", () => {
+    // Faithful body.ts integration: friction THEN gravity each frame.
     let yv = -JUMP_STRENGTH;
     let frames = 0;
-    while (yv < 0) {
-      yv += GRAVITY;
+    while (yv < 0 && frames < 50) {
+      yv = yv * AIR_FRICTION + GRAVITY;
       frames++;
     }
-    // The closed-form APEX_FRAMES (16.5) lies between consecutive integer frame counts.
-    expect(APEX_FRAMES).toBeGreaterThan(frames - 1);
-    expect(APEX_FRAMES).toBeLessThan(frames + 1);
+    // Air friction accelerates the climb back to zero — apex arrives slightly before
+    // the friction-less closed form (16.5). Tolerance of 1 frame is plenty.
+    expect(APEX_FRAMES).toBeGreaterThan(frames - 2);
+    expect(APEX_FRAMES).toBeLessThanOrEqual(frames + 1);
   });
 
-  it("max jump height is achievable in simulation (no horizontal motion)", () => {
-    let yv = -JUMP_STRENGTH;
-    let y = 0;
-    let minY = 0;
-    for (let i = 0; i < Math.ceil(AIRTIME_FRAMES); i++) {
-      y += yv + GRAVITY * 0.5; // yDiff = vy*dt + g*dt^2/2 (dt=1)
-      yv += GRAVITY;
-      if (y < minY) minY = y;
+  it("max jump height matches faithful integration within 1 pixel", () => {
+    let s = { x: 0, y: 0, xv: 0, yv: -JUMP_STRENGTH };
+    let peak = 0;
+    for (let i = 0; i < 60; i++) {
+      s = airStep(s, 0);
+      if (s.y < peak) peak = s.y;
+      if (s.y > 0) break;
     }
-    // minY (most negative) corresponds to peak height (up is negative y).
-    expect(Math.abs(minY)).toBeGreaterThanOrEqual(MAX_JUMP_HEIGHT - 1);
+    // MAX_JUMP_HEIGHT is floor()'d for conservative graph planning, so simulation
+    // peak should be in [MAX_JUMP_HEIGHT, MAX_JUMP_HEIGHT + 1).
+    expect(Math.abs(peak)).toBeGreaterThanOrEqual(MAX_JUMP_HEIGHT);
+    expect(Math.abs(peak)).toBeLessThan(MAX_JUMP_HEIGHT + 1);
   });
 
-  it("max jump distance is approximately reachable from running launch", () => {
-    // Simulate: launch at WALK_TERMINAL_VELOCITY, hold air-control direction +1.
-    let xv = WALK_TERMINAL_VELOCITY;
-    let yv = -JUMP_STRENGTH;
-    let x = 0;
-    let y = 0;
-    let frames = 0;
-    while (y <= 0 && frames < 100) {
-      const yDiff = yv + GRAVITY * 0.5;
-      const xAcc = AIR_CONTROL * SPEED;
-      const xDiff = xv + xAcc * 0.5;
-      x += xDiff;
-      y += yDiff;
-      xv = xv * AIR_FRICTION + xAcc;
-      yv += GRAVITY;
-      frames++;
+  it("max jump distance from running launch is within 1 pixel of simulation", () => {
+    let s = {
+      x: 0,
+      y: 0,
+      xv: WALK_TERMINAL_VELOCITY,
+      yv: -JUMP_STRENGTH,
+    };
+    while (s.y <= 0) {
+      s = airStep(s, 1);
     }
-    // Simulated distance should be within 30% of our MAX_JUMP_DISTANCE estimate.
-    // (The estimate uses a fudge factor of 0.7; this test verifies it's in the right ballpark.)
-    expect(x).toBeGreaterThan(MAX_JUMP_DISTANCE * 0.7);
-    expect(x).toBeLessThan(MAX_JUMP_DISTANCE * 1.3);
+    // MAX_JUMP_DISTANCE is floor()'d for conservative graph planning.
+    expect(s.x).toBeGreaterThanOrEqual(MAX_JUMP_DISTANCE);
+    expect(s.x).toBeLessThan(MAX_JUMP_DISTANCE + 1);
   });
 
   it("min launch speed is below terminal velocity", () => {
