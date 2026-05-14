@@ -21,6 +21,15 @@ export abstract class RangedStrategy extends Strategy {
     return 1000;
   }
 
+  /**
+   * Minimum useful cast distance (screen pixels). Spells like Fireball whose arc
+   * overshoots at close range should override to avoid embarrassing whiffs.
+   * Defaults to 0 (no minimum).
+   */
+  protected minRange(): number {
+    return 0;
+  }
+
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
 
@@ -36,7 +45,7 @@ export abstract class RangedStrategy extends Strategy {
         const dy = targetCenter[1] - myCenter[1];
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > this.maxRange()) {
+        if (distance > this.maxRange() || distance < this.minRange()) {
           return null;
         }
 

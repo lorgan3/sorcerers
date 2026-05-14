@@ -15,11 +15,19 @@ const AIM_LIFT_PIXELS = 30;
 // (screen pixels) — the projectile arc would fall short.
 const MAX_RANGE_SCREEN = 600;
 
+// At point-blank range the arcing projectile flies past the target. Below this
+// distance, prefer Melee.
+const MIN_RANGE_SCREEN = 150;
+
 export class Fireball extends RangedStrategy {
   public static spell = FIREBALL;
 
   protected maxRange(): number {
     return MAX_RANGE_SCREEN;
+  }
+
+  protected minRange(): number {
+    return MIN_RANGE_SCREEN;
   }
 
   private castFrames = 0;
