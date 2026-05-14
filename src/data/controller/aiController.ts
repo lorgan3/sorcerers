@@ -56,8 +56,15 @@ export class AiController implements Controller {
 
   setKey(key: Key, state: boolean) {
     if (state) {
+      // Edge-triggered: only fire listeners on the up→down transition. Strategies
+      // emit KeyDown every tick (e.g. holding Inventory for 120 ticks during the
+      // Selecting state), and naive listener firing here would call openSpellBook
+      // ~120 times per cast for a no-op.
+      const wasDown = !!(this.pressedKeys & keyMap[key]);
       this.pressedKeys |= keyMap[key];
-      this.eventHandlers.get(key)?.forEach((fn) => fn());
+      if (!wasDown) {
+        this.eventHandlers.get(key)?.forEach((fn) => fn());
+      }
     } else {
       this.pressedKeys &= ~keyMap[key];
     }
