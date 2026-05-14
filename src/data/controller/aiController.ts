@@ -149,6 +149,32 @@ export class AiController implements Controller {
     }
   }
 
+  /**
+   * Install an externally-supplied path as the active follower. Used by the
+   * sandbox debug API to drive deterministic walk attempts. Clears any active
+   * strategy and resets the wander counter so the bot doesn't bail out of the
+   * follower prematurely. The existing tick loop drives `wanderFollower` once
+   * `strategy` is null.
+   */
+  installFollower(path: Path) {
+    this.strategies = [];
+    this.strategy = null;
+    this.wanderCount = 0;
+    this.wanderFollower = path;
+  }
+
+  /** Returns the currently installed follower (null when none). */
+  getFollower(): Path | null {
+    return this.wanderFollower;
+  }
+
+  /** Clear any installed follower and strategy. */
+  clearFollower() {
+    this.strategies = [];
+    this.strategy = null;
+    this.wanderFollower = null;
+  }
+
   private startWander() {
     this.strategy = null;
     this.wanderFollower = null;
