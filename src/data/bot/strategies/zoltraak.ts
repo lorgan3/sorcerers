@@ -1,5 +1,5 @@
 import { Command, CommandType, Key } from "../../controller/controller";
-import { ZOLTRAAK } from "../../spells";
+import { ZOLTRAAK, getSpellCost } from "../../spells";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
 import { Element } from "../../spells/types";
@@ -90,7 +90,7 @@ export class Zoltraak extends RangedStrategy {
           friendlyDamage,
           killsAlly,
           targetHp: target.hp,
-          spellCost: Zoltraak.spell.cost,
+          spellCost: getSpellCost(Zoltraak.spell),
           currentMana,
         });
 

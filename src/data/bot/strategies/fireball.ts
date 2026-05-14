@@ -1,5 +1,5 @@
 import { Command, CommandType, Key } from "../../controller/controller";
-import { FIREBALL } from "../../spells";
+import { FIREBALL, getSpellCost } from "../../spells";
 import { RangedStrategy } from "./rangedStrategy";
 import { Character } from "../../entity/character";
 import { Cluster } from "../cluster";
@@ -104,7 +104,7 @@ export class Fireball extends RangedStrategy {
           friendlyDamage,
           killsAlly,
           targetHp: target.hp,
-          spellCost: Fireball.spell.cost,
+          spellCost: getSpellCost(Fireball.spell),
           currentMana,
         });
 

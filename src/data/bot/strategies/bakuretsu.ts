@@ -1,5 +1,5 @@
 import { Command, CommandType, Key } from "../../controller/controller";
-import { BAKURETSU } from "../../spells";
+import { BAKURETSU, getSpellCost } from "../../spells";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
 import { Element } from "../../spells/types";
@@ -60,7 +60,7 @@ export class Bakuretsu extends RangedStrategy {
           friendlyDamage,
           killsAlly,
           targetHp: target.hp,
-          spellCost: Bakuretsu.spell.cost,
+          spellCost: getSpellCost(Bakuretsu.spell),
           currentMana,
         });
 

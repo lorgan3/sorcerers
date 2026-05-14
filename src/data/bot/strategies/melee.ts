@@ -2,7 +2,7 @@ import { getSquareDistance } from "../../../util/math";
 import { Command, CommandType, Key } from "../../controller/controller";
 import { Character } from "../../entity/character";
 import { getManager } from "../../context";
-import { MELEE } from "../../spells";
+import { MELEE, getSpellCost } from "../../spells";
 import { Element } from "../../spells/types";
 import { Cluster } from "../cluster";
 import { EdgeType } from "../edge";
@@ -53,7 +53,7 @@ export class Melee extends Strategy {
           friendlyDamage: 0,
           killsAlly: false,
           targetHp: target.hp,
-          spellCost: Melee.spell.cost,
+          spellCost: getSpellCost(Melee.spell),
           currentMana,
         });
 
