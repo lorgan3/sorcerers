@@ -1,7 +1,8 @@
 import { Command, CommandType, Key, keyMap } from "../../controller/controller";
 import { Character } from "../../entity/character";
 import { getServer } from "../../context";
-import { Spell } from "../../spells";
+import { SPELLS, Spell } from "../../spells";
+import { MessageType } from "../../network/types";
 import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Node } from "../node";
@@ -94,10 +95,17 @@ export abstract class Strategy {
           return [{ type: CommandType.KeyDown, key: Key.Inventory }];
         }
 
-        getServer()!.selectSpell(
-          (this.constructor as StrategyConstructor).spell,
-          this.character.player
-        );
+        const server = getServer()!;
+        const spell = (this.constructor as StrategyConstructor).spell;
+        server.selectSpell(spell, this.character.player);
+        // The SelectSpell message handler broadcasts when human clients select a spell;
+        // bots bypass that path, so emit the broadcast manually so clients create their
+        // own cursor in time for the Cast that follows.
+        server.broadcast({
+          type: MessageType.SelectSpell,
+          spell: SPELLS.indexOf(spell),
+          player: server.players.indexOf(this.character.player),
+        });
 
         this.state = State.Moving;
         if (this.path.success) {
