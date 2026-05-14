@@ -1,11 +1,11 @@
-// Mirrors the constants in src/data/collision/body.ts. If body.ts is retuned,
-// update these — physics-spec tests will fail loudly if the simulation drifts.
-const GRAVITY = 0.2;
-const JUMP_STRENGTH = 3.3;
-const SPEED = 0.08;
-const AIR_CONTROL = 0.3;
-const GROUND_FRICTION = 0.88;
-const AIR_FRICTION = 0.98;
+import {
+  AIR_CONTROL,
+  AIR_FRICTION,
+  GRAVITY,
+  GROUND_FRICTION,
+  JUMP_STRENGTH,
+  SPEED,
+} from "../collision/physicsConstants";
 
 // Walking terminal velocity: equilibrium of v = v * f + a, so v = a / (1 - f).
 export const WALK_TERMINAL_VELOCITY = SPEED / (1 - GROUND_FRICTION);

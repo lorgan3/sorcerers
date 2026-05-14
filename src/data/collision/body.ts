@@ -1,18 +1,20 @@
 import { PhysicsBody } from ".";
 import { CollisionMask } from "./collisionMask";
+import {
+  AIR_CONTROL,
+  AIR_FRICTION,
+  GRAVITY,
+  GROUND_FRICTION,
+  JUMP_STRENGTH,
+  SPEED,
+} from "./physicsConstants";
 
 // Random value that determines how much gravity a body must receive before something is considered a collision with the ground/ceiling
 const COLLISION_TRIGGER = 7;
 const MAX_STEP = 3;
 
-const GRAVITY = 0.2;
-const AIR_CONTROL = 0.3;
-const GROUND_FRICTION = 0.88;
-const AIR_FRICTION = 0.98;
 const MIN_MOVEMENT = 0.01;
 
-const SPEED = 0.08;
-const JUMP_STRENGTH = 3.3;
 const JUMP_COOLDOWN = 15;
 const JUMP_CHARGE_TIME = 5;
 const LADDER_SPEED = 0.6;

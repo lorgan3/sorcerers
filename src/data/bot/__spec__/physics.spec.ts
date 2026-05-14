@@ -7,15 +7,14 @@ import {
   WALK_TERMINAL_VELOCITY,
   runUpDistanceFromRest,
 } from "../physics";
-
-// Mirrors the constants in src/data/collision/body.ts. If body.ts is retuned,
-// update these AND the values in physics.ts.
-const GRAVITY = 0.2;
-const JUMP_STRENGTH = 3.3;
-const SPEED = 0.08;
-const GROUND_FRICTION = 0.88;
-const AIR_FRICTION = 0.98;
-const AIR_CONTROL = 0.3;
+import {
+  AIR_CONTROL,
+  AIR_FRICTION,
+  GRAVITY,
+  GROUND_FRICTION,
+  JUMP_STRENGTH,
+  SPEED,
+} from "../../collision/physicsConstants";
 
 /**
  * One in-air integration step matching body.ts:tick(dt=1) exactly:
