@@ -136,9 +136,7 @@ export class Fireball extends RangedStrategy {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     const damageMultiplier = 2 + getManager().getElementValue(Element.Arcane);
-    // +5 game units: ExplosiveDamage's effective range is (nominalRadius + 5).
-    // See predictExplosiveDamage JSDoc in scoring.ts.
-    return predictExplosiveDamage(distance, Fireball.BLAST_RADIUS_GAME + 5, damageMultiplier);
+    return predictExplosiveDamage(distance, Fireball.BLAST_RADIUS_GAME, damageMultiplier);
   }
 
   private castFrames = 0;

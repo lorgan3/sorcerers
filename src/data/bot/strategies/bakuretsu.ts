@@ -91,9 +91,7 @@ export class Bakuretsu extends RangedStrategy {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     const damageMultiplier = 8 * getManager().getElementValue(Element.Elemental);
-    // +5 game units: ExplosiveDamage's effective range is (nominalRadius + 5).
-    // See predictExplosiveDamage JSDoc in scoring.ts.
-    return predictExplosiveDamage(distance, Bakuretsu.BLAST_RADIUS_GAME + 5, damageMultiplier);
+    return predictExplosiveDamage(distance, Bakuretsu.BLAST_RADIUS_GAME, damageMultiplier);
   }
 
   // Track how many frames we've spent in the cast sequence so we know when to finish.

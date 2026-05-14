@@ -10,22 +10,25 @@ import {
 import { Character } from "../../../entity/character";
 
 describe("predictExplosiveDamage", () => {
-  it("returns 0 outside the blast radius", () => {
+  // Helper adds +5 to nominal radius internally — effective range = nominal + 5.
+
+  it("returns 0 outside the effective blast radius", () => {
+    // nominal 32 → effective 37; distance 40 is past the edge.
     expect(predictExplosiveDamage(40, 32, 8)).toBe(0);
   });
 
   it("returns full damage at the center", () => {
-    // (5 + 5 * (32 - 0) / 32) * 8 = (5 + 5) * 8 = 80
+    // effective 37; (5 + 5 * (37 - 0) / 37) * 8 = 80
     expect(predictExplosiveDamage(0, 32, 8)).toBe(80);
   });
 
-  it("scales linearly with distance to the edge", () => {
-    // (5 + 5 * (32 - 16) / 32) * 8 = (5 + 2.5) * 8 = 60
-    expect(predictExplosiveDamage(16, 32, 8)).toBe(60);
+  it("scales linearly with distance toward the effective edge", () => {
+    // effective 37; (5 + 5 * (37 - 18.5) / 37) * 8 = (5 + 2.5) * 8 = 60
+    expect(predictExplosiveDamage(18.5, 32, 8)).toBeCloseTo(60);
   });
 
   it("respects damageMultiplier", () => {
-    // (5 + 5) * 2 = 20 at center with mult=2
+    // nominal 16 → effective 21; at center: (5 + 5) * 2 = 20
     expect(predictExplosiveDamage(0, 16, 2)).toBe(20);
   });
 });
