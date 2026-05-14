@@ -3,6 +3,8 @@ import { CollisionMask } from "../../collision/collisionMask";
 import { SimpleBody } from "../../collision/simpleBody";
 import { TickingEntity } from "../types";
 import { getLevel } from "../../context";
+import { Force } from "../../damage/targetList";
+import { DamageSource } from "../../damage/types";
 
 export interface GibConfig {
   texture: Texture;
@@ -31,6 +33,7 @@ const AIR_SPIN_DRAG = 0.99;
 const WATER_SPIN_DRAG = 0.92;
 const GROUND_SPIN_DRAG = 0.6;
 const GROUND_CONTACT_TICKS = 3;
+const SPIN_FROM_FORCE = 0.3;
 
 export class Gib extends Sprite implements TickingEntity {
   public readonly body: SimpleBody;
@@ -92,6 +95,18 @@ export class Gib extends Sprite implements TickingEntity {
 
   spin(amount: number) {
     this.angularVelocity += amount;
+  }
+
+  getCenter(): [number, number] {
+    return [this.position.x, this.position.y];
+  }
+
+  applyForce(_source: DamageSource | null, force: Force) {
+    const vx = Math.cos(force.direction) * force.power;
+    const vy = Math.sin(force.direction) * force.power;
+    this.body.addVelocity(vx, vy);
+    this.angularVelocity += vx * SPIN_FROM_FORCE;
+    this.bleed();
   }
 
   tick(dt: number) {

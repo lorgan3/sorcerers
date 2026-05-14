@@ -7,6 +7,9 @@ import { Sound } from "../../sound";
 import { Player } from "../network/player";
 import { getLevel } from "../context";
 
+const IMPACT_GIB_POWER = 2;
+const IMPACT_GIB_RANGE = 16 * 6;
+
 export class ImpactDamage implements DamageSource {
   public readonly type = DamageSourceType.Impact;
 
@@ -26,6 +29,16 @@ export class ImpactDamage implements DamageSource {
     }
 
     this.getTargets().damage(this);
+
+    const cx = (this.x + 3) * 6;
+    const cy = (this.y + 8) * 6;
+    getLevel().withNearbyGibs(cx, cy, IMPACT_GIB_RANGE, (gib) => {
+      const [gx, gy] = gib.getCenter();
+      gib.applyForce(this, {
+        power: IMPACT_GIB_POWER,
+        direction: Math.atan2(gy - cy, gx - cx),
+      });
+    });
   }
 
   serialize() {

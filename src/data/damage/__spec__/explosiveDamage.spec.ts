@@ -1,7 +1,19 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+vi.mock("../../../sound/controllableSound", () => ({
+  ControllableSound: {
+    fromEntity: vi.fn(),
+  },
+}));
+
 import { ExplosiveDamage } from "../explosiveDamage";
 import { HurtableEntity } from "../../entity/types";
 import { Level } from "../../map/level";
+import {
+  installMockContext,
+  clearMockContext,
+  MockLevel,
+} from "../../__spec__/mockContext";
 
 function createMockEntity(
   id: number,
@@ -156,6 +168,57 @@ describe("ExplosiveDamage", () => {
       expect(restored.x).toBe(15);
       expect(restored.y).toBe(25);
       expect(restored.serialize()[2]).toBe(8);
+    });
+  });
+
+  describe("gib push", () => {
+    let level: MockLevel;
+
+    beforeEach(() => {
+      const mocks = installMockContext();
+      level = mocks.level;
+      level.terrain.subtractCircle.mockReturnValue(false);
+      level.terrain.draw.mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      clearMockContext();
+    });
+
+    it("queries level.withNearbyGibs with the explosion epicenter", () => {
+      level.withNearbyGibs.mockImplementation(() => {});
+      const damage = new ExplosiveDamage(10, 20, 16, 5, 1);
+      damage.damage();
+
+      expect(level.withNearbyGibs).toHaveBeenCalledWith(
+        10 * 6,
+        20 * 6,
+        (16 + 5) * 6,
+        expect.any(Function)
+      );
+    });
+
+    it("applies force to gibs scaled by distance falloff", () => {
+      const gib = {
+        getCenter: () => [10 * 6 + 30, 20 * 6],
+        applyForce: vi.fn(),
+      };
+      level.withNearbyGibs.mockImplementation(
+        (x: number, y: number, range: number, fn: Function) => {
+          fn(gib, 30 * 30);
+        }
+      );
+
+      const damage = new ExplosiveDamage(10, 20, 16, 8, 1);
+      damage.damage();
+
+      expect(gib.applyForce).toHaveBeenCalledTimes(1);
+      const force = gib.applyForce.mock.calls[0][1];
+      // Direction is rightward (gib east of epicenter)
+      expect(force.direction).toBeCloseTo(0, 1);
+      // Power is positive and less than full (distance > 0)
+      expect(force.power).toBeGreaterThan(0);
+      expect(force.power).toBeLessThan(8);
     });
   });
 });

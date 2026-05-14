@@ -101,6 +101,22 @@ export class ExplosiveDamage implements DamageSource {
     }
 
     this.getTargets().damage(this);
+
+    const gibRange = (this.range + 5) * 6;
+    getLevel().withNearbyGibs(
+      this.x * 6,
+      this.y * 6,
+      gibRange,
+      (gib, distSq) => {
+        const [gx, gy] = gib.getCenter();
+        const distance = Math.sqrt(distSq);
+        const falloff = (gibRange - distance) / gibRange;
+        gib.applyForce(this, {
+          power: this.power * falloff,
+          direction: Math.atan2(gy - this.y * 6, gx - this.x * 6),
+        });
+      }
+    );
   }
 
   serialize() {

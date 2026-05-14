@@ -21,6 +21,7 @@ export class WindBlast extends Container implements Spawnable {
   private rx = 0;
   private ry = 0;
   private triggered = false;
+  private gibsTriggered = false;
 
   public id = -1;
   public readonly type = EntityType.WindBlast;
@@ -71,21 +72,46 @@ export class WindBlast extends Container implements Spawnable {
   }
 
   tick(dt: number) {
+    const triggerFrameReached =
+      this.sprite.currentFrame > WindBlast.triggerFrame;
+
+    // Change the direction a bit upwards for a better effect (Characters have a lot of friction with the ground)
+    const diff = angleDiff(this.direction, -Math.PI / 2);
+    const max = Math.PI / 6;
+    const adjustedDirection =
+      this.direction + Math.max(-max, Math.min(max, diff));
+
+    const x = this.rx + (this.character.direction === 1 ? 0 : -24);
+    const y = this.ry - 12;
+
+    if (triggerFrameReached && !this.gibsTriggered) {
+      this.gibsTriggered = true;
+
+      const gibPower =
+        this.power *
+        (0.7 + getManager().getElementValue(Element.Elemental) * 0.3);
+      const rect =
+        rotatedRectangle6x24[
+          getIndexFromAngle(this.direction - Math.PI / 2)
+        ];
+
+      getLevel().withNearbyGibs(x * 6, y * 6, 32 * 6, (gib) => {
+        const [gx, gy] = gib.body.position;
+        if (rect.collidesWith(gib.body.mask, gx - x, gy - y)) {
+          gib.applyForce(null, {
+            direction: adjustedDirection,
+            power: gibPower,
+          });
+        }
+      });
+    }
+
     if (!getServer()) {
       return;
     }
 
-    if (this.sprite.currentFrame > WindBlast.triggerFrame && !this.triggered) {
+    if (triggerFrameReached && !this.triggered) {
       this.triggered = true;
-
-      const x = this.rx + (this.character.direction === 1 ? 0 : -24);
-      const y = this.ry - 12;
-
-      // Change the direction a bit upwards for a better effect (Characters have a lot of friction with the ground)
-      const diff = angleDiff(this.direction, -Math.PI / 2);
-      const max = Math.PI / 6;
-      const adjustedDirection =
-        this.direction + Math.max(-max, Math.min(max, diff));
 
       const entities: HurtableEntity[] = [];
       getLevel().withNearbyEntities(x * 6, y * 6, 32 * 6, (entity) => {

@@ -121,6 +121,14 @@ export class FallDamage implements DamageSource {
     );
 
     this.getTargets().damage(this);
+
+    const sx = (this.x + data.xOffset) * 6;
+    const sy = (this.y + data.yOffset) * 6;
+    getLevel().withNearbyGibs(sx, sy, data.range, (gib) => {
+      const [gx] = gib.getCenter();
+      const direction = sx < gx ? -Math.PI / 3 : Math.PI + Math.PI / 3;
+      gib.applyForce(this, { power: data.power, direction });
+    });
   }
 
   getTargets() {

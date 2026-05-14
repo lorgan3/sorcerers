@@ -147,4 +147,53 @@ describe("ImpactDamage", () => {
       expect(serialized[0][3]).toBe(direction);
     });
   });
+
+  describe("gib push", () => {
+    let level: MockLevel;
+
+    beforeEach(() => {
+      const mocks = installMockContext();
+      level = mocks.level;
+      level.terrain.subtractCircle.mockReturnValue(false);
+    });
+
+    afterEach(() => {
+      clearMockContext();
+    });
+
+    it("queries level.withNearbyGibs at the impact center", () => {
+      level.withNearbyGibs.mockImplementation(() => {});
+      const damage = new ImpactDamage(10, 20, 0, 15);
+      damage.damage();
+
+      expect(level.withNearbyGibs).toHaveBeenCalledWith(
+        (10 + 3) * 6,
+        (20 + 8) * 6,
+        16 * 6,
+        expect.any(Function)
+      );
+    });
+
+    it("applies radial outward force to nearby gibs", () => {
+      const cx = (10 + 3) * 6;
+      const cy = (20 + 8) * 6;
+      const gib = {
+        getCenter: () => [cx + 30, cy],
+        applyForce: vi.fn(),
+      };
+      level.withNearbyGibs.mockImplementation(
+        (x: number, y: number, range: number, fn: Function) => {
+          fn(gib, 900);
+        }
+      );
+
+      const damage = new ImpactDamage(10, 20, 0, 15);
+      damage.damage();
+
+      expect(gib.applyForce).toHaveBeenCalledTimes(1);
+      const force = gib.applyForce.mock.calls[0][1];
+      expect(force.direction).toBeCloseTo(0, 1);
+      expect(force.power).toBeGreaterThan(0);
+    });
+  });
 });
