@@ -26,6 +26,7 @@ import { Background } from "./background";
 import { Viewport } from "./viewport";
 import { DebugLayer } from "./debugLayer";
 import { isBotDebugEnabled } from "../bot/debug";
+import { installDebugApi } from "../bot/sandbox/debugApi";
 import { Graph } from "../bot/graph";
 import { Manager } from "../network/manager";
 import { ellipse9x16 } from "../collision/precomputed/circles";
@@ -148,6 +149,8 @@ export class Level {
     );
 
     this.backgroundParticles.addEmitter(this.bloodEmitter);
+
+    installDebugApi();
   }
 
   private resize = () => {
