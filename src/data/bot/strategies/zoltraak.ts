@@ -40,7 +40,10 @@ export class Zoltraak extends RangedStrategy {
       myCenter[1],
       BEAM_LENGTH,
       (entity) => {
-        if (entity instanceof Character) {
+        // Exclude self: at t=0 isOnBeam returns true for the caster's own position,
+        // which would falsely flag every Zoltraak as self-damaging. The real spell
+        // does not hit its own caster.
+        if (entity instanceof Character && entity !== this.character) {
           allCharacters.push(entity);
         }
       },
