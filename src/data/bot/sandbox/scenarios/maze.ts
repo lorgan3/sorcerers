@@ -11,8 +11,8 @@ export const maze: Scenario = {
   tiles: [
     ["empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty"],
     ["empty", "empty", "empty", "empty", "solid", "floorLadderTop", "solid", "empty"],
-    ["empty", "empty", "empty", "empty", "empty", "halfLadder", "empty", "empty"],
-    ["empty", "empty", "empty", "empty", "empty", "halfLadder", "empty", "empty"],
+    ["empty", "empty", "empty", "empty", "empty", "halfLadder_m", "empty", "empty"],
+    ["empty", "empty", "empty", "empty", "empty", "halfLadder_m", "empty", "empty"],
     ["solid", "solid", "solid", "doubleJumpFloor", "doubleJumpFloor", "floorLadder", "solid", "solid"],
   ],
   spawn: { x: 40, y: 310 },

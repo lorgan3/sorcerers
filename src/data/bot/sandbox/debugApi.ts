@@ -36,7 +36,13 @@ interface DebugWindow extends Window {
     paused?: () => boolean;
     lastDamage?: () => LastDamage | null;
     path?: () => PathSnapshot | null;
+    graph?: () => GraphSnapshot | null;
+    closestNode?: (x: number, y: number) => { x: number; y: number; type: number; edges: number } | null;
   };
+}
+
+interface GraphSnapshot {
+  nodes: Array<{ x: number; y: number; type: number; edges: number }>;
 }
 
 interface PathSnapshot {
@@ -191,7 +197,10 @@ export function installDebugApi(): void {
 
     const start = performance.now();
     const startHp = character.hp;
-    const NODE_ARRIVAL_RADIUS_SQ = 14 * 14;
+    // Path.done fires when the body is within WALKING_NEXT_DISTANCE (12) of
+    // the last edge's `to`; allow a bit more slack here for physics drift
+    // between that frame and our rAF detection.
+    const NODE_ARRIVAL_RADIUS_SQ = 25 * 25;
 
     // Drift threshold: if the body is farther than this from the current
     // edge's target node, the follower has lost its way (jumped wrong,
@@ -340,6 +349,27 @@ export function installDebugApi(): void {
   win.debug.paused = (): boolean => isSandboxPaused();
 
   win.debug.lastDamage = (): LastDamage | null => getLastDamage();
+
+  win.debug.graph = (): GraphSnapshot | null => {
+    const graph = getContextOrNull()?.level?.getGraph();
+    if (!graph) return null;
+    return {
+      nodes: graph.getNodes().map((n) => ({
+        x: n.x,
+        y: n.y,
+        type: n.type,
+        edges: n.edges.length,
+      })),
+    };
+  };
+
+  win.debug.closestNode = (x: number, y: number) => {
+    const graph = getContextOrNull()?.level?.getGraph();
+    if (!graph) return null;
+    const n = graph.getClosestNode(x, y);
+    if (!n) return null;
+    return { x: n.x, y: n.y, type: n.type, edges: n.edges.length };
+  };
 
   win.debug.path = (): PathSnapshot | null => {
     const controller = getContextOrNull()?.manager?.getActivePlayer()?.controller;
