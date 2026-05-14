@@ -1,29 +1,29 @@
 import type { Scenario } from "../types";
 
-// 10 tiles wide × 3 tiles tall at TILE_SIZE_PX = 80 → 800×240 mask pixels.
-// Coordinates below are in mask pixels (= game units at scale 6).
+// 10 tiles wide × 3 tiles tall → 800×240 mask pixels.
 //
-// Layout:
-//   Row 0 (y=0..80):    sky
-//   Row 1 (y=80..160):  sky
-//   Row 2 (y=160..240): floor row, with two single-tile gaps to require jumps
+// The floor row is `doubleFloor` (solid base + continuous upper walkway)
+// punctuated by two `doubleJumpFloor` tiles. `doubleJumpFloor` has the
+// same outer shape as `doubleFloor` but the upper walkway carries small
+// (~20 px) gaps — within MAX_JUMP_DISTANCE = 23 — so the character has
+// to jump them. Full 80-px gaps (one empty tile) are 4× too wide for the
+// jump physics, so tile-level gaps are not viable for jump testing.
 //
-// `solid` is used instead of `floor` so the playable surface has no
-// alpha-edge ambiguity around the post-process blur. The character body
-// is 6×16; spawn y=144 puts feet exactly on the floor surface at y=160.
+// Body is 6×16. Spawn y=150 sits above any of the floor-row surfaces;
+// gravity settles the body onto whichever tile's upper surface is below.
 export const flat: Scenario = {
   name: "flat",
   tiles: [
     ["empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty"],
     ["empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty"],
-    ["solid", "solid", "empty", "solid", "solid", "empty", "solid", "solid", "solid", "solid"],
+    ["doubleFloor", "doubleFloor", "doubleJumpFloor", "doubleFloor", "doubleFloor", "doubleFloor", "doubleJumpFloor", "doubleFloor", "doubleFloor", "doubleFloor"],
   ],
-  spawn: { x: 60, y: 144 },
+  spawn: { x: 40, y: 150 },
   targets: [
-    { x: 100, y: 144, label: "walk-right" },
-    { x: 280, y: 144, label: "first-jump" },
-    { x: 540, y: 144, label: "second-jump" },
-    { x: 700, y: 144, label: "far-right" },
-    { x: 60, y: 144, label: "return-home" },
+    { x: 120, y: 150, label: "before-first-jumps" },
+    { x: 300, y: 150, label: "after-first-jumps" },
+    { x: 440, y: 150, label: "before-second-jumps" },
+    { x: 600, y: 150, label: "after-second-jumps" },
+    { x: 40, y: 150, label: "return-home" },
   ],
 };

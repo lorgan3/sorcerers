@@ -1,11 +1,11 @@
 import type { Scenario } from "../types";
 
 // 8 tiles wide × 5 tiles tall → 640×400 mask pixels.
-// Mixed layout exercising walk, jump, and climb edges:
-//   - Bottom floor at row 4 (y=320..400) with a 1-tile gap at column 4
-//   - A ladder run in column 5 from row 4 up to row 1
-//   - An upper platform at row 1 (y=80..160) the character can reach
-//     by climbing the ladder
+//
+// Bottom floor at row 4 mixes `solid` with two `doubleJumpFloor` tiles
+// (small jumps) before reaching the ladder at column 5. The ladder
+// climbs to an upper platform at row 1 (y=80..160). Exercises walk +
+// jump + climb in one path.
 export const maze: Scenario = {
   name: "maze",
   tiles: [
@@ -13,13 +13,13 @@ export const maze: Scenario = {
     ["empty", "empty", "empty", "empty", "solid", "floorLadderTop", "solid", "empty"],
     ["empty", "empty", "empty", "empty", "empty", "halfLadder", "empty", "empty"],
     ["empty", "empty", "empty", "empty", "empty", "halfLadder", "empty", "empty"],
-    ["solid", "solid", "solid", "solid", "empty", "floorLadder", "solid", "solid"],
+    ["solid", "solid", "solid", "doubleJumpFloor", "doubleJumpFloor", "floorLadder", "solid", "solid"],
   ],
-  spawn: { x: 60, y: 304 },
+  spawn: { x: 40, y: 310 },
   targets: [
-    { x: 280, y: 304, label: "walk-to-edge" },
-    { x: 460, y: 304, label: "across-gap" },
-    { x: 440, y: 64, label: "top-of-ladder" },
-    { x: 60, y: 304, label: "return-home" },
+    { x: 220, y: 310, label: "before-jumps" },
+    { x: 400, y: 310, label: "across-jumps" },
+    { x: 440, y: 70, label: "top-of-ladder" },
+    { x: 40, y: 310, label: "return-home" },
   ],
 };
