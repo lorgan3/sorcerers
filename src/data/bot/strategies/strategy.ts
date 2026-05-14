@@ -1,4 +1,4 @@
-import { Command, CommandType, Key, keyMap } from "../../controller/controller";
+import { Command, CommandType, Key } from "../../controller/controller";
 import { Character } from "../../entity/character";
 import { getServer } from "../../context";
 import { SPELLS, Spell } from "../../spells";
@@ -116,6 +116,7 @@ export abstract class Strategy {
       case State.Moving:
         if (this.destinationReached) {
           this.state = State.Casting;
+          break;
         }
 
         if (this.follower!.stuck) {
