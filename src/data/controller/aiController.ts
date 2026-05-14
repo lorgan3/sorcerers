@@ -4,23 +4,23 @@ import { Strategy } from "../bot/strategies/strategy";
 import { Targeting } from "../bot/targeting";
 import { Path } from "../bot/path";
 import { Pathfinding } from "../bot/pathfinding";
+import { Graph } from "../bot/graph";
+import { Node } from "../bot/node";
+import { Character } from "../entity/character";
 
 import { Command, CommandType, Controller, Key, keyMap } from "./controller";
 
-// When all strategies have no reachable target, the bot walks to a random
-// graph node within this range and re-evaluates. Squared distances in
-// game-unit space (graph nodes are in game units).
-const WANDER_MIN_DIST_SQ = 30 * 30;
-const WANDER_MAX_DIST_SQ = 150 * 150;
+// When all strategies have no reachable target, the bot walks to a graph node
+// within a preferred distance band, falling back to any pathable node.
+// Distances in game-unit space (graph nodes are in game units).
+const WANDER_PREFERRED_MIN_SQ = 5 * 5;
+const WANDER_PREFERRED_MAX_SQ = 150 * 150;
+const WANDER_FALLBACK_MAX_SQ = 300 * 300;
 
 // Cap on wander iterations per turn to prevent runaway loops. The game's
 // turn timer ultimately bounds this too, but having a hard ceiling keeps
 // behavior predictable.
 const MAX_WANDERS_PER_TURN = 5;
-
-// Number of random graph nodes to consider when picking a wander destination.
-// Keeping this small bounds the work done in startWander().
-const WANDER_CANDIDATE_SAMPLE = 20;
 
 export class AiController implements Controller {
   public pressedKeys = 0;
@@ -163,27 +163,45 @@ export class AiController implements Controller {
     const myPos = self.body.precisePosition;
     const myNode = graph.getClosestNode(myPos[0] + 3, myPos[1] + 8);
 
-    // Sample a handful of random nodes and pick the first one within the
-    // wander distance band that yields a successful path.
-    const nodes = graph.getNodes();
-    for (let i = 0; i < WANDER_CANDIDATE_SAMPLE; i++) {
-      const dest = nodes[Math.floor(Math.random() * nodes.length)];
-      if (dest === myNode) continue;
+    // Build a shuffled list of all nodes other than ourselves.
+    const candidates = graph.getNodes().filter((n) => n !== myNode);
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
 
+    // Pass 1: prefer nodes in [5, 150] units — meaningful wandering distance.
+    if (this.tryWanderTo(self, myNode, candidates, WANDER_PREFERRED_MIN_SQ, WANDER_PREFERRED_MAX_SQ)) {
+      return;
+    }
+
+    // Pass 2: accept anything pathable in [0, 300] — last resort so the bot
+    // at least moves somewhere rather than staring at a wall.
+    this.tryWanderTo(self, myNode, candidates, 0, WANDER_FALLBACK_MAX_SQ);
+  }
+
+  private tryWanderTo(
+    self: Character,
+    myNode: Node,
+    candidates: Node[],
+    minDistSq: number,
+    maxDistSq: number
+  ): boolean {
+    for (const dest of candidates) {
       const dx = dest.x - myNode.x;
       const dy = dest.y - myNode.y;
       const distSq = dx * dx + dy * dy;
-      if (distSq < WANDER_MIN_DIST_SQ || distSq > WANDER_MAX_DIST_SQ) {
+      if (distSq < minDistSq || distSq > maxDistSq) {
         continue;
       }
 
       const result = Pathfinding.findPath(myNode, dest);
       if (result.success) {
         this.wanderFollower = new Path(self, result.path);
-        return;
+        return true;
       }
     }
-    // Couldn't find a viable wander destination — give up for this turn.
+    return false;
   }
 
   private parseCommands(commands: Command[]) {
