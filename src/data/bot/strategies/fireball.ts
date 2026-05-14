@@ -1,6 +1,13 @@
 import { Command, CommandType, Key } from "../../controller/controller";
 import { FIREBALL } from "../../spells";
 import { RangedStrategy } from "./rangedStrategy";
+import { Character } from "../../entity/character";
+import { Cluster } from "../cluster";
+import { Graph } from "../graph";
+import { Evaluation } from "./strategy";
+import { getLevel, getManager } from "../../context";
+import { Element } from "../../spells/types";
+import { collectAllies, predictExplosiveDamage, scoreCandidate } from "./scoring";
 
 // PoweredArcaneCircle charges power at 0.1/tick starting from ~0.
 // 50 ticks → power ≈ 5.0, near-max (5.49) — gives Fireball maximum range.
@@ -28,6 +35,106 @@ export class Fireball extends RangedStrategy {
 
   protected minRange(): number {
     return MIN_RANGE_SCREEN;
+  }
+
+  private static BLAST_RADIUS_GAME = 16;
+
+  evaluate(graph: Graph, targets: Character[]) {
+    this.graph = graph;
+
+    const myPosition = this.character.body.precisePosition;
+    const myCenter = this.character.getCenter();
+    const myNode = graph.getClosestNode(myPosition[0] + 3, myPosition[1] + 8);
+    const surface = getLevel().terrain.collisionMask;
+    const currentMana = this.character.player.mana;
+
+    const everyone: Character[] = [];
+    getLevel().withNearbyEntities(
+      myCenter[0],
+      myCenter[1],
+      MAX_RANGE_SCREEN,
+      (entity) => {
+        if (entity instanceof Character) everyone.push(entity);
+      },
+    );
+    const allies = collectAllies(this.character, everyone);
+
+    this.evaluations = targets
+      .slice(0, 3)
+      .map((target) => {
+        const targetCenter = target.getCenter();
+        const dx = targetCenter[0] - myCenter[0];
+        const dy = targetCenter[1] - myCenter[1];
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > MAX_RANGE_SCREEN || distance < MIN_RANGE_SCREEN) return null;
+
+        // LOS check vs terrain.
+        if (
+          surface.collidesWithLine(
+            Math.round(myCenter[0] / 6),
+            Math.round(myCenter[1] / 6),
+            Math.round(targetCenter[0] / 6),
+            Math.round(targetCenter[1] / 6),
+          )
+        ) {
+          return null;
+        }
+
+        // Assume the fireball detonates at the target's center.
+        const impactXGame = targetCenter[0] / 6;
+        const impactYGame = targetCenter[1] / 6;
+
+        const enemyDamage = this.predictDamage(target, impactXGame, impactYGame);
+
+        let friendlyDamage = 0;
+        let killsAlly = false;
+        for (const ally of allies) {
+          const d = this.predictDamage(ally, impactXGame, impactYGame);
+          friendlyDamage += d;
+          if (d >= ally.hp) killsAlly = true;
+        }
+
+        const value = scoreCandidate({
+          enemyDamage,
+          friendlyDamage,
+          killsAlly,
+          targetHp: target.hp,
+          spellCost: Fireball.spell.cost,
+          currentMana,
+        });
+
+        if (value === null) return null;
+
+        return {
+          target: Cluster.onCharacter(target),
+          value,
+          to: [myNode],
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.value - a!.value) as Evaluation[];
+
+    this.getNextEvaluation();
+  }
+
+  /**
+   * Predicted HP damage to `target` if the fireball detonates at (impactXGame, impactYGame).
+   * Mirrors ExplosiveDamage's distance falloff using Fireball's main-explosion args
+   * (see `src/data/spells/fireball.ts:102-108`).
+   */
+  private predictDamage(target: Character, impactXGame: number, impactYGame: number): number {
+    const [cxScreen, cyScreen] = target.getCenter();
+    const cxGame = cxScreen / 6;
+    const cyGame = cyScreen / 6;
+    const dx = cxGame - impactXGame;
+    const dy = cyGame - impactYGame;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const damageMultiplier = 2 + getManager().getElementValue(Element.Arcane);
+    // +5 game units: ExplosiveDamage's effective range is (nominalRadius + 5).
+    // See predictExplosiveDamage JSDoc in scoring.ts.
+    return predictExplosiveDamage(distance, Fireball.BLAST_RADIUS_GAME + 5, damageMultiplier);
   }
 
   private castFrames = 0;
