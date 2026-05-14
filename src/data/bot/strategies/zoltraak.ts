@@ -17,9 +17,10 @@ const HOLD_TICKS = 60;
 const BEAM_LENGTH = 912;
 
 // Perpendicular distance (screen px) within which a character is considered "on the beam".
-// Zoltraak's widest tool is rotatedRectangle6x24 — beam is 6 game units = 36 screen px
-// wide. Use half-width + a small margin so we generously avoid friendly fire.
-const BEAM_HALF_WIDTH = 24;
+// The real Zoltraak hits any character with rayDistance <= 48 screen px (see
+// src/data/spells/zoltraak.ts:161). Match that exactly so the bot predicts the
+// same hits the engine produces.
+const BEAM_HALF_WIDTH = 48;
 
 export class Zoltraak extends RangedStrategy {
   public static spell = ZOLTRAAK;
