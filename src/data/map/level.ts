@@ -174,19 +174,19 @@ export class Level {
   }
 
   buildGraph(character: Character) {
-    this.terrain.characterMask.subtract(
-      character.body.mask,
-      ...character.body.position
-    );
+    // Floor matches Terrain.subtract/add convention; CollisionMask.subtract reads
+    // mask rows with fractional `y` and returns undefined rows, crashing the loop.
+    const [bx, by] = character.body.position;
+    const x = bx | 0;
+    const y = by | 0;
+
+    this.terrain.characterMask.subtract(character.body.mask, x, y);
 
     this.graph = new Graph(this.terrain);
     this.graph.build();
     this.debugLayer.draw(this.graph);
 
-    this.terrain.characterMask.add(
-      character.body.mask,
-      ...character.body.position
-    );
+    this.terrain.characterMask.add(character.body.mask, x, y);
 
     return this.graph;
   }
