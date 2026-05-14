@@ -127,7 +127,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from) => {
-  if (from.path.startsWith("/sandbox") && !to.path.startsWith("/game/sandbox-")) {
+  if (from.path.startsWith("/game/sandbox-") && !to.path.startsWith("/game/sandbox-")) {
     setActiveScenario(null);
   }
 });
