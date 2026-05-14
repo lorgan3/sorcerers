@@ -1,11 +1,13 @@
 import { Command, CommandType, Key } from "../../controller/controller";
 import { BAKURETSU } from "../../spells";
-import { getLevel } from "../../context";
+import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
+import { Element } from "../../spells/types";
 import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { RangedStrategy } from "./rangedStrategy";
+import { collectAllies, predictExplosiveDamage, scoreCandidate } from "./scoring";
 
 export class Bakuretsu extends RangedStrategy {
   public static spell = BAKURETSU;
@@ -15,50 +17,58 @@ export class Bakuretsu extends RangedStrategy {
     return false;
   }
 
-  // Bakuretsu blast radius is 32 game units = 192 screen px.
-  // Use a 1.5x safety radius for friendly-fire check because the projectile
-  // impacts at the ground under the target's x, which can be vertically
-  // distant from the target's center if the target is airborne or on a high platform.
-  private static FRIENDLY_FIRE_RADIUS_SCREEN = 32 * 6 * 1.5;
+  // Bakuretsu blast radius in game units (matches ExplosiveDamage radius in the spell).
+  private static BLAST_RADIUS_GAME = 32;
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
 
     const myPosition = this.character.body.precisePosition;
     const myNode = graph.getClosestNode(myPosition[0] + 3, myPosition[1] + 8);
+    const currentMana = this.character.player.mana;
+
+    // Collect every character in a wide area to score self + teammate damage.
+    const everyone: Character[] = [];
+    getLevel().withNearbyEntities(
+      ...this.character.getCenter(),
+      Bakuretsu.BLAST_RADIUS_GAME * 6 * 4,
+      (entity) => {
+        if (entity instanceof Character) everyone.push(entity);
+      },
+    );
+    const allies = collectAllies(this.character, everyone);
 
     this.evaluations = targets
       .slice(0, 3)
       .map((target) => {
-        // Check around the target's FEET (sprite x+18, body bottom = body.y+16 game = +96 screen).
-        // This is closer to Bakuretsu's actual impact point (ground under target's x)
-        // than the body-center y.
-        const targetFeetX = target.body.position[0] * 6 + 18;
-        const targetFeetY = target.body.position[1] * 6 + 96;
+        // Impact lands at target's feet x, on the ground.
+        const targetFeetXGame = target.body.position[0] + 3;
+        const targetFeetYGame = target.body.position[1] + 16;
 
-        let allyInBlast = false;
-        getLevel().withNearbyEntities(
-          targetFeetX,
-          targetFeetY,
-          Bakuretsu.FRIENDLY_FIRE_RADIUS_SCREEN,
-          (entity) => {
-            if (
-              entity instanceof Character &&
-              entity.player === this.character.player
-            ) {
-              allyInBlast = true;
-              return true;
-            }
-          }
-        );
+        const enemyDamage = this.predictDamage(target, targetFeetXGame, targetFeetYGame);
 
-        if (allyInBlast) {
-          return null;
+        let friendlyDamage = 0;
+        let killsAlly = false;
+        for (const ally of allies) {
+          const d = this.predictDamage(ally, targetFeetXGame, targetFeetYGame);
+          friendlyDamage += d;
+          if (d >= ally.hp) killsAlly = true;
         }
+
+        const value = scoreCandidate({
+          enemyDamage,
+          friendlyDamage,
+          killsAlly,
+          targetHp: target.hp,
+          spellCost: Bakuretsu.spell.cost,
+          currentMana,
+        });
+
+        if (value === null) return null;
 
         return {
           target: Cluster.onCharacter(target),
-          value: 50 + Math.random() * 20,
+          value,
           to: [myNode],
         };
       })
@@ -66,6 +76,24 @@ export class Bakuretsu extends RangedStrategy {
       .sort((a, b) => b!.value - a!.value) as Evaluation[];
 
     this.getNextEvaluation();
+  }
+
+  /**
+   * Predicted HP damage to `target` if Bakuretsu impacts at (impactXGame, impactYGame).
+   * Mirrors ExplosiveDamage's distance falloff formula using Bakuretsu's spell args.
+   */
+  predictDamage(target: Character, impactXGame: number, impactYGame: number): number {
+    const [cxScreen, cyScreen] = target.getCenter();
+    const cxGame = cxScreen / 6;
+    const cyGame = cyScreen / 6;
+    const dx = cxGame - impactXGame;
+    const dy = cyGame - impactYGame;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const damageMultiplier = 8 * getManager().getElementValue(Element.Elemental);
+    // +5 game units: ExplosiveDamage's effective range is (nominalRadius + 5).
+    // See predictExplosiveDamage JSDoc in scoring.ts.
+    return predictExplosiveDamage(distance, Bakuretsu.BLAST_RADIUS_GAME + 5, damageMultiplier);
   }
 
   // Track how many frames we've spent in the cast sequence so we know when to finish.
