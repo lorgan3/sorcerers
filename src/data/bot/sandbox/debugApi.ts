@@ -8,6 +8,7 @@ interface DebugWindow extends Window {
     scenario?: () => { name: string; spawn: Pt; targets: Array<Pt & { label: string }> } | null;
     character?: () => { x: number; y: number; hp: number; name: string } | null;
     graphSummary?: () => { nodes: number; edges: number } | null;
+    reset?: () => boolean;
   };
 }
 
@@ -54,5 +55,34 @@ export function installDebugApi(): void {
     let edges = 0;
     for (const n of nodes) edges += n.edges.length;
     return { nodes: nodes.length, edges };
+  };
+
+  win.debug.reset = (): boolean => {
+    const ctx = getContextOrNull();
+    const level = ctx?.level;
+    const manager = ctx?.manager;
+    const active = getActiveScenario();
+    if (!level || !manager || !active) return false;
+
+    const character = manager.getActiveCharacter();
+    if (!character) return false;
+
+    const controller = manager.getActivePlayer()?.controller;
+    if (controller && "clearFollower" in controller) {
+      (controller as { clearFollower: () => void }).clearFollower();
+    }
+
+    const [oldX, oldY] = character.body.position;
+    level.terrain.characterMask.subtract(character.body.mask, oldX, oldY);
+
+    character.body.move(active.scenario.spawn.x, active.scenario.spawn.y);
+    character.body.xVelocity = 0;
+    character.body.yVelocity = 0;
+    character.hp = 100;
+
+    const [newX, newY] = character.body.position;
+    level.terrain.characterMask.add(character.body.mask, newX, newY);
+
+    return true;
   };
 }
