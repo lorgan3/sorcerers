@@ -116,10 +116,16 @@ export abstract class Strategy {
             throw InvalidStrategyError.becausePathStuck();
           }
 
+          // Empty path with a stuck follower can't be rebuilt — bail rather than crash.
+          const lastEdge = this.path.path?.at(-1);
+          if (!lastEdge) {
+            throw InvalidStrategyError.becausePathNotFound();
+          }
+
           const myPosition = this.character.body.position;
           this.evaluation!.path = Pathfinding.findPath(
             this.graph!.getClosestNode(myPosition[0] + 3, myPosition[1] + 8),
-            this.path.path!.at(-1)!.to
+            lastEdge.to
           );
 
           if (this.path.success) {
