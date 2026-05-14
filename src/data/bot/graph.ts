@@ -179,9 +179,19 @@ export class Graph {
             to.connect(from, EdgeType.Jump);
           } else {
             if (to.type === NodeType.Ladder) {
-              // We can only fall from the middle of a ladder, too steep drops are useless, we'll just keep using the ladder in that case
-              const slope = (to.y - from.y) / Math.abs(from.x - to.x);
-              if (slope < 0 || slope > 1) {
+              // Ladders should be climbed, not abused as fall targets.
+              // After the swap on line 170, `to` can be either side:
+              //   - upper ladder + lower non-ladder: a fall edge would go DOWN
+              //     off the ladder. Reject — the bot should climb down instead.
+              //   - lower ladder + upper non-ladder: a fall edge would land ON
+              //     the ladder. Allow shallow drops only; steep diagonals are
+              //     better handled by the ladder itself.
+              const ladderIsBelow = to.y > from.y;
+              if (!ladderIsBelow) {
+                continue;
+              }
+              const dropSlope = (to.y - from.y) / Math.abs(from.x - to.x);
+              if (dropSlope > 1) {
                 continue;
               }
             }
