@@ -2,7 +2,7 @@ import { getContextOrNull } from "../../context";
 import { Pathfinding } from "../pathfinding";
 import { Path } from "../path";
 import { getActiveScenario } from "./state";
-import type { FollowResult, FollowReason, Pt } from "./types";
+import type { FollowResult, FollowReason, Pt, RunAllResult, TargetResult } from "./types";
 
 interface DebugWindow extends Window {
   debug?: {
@@ -16,6 +16,7 @@ interface DebugWindow extends Window {
       toY: number,
       opts?: { timeoutMs?: number }
     ) => Promise<FollowResult>;
+    runAll?: (opts?: { timeoutMsPerTarget?: number }) => Promise<RunAllResult>;
   };
 }
 
@@ -173,5 +174,44 @@ export function installDebugApi(): void {
       };
       requestAnimationFrame(tick);
     });
+  };
+
+  win.debug.runAll = async (
+    opts: { timeoutMsPerTarget?: number } = {},
+  ): Promise<RunAllResult> => {
+    const active = getActiveScenario();
+    if (!active) {
+      return {
+        scenario: "none",
+        results: [],
+        summary: { total: 0, arrived: 0, stuck: 0, dead: 0, timeout: 0, noPath: 0 },
+      };
+    }
+
+    const results: TargetResult[] = [];
+    const summary = { total: 0, arrived: 0, stuck: 0, dead: 0, timeout: 0, noPath: 0 };
+
+    for (const target of active.scenario.targets) {
+      win.debug!.reset!();
+      const followed = await win.debug!.followPath!(target.x, target.y, {
+        timeoutMs: opts.timeoutMsPerTarget,
+      });
+      results.push({
+        label: target.label,
+        toX: target.x,
+        toY: target.y,
+        ...followed,
+      });
+      summary.total++;
+      switch (followed.reason) {
+        case "arrived": summary.arrived++; break;
+        case "stuck": summary.stuck++; break;
+        case "dead": summary.dead++; break;
+        case "timeout": summary.timeout++; break;
+        case "no-path": summary.noPath++; break;
+      }
+    }
+
+    return { scenario: active.scenario.name, results, summary };
   };
 }
