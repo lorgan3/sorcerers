@@ -1,4 +1,5 @@
 import { Character } from "../../entity/character";
+import { Spell, getSpellCost } from "../../spells";
 
 export const COST_FLOOR = 15;
 export const KILL_BONUS = 50;
@@ -55,4 +56,37 @@ export function collectAllies(
   allCharacters: Character[],
 ): Character[] {
   return allCharacters.filter((c) => c.player === self.player);
+}
+
+/**
+ * Shared scoring loop for AOE strategies (Bakuretsu, Fireball). The caller provides
+ * a `predictDamage` function curried with whatever impact point the spell uses, and
+ * this helper handles: sum enemy damage, sum friendly damage, detect ally-kills,
+ * and call `scoreCandidate`.
+ */
+export function scoreAOECandidate(args: {
+  target: Character;
+  allies: Character[];
+  predictDamage: (character: Character) => number;
+  spell: Spell;
+  currentMana: number;
+}): number | null {
+  const enemyDamage = args.predictDamage(args.target);
+
+  let friendlyDamage = 0;
+  let killsAlly = false;
+  for (const ally of args.allies) {
+    const d = args.predictDamage(ally);
+    friendlyDamage += d;
+    if (d >= ally.hp) killsAlly = true;
+  }
+
+  return scoreCandidate({
+    enemyDamage,
+    friendlyDamage,
+    killsAlly,
+    targetHp: args.target.hp,
+    spellCost: getSpellCost(args.spell),
+    currentMana: args.currentMana,
+  });
 }

@@ -1,5 +1,5 @@
 import { Command, CommandType, Key } from "../../controller/controller";
-import { FIREBALL, getSpellCost } from "../../spells";
+import { FIREBALL } from "../../spells";
 import { RangedStrategy } from "./rangedStrategy";
 import { Character } from "../../entity/character";
 import { Cluster } from "../cluster";
@@ -7,7 +7,7 @@ import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { getLevel, getManager } from "../../context";
 import { Element } from "../../spells/types";
-import { collectAllies, predictExplosiveDamage, scoreCandidate } from "./scoring";
+import { collectAllies, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
 
 // PoweredArcaneCircle charges power at 0.1/tick starting from ~0.
 // 50 ticks → power ≈ 5.0, near-max (5.49) — gives Fireball maximum range.
@@ -89,22 +89,11 @@ export class Fireball extends RangedStrategy {
         const impactXGame = targetCenter[0] / 6;
         const impactYGame = targetCenter[1] / 6;
 
-        const enemyDamage = this.predictDamage(target, impactXGame, impactYGame);
-
-        let friendlyDamage = 0;
-        let killsAlly = false;
-        for (const ally of allies) {
-          const d = this.predictDamage(ally, impactXGame, impactYGame);
-          friendlyDamage += d;
-          if (d >= ally.hp) killsAlly = true;
-        }
-
-        const value = scoreCandidate({
-          enemyDamage,
-          friendlyDamage,
-          killsAlly,
-          targetHp: target.hp,
-          spellCost: getSpellCost(Fireball.spell),
+        const value = scoreAOECandidate({
+          target,
+          allies,
+          predictDamage: (c) => this.predictDamage(c, impactXGame, impactYGame),
+          spell: Fireball.spell,
           currentMana,
         });
 

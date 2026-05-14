@@ -1,5 +1,5 @@
 import { Command, CommandType, Key } from "../../controller/controller";
-import { BAKURETSU, getSpellCost } from "../../spells";
+import { BAKURETSU } from "../../spells";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
 import { Element } from "../../spells/types";
@@ -7,7 +7,7 @@ import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { RangedStrategy } from "./rangedStrategy";
-import { collectAllies, predictExplosiveDamage, scoreCandidate } from "./scoring";
+import { collectAllies, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
 import { probeX } from "../../map/utils";
 
 export class Bakuretsu extends RangedStrategy {
@@ -50,22 +50,11 @@ export class Bakuretsu extends RangedStrategy {
         const targetFeetXGame = target.body.position[0] + 3;
         const targetFeetYGame = probeX(surface, targetFeetXGame);
 
-        const enemyDamage = this.predictDamage(target, targetFeetXGame, targetFeetYGame);
-
-        let friendlyDamage = 0;
-        let killsAlly = false;
-        for (const ally of allies) {
-          const d = this.predictDamage(ally, targetFeetXGame, targetFeetYGame);
-          friendlyDamage += d;
-          if (d >= ally.hp) killsAlly = true;
-        }
-
-        const value = scoreCandidate({
-          enemyDamage,
-          friendlyDamage,
-          killsAlly,
-          targetHp: target.hp,
-          spellCost: getSpellCost(Bakuretsu.spell),
+        const value = scoreAOECandidate({
+          target,
+          allies,
+          predictDamage: (c) => this.predictDamage(c, targetFeetXGame, targetFeetYGame),
+          spell: Bakuretsu.spell,
           currentMana,
         });
 
