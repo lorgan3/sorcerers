@@ -13,7 +13,10 @@ import Game from "./components/pages/Game.vue";
 import Credits from "./components/pages/Credits.vue";
 import SettingsComponent from "./components/pages/Settings.vue";
 import "./util/firebase";
-import { GameSettings } from "./util/localStorage/settings";
+import { GameSettings, defaults } from "./util/localStorage/settings";
+import { Server } from "./data/network/server";
+import { Team } from "./data/team";
+import { loadScenario, SCENARIOS, setActiveScenario } from "./data/bot/sandbox";
 
 new AssetsContainer();
 let config: Config;
@@ -71,6 +74,39 @@ const routes: RouteRecordRaw[] = [
     }),
   },
   {
+    path: "/sandbox/:name?",
+    component: MainMenu,
+    beforeEnter: async (to) => {
+      const requested = (to.params.name as string) || Object.keys(SCENARIOS)[0];
+      const scenario = SCENARIOS[requested];
+      if (!scenario) {
+        router.replace("/");
+        return;
+      }
+
+      const loaded = await loadScenario(scenario);
+      setActiveScenario(loaded);
+
+      selectedMap = await Map.fromConfig(loaded.config);
+      selectedSettings = {
+        ...defaults().gameSettings,
+        teamSize: 1,
+        turnLength: 3600,
+        gameLength: 60,
+        manaMultiplier: 0,
+        itemSpawnChance: 0,
+        trustClient: false,
+      };
+
+      // Headless server: no peer, one bot player.
+      const server = new Server();
+      server.teamSize = 1;
+      server.addBot("Sandbox-Bot", Team.random());
+
+      router.replace(`/game/sandbox-${requested}`);
+    },
+  },
+  {
     path: "/game/:id",
     component: Game,
     props: () => ({
@@ -88,6 +124,12 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+router.beforeEach((to, from) => {
+  if (from.path.startsWith("/sandbox") && !to.path.startsWith("/game/sandbox-")) {
+    setActiveScenario(null);
+  }
 });
 
 createApp(App).use(router).mount("#app");
