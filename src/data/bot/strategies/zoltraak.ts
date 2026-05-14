@@ -1,11 +1,13 @@
 import { Command, CommandType, Key } from "../../controller/controller";
 import { ZOLTRAAK } from "../../spells";
-import { getLevel } from "../../context";
+import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
+import { Element } from "../../spells/types";
 import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { RangedStrategy } from "./rangedStrategy";
+import { scoreCandidate } from "./scoring";
 
 // Hold M1 for ~60 ticks so the cursor's charge indicator becomes fully visible
 // (matches a normal player cast).
@@ -29,6 +31,7 @@ export class Zoltraak extends RangedStrategy {
     const myPosition = this.character.body.precisePosition;
     const myNode = graph.getClosestNode(myPosition[0] + 3, myPosition[1] + 8);
     const surface = getLevel().terrain.collisionMask;
+    const currentMana = this.character.player.mana;
 
     // Collect every character on the level to score against each candidate beam.
     const allCharacters: Character[] = [];
@@ -37,10 +40,10 @@ export class Zoltraak extends RangedStrategy {
       myCenter[1],
       BEAM_LENGTH,
       (entity) => {
-        if (entity instanceof Character && entity !== this.character) {
+        if (entity instanceof Character) {
           allCharacters.push(entity);
         }
-      }
+      },
     );
 
     this.evaluations = targets
@@ -48,40 +51,47 @@ export class Zoltraak extends RangedStrategy {
       .map((target) => {
         const targetCenter = target.getCenter();
 
-        // LOS check vs terrain (skips line through walls).
+        // LOS check vs terrain.
         if (
           surface.collidesWithLine(
             Math.round(myCenter[0] / 6),
             Math.round(myCenter[1] / 6),
             Math.round(targetCenter[0] / 6),
-            Math.round(targetCenter[1] / 6)
+            Math.round(targetCenter[1] / 6),
           )
         ) {
           return null;
         }
 
-        // For every other character, is it on the beam line from bot to (and past) target?
-        let enemiesHit = 1; // target itself counts
-        let allyOnBeam = false;
-        for (const other of allCharacters) {
-          if (other === target) continue;
-          if (
-            this.isOnBeam(myCenter, targetCenter, other.getCenter())
-          ) {
-            if (other.player === this.character.player) {
-              allyOnBeam = true;
-              break;
-            }
-            enemiesHit++;
+        // Sum damage across every character on the beam line (target + bystanders).
+        let enemyDamage = 0;
+        let friendlyDamage = 0;
+        let killsAlly = false;
+
+        for (const c of allCharacters) {
+          if (!this.isOnBeam(myCenter, targetCenter, c.getCenter())) continue;
+          const d = this.predictDamage(c);
+
+          if (c.player === this.character.player) {
+            friendlyDamage += d;
+            if (d >= c.hp) killsAlly = true;
+          } else {
+            enemyDamage += d;
           }
         }
 
-        if (allyOnBeam) {
-          return null;
-        }
+        if (enemyDamage === 0) return null; // beam hits no enemies
 
-        // Reward beams that hit multiple enemies. Base 50 + 25 per extra enemy + jitter.
-        const value = 50 + (enemiesHit - 1) * 25 + Math.random() * 10;
+        const value = scoreCandidate({
+          enemyDamage,
+          friendlyDamage,
+          killsAlly,
+          targetHp: target.hp,
+          spellCost: Zoltraak.spell.cost,
+          currentMana,
+        });
+
+        if (value === null) return null;
 
         return {
           target: Cluster.onCharacter(target),
@@ -93,6 +103,14 @@ export class Zoltraak extends RangedStrategy {
       .sort((a, b) => b!.value - a!.value) as Evaluation[];
 
     this.getNextEvaluation();
+  }
+
+  /**
+   * Per-target damage for Zoltraak. GenericDamage applies a flat amount per character
+   * on the beam (see `spells/zoltraak.ts:170` — `DAMAGE + getElementValue(Arcane) * 6`).
+   */
+  private predictDamage(_target: Character): number {
+    return 35 + getManager().getElementValue(Element.Arcane) * 6;
   }
 
   /**
