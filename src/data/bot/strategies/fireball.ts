@@ -3,16 +3,24 @@ import { FIREBALL } from "../../spells";
 import { RangedStrategy } from "./rangedStrategy";
 
 // PoweredArcaneCircle charges power at 0.1/tick starting from ~0.
-// 25 ticks → power ≈ 2.5, mid-range — works at typical engagement distances.
-const HOLD_TICKS = 25;
+// 50 ticks → power ≈ 5.0, near-max (5.49) — gives Fireball maximum range.
+const HOLD_TICKS = 50;
 
 // Aim slightly above the target's center to compensate for gravity drop during the
 // projectile's flight. Tuned empirically — bots overshoot by a few pixels otherwise,
 // but anything is better than aiming flat into the ground.
 const AIM_LIFT_PIXELS = 30;
 
+// Fireball is a short-to-medium range spell. Don't even attempt it past this distance
+// (screen pixels) — the projectile arc would fall short.
+const MAX_RANGE_SCREEN = 600;
+
 export class Fireball extends RangedStrategy {
   public static spell = FIREBALL;
+
+  protected maxRange(): number {
+    return MAX_RANGE_SCREEN;
+  }
 
   private castFrames = 0;
 

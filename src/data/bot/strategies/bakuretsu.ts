@@ -15,9 +15,11 @@ export class Bakuretsu extends RangedStrategy {
     return false;
   }
 
-  // Bakuretsu blast radius is 32 game units = 192 screen px. Allies (same player)
-  // within this radius take damage. Skip targets where casting would self-friendly-fire.
-  private static BLAST_RADIUS_SCREEN = 32 * 6;
+  // Bakuretsu blast radius is 32 game units = 192 screen px.
+  // Use a 1.5x safety radius for friendly-fire check because the projectile
+  // impacts at the ground under the target's x, which can be vertically
+  // distant from the target's center if the target is airborne or on a high platform.
+  private static FRIENDLY_FIRE_RADIUS_SCREEN = 32 * 6 * 1.5;
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
@@ -28,14 +30,17 @@ export class Bakuretsu extends RangedStrategy {
     this.evaluations = targets
       .slice(0, 3)
       .map((target) => {
-        const targetCenter = target.getCenter();
+        // Check around the target's FEET (sprite x+18, body bottom = body.y+16 game = +96 screen).
+        // This is closer to Bakuretsu's actual impact point (ground under target's x)
+        // than the body-center y.
+        const targetFeetX = target.body.position[0] * 6 + 18;
+        const targetFeetY = target.body.position[1] * 6 + 96;
 
-        // Friendly-fire check: any ally within blast radius of the target's center?
         let allyInBlast = false;
         getLevel().withNearbyEntities(
-          targetCenter[0],
-          targetCenter[1],
-          Bakuretsu.BLAST_RADIUS_SCREEN,
+          targetFeetX,
+          targetFeetY,
+          Bakuretsu.FRIENDLY_FIRE_RADIUS_SCREEN,
           (entity) => {
             if (
               entity instanceof Character &&

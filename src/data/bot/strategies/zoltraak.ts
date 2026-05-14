@@ -2,9 +2,9 @@ import { Command, CommandType, Key } from "../../controller/controller";
 import { ZOLTRAAK } from "../../spells";
 import { RangedStrategy } from "./rangedStrategy";
 
-// Hold M1 for ~30 ticks so the cursor's charge indicator becomes visible
+// Hold M1 for ~60 ticks so the cursor's charge indicator becomes visible
 // (and the visual feedback matches a normal player cast).
-const HOLD_TICKS = 30;
+const HOLD_TICKS = 60;
 
 export class Zoltraak extends RangedStrategy {
   public static spell = ZOLTRAAK;
