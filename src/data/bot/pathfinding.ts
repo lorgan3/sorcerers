@@ -1,4 +1,5 @@
 import { Edge, EdgeType } from "./edge";
+import { MinHeap } from "./minHeap";
 import { Node } from "./node";
 
 interface AStarNode {
@@ -10,13 +11,24 @@ interface AStarNode {
   edge: Edge | null;
 }
 
+interface HeapEntry {
+  aStarNode: AStarNode;
+  // Snapshot of fCost at push time. The canonical fCost lives on the
+  // AStarNode and may have improved since this entry was pushed. On pop,
+  // entries whose snapshot disagrees with the canonical fCost are stale.
+  fCost: number;
+}
+
 export type PathResult =
   | { success: true; path: Edge[]; totalCost: number }
   | { success: false; path: undefined; totalCost: undefined };
 
 export class Pathfinding {
   /**
-   * Find the optimal path between two points using A* algorithm
+   * Find a path between two nodes using A* with a Manhattan heuristic.
+   * Edge cost is Euclidean (see edge.ts), so the heuristic is mildly
+   * inadmissible — A* runs as weighted A* (fewer expansions, paths
+   * occasionally suboptimal).
    */
   public static findPath(
     startNode: Node,
@@ -39,11 +51,14 @@ export class Pathfinding {
       };
     }
 
-    const openSet = new Set<AStarNode>();
+    const openSet = new MinHeap<HeapEntry>(
+      (a, b) =>
+        a.fCost < b.fCost ||
+        (a.fCost === b.fCost && a.aStarNode.hCost < b.aStarNode.hCost)
+    );
     const closedSet = new Set<Node>();
     const nodeMap = new Map<Node, AStarNode>();
 
-    // Create start node
     const startAStarNode: AStarNode = {
       node: startNode,
       gCost: 0,
@@ -54,7 +69,7 @@ export class Pathfinding {
     };
     startAStarNode.fCost = startAStarNode.gCost + startAStarNode.hCost;
 
-    openSet.add(startAStarNode);
+    openSet.push({ aStarNode: startAStarNode, fCost: startAStarNode.fCost });
     nodeMap.set(startNode, startAStarNode);
 
     let iterations = 0;
@@ -62,12 +77,15 @@ export class Pathfinding {
     while (openSet.size > 0 && iterations < maxIterations) {
       iterations++;
 
-      // Find node with lowest fCost
-      const currentNode = this.getLowestFCostNode(openSet);
-      openSet.delete(currentNode);
+      const entry = openSet.pop()!;
+      // Stale-entry skip: the AStarNode's fCost improved since this entry
+      // was pushed. The improved entry was pushed separately and will be
+      // popped (or already was) in the correct order.
+      if (entry.fCost !== entry.aStarNode.fCost) continue;
+
+      const currentNode = entry.aStarNode;
       closedSet.add(currentNode.node);
 
-      // Check if we reached the goal
       if (currentNode.node === goalNode) {
         const path = this.reconstructPath(currentNode);
 
@@ -78,11 +96,9 @@ export class Pathfinding {
         };
       }
 
-      // Explore neighbors
       for (const edge of currentNode.node.edges) {
         const neighbor = edge.to;
 
-        // Skip if already evaluated
         if (closedSet.has(neighbor)) {
           continue;
         }
@@ -92,7 +108,6 @@ export class Pathfinding {
         let neighborAStarNode = nodeMap.get(neighbor);
 
         if (!neighborAStarNode) {
-          // Create new node
           neighborAStarNode = {
             node: neighbor,
             edge,
@@ -105,24 +120,27 @@ export class Pathfinding {
             neighborAStarNode.gCost + neighborAStarNode.hCost;
 
           nodeMap.set(neighbor, neighborAStarNode);
-          openSet.add(neighborAStarNode);
+          openSet.push({
+            aStarNode: neighborAStarNode,
+            fCost: neighborAStarNode.fCost,
+          });
         } else if (tentativeGCost < neighborAStarNode.gCost) {
-          // Found a better path to this neighbor
           neighborAStarNode.gCost = tentativeGCost;
           neighborAStarNode.fCost =
             neighborAStarNode.gCost + neighborAStarNode.hCost;
           neighborAStarNode.parent = currentNode;
           neighborAStarNode.edge = edge;
 
-          // Add back to open set if it was removed
-          if (!openSet.has(neighborAStarNode)) {
-            openSet.add(neighborAStarNode);
-          }
+          // Push a fresh entry at the new (lower) fCost. The previous
+          // entry, if still on the heap, becomes stale and is skipped.
+          openSet.push({
+            aStarNode: neighborAStarNode,
+            fCost: neighborAStarNode.fCost,
+          });
         }
       }
     }
 
-    // No path found
     return {
       path: undefined,
       totalCost: undefined,
@@ -134,27 +152,6 @@ export class Pathfinding {
     const dx = Math.abs(to.x - from.x);
     const dy = Math.abs(to.y - from.y);
     return dx + dy;
-  }
-
-  /**
-   * Find the node with the lowest fCost in the open set
-   */
-  private static getLowestFCostNode(openSet: Set<AStarNode>): AStarNode {
-    let lowestNode: AStarNode | null = null;
-    let lowestFCost = Infinity;
-
-    for (const node of openSet) {
-      if (
-        node.fCost < lowestFCost ||
-        (node.fCost === lowestFCost &&
-          node.hCost < (lowestNode?.hCost ?? Infinity))
-      ) {
-        lowestFCost = node.fCost;
-        lowestNode = node;
-      }
-    }
-
-    return lowestNode!;
   }
 
   /**
