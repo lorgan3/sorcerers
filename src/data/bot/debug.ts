@@ -21,6 +21,11 @@ function setEnabled(value: boolean) {
   }
 }
 
+/** Programmatic toggle for callers outside debug.ts (e.g. sandbox routing). */
+export function setBotDebugEnabled(value: boolean) {
+  setEnabled(value);
+}
+
 if (typeof window !== "undefined") {
   (window as Window & { debug?: () => boolean }).debug = () => {
     setEnabled(!enabled);

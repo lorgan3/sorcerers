@@ -17,6 +17,7 @@ import { GameSettings, defaults } from "./util/localStorage/settings";
 import { Server } from "./data/network/server";
 import { Team } from "./data/team";
 import { loadScenario, SCENARIOS, setActiveScenario } from "./data/bot/sandbox";
+import { setBotDebugEnabled } from "./data/bot/debug";
 
 new AssetsContainer();
 let config: Config;
@@ -86,6 +87,10 @@ const routes: RouteRecordRaw[] = [
 
       const loaded = await loadScenario(scenario);
       setActiveScenario(loaded);
+      // Visualise the graph + path overlay automatically — the sandbox
+      // exists for debugging path follow, so the overlay should be on by
+      // default. Flipped off again by the beforeEach cleanup on exit.
+      setBotDebugEnabled(true);
 
       selectedMap = await Map.fromConfig(loaded.config);
       selectedSettings = {
@@ -129,6 +134,7 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   if (from.path.startsWith("/game/sandbox-") && !to.path.startsWith("/game/sandbox-")) {
     setActiveScenario(null);
+    setBotDebugEnabled(false);
   }
 });
 
