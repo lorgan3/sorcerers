@@ -22,7 +22,9 @@ export function scoreCandidate(input: ScoreInput): number | null {
   const efficiency = (gross + killBonus) / (input.spellCost + COST_FLOOR);
 
   const wouldStarve =
-    input.currentMana - input.spellCost < MIN_RESERVE && killBonus === 0;
+    input.spellCost > 0 &&
+    input.currentMana - input.spellCost < MIN_RESERVE &&
+    killBonus === 0;
   const reserveScale = wouldStarve ? 0.5 : 1.0;
 
   return efficiency * reserveScale + Math.random() * JITTER;
