@@ -14,13 +14,13 @@ import { scoreCandidate } from "./scoring";
 const HOLD_TICKS = 60;
 
 // Zoltraak beam length (screen px) — matches MAX_DISTANCE in spells/zoltraak.ts.
-const BEAM_LENGTH = 912;
+const BEAM_LENGTH_SCREEN = 912;
 
 // Perpendicular distance (screen px) within which a character is considered "on the beam".
 // The real Zoltraak hits any character with rayDistance <= 48 screen px (see
 // src/data/spells/zoltraak.ts:161). Match that exactly so the bot predicts the
 // same hits the engine produces.
-const BEAM_HALF_WIDTH = 48;
+const BEAM_HALF_WIDTH_SCREEN = 48;
 
 export class Zoltraak extends RangedStrategy {
   public static spell = ZOLTRAAK;
@@ -39,7 +39,7 @@ export class Zoltraak extends RangedStrategy {
     getLevel().withNearbyEntities(
       myCenter[0],
       myCenter[1],
-      BEAM_LENGTH,
+      BEAM_LENGTH_SCREEN,
       (entity) => {
         // Exclude self: at t=0 isOnBeam returns true for the caster's own position,
         // which would falsely flag every Zoltraak as self-damaging. The real spell
@@ -119,9 +119,9 @@ export class Zoltraak extends RangedStrategy {
 
   /**
    * Is `point` within the beam fired from `from` toward and past `aimedAt`?
-   * The beam is a line of length BEAM_LENGTH starting at `from`, oriented along
+   * The beam is a line of length BEAM_LENGTH_SCREEN starting at `from`, oriented along
    * the (from → aimedAt) vector. A character is hit if their center is within
-   * BEAM_HALF_WIDTH perpendicular distance AND between 0 and BEAM_LENGTH along
+   * BEAM_HALF_WIDTH_SCREEN perpendicular distance AND between 0 and BEAM_LENGTH_SCREEN along
    * the beam.
    */
   private isOnBeam(
@@ -143,14 +143,14 @@ export class Zoltraak extends RangedStrategy {
 
     // Parametric position along the beam.
     const t = px * ux + py * uy;
-    if (t < 0 || t > BEAM_LENGTH) {
+    if (t < 0 || t > BEAM_LENGTH_SCREEN) {
       return false;
     }
 
     // Perpendicular distance from point to the beam line.
     const perpX = px - t * ux;
     const perpY = py - t * uy;
-    return perpX * perpX + perpY * perpY <= BEAM_HALF_WIDTH * BEAM_HALF_WIDTH;
+    return perpX * perpX + perpY * perpY <= BEAM_HALF_WIDTH_SCREEN * BEAM_HALF_WIDTH_SCREEN;
   }
 
   private castFrames = 0;
