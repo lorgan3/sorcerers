@@ -5,7 +5,9 @@ import {
   MIN_RESERVE,
   predictExplosiveDamage,
   scoreCandidate,
+  collectAllies,
 } from "../scoring";
+import { Character } from "../../../entity/character";
 
 describe("predictExplosiveDamage", () => {
   it("returns 0 outside the blast radius", () => {
@@ -144,5 +146,32 @@ describe("scoreCandidate", () => {
       currentMana: 100,
     })!;
     expect(cheapKill).toBeGreaterThan(expensiveScratch);
+  });
+});
+
+describe("collectAllies", () => {
+  function makeChar(playerRef: object): Character {
+    return { player: playerRef } as unknown as Character;
+  }
+
+  it("returns characters that share the self's player, including self", () => {
+    const playerA = { id: "A" };
+    const playerB = { id: "B" };
+
+    const self = makeChar(playerA);
+    const teammate = makeChar(playerA);
+    const enemy = makeChar(playerB);
+
+    const allCharacters = [self, teammate, enemy];
+
+    const allies = collectAllies(self, allCharacters);
+    expect(allies).toEqual([self, teammate]);
+  });
+
+  it("returns just self when there are no teammates", () => {
+    const playerA = { id: "A" };
+    const self = makeChar(playerA);
+    const allies = collectAllies(self, [self]);
+    expect(allies).toEqual([self]);
   });
 });

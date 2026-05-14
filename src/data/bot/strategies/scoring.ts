@@ -44,3 +44,12 @@ export function predictExplosiveDamage(
   if (distance > range) return 0;
   return (5 + 5 * (range - distance) / range) * damageMultiplier;
 }
+
+import { Character } from "../../entity/character";
+
+export function collectAllies(
+  self: Character,
+  allCharacters: Character[],
+): Character[] {
+  return allCharacters.filter((c) => c.player === self.player);
+}
