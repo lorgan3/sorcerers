@@ -27,6 +27,7 @@ export class Graph {
   private nodes = new Map<string, Node>();
   private surface: CollisionMask;
   private killboxLevel: number;
+  private closestNodeCache = new Map<string, Node>();
 
   constructor(private terrain: Terrain) {
     this.surface = terrain.characterMask;
@@ -37,6 +38,7 @@ export class Graph {
   }
 
   build() {
+    this.closestNodeCache.clear();
     for (let x = 0; x < this.surface.width - 6; x++) {
       let y = probeX(this.surface, x);
 
@@ -260,6 +262,12 @@ export class Graph {
   }
 
   getClosestNode(x: number, y: number) {
+    // Round to integer so sub-pixel input perturbations hit the same cache
+    // entry. The scan itself still uses the un-rounded inputs.
+    const key = `${Math.round(x)},${Math.round(y)}`;
+    const hit = this.closestNodeCache.get(key);
+    if (hit) return hit;
+
     let closestNode: Node | null = null;
     let closestDistance = Infinity;
 
@@ -271,6 +279,7 @@ export class Graph {
       }
     });
 
+    this.closestNodeCache.set(key, closestNode!);
     return closestNode!;
   }
 
