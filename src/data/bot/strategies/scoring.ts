@@ -1,3 +1,5 @@
+import { Character } from "../../entity/character";
+
 export const COST_FLOOR = 5;
 export const KILL_BONUS = 50;
 export const MIN_RESERVE = 5;
@@ -44,8 +46,6 @@ export function predictExplosiveDamage(
   if (distance > range) return 0;
   return (5 + 5 * (range - distance) / range) * damageMultiplier;
 }
-
-import { Character } from "../../entity/character";
 
 export function collectAllies(
   self: Character,
