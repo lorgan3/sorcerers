@@ -25,7 +25,7 @@ import { filters } from "@pixi/sound";
 import { Background } from "./background";
 import { Viewport } from "./viewport";
 import { DebugLayer } from "./debugLayer";
-import { BOT_DEBUG_ENABLED } from "../bot/debug";
+import { isBotDebugEnabled } from "../bot/debug";
 import { Graph } from "../bot/graph";
 import { Manager } from "../network/manager";
 import { ellipse9x16 } from "../collision/precomputed/circles";
@@ -130,6 +130,10 @@ export class Level {
       this.viewport.addChild(this.terrain.backgroundSprite);
     }
 
+    // DebugLayer is always added but starts hidden. window.debug() toggles its
+    // visibility at runtime so existing graphics can be cleared and re-shown
+    // without rebuilding the level.
+    this.debugLayer.visible = isBotDebugEnabled();
     this.viewport.addChild(
       this.backgroundParticles,
       this.backgroundContainer,
@@ -138,13 +142,10 @@ export class Level {
       this.particleContainer,
       this.terrain.foreground,
       this.overlayContainer,
+      this.debugLayer,
       this.numberContainer,
       this.uiContainer
     );
-
-    if (BOT_DEBUG_ENABLED) {
-      this.viewport.addChild(this.debugLayer);
-    }
 
     this.backgroundParticles.addEmitter(this.bloodEmitter);
   }
