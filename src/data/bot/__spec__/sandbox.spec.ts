@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { TILES } from "../../wfc/tiles";
 import { resolveTiles } from "../sandbox/builder";
+import { flat } from "../sandbox/scenarios/flat";
+import { buildSandboxGraph } from "../sandbox/testHelpers";
 
 describe("resolveTiles", () => {
   it("resolves tile IDs against the TILES registry", () => {
@@ -22,5 +24,13 @@ describe("resolveTiles", () => {
     expect(() => resolveTiles([["does-not-exist"]])).toThrow(
       /does-not-exist/,
     );
+  });
+});
+
+describe("buildSandboxGraph", () => {
+  it.skip("builds a Graph with at least one walkable node for the flat scenario (needs browser env)", async () => {
+    const graph = await buildSandboxGraph(flat);
+    const nodes = graph.getNodes();
+    expect(nodes.length).toBeGreaterThan(0);
   });
 });
