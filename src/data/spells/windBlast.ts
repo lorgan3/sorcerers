@@ -4,6 +4,7 @@ import { Character } from "../entity/character";
 import { EntityType, HurtableEntity, Spawnable } from "../entity/types";
 import { TurnState } from "../network/types";
 import { rotatedRectangle6x24 } from "../collision/precomputed/rectangles";
+import { CollisionMask } from "../collision/collisionMask";
 import { getIndexFromAngle } from "../collision/util";
 import { TargetList } from "../damage/targetList";
 import { GenericDamage } from "../damage/genericDamage";
@@ -20,6 +21,10 @@ export class WindBlast extends Container implements Spawnable {
 
   private rx = 0;
   private ry = 0;
+  private targetX: number;
+  private targetY: number;
+  private adjustedDirection: number;
+  private rect: CollisionMask;
   private triggered = false;
   private gibsTriggered = false;
 
@@ -38,6 +43,17 @@ export class WindBlast extends Container implements Spawnable {
     this.position.set(x * 6, y * 6);
     this.rx = Math.round(x);
     this.ry = Math.round(y);
+
+    this.targetX = this.rx + (character.direction === 1 ? 0 : -24);
+    this.targetY = this.ry - 12;
+
+    // Bias the push direction upward — characters have a lot of friction
+    // with the ground, so a purely horizontal blast barely moves them.
+    const diff = angleDiff(direction, -Math.PI / 2);
+    const max = Math.PI / 6;
+    this.adjustedDirection = direction + Math.max(-max, Math.min(max, diff));
+
+    this.rect = rotatedRectangle6x24[getIndexFromAngle(direction - Math.PI / 2)];
 
     const atlas = AssetsContainer.instance.assets!["atlas"];
 
@@ -75,35 +91,31 @@ export class WindBlast extends Container implements Spawnable {
     const triggerFrameReached =
       this.sprite.currentFrame > WindBlast.triggerFrame;
 
-    // Change the direction a bit upwards for a better effect (Characters have a lot of friction with the ground)
-    const diff = angleDiff(this.direction, -Math.PI / 2);
-    const max = Math.PI / 6;
-    const adjustedDirection =
-      this.direction + Math.max(-max, Math.min(max, diff));
-
-    const x = this.rx + (this.character.direction === 1 ? 0 : -24);
-    const y = this.ry - 12;
-
     if (triggerFrameReached && !this.gibsTriggered) {
       this.gibsTriggered = true;
 
       const gibPower =
         this.power *
         (0.7 + getManager().getElementValue(Element.Elemental) * 0.3);
-      const rect =
-        rotatedRectangle6x24[
-          getIndexFromAngle(this.direction - Math.PI / 2)
-        ];
 
-      getLevel().withNearbyGibs(x * 6, y * 6, 32 * 6, (gib) => {
-        const [gx, gy] = gib.body.position;
-        if (rect.collidesWith(gib.body.mask, gx - x, gy - y)) {
-          gib.applyForce(null, {
-            direction: adjustedDirection,
-            power: gibPower,
-          });
+      // withNearbyGibs filters in pixel space (×6); rect.collidesWith works
+      // in tile space, so the predicate uses gib.body.position directly.
+      getLevel().withNearbyGibs(
+        this.targetX * 6,
+        this.targetY * 6,
+        32 * 6,
+        (gib) => {
+          const [gx, gy] = gib.body.position;
+          if (
+            this.rect.collidesWith(gib.body.mask, gx - this.targetX, gy - this.targetY)
+          ) {
+            gib.applyForce(null, {
+              direction: this.adjustedDirection,
+              power: gibPower,
+            });
+          }
         }
-      });
+      );
     }
 
     if (!getServer()) {
@@ -114,17 +126,24 @@ export class WindBlast extends Container implements Spawnable {
       this.triggered = true;
 
       const entities: HurtableEntity[] = [];
-      getLevel().withNearbyEntities(x * 6, y * 6, 32 * 6, (entity) => {
-        const [ex, ey] = entity.body.position;
+      getLevel().withNearbyEntities(
+        this.targetX * 6,
+        this.targetY * 6,
+        32 * 6,
+        (entity) => {
+          const [ex, ey] = entity.body.position;
 
-        if (
-          rotatedRectangle6x24[
-            getIndexFromAngle(this.direction - Math.PI / 2)
-          ].collidesWith(entity.body.mask, ex - x, ey - y)
-        ) {
-          entities.push(entity);
+          if (
+            this.rect.collidesWith(
+              entity.body.mask,
+              ex - this.targetX,
+              ey - this.targetY
+            )
+          ) {
+            entities.push(entity);
+          }
         }
-      });
+      );
 
       const targetList = new TargetList(
         entities
@@ -147,7 +166,7 @@ export class WindBlast extends Container implements Spawnable {
             entityId: entity.id,
             damage: 0,
             force: {
-              direction: adjustedDirection,
+              direction: this.adjustedDirection,
               power:
                 this.power *
                 (0.7 +

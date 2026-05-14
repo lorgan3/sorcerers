@@ -98,7 +98,11 @@ export class Gib extends Sprite implements TickingEntity {
   }
 
   getCenter(): [number, number] {
-    return [this.position.x, this.position.y];
+    // Read from body.precisePosition so callers get a stable center before
+    // tick() has run (e.g. a spell hitting on the spawn frame). this.position
+    // is only authoritative once tick() writes it.
+    const [bx, by] = this.body.precisePosition;
+    return [bx * 6 + this.width / 2, by * 6 + this.height / 2];
   }
 
   applyForce(_source: DamageSource | null, force: Force) {
