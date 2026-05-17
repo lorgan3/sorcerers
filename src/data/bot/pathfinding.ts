@@ -188,11 +188,11 @@ export class Pathfinding {
           if (extraEdge) {
             const reverseEdge = extraEdge.to.edges.find(
               (edge) => edge.to === currentEdge.from
-            )!;
-            // Push in reverse-of-forward order; the final reverse() flips it
-            // back to [extraEdge, reverseEdge, currentEdge, ...].
-            path.push(reverseEdge);
-            path.push(extraEdge);
+            );
+            if (reverseEdge) {
+              path.push(reverseEdge);
+              path.push(extraEdge);
+            }
           }
         }
       }
