@@ -142,7 +142,7 @@ export class CharacterMovement {
         }
       } else if (
         controller.isKeyDown(Key.Down) ||
-        controller.isKeyDown(Key.D)
+        controller.isKeyDown(Key.S)
       ) {
         this.character.body.setLadderDirection(1);
         this.character.animate("Climb");
