@@ -23,7 +23,7 @@ describe("body", () => {
     }
 
     const [x, y] = body.precisePosition;
-    const [expectedX, expectedY] = [14, -1];
+    const [expectedX, expectedY] = [16, -1];
     expect(x).toBeCloseTo(expectedX, 0);
     expect(y).toBeCloseTo(expectedY, 0);
   });

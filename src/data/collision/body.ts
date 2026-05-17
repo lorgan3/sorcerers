@@ -18,6 +18,7 @@ const MIN_MOVEMENT = 0.01;
 const JUMP_COOLDOWN = 15;
 const JUMP_CHARGE_TIME = 5;
 const LADDER_SPEED = 0.6;
+const LADDER_X_CONTROL = 0.5;
 
 interface Config {
   mask: CollisionMask;
@@ -77,7 +78,7 @@ export class Body implements PhysicsBody {
       onCollide,
       roundness = 0,
       bounciness = 0,
-    }: Config
+    }: Config,
   ) {
     this.mask = mask;
     this.gravity = gravity;
@@ -176,7 +177,13 @@ export class Body implements PhysicsBody {
     let yAcc = this._onLadder ? 0 : this.gravity;
     let yDiff = this.yVelocity * dt + yAcc * idt;
     let xAcc =
-      this.walkDirection * SPEED * (this._grounded ? 1 : this.airControl);
+      this.walkDirection *
+      SPEED *
+      (this._grounded
+        ? 1
+        : this._onLadder
+          ? LADDER_X_CONTROL
+          : this.airControl);
 
     if (
       this.lastRollDirection &&
@@ -204,7 +211,7 @@ export class Body implements PhysicsBody {
       this._grounded = this.surface.collidesWith(
         this.mask,
         this.rX,
-        alignY(this.y + yDiff)
+        alignY(this.y + yDiff),
       );
 
       if (this._grounded) {
@@ -260,7 +267,7 @@ export class Body implements PhysicsBody {
       const ceiled = this.surface.collidesWith(
         this.mask,
         this.rX,
-        alignY(this.y + yDiff)
+        alignY(this.y + yDiff),
       );
 
       if (ceiled) {
@@ -341,6 +348,33 @@ export class Body implements PhysicsBody {
     this.x += xDiff;
     this.xVelocity += xAcc * dt;
     this.rX = alignX(this.x);
+
+    // Snap down to ground when walking off small downhill slopes (<=45° per
+    // tick), so the character stays grounded and can keep jumping. Drop budget
+    // is bounded by horizontal step taken this tick — cliffs and steep ledges
+    // exceed the budget and fall through normally.
+    if (
+      this._grounded &&
+      !this._onLadder &&
+      xDiff !== 0 &&
+      this.yVelocity >= 0 &&
+      !this.surface.collidesWith(this.mask, this.rX, this.rY + 1)
+    ) {
+      const maxSnap = Math.max(1, Math.ceil(Math.abs(xDiff)));
+      let snapTo = 0;
+      for (let step = 2; step <= maxSnap + 1; step++) {
+        if (this.surface.collidesWith(this.mask, this.rX, this.rY + step)) {
+          snapTo = step - 1;
+          break;
+        }
+      }
+      if (snapTo > 0) {
+        this.y += snapTo;
+        this.rY = alignY(this.y);
+      } else {
+        this._grounded = false;
+      }
+    }
 
     // If we're on the ground and barely moving, go to sleep.
     if (
