@@ -24,6 +24,9 @@ import { Sound } from "../../sound";
 import { filters } from "@pixi/sound";
 import { Background } from "./background";
 import { Viewport } from "./viewport";
+import { DebugLayer } from "./debugLayer";
+import { isBotDebugEnabled } from "../bot/debug";
+import { Graph } from "../bot/graph";
 import { Manager } from "../network/manager";
 import { ellipse9x16 } from "../collision/precomputed/circles";
 import { getContextOrNull } from "../context";
@@ -47,6 +50,7 @@ export class Level {
   public readonly backgroundParticles = new ParticleManager();
   public readonly bloodEmitter = new BloodEmitter();
   public readonly cameraTarget: CameraTarget;
+  public readonly debugLayer = new DebugLayer();
   private vignette: Vignette;
   private letterbox: Letterbox;
 
@@ -59,6 +63,7 @@ export class Level {
   public readonly terrain: Terrain;
   private background?: Background;
   private spawnLocations: Array<[number, number]> = [];
+  private graph: Graph | null = null;
 
   public readonly entities = new Set<TickingEntity>();
   public readonly entityMap = new Map<number, TickingEntity>();
@@ -127,6 +132,10 @@ export class Level {
       this.viewport.addChild(this.terrain.backgroundSprite);
     }
 
+    // DebugLayer is always added but starts hidden. window.debug() toggles its
+    // visibility at runtime so existing graphics can be cleared and re-shown
+    // without rebuilding the level.
+    this.debugLayer.visible = isBotDebugEnabled();
     this.viewport.addChild(
       this.backgroundParticles,
       this.backgroundContainer,
@@ -135,6 +144,7 @@ export class Level {
       this.particleContainer,
       this.terrain.foreground,
       this.overlayContainer,
+      this.debugLayer,
       this.numberContainer,
       this.uiContainer
     );
@@ -163,6 +173,28 @@ export class Level {
 
     const index = Math.floor(Math.random() * this.spawnLocations.length);
     return this.spawnLocations.splice(index, 1)[0];
+  }
+
+  buildGraph(character: Character) {
+    // Floor matches Terrain.subtract/add convention; CollisionMask.subtract reads
+    // mask rows with fractional `y` and returns undefined rows, crashing the loop.
+    const [bx, by] = character.body.position;
+    const x = bx | 0;
+    const y = by | 0;
+
+    this.terrain.characterMask.subtract(character.body.mask, x, y);
+
+    this.graph = new Graph(this.terrain);
+    this.graph.build();
+    this.debugLayer.draw(this.graph);
+
+    this.terrain.characterMask.add(character.body.mask, x, y);
+
+    return this.graph;
+  }
+
+  getGraph() {
+    return this.graph;
   }
 
   getRandomItemLocation() {

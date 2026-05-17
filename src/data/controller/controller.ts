@@ -3,6 +3,7 @@ export interface Controller {
   getMouse(): [number, number];
   getLocalMouse(): [number, number];
 
+  readonly isBot: boolean;
   pressedKeys: number;
   serialize(): [number, number, number];
   deserialize(buffer: [number, number, number]): void;
@@ -40,6 +41,21 @@ export enum Key {
   M3 = "M3",
   Inventory = "Inventory",
 }
+
+export enum CommandType {
+  ResetKeys,
+  KeyDown,
+  KeyUp,
+  KeyPress,
+  MouseMove,
+}
+
+export type Command =
+  | { type: CommandType.ResetKeys }
+  | { type: CommandType.KeyDown; key: Key }
+  | { type: CommandType.KeyUp; key: Key }
+  | { type: CommandType.KeyPress; key: Key }
+  | { type: CommandType.MouseMove; x: number; y: number };
 
 export const keys = Object.values(Key);
 export const keySet = new Set<string>(keys);

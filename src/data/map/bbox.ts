@@ -27,6 +27,10 @@ export class BBox {
     return this.right - this.left;
   }
 
+  get horizontalCenter() {
+    return this.left + this.width / 2;
+  }
+
   get height() {
     return this.bottom - this.top;
   }

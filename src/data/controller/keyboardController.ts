@@ -3,6 +3,7 @@ import { Controller, Key, isKey, keyMap } from "./controller";
 import { Viewport } from "../map/viewport";
 
 export class KeyboardController implements Controller {
+  public readonly isBot = false;
   private mouseX = 0;
   private mouseY = 0;
   public pressedKeys = 0;

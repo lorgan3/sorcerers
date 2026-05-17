@@ -61,6 +61,7 @@ export class Player {
   };
 
   destroy() {
+    this._controller.destroy();
     if (this.characters.length) {
       getLevel().remove(...this.characters);
     }

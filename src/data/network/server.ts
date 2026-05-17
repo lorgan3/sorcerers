@@ -25,6 +25,7 @@ import { DAMAGE_SOURCES } from "../damage";
 import { GameSettings } from "../../util/localStorage/settings";
 import { minutesToMs, secondsToMs } from "../../util/time";
 import { getAccumulatedStats } from "./statsAccumulator";
+import { AiController } from "../controller/aiController";
 
 export class Server extends Manager {
   private availableColors = [...COLORS];
@@ -104,10 +105,21 @@ export class Server extends Manager {
     this.localPlayers.push(player);
 
     player.connect(name, team, this.availableColors.pop()!, this.controller);
+    player.resolveReady();
 
     if (!this._self) {
       this._self = player;
     }
+
+    return player;
+  }
+
+  addBot(name: string, team: Team) {
+    const player = new Player();
+    this.players.push(player);
+
+    player.connect(name, team, this.availableColors.pop()!, new AiController());
+    player.resolveReady();
 
     return player;
   }
@@ -120,9 +132,6 @@ export class Server extends Manager {
         settings: this.settings,
       });
 
-      for (let player of this.localPlayers) {
-        player.resolveReady();
-      }
       await Promise.all(this.players.map((player) => player.ready));
     }
 
@@ -221,7 +230,9 @@ export class Server extends Manager {
 
       if (
         this.isControlling() &&
-        (this.activePlayer === this._self || !this.settings.trustClient)
+        (this.activePlayer === this._self ||
+          !this.settings.trustClient ||
+          this.activePlayer.controller.isBot)
       ) {
         this.activePlayer.activeCharacter.control(this.activePlayer.controller);
       }
@@ -358,7 +369,12 @@ export class Server extends Manager {
       throw new Error("Cannot kick the host!");
     }
 
-    if (localIndex > 0) {
+    if (player.controller.isBot) {
+      this.players.splice(this.players.indexOf(player), 1);
+      player.destroy();
+      this.availableColors.push(player.color);
+      this.syncPlayers();
+    } else if (localIndex > 0) {
       this.localPlayers.splice(localIndex, 1);
 
       this.players.splice(this.players.indexOf(player), 1);
@@ -860,6 +876,10 @@ export class Server extends Manager {
   }
 
   isTrusted(character: Character) {
-    return character.player === this._self || !this.settings.trustClient;
+    return (
+      character.player === this._self ||
+      !this.settings.trustClient ||
+      character.player.controller.isBot
+    );
   }
 }

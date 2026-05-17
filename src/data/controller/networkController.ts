@@ -3,6 +3,7 @@ import { FIXED_INTERVAL } from "../network/constants";
 import { Controller, Key, keyMap } from "./controller";
 
 export class NetworkController implements Controller {
+  public readonly isBot = false;
   public pressedKeys = 0;
 
   private mouseX = 0;
