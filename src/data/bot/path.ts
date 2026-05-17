@@ -3,7 +3,13 @@ import { Command, CommandType, Key } from "../controller/controller";
 import { Character } from "../entity/character";
 import { getLevel } from "../context";
 import { Edge, EdgeType } from "./edge";
-import { MIN_LAUNCH_SPEED, runUpDistanceFromRest } from "./physics";
+import {
+  MIN_LAUNCH_SPEED,
+  WALK_TERMINAL_VELOCITY,
+  runUpDistanceFromRest,
+} from "./physics";
+
+const REVERSE_INPUT_SPEED = WALK_TERMINAL_VELOCITY / 2;
 
 export class Path {
   private static WALKING_NEXT_DISTANCE = 12;
@@ -101,10 +107,13 @@ export class Path {
         }
       } else if (
         destination.to.x > x + offset &&
-        (sameDirection || this.character.body.xVelocity < 0.35)
+        (sameDirection || this.character.body.xVelocity < REVERSE_INPUT_SPEED)
       ) {
         commands.push({ type: CommandType.KeyDown, key: Key.Right });
-      } else if (sameDirection || this.character.body.xVelocity > -0.35) {
+      } else if (
+        sameDirection ||
+        this.character.body.xVelocity > -REVERSE_INPUT_SPEED
+      ) {
         commands.push({ type: CommandType.KeyDown, key: Key.Left });
       }
 
@@ -183,11 +192,10 @@ export class Path {
           ) {
             // Walk backwards until we have enough room to accelerate.
             const needed = runUpDistanceFromRest() - Math.max(0, distToLaunch);
-            // Convert pixels-to-walk-back into frames. Terminal velocity is ~0.667 px/frame,
-            // so `needed / 0.667 ≈ needed * 1.5` frames at top speed.
+            // Convert pixels-to-walk-back into frames by dividing by terminal velocity.
             // We're walking backwards from rest so the average velocity is lower — this
             // conversion already accounts for that, no extra margin needed.
-            this.prerollFrames = Math.ceil(needed * 1.5);
+            this.prerollFrames = Math.ceil(needed / WALK_TERMINAL_VELOCITY);
           }
         }
       }
