@@ -321,43 +321,44 @@ export class Graph {
     options: { maxCost?: number; type: EdgeType; allowedTypes?: EdgeType[] }
   ) {
     const edges: Edge[] = [];
-    const openSet = new Set<EdgeWithCost>();
     const closedSet = new Set<Node>();
+    const visitedEdges = new Set<Edge>();
 
-    for (let edge of node.edges) {
-      openSet.add({ edge, cost: 0 });
+    const queue: EdgeWithCost[] = [];
+    for (const edge of node.edges) {
+      if (visitedEdges.has(edge)) continue;
+      visitedEdges.add(edge);
+      queue.push({ edge, cost: 0 });
     }
 
-    while (openSet.size > 0) {
-      const currentEdge = openSet.values().next().value!;
-      openSet.delete(currentEdge);
-      closedSet.add(currentEdge.edge.to);
+    let head = 0;
+    while (head < queue.length) {
+      const current = queue[head++];
+      closedSet.add(current.edge.to);
 
-      if (currentEdge.edge.type === options.type) {
-        edges.push(currentEdge.edge);
+      if (current.edge.type === options.type) {
+        edges.push(current.edge);
         continue;
       }
 
       if (
         options.allowedTypes &&
-        !options.allowedTypes.includes(currentEdge.edge.type)
+        !options.allowedTypes.includes(current.edge.type)
       ) {
         continue;
       }
 
-      for (const edge of currentEdge.edge.to.edges) {
-        const neighbor = edge.to;
+      for (const edge of current.edge.to.edges) {
+        if (closedSet.has(edge.to)) continue;
+        if (visitedEdges.has(edge)) continue;
 
-        if (closedSet.has(neighbor)) {
-          continue;
-        }
-
-        const cost = currentEdge.cost + edge.cost;
+        const cost = current.cost + edge.cost;
         if (options.maxCost && cost > options.maxCost) {
           continue;
         }
 
-        openSet.add({ edge, cost });
+        visitedEdges.add(edge);
+        queue.push({ edge, cost });
       }
     }
 
