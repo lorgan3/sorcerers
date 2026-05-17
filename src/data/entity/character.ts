@@ -35,8 +35,10 @@ import { CharacterHealth } from "./characterHealth";
 import { CharacterCombat } from "./characterCombat";
 import { CharacterMovement } from "./characterMovement";
 
-// Start bouncing when impact is greater than this value
-const BOUNCE_TRIGGER = 3.8;
+// Start bouncing when impact is greater than this value. The active character
+// gets a slightly more forgiving threshold than the rest of the team.
+const BOUNCE_TRIGGER_ACTIVE = 4;
+const BOUNCE_TRIGGER_PASSIVE = 3.6;
 const SMOKE_TRIGGER = 2;
 const KICK_VELOCITY_THRESHOLD_SQUARED = 0.04;
 const KICK_RADIUS = 30;
@@ -345,9 +347,14 @@ export class Character extends Container implements HurtableEntity, Syncable {
       getLevel().add(new SmokePuff(x * 6 + 18, y * 6 + 72));
     }
 
+    const bounceTrigger =
+      getManager().getActiveCharacter() === this
+        ? BOUNCE_TRIGGER_ACTIVE
+        : BOUNCE_TRIGGER_PASSIVE;
+
     if (
-      Math.abs(this.body.xVelocity) > BOUNCE_TRIGGER ||
-      Math.abs(this.body.yVelocity) > BOUNCE_TRIGGER
+      Math.abs(this.body.xVelocity) > bounceTrigger ||
+      Math.abs(this.body.yVelocity) > bounceTrigger
     ) {
       getManager().dealFallDamage(x, y, this);
     }
