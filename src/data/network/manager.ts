@@ -89,15 +89,16 @@ export abstract class Manager {
   }
 
   tick(dt: number) {
+    const controller = this.activePlayer?.controller;
     if (
-      this.activePlayer?.controller instanceof NetworkController ||
-      this.activePlayer?.controller instanceof AiController
+      controller instanceof NetworkController ||
+      controller instanceof AiController
     ) {
-      this.activePlayer.controller.tick(dt);
+      controller.tick(dt);
     }
 
     if (this.cursor) {
-      this.cursor.tick(dt, this.activePlayer!.controller);
+      this.cursor.tick(dt, controller!);
     }
 
     if (this.isControlling()) {
