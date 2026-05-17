@@ -32,15 +32,7 @@ export class Melee extends Strategy {
         let to = leftTo === rightTo ? [leftTo] : [leftTo, rightTo];
 
         const y = targetPosition[1];
-        if (
-          to.some((to) => {
-            if (Math.abs(to.y - 8 - y) > 10) {
-              return true;
-            }
-
-            return false;
-          })
-        ) {
+        if (to.some((node) => Math.abs(node.y - 8 - y) > 10)) {
           return null;
         }
 
