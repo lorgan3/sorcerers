@@ -29,8 +29,7 @@ export class Zoltraak extends RangedStrategy {
     this.graph = graph;
 
     const myCenter = this.character.getCenter();
-    const myPosition = this.character.body.precisePosition;
-    const myNode = graph.getClosestNode(myPosition[0] + 3, myPosition[1] + 8);
+    const myNode = graph.getClosestNode(...this.character.bodyFootCenter);
     const surface = getLevel().terrain.collisionMask;
     const currentMana = this.character.player.mana;
 

@@ -42,9 +42,8 @@ export class Fireball extends RangedStrategy {
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
 
-    const myPosition = this.character.body.precisePosition;
     const myCenter = this.character.getCenter();
-    const myNode = graph.getClosestNode(myPosition[0] + 3, myPosition[1] + 8);
+    const myNode = graph.getClosestNode(...this.character.bodyFootCenter);
     const surface = getLevel().terrain.collisionMask;
     const currentMana = this.character.player.mana;
 

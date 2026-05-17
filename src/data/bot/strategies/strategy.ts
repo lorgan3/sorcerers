@@ -40,11 +40,7 @@ export abstract class Strategy {
 
   getNextEvaluation() {
     // Child class should populate evaluations first.
-    const myPosition = this.character.body.position;
-    const from = this.graph!.getClosestNode(
-      myPosition[0] + 3,
-      myPosition[1] + 8
-    );
+    const from = this.graph!.getClosestNode(...this.character.bodyFootCenter);
 
     while (this.evaluations.length > 0) {
       const evaluation = this.evaluations.shift()!;
@@ -131,9 +127,8 @@ export abstract class Strategy {
             throw InvalidStrategyError.becausePathNotFound();
           }
 
-          const myPosition = this.character.body.position;
           this.evaluation!.path = Pathfinding.findPath(
-            this.graph!.getClosestNode(myPosition[0] + 3, myPosition[1] + 8),
+            this.graph!.getClosestNode(...this.character.bodyFootCenter),
             lastEdge.to
           );
 

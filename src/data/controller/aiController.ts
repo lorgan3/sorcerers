@@ -168,8 +168,7 @@ export class AiController implements Controller {
       return;
     }
 
-    const myPos = self.body.precisePosition;
-    const myNode = graph.getClosestNode(myPos[0] + 3, myPos[1] + 8);
+    const myNode = graph.getClosestNode(...self.bodyFootCenter);
 
     // Build a shuffled list of all nodes other than ourselves.
     const candidates = graph.getNodes().filter((n) => n !== myNode);

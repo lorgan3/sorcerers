@@ -358,6 +358,11 @@ export class Character extends Container implements HurtableEntity, Syncable {
     return [this.position.x + 18, this.position.y + 48];
   }
 
+  get bodyFootCenter(): [number, number] {
+    const [x, y] = this.body.precisePosition;
+    return [x + 3, y + 8];
+  }
+
   private kickNearbyGibs() {
     const xSpeedSquared = this.body.xVelocity ** 2;
     if (xSpeedSquared < KICK_VELOCITY_THRESHOLD_SQUARED) {
