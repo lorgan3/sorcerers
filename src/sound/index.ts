@@ -42,6 +42,7 @@ export enum Sound {
   Smoke = "smokeSnd",
   Tada = "tadaSnd",
   LadderClimb = "ladderClimbSnd",
+  Vortex = "vortexSnd",
 }
 
 export enum Music {
@@ -170,6 +171,7 @@ addSoundData(
   "478052__deleted_user_10023915__ladderclimb4",
   0.5
 );
+addSoundData(Sound.Vortex, "172334__knova__grenade_knova");
 
 addMusicData(Music.TitleScreen, "Sorcerers Theme Sample", 0.8);
 addMusicData(Music.Battle, "Sorcerers Battle 1", 0.8);
