@@ -92,6 +92,7 @@ export enum EntityType {
   Doragate,
   Daosdorg,
   PocketBlackHole,
+  MagicMirror,
 }
 
 export enum Priority {

@@ -64,6 +64,7 @@ export type Message =
   | {
       type: MessageType.SpawnCharacter;
       player: number;
+      characterId: number;
       name: string;
       hp: number;
       x: number;

@@ -220,6 +220,27 @@ export class Client extends Manager {
         this.players = this.players.slice(0, message.players.length);
         break;
 
+      case MessageType.SpawnCharacter:
+        {
+          const player = this.players[message.player];
+          if (!player) {
+            throw new Error(
+              `SpawnCharacter for unknown player index ${message.player}`,
+            );
+          }
+          setId(message.characterId);
+          const character = new Character(
+            player,
+            message.x,
+            message.y,
+            message.name,
+          );
+          character.hp = message.hp;
+          player.addCharacter(character);
+          // Separation nudge happens inside MagicMirror.activate on each peer.
+        }
+        break;
+
       case MessageType.ActiveCharacter:
         const lastActivePlayer = this.activePlayer;
         Object.keys(this.elements).forEach(
