@@ -111,31 +111,32 @@ export abstract class BaseItem extends Container implements Syncable, Item {
         const [x, y] = this.body.precisePosition;
         this.position.set(x * 6, y * 6);
       }
+    }
 
-      const server = getServer();
-      if (server) {
-        getLevel().withNearbyEntities(
-          ...this.getCenter(),
-          48,
-          (entity: HurtableEntity) => {
-            if (!(entity instanceof Character)) {
-              return;
-            }
-
-            server.activate(this, entity);
-            return true;
+    // Runs while the body sleeps too, so a settled item doesn't make pickups laggy.
+    const server = getServer();
+    if (server) {
+      getLevel().withNearbyEntities(
+        ...this.getCenter(),
+        48,
+        (entity: HurtableEntity) => {
+          if (!(entity instanceof Character)) {
+            return;
           }
-        );
 
-        if (
-          getLevel().terrain.killbox.collidesWith(
-            this.body.mask,
-            this.position.x,
-            this.position.y
-          )
-        ) {
-          server.kill(this);
+          server.activate(this, entity);
+          return true;
         }
+      );
+
+      if (
+        getLevel().terrain.killbox.collidesWith(
+          this.body.mask,
+          this.position.x,
+          this.position.y
+        )
+      ) {
+        server.kill(this);
       }
     }
   }
