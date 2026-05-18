@@ -25,6 +25,7 @@ import { Element } from "../spells/types";
 import { WindBlast } from "../spells/windBlast";
 import { Zoltraak } from "../spells/zoltraak";
 import { BlackHole } from "./blackHole";
+import { ChaosCrystal } from "./chaosCrystal";
 import { Character } from "./character";
 import { MagicMirror } from "./magicMirror";
 import { MagicScroll } from "./magicScroll";
@@ -73,6 +74,7 @@ export const ENTITIES: Record<
   [EntityType.Daosdorg]: Daosdorg,
   [EntityType.PocketBlackHole]: BlackHole,
   [EntityType.MagicMirror]: MagicMirror,
+  [EntityType.ChaosCrystal]: ChaosCrystal,
 };
 
 interface SpawnRateData {

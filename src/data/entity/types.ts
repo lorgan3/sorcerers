@@ -93,6 +93,7 @@ export enum EntityType {
   Daosdorg,
   PocketBlackHole,
   MagicMirror,
+  ChaosCrystal,
 }
 
 export enum Priority {

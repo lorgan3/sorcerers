@@ -456,6 +456,29 @@ export class Server extends Manager {
     }, 2000);
   }
 
+  triggerSuddenDeath() {
+    if (this.suddenDeath) {
+      return;
+    }
+
+    this.suddenDeath = true;
+    // Both clocks advance together so the per-turn sink keeps firing without
+    // ending the current turn.
+    const gameLengthMs = minutesToMs(this.settings.gameLength);
+    if (this.time < gameLengthMs) {
+      const delta = gameLengthMs - this.time;
+      this.time += delta;
+      this.turnStartTime += delta;
+    }
+
+    this.addPopup({ title: "Sudden death!" });
+
+    this.broadcast({
+      type: MessageType.Sink,
+      level: getLevel().sink(),
+    });
+  }
+
   private handleMessage(message: Message, player: Player) {
     switch (message.type) {
       case MessageType.Join:
