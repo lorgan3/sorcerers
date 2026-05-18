@@ -24,7 +24,10 @@ import { Teleport } from "../spells/teleport";
 import { Element } from "../spells/types";
 import { WindBlast } from "../spells/windBlast";
 import { Zoltraak } from "../spells/zoltraak";
+import { BlackHole } from "./blackHole";
+import { ChaosCrystal } from "./chaosCrystal";
 import { Character } from "./character";
+import { MagicMirror } from "./magicMirror";
 import { MagicScroll } from "./magicScroll";
 import { Potion } from "./potion";
 import { PotionType } from "./potionData";
@@ -69,6 +72,9 @@ export const ENTITIES: Record<
   [EntityType.Teleport]: Teleport,
   [EntityType.Doragate]: Doragate,
   [EntityType.Daosdorg]: Daosdorg,
+  [EntityType.PocketBlackHole]: BlackHole,
+  [EntityType.MagicMirror]: MagicMirror,
+  [EntityType.ChaosCrystal]: ChaosCrystal,
 };
 
 interface SpawnRateData {
@@ -115,6 +121,14 @@ const SPAWN_RATES: SpawnRateData[] = [
     spawn: (x: number, y: number) =>
       new MagicScroll(x, y, false, Element.Physical),
     weight: 1,
+  },
+  {
+    spawn: (x: number, y: number) => new BlackHole(x, y, false),
+    weight: 0.4,
+  },
+  {
+    spawn: (x: number, y: number) => new MagicMirror(x, y, false),
+    weight: 0.6,
   },
 ];
 

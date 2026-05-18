@@ -10,12 +10,19 @@ import {
 } from "./types";
 
 import { circle9x9 } from "../collision/precomputed/circles";
+import { ExplosiveDamage } from "../damage/explosiveDamage";
 import { Force } from "../damage/targetList";
 import { DamageSource } from "../damage/types";
 import { Character } from "./character";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
 import { getLevel, getServer } from "../context";
+
+// Item body's terminal velocity; gravity alone can't trip the explosion.
+const ITEM_EXPLOSION_SPEED_THRESHOLD = 10;
+const ITEM_EXPLOSION_RANGE = 12;
+const ITEM_EXPLOSION_POWER = 1;
+const ITEM_EXPLOSION_DAMAGE = 1;
 
 export abstract class BaseItem extends Container implements Syncable, Item {
   protected static floatSpeed = 0.3;
@@ -42,11 +49,31 @@ export abstract class BaseItem extends Container implements Syncable, Item {
       airXFriction: 0.99,
       roundness: 0.25,
       ladderSpeed: 0,
+      onCollide: (x, y) => this.handleHighSpeedCollide(x, y),
     });
     this.body.move(x, y);
     this.position.set(x * 6, y * 6);
 
     this.alpha = 0;
+  }
+
+  protected handleHighSpeedCollide(x: number, y: number) {
+    if (this.body.velocity < ITEM_EXPLOSION_SPEED_THRESHOLD) {
+      return;
+    }
+    const server = getServer();
+    if (!server) {
+      return;
+    }
+    server.damage(
+      new ExplosiveDamage(
+        x,
+        y,
+        ITEM_EXPLOSION_RANGE,
+        ITEM_EXPLOSION_POWER,
+        ITEM_EXPLOSION_DAMAGE,
+      ),
+    );
   }
 
   abstract serialize(): void;
@@ -111,31 +138,32 @@ export abstract class BaseItem extends Container implements Syncable, Item {
         const [x, y] = this.body.precisePosition;
         this.position.set(x * 6, y * 6);
       }
+    }
 
-      const server = getServer();
-      if (server) {
-        getLevel().withNearbyEntities(
-          ...this.getCenter(),
-          48,
-          (entity: HurtableEntity) => {
-            if (!(entity instanceof Character)) {
-              return;
-            }
-
-            server.activate(this, entity);
-            return true;
+    // Runs while the body sleeps too, so a settled item doesn't make pickups laggy.
+    const server = getServer();
+    if (server) {
+      getLevel().withNearbyEntities(
+        ...this.getCenter(),
+        48,
+        (entity: HurtableEntity) => {
+          if (!(entity instanceof Character)) {
+            return;
           }
-        );
 
-        if (
-          getLevel().terrain.killbox.collidesWith(
-            this.body.mask,
-            this.position.x,
-            this.position.y
-          )
-        ) {
-          server.kill(this);
+          server.activate(this, entity);
+          return true;
         }
+      );
+
+      if (
+        getLevel().terrain.killbox.collidesWith(
+          this.body.mask,
+          this.position.x,
+          this.position.y
+        )
+      ) {
+        server.kill(this);
       }
     }
   }

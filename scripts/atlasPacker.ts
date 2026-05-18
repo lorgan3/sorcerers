@@ -29,7 +29,7 @@ const extractColors: Record<string, { from: number[]; to: string[] }> = {
   },
 };
 
-const ATLASES = { characters: 2048, atlas: 1024, backgrounds: null };
+const ATLASES = { characters: 2048, atlas: null, backgrounds: null };
 const DIRECTORY = "./public/";
 
 // This might help with edges containing colors of adjacent sprites in the atlas?

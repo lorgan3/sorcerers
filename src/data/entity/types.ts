@@ -91,6 +91,9 @@ export enum EntityType {
   Teleport,
   Doragate,
   Daosdorg,
+  PocketBlackHole,
+  MagicMirror,
+  ChaosCrystal,
 }
 
 export enum Priority {
