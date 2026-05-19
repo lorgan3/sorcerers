@@ -151,6 +151,10 @@ export abstract class BaseItem extends Container implements Syncable, Item {
             return;
           }
 
+          if (!this.canActivate()) {
+            return true;
+          }
+
           server.activate(this, entity);
           return true;
         }
@@ -178,6 +182,10 @@ export abstract class BaseItem extends Container implements Syncable, Item {
     if (character) {
       character.player.stats.registerItem(this);
     }
+  }
+
+  canActivate() {
+    return true;
   }
 
   get activated() {

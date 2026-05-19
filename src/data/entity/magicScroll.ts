@@ -8,7 +8,7 @@ import { EntityType } from "./types";
 import { Character } from "./character";
 import { ControllableSound } from "../../sound/controllableSound";
 import { Sound } from "../../sound";
-import { getLevel } from "../context";
+import { getLevel, getServer } from "../context";
 
 export class MagicScroll extends BaseItem {
   static aoeRange = 64 * 6;
@@ -75,5 +75,9 @@ export class MagicScroll extends BaseItem {
       this.element
     );
     getLevel().add(this.aoe);
+  }
+
+  canActivate() {
+    return !getServer()?.isEnding();
   }
 }
