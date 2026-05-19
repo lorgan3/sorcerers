@@ -17,12 +17,15 @@ export class AreaOfEffect extends Container implements TickingEntity {
   private static growDuration = 90;
   private static expansionDuration = 20;
   private static maxAlpha = 0.4;
-  private static fadeDuration = 60;
   private static rotationSpeed = Math.PI / 150;
+  // Concentric outline radii (normalized to texture half-width), matching the
+  // three rings in the rune-circle artwork.
+  private static ringRadii = [0.625, 0.75, 0.875];
+  private static hubRadius = 0.1;
+  private static particleStep = 0.04;
 
   private emitter?: ParticleEmitter;
   private time = 0;
-  private fadeTime = -1;
 
   private circle: Sprite;
 
@@ -82,21 +85,6 @@ export class AreaOfEffect extends Container implements TickingEntity {
     this.time += dt;
     this.rotation -= AreaOfEffect.rotationSpeed * dt;
 
-    if (this.fadeTime > -1) {
-      const t = this.time - this.fadeTime;
-      this.circle.alpha = map(
-        AreaOfEffect.maxAlpha,
-        0,
-        t / AreaOfEffect.fadeDuration
-      );
-
-      if (this.time - this.fadeTime >= AreaOfEffect.fadeDuration) {
-        getLevel().remove(this);
-      }
-
-      return;
-    }
-
     if (this.time < AreaOfEffect.growDuration) {
       this.circle.scale.set(
         (this.growSize * Math.min(this.time, AreaOfEffect.growDuration)) /
@@ -133,7 +121,56 @@ export class AreaOfEffect extends Container implements TickingEntity {
   }
 
   fade() {
-    getLevel().backgroundParticles.destroyEmitter(this.emitter);
-    this.fadeTime = this.time;
+    const level = getLevel();
+    level.backgroundParticles.destroyEmitter(this.emitter);
+
+    const tint = ELEMENT_COLOR_MAP[this.element];
+    const radius = (this.circle.texture.width / 2) * this.expansionSize;
+    const cx = this.position.x;
+    const cy = this.position.y;
+    const mask = level.terrain.collisionMask;
+    const step = AreaOfEffect.particleStep;
+
+    const spawn = (nx: number, ny: number) => {
+      const rx = nx * radius;
+      const ry = ny * radius;
+      const px = cx + rx;
+      const py = cy + ry;
+
+      if (mask.collidesWithPoint((px / 6) | 0, (py / 6) | 0)) {
+        return;
+      }
+
+      const dist = Math.sqrt(rx * rx + ry * ry) || 1;
+      const speed = 0.5 + Math.random() * 2.5;
+      level.bloodEmitter.spawn(
+        px,
+        py,
+        (rx / dist) * speed,
+        (ry / dist) * speed - 1,
+        tint,
+        AreaOfEffect.maxAlpha
+      );
+    };
+
+    // Solid hub
+    for (let r = 0; r <= AreaOfEffect.hubRadius; r += step) {
+      const count = Math.max(1, Math.round((2 * Math.PI * r) / step));
+      for (let i = 0; i < count; i++) {
+        const a = this.rotation + (i / count) * Math.PI * 2;
+        spawn(Math.cos(a) * r, Math.sin(a) * r);
+      }
+    }
+
+    // Concentric outlines
+    for (const r of AreaOfEffect.ringRadii) {
+      const count = Math.round((2 * Math.PI * r) / step);
+      for (let i = 0; i < count; i++) {
+        const a = this.rotation + (i / count) * Math.PI * 2;
+        spawn(Math.cos(a) * r, Math.sin(a) * r);
+      }
+    }
+
+    level.remove(this);
   }
 }
