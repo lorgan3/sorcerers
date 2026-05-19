@@ -134,7 +134,7 @@ const SPAWN_RATES: SpawnRateData[] = [
 
 const totalWeight = SPAWN_RATES.reduce(
   (sum, spawnRate) => sum + spawnRate.weight,
-  0
+  0,
 );
 
 export const getRandomItem = (x: number, y: number) => {
