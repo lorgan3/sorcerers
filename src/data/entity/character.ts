@@ -586,6 +586,10 @@ export class Character extends Container implements HurtableEntity, Syncable {
     this.health.hp = hp;
   }
 
+  silentSetHp(hp: number) {
+    this.health.silentSet(hp);
+  }
+
   get time() {
     return this._time;
   }

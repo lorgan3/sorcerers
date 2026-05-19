@@ -51,11 +51,17 @@ describe("Magic Mirror", () => {
       set hp(v: number) {
         hp = v;
       },
+      silentSetHp(v: number) {
+        hp = v;
+      },
       health: {
         get hp() {
           return hp;
         },
         set hp(v: number) {
+          hp = v;
+        },
+        silentSet(v: number) {
           hp = v;
         },
       },

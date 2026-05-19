@@ -60,8 +60,7 @@ export class MagicMirror extends BaseItem {
     // Fall back to +1 so a stationary activator still separates from the mirror.
     const direction = Math.sign(character.body.xVelocity) || 1;
 
-    // Direct setter: not damage, so no attribution/popups.
-    character.hp = newHp;
+    character.silentSetHp(newHp);
     character.body.addVelocity(direction * NUDGE_X, -NUDGE_Y);
 
     const [cx, cy] = character.getCenter();
@@ -84,7 +83,7 @@ export class MagicMirror extends BaseItem {
       const mirroredName = reverseName(character.characterName);
       const mirror = new Character(character.player, x, y, mirroredName);
       character.player.addCharacter(mirror);
-      mirror.hp = newHp;
+      mirror.silentSetHp(newHp);
 
       const playerIndex = server.players.indexOf(character.player);
 

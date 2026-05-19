@@ -49,6 +49,15 @@ export class CharacterHealth {
     this.character.body.active = 1;
   }
 
+  silentSet(hp: number) {
+    this._hp = hp;
+    this.lastReportedHp = hp;
+    this.namePlate.text = `${this.namePlateName} ${Math.max(
+      0,
+      Math.ceil(hp)
+    )}`;
+  }
+
   get lastDamageDealer(): Player | null {
     if (
       this.character.time >
