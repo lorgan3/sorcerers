@@ -57,7 +57,7 @@ export class BloodEmitter
         continue;
       }
 
-      particle.alpha = Math.min(1, particle.lifetime / 10);
+      particle.alpha = Math.min(1, particle.lifetime / 10) * particle.maxAlpha;
 
       if (
         !getLevel().terrain.collisionMask.collidesWithPoint(
@@ -73,18 +73,10 @@ export class BloodEmitter
         particle.lifetime = 0;
         getLevel().terrain.draw(
           (ctx) => {
+            ctx.globalAlpha = particle.maxAlpha;
             ctx.fillStyle = particle.color;
-
-            if (particle.xVelocity > 0) {
-              ctx.fillRect(
-                ((particle.x / 6) | 0) + 1,
-                ((particle.y / 6) | 0) + 1,
-                1,
-                1
-              );
-            } else {
-              ctx.fillRect((particle.x / 6) | 0, (particle.y / 6) | 0, 1, 1);
-            }
+            ctx.fillRect((particle.x / 6) | 0, (particle.y / 6) | 0, 1, 1);
+            ctx.globalAlpha = 1;
           },
           () => {}
         );
@@ -101,7 +93,8 @@ export class BloodEmitter
     y: number,
     xVelocity: number,
     yVelocity: number,
-    tint = "#b91e1e"
+    tint = "#b91e1e",
+    alpha = 1
   ) {
     this.activeParticles++;
     let particle: Particle | undefined;
@@ -128,6 +121,7 @@ export class BloodEmitter
     particle.yVelocity = yVelocity;
     particle.tint = tint;
     particle.color = tint;
+    particle.maxAlpha = alpha;
 
     particle.lifetime = 500 * (1 + 0.2 * Math.random());
   }
