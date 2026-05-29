@@ -158,8 +158,11 @@ export class Path {
         destination.type === EdgeType.Climb ||
         this.character.body.onLadder
       ) {
+        // Hold Up (not KeyPress) so the mount fires deterministically on the
+        // next 20Hz control() tick — KeyPress toggles at 60Hz, leaving the
+        // mount reliant on lucky timing between the toggle and the interval.
         if (!this.character.body.onLadder) {
-          commands.push({ type: CommandType.KeyPress, key: Key.Up });
+          commands.push({ type: CommandType.KeyDown, key: Key.Up });
         } else if (destination.to.y > y + 8) {
           commands.push({ type: CommandType.KeyDown, key: Key.Down });
         } else {
