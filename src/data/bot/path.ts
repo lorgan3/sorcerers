@@ -70,12 +70,22 @@ export class Path {
 
     const offset = direction > 0 ? 6 : 0;
 
-    const distance = getSquareDistance(
-      x + 3,
-      y + 8,
-      destination.to.x,
-      destination.to.y
-    );
+    // On a ladder mid-climb, body.x is snapped by ladder physics to the
+    // ladder's column. The graph node may sit on a different x within that
+    // column (e.g. ladder edge vs center), giving a constant horizontal
+    // offset the bot can't close. Ignore x for the arrival distance in this
+    // case — y proximity is what actually matters.
+    const climbingLadder =
+      this.character.body.onLadder &&
+      destination.type === EdgeType.Climb;
+    const distance = climbingLadder
+      ? (y + 8 - destination.to.y) ** 2
+      : getSquareDistance(
+          x + 3,
+          y + 8,
+          destination.to.x,
+          destination.to.y
+        );
 
     let hasArrived = false;
 
