@@ -214,6 +214,13 @@ export class Graph {
       (from.y > to.y || distance > 6) &&
       distance < Graph.DIAGONAL_DISTANCE
     ) {
+      // The character can only jump from a surface, not from the middle of a
+      // ladder (sideways dismount only fires at ladder.left/ladder.right edges
+      // per characterMovement.ts). LadderTop is exempt: it's the floor the
+      // character emerges onto at the top of the ladder.
+      if (from.type === NodeType.Ladder || to.type === NodeType.Ladder) {
+        return;
+      }
       to.connect(from, EdgeType.Jump);
     } else {
       if (to.type === NodeType.Ladder) {
