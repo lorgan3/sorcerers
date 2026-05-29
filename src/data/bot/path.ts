@@ -191,6 +191,13 @@ export class Path {
         if ((atLaunchPoint && fastEnough) || overshot) {
           commands.push({ type: CommandType.KeyDown, key: Key.Up });
         }
+      } else if (
+        destination.type === EdgeType.Walk &&
+        destination.from.y - destination.to.y > 4
+      ) {
+        // Walk edge with a step-up taller than the body's auto-step (MAX_STEP=3px).
+        // Need to jump to clear the obstacle.
+        commands.push({ type: CommandType.KeyDown, key: Key.Up });
       }
 
       this.lastX = x;
