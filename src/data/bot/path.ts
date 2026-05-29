@@ -30,6 +30,12 @@ export class Path {
   // each tick; when > 0, override the walk direction.
   private prerollFrames = 0;
 
+  // Frame counter used to toggle horizontal direction input while on a ladder.
+  // characterMovement's dismount rule fires on the RISING edge of Left/Right.
+  // Holding the key continuously never produces that edge, so we briefly drop
+  // it every few frames to let the next tick register as a fresh press.
+  private ladderTicks = 0;
+
   private pause = false;
 
   constructor(private character: Character, public readonly edges: Edge[]) {
@@ -104,6 +110,17 @@ export class Path {
         (distance > this.lastDistance && this.shouldContinuePath());
     }
 
+    // While on a ladder, suppress the horizontal direction key every 4th tick.
+    // characterMovement's dismount-via-edge rule needs a Left/Right rising edge
+    // (`!wasRight && rightHeld`); a held key never triggers it.
+    const onLadder = this.character.body.onLadder;
+    if (onLadder) {
+      this.ladderTicks += dt;
+    } else {
+      this.ladderTicks = 0;
+    }
+    const suppressForRisingEdge = onLadder && Math.floor(this.ladderTicks) % 4 === 0;
+
     if (!hasArrived) {
       // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
       if (this.prerollFrames > 0) {
@@ -115,6 +132,8 @@ export class Path {
         } else if (md < 0) {
           commands.push({ type: CommandType.KeyDown, key: Key.Right });
         }
+      } else if (suppressForRisingEdge) {
+        // intentionally no horizontal input this tick
       } else if (
         destination.to.x > x + offset &&
         (sameDirection || this.character.body.xVelocity < REVERSE_INPUT_SPEED)
