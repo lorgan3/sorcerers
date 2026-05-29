@@ -36,6 +36,13 @@ export class Path {
   // it every few frames to let the next tick register as a fresh press.
   private ladderTicks = 0;
 
+  // While climbing on a ladder, count frames during which body.y has failed
+  // to decrease (likely caught on a sidewall or tube-ladder ceiling). When
+  // this exceeds a threshold, the path follower biases the target x toward
+  // the ladder's horizontal center to slide along the column.
+  private climbBlockedFrames = 0;
+  private lastClimbY: number | null = null;
+
   private pause = false;
 
   constructor(private character: Character, public readonly edges: Edge[]) {
@@ -67,7 +74,49 @@ export class Path {
     this.bustedTimer -= dt;
     let [x, y] = this.character.body.precisePosition;
     const destination = this.edges[this.pathIndex];
-    const direction = Math.sign(destination.from.x - destination.to.x);
+
+    // While climbing on a ladder, follow the graph node's x by default; the
+    // pathfinder picked it for a reason (e.g. lining up the dismount with the
+    // next edge). If the climb stalls — body.y not decreasing for several
+    // frames, typically because the body is caught on a sidewall or a tube-
+    // ladder ceiling — bias the target x toward the ladder's horizontal
+    // center so the bot slides along the column and clears the obstruction.
+    let targetX = destination.to.x;
+    if (
+      this.character.body.onLadder &&
+      destination.type === EdgeType.Climb
+    ) {
+      const wantsUp = y + 8 > destination.to.y;
+      if (wantsUp) {
+        if (this.lastClimbY !== null && y >= this.lastClimbY - 0.1) {
+          this.climbBlockedFrames += dt;
+        } else {
+          this.climbBlockedFrames = 0;
+        }
+        this.lastClimbY = y;
+        if (this.climbBlockedFrames > 5) {
+          for (const ladder of getLevel().terrain.ladders) {
+            if (
+              x + 6 >= ladder.left &&
+              x <= ladder.right &&
+              y + 16 > ladder.top &&
+              y < ladder.bottom
+            ) {
+              targetX = Math.round(ladder.horizontalCenter) - 3;
+              break;
+            }
+          }
+        }
+      } else {
+        this.climbBlockedFrames = 0;
+        this.lastClimbY = null;
+      }
+    } else {
+      this.climbBlockedFrames = 0;
+      this.lastClimbY = null;
+    }
+
+    const direction = Math.sign(destination.from.x - targetX);
 
     const nextDestination = this.edges[this.pathIndex + 1];
     const nextDirection = nextDestination
@@ -135,7 +184,7 @@ export class Path {
       } else if (suppressForRisingEdge) {
         // intentionally no horizontal input this tick
       } else if (
-        destination.to.x > x + offset &&
+        targetX > x + offset &&
         (sameDirection || this.character.body.xVelocity < REVERSE_INPUT_SPEED)
       ) {
         commands.push({ type: CommandType.KeyDown, key: Key.Right });
