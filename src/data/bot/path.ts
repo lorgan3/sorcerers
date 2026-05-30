@@ -30,6 +30,19 @@ export class Path {
   // each tick; when > 0, override the walk direction.
   private prerollFrames = 0;
 
+  // Frame counter used to toggle horizontal direction input while on a ladder.
+  // characterMovement's dismount rule fires on the RISING edge of Left/Right.
+  // Holding the key continuously never produces that edge, so we briefly drop
+  // it every few frames to let the next tick register as a fresh press.
+  private ladderTicks = 0;
+
+  // While climbing on a ladder, count frames during which body.y has failed
+  // to decrease (likely caught on a sidewall or tube-ladder ceiling). When
+  // this exceeds a threshold, the path follower biases the target x toward
+  // the ladder's horizontal center to slide along the column.
+  private climbBlockedFrames = 0;
+  private lastClimbY: number | null = null;
+
   private pause = false;
 
   constructor(private character: Character, public readonly edges: Edge[]) {
@@ -61,7 +74,49 @@ export class Path {
     this.bustedTimer -= dt;
     let [x, y] = this.character.body.precisePosition;
     const destination = this.edges[this.pathIndex];
-    const direction = Math.sign(destination.from.x - destination.to.x);
+
+    // While climbing on a ladder, follow the graph node's x by default; the
+    // pathfinder picked it for a reason (e.g. lining up the dismount with the
+    // next edge). If the climb stalls — body.y not decreasing for several
+    // frames, typically because the body is caught on a sidewall or a tube-
+    // ladder ceiling — bias the target x toward the ladder's horizontal
+    // center so the bot slides along the column and clears the obstruction.
+    let targetX = destination.to.x;
+    if (
+      this.character.body.onLadder &&
+      destination.type === EdgeType.Climb
+    ) {
+      const wantsUp = y + 8 > destination.to.y;
+      if (wantsUp) {
+        if (this.lastClimbY !== null && y >= this.lastClimbY - 0.1) {
+          this.climbBlockedFrames += dt;
+        } else {
+          this.climbBlockedFrames = 0;
+        }
+        this.lastClimbY = y;
+        if (this.climbBlockedFrames > 5) {
+          for (const ladder of getLevel().terrain.ladders) {
+            if (
+              x + 6 >= ladder.left &&
+              x <= ladder.right &&
+              y + 16 > ladder.top &&
+              y < ladder.bottom
+            ) {
+              targetX = Math.round(ladder.horizontalCenter) - 3;
+              break;
+            }
+          }
+        }
+      } else {
+        this.climbBlockedFrames = 0;
+        this.lastClimbY = null;
+      }
+    } else {
+      this.climbBlockedFrames = 0;
+      this.lastClimbY = null;
+    }
+
+    const direction = Math.sign(destination.from.x - targetX);
 
     const nextDestination = this.edges[this.pathIndex + 1];
     const nextDirection = nextDestination
@@ -70,12 +125,22 @@ export class Path {
 
     const offset = direction > 0 ? 6 : 0;
 
-    const distance = getSquareDistance(
-      x + 3,
-      y + 8,
-      destination.to.x,
-      destination.to.y
-    );
+    // On a ladder mid-climb, body.x is snapped by ladder physics to the
+    // ladder's column. The graph node may sit on a different x within that
+    // column (e.g. ladder edge vs center), giving a constant horizontal
+    // offset the bot can't close. Ignore x for the arrival distance in this
+    // case — y proximity is what actually matters.
+    const climbingLadder =
+      this.character.body.onLadder &&
+      destination.type === EdgeType.Climb;
+    const distance = climbingLadder
+      ? (y + 8 - destination.to.y) ** 2
+      : getSquareDistance(
+          x + 3,
+          y + 8,
+          destination.to.x,
+          destination.to.y
+        );
 
     let hasArrived = false;
 
@@ -94,6 +159,17 @@ export class Path {
         (distance > this.lastDistance && this.shouldContinuePath());
     }
 
+    // While on a ladder, suppress the horizontal direction key every 4th tick.
+    // characterMovement's dismount-via-edge rule needs a Left/Right rising edge
+    // (`!wasRight && rightHeld`); a held key never triggers it.
+    const onLadder = this.character.body.onLadder;
+    if (onLadder) {
+      this.ladderTicks += dt;
+    } else {
+      this.ladderTicks = 0;
+    }
+    const suppressForRisingEdge = onLadder && Math.floor(this.ladderTicks) % 4 === 0;
+
     if (!hasArrived) {
       // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
       if (this.prerollFrames > 0) {
@@ -105,8 +181,10 @@ export class Path {
         } else if (md < 0) {
           commands.push({ type: CommandType.KeyDown, key: Key.Right });
         }
+      } else if (suppressForRisingEdge) {
+        // intentionally no horizontal input this tick
       } else if (
-        destination.to.x > x + offset &&
+        targetX > x + offset &&
         (sameDirection || this.character.body.xVelocity < REVERSE_INPUT_SPEED)
       ) {
         commands.push({ type: CommandType.KeyDown, key: Key.Right });
@@ -129,8 +207,11 @@ export class Path {
         destination.type === EdgeType.Climb ||
         this.character.body.onLadder
       ) {
+        // Hold Up (not KeyPress) so the mount fires deterministically on the
+        // next 20Hz control() tick — KeyPress toggles at 60Hz, leaving the
+        // mount reliant on lucky timing between the toggle and the interval.
         if (!this.character.body.onLadder) {
-          commands.push({ type: CommandType.KeyPress, key: Key.Up });
+          commands.push({ type: CommandType.KeyDown, key: Key.Up });
         } else if (destination.to.y > y + 8) {
           commands.push({ type: CommandType.KeyDown, key: Key.Down });
         } else {
@@ -159,6 +240,13 @@ export class Path {
         if ((atLaunchPoint && fastEnough) || overshot) {
           commands.push({ type: CommandType.KeyDown, key: Key.Up });
         }
+      } else if (
+        destination.type === EdgeType.Walk &&
+        destination.from.y - destination.to.y > 4
+      ) {
+        // Walk edge with a step-up taller than the body's auto-step (MAX_STEP=3px).
+        // Need to jump to clear the obstacle.
+        commands.push({ type: CommandType.KeyDown, key: Key.Up });
       }
 
       this.lastX = x;
