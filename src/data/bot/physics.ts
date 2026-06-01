@@ -75,6 +75,66 @@ export const MAX_JUMP_HEIGHT = Math.floor(STANDING_JUMP.peakHeight);
 // holding air-control for the full flight. Rounded down for conservative graph planning.
 export const MAX_JUMP_DISTANCE = Math.floor(RUNNING_JUMP.distance);
 
+// Jump reachability envelope: the maximum height (px above launch) a jump can
+// reach at each integer horizontal distance. MAX_JUMP_HEIGHT and
+// MAX_JUMP_DISTANCE are independent caps; this couples them, so the graph can
+// reject jumps that demand near-max height AND near-max distance at once —
+// physically impossible in a single arc.
+const JUMP_HEIGHT_AT_DISTANCE: number[] = (() => {
+  const env: number[] = [0];
+  const samples = 24;
+  for (let i = 0; i <= samples; i++) {
+    const launchX = (WALK_TERMINAL_VELOCITY * i) / samples;
+    let s = { x: 0, y: 0, xv: launchX, yv: -JUMP_STRENGTH };
+    let prev = { x: 0, h: 0 };
+    for (let frame = 1; frame <= 200; frame++) {
+      s = airStep(s, 1);
+      const cur = { x: s.x, h: -s.y };
+      for (let xi = Math.ceil(prev.x); xi <= Math.floor(cur.x); xi++) {
+        const t = (xi - prev.x) / (cur.x - prev.x || 1);
+        const h = prev.h + t * (cur.h - prev.h);
+        if (env[xi] === undefined || h > env[xi]) {
+          env[xi] = h;
+        }
+      }
+      prev = cur;
+      if (s.y > 0 && frame > 1) break;
+    }
+  }
+  // The samples above hold full forward air-control, which pushes the apex out
+  // to x≈10 — so they understate the height at very short distances. But the
+  // bot can withhold air-control and jump nearly straight up, reaching the apex
+  // at x≈0. So at any distance up to where the arc peaks, the full apex height
+  // is reachable: flatten the rising side to the peak.
+  let peakIdx = 0;
+  for (let x = 1; x < env.length; x++) {
+    if (env[x] > env[peakIdx]) peakIdx = x;
+  }
+  for (let x = 0; x < peakIdx; x++) env[x] = env[peakIdx];
+  return env;
+})();
+
+// Extra vertical reach beyond the ballistic arc when landing on a ledge. The
+// body steps up to MAX_STEP (3px, body.ts) as its feet reach a ledge corner,
+// so a jump whose apex stops a hair below the target still clambers onto it.
+// This is what makes near-vertical jumps to a ledge ~MAX_JUMP_HEIGHT+ high land
+// (the apex is ~21.95px, so a clean 22px step would otherwise be rejected).
+const LANDING_CLAMBER = 3;
+
+/**
+ * Whether a jump from a surface can clear `dyUp` pixels of rise over `dx`
+ * pixels of horizontal distance. `dyUp` is positive for an upward target,
+ * zero/negative for a level-or-downward one (always reachable within range).
+ * Distances past the arc's reach return false.
+ */
+export function jumpReaches(dx: number, dyUp: number): boolean {
+  const i = Math.floor(Math.abs(dx));
+  if (i >= JUMP_HEIGHT_AT_DISTANCE.length) {
+    return false;
+  }
+  return dyUp <= JUMP_HEIGHT_AT_DISTANCE[i] + LANDING_CLAMBER;
+}
+
 // Minimum launch xVelocity required to reach a jump's nominal max distance with margin.
 // Below this threshold, the bot should walk longer before launching.
 // Set to 75% of terminal velocity — generous enough that the bot isn't paralysed by tiny

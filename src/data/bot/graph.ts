@@ -5,7 +5,7 @@ import { Terrain } from "../map/terrain";
 import { probeX } from "../map/utils";
 import { Edge, EdgeType } from "./edge";
 import { Node, NodeType } from "./node";
-import { MAX_JUMP_DISTANCE, MAX_JUMP_HEIGHT } from "./physics";
+import { MAX_JUMP_DISTANCE, jumpReaches } from "./physics";
 
 interface EdgeWithCost {
   edge: Edge;
@@ -14,8 +14,9 @@ interface EdgeWithCost {
 
 export class Graph {
   // Use Math.floor for a conservative upper bound: don't let the graph generate
-  // jumps that exceed what the body can actually clear.
-  public static JUMP_HEIGHT = Math.floor(MAX_JUMP_HEIGHT);
+  // jumps that exceed what the body can actually clear. Jump reachability itself
+  // is gated by physics.jumpReaches (couples height and distance); these caps
+  // bound the candidate-pair search and the diagonal climb/ladder range.
   public static JUMP_DISTANCE = MAX_JUMP_DISTANCE;
   public static DIAGONAL_DISTANCE = MAX_JUMP_DISTANCE + 4;
 
@@ -173,9 +174,21 @@ export class Graph {
       yDiff = -yDiff;
       [from, to] = [to, from];
     }
+    // `from` is now the lower node, `to` the upper.
 
     if (this.surface.collidesWithLine(from.x, from.y, to.x, to.y)) {
-      return;
+      // The straight line clips terrain. For a near-vertical jump that's the
+      // wrong model: the bot rises in its own column and steps onto the ledge,
+      // and the diagonal only clips the ledge's wall corner. Allow it if the
+      // vertical rise at the launch column is itself clear. Stays rejected for
+      // shallower jumps/falls/walks, where the straight line is a fair proxy.
+      const steep = yDiff > xDiff;
+      if (
+        !steep ||
+        this.surface.collidesWithLine(from.x, from.y, from.x, to.y)
+      ) {
+        return;
+      }
     }
 
     if (
@@ -185,8 +198,17 @@ export class Graph {
     ) {
       if (xDiff <= Graph.RESOLUTION + 1) {
         to.connect(from, EdgeType.Walk);
+        return;
       }
-      return;
+      // Too far to walk. If both ends are interior (Regular) ground, a long
+      // flat span is already covered by the walk chain between the intermediate
+      // checkpoint nodes, so don't add a redundant jump. But if either end is an
+      // Edge node, this is a gap boundary (a cliff edge facing another ledge at
+      // the same height) — fall through to the jump logic so the bot can clear
+      // it, instead of being forced into a fall-then-jump detour.
+      if (from.type === NodeType.Regular && to.type === NodeType.Regular) {
+        return;
+      }
     }
 
     const distance = getDistance(from.x, from.y, to.x, to.y);
@@ -197,7 +219,11 @@ export class Graph {
       return;
     }
 
-    if (xDiff <= 1) {
+    // Only reject perfectly-stacked nodes (dx 0): their jump cost is infinite
+    // (50/xDiff) and they're degenerate. A 1px horizontal offset is a genuine
+    // near-vertical jump — the bot can hop almost straight up onto a ledge — so
+    // let it through to the jump logic, gated by jumpReaches on height.
+    if (xDiff === 0) {
       return;
     }
 
@@ -210,9 +236,8 @@ export class Graph {
     }
 
     if (
-      yDiff < Graph.JUMP_HEIGHT &&
       (from.y > to.y || distance > 6) &&
-      distance < Graph.DIAGONAL_DISTANCE
+      jumpReaches(xDiff, yDiff)
     ) {
       // The character can only jump from a surface, not from the middle of a
       // ladder (sideways dismount only fires at ladder.left/ladder.right edges
