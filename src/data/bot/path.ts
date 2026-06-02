@@ -11,6 +11,18 @@ import {
 
 const REVERSE_INPUT_SPEED = WALK_TERMINAL_VELOCITY / 2;
 
+// Horizontal speed cap while a Fall edge is current or imminent. Falls are
+// steep drops onto a target platform; arriving fast (especially airborne, after
+// a ramp climb) makes the body sail over the platform into whatever is below.
+// Braking toward this cap keeps the descent near-vertical so the body lands on
+// the intended node instead of overshooting it.
+const SAFE_DESCENT_SPEED = 0.6;
+
+// Max obstacle the body climbs while walking, in pixels — mirrors body.ts's
+// MAX_STEP. Rises up to this are auto-stepped (so the bot walks ramps); taller
+// ones need a hop.
+const MAX_STEP = 3;
+
 export class Path {
   private static WALKING_NEXT_DISTANCE = 12;
   private static BUSTED_TIMER = 120;
@@ -159,6 +171,47 @@ export class Path {
         (distance > this.lastDistance && this.shouldContinuePath());
     }
 
+    // Horizontal run-in jump: a launch node can sit on a down-slope the body
+    // skims over (passing above it, then dropping past it) so it never lands
+    // within arrival range. If the next edge is a roughly-horizontal jump and
+    // the bot has already reached the launch x moving into it at launch speed,
+    // commit now — advance and let the jump fire in motion (within jump-grace
+    // of leaving the ledge) rather than walking off and falling past the node.
+    if (!hasArrived && nextDestination?.type === EdgeType.Jump) {
+      const jdx = Math.abs(nextDestination.to.x - nextDestination.from.x);
+      const jdy = Math.abs(nextDestination.to.y - nextDestination.from.y);
+      const jumpDir = Math.sign(nextDestination.to.x - nextDestination.from.x);
+      const speedAlong = this.character.body.xVelocity * jumpDir;
+      const pastLaunch = (x + 3 - nextDestination.from.x) * jumpDir >= 0;
+      if (jdx >= jdy && speedAlong >= MIN_LAUNCH_SPEED && pastLaunch) {
+        hasArrived = true;
+      }
+    }
+
+    // Don't advance into a Jump edge until the bot is grounded at the launch
+    // node. Otherwise the path index races ahead while the body is still
+    // airborne — e.g. tumbling up a steep staircase — so the jump fires from a
+    // mid-air position and the bot launches from the wrong place.
+    //
+    // Exception: the horizontal run-in jump above — there the bot SHOULD commit
+    // in motion. (Vertical staircase jumps stay gated: they're taken from a
+    // near-standstill and need clean footing.)
+    if (
+      hasArrived &&
+      nextDestination?.type === EdgeType.Jump &&
+      !this.character.body.grounded
+    ) {
+      const jdx = Math.abs(nextDestination.to.x - nextDestination.from.x);
+      const jdy = Math.abs(nextDestination.to.y - nextDestination.from.y);
+      const jumpDir = Math.sign(nextDestination.to.x - nextDestination.from.x);
+      const speedAlong = this.character.body.xVelocity * jumpDir;
+      const runningIntoHorizontalJump =
+        jdx >= jdy && speedAlong >= MIN_LAUNCH_SPEED;
+      if (!runningIntoHorizontalJump) {
+        hasArrived = false;
+      }
+    }
+
     // While on a ladder, suppress the horizontal direction key every 4th tick.
     // characterMovement's dismount-via-edge rule needs a Left/Right rising edge
     // (`!wasRight && rightHeld`); a held key never triggers it.
@@ -169,6 +222,46 @@ export class Path {
       this.ladderTicks = 0;
     }
     const suppressForRisingEdge = onLadder && Math.floor(this.ladderTicks) % 4 === 0;
+
+    // If a Fall edge is current (or the next edge), brake when moving too fast
+    // in the fall direction so the body drops onto the target platform rather
+    // than overshooting it. Applies in-air too (air control still decelerates).
+    const fallAhead =
+      destination.type === EdgeType.Fall
+        ? destination
+        : nextDestination?.type === EdgeType.Fall
+          ? nextDestination
+          : null;
+    let brakeKey: Key | null = null;
+    if (fallAhead) {
+      const fallDir = Math.sign(fallAhead.to.x - fallAhead.from.x) || 1;
+      const speedAlong = this.character.body.xVelocity * fallDir;
+      if (speedAlong > SAFE_DESCENT_SPEED) {
+        brakeKey = fallDir > 0 ? Key.Left : Key.Right;
+      }
+    }
+
+    // Steep/vertical jumps are taken from near-standstill — air-control drifts
+    // the body the small horizontal distance during the arc. Carrying run-up
+    // momentum into them (e.g. after sprinting along a platform into a stair
+    // climb) overshoots the tiny launch nodes and the body races ahead of the
+    // path. Brake excess horizontal speed when a steep jump is current or next.
+    const isSteepJump = (e: Edge | undefined) =>
+      !!e &&
+      e.type === EdgeType.Jump &&
+      Math.abs(e.to.y - e.from.y) > Math.abs(e.to.x - e.from.x);
+    const steepJump = isSteepJump(destination)
+      ? destination
+      : isSteepJump(nextDestination)
+        ? nextDestination
+        : null;
+    if (!brakeKey && steepJump) {
+      const jumpDir = Math.sign(steepJump.to.x - steepJump.from.x) || 1;
+      const speedAlong = this.character.body.xVelocity * jumpDir;
+      if (speedAlong > REVERSE_INPUT_SPEED) {
+        brakeKey = jumpDir > 0 ? Key.Left : Key.Right;
+      }
+    }
 
     if (!hasArrived) {
       // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
@@ -183,6 +276,8 @@ export class Path {
         }
       } else if (suppressForRisingEdge) {
         // intentionally no horizontal input this tick
+      } else if (brakeKey !== null) {
+        commands.push({ type: CommandType.KeyDown, key: brakeKey });
       } else if (
         targetX > x + offset &&
         (sameDirection || this.character.body.xVelocity < REVERSE_INPUT_SPEED)
@@ -229,8 +324,14 @@ export class Path {
         const speedAlong = this.character.body.xVelocity * md;
 
         // Launch when at-or-past the edge AND moving along the path at enough speed.
+        // A steep/vertical jump needs no horizontal run-up (air-control covers the
+        // small offset during the arc), so fire as soon as we're at the launch —
+        // requiring run-up there would fight the steep-jump brake above and stall.
         const atLaunchPoint = pastEdge >= -1;
-        const fastEnough = speedAlong >= MIN_LAUNCH_SPEED;
+        const steep =
+          Math.abs(destination.to.y - destination.from.y) >
+          Math.abs(destination.to.x - destination.from.x);
+        const fastEnough = steep || speedAlong >= MIN_LAUNCH_SPEED;
 
         // Panic-fire fallback: if we've overshot the edge AND are still going
         // forward, jump anyway. Don't fire when reversed — that'd just launch
@@ -244,9 +345,25 @@ export class Path {
         destination.type === EdgeType.Walk &&
         destination.from.y - destination.to.y > 4
       ) {
-        // Walk edge with a step-up taller than the body's auto-step (MAX_STEP=3px).
-        // Need to jump to clear the obstacle.
-        commands.push({ type: CommandType.KeyDown, key: Key.Up });
+        // Rising Walk edge. Press Up (hop / ladder-mount) only when needed:
+        //  - the edge climbs onto a ladder node — Up mounts it, or
+        //  - a step too tall for the body's auto-step (MAX_STEP=3px) sits just
+        //    ahead (probe the terrain, since a gentle node-delta slope can still
+        //    hide a localized ledge).
+        // A gradual ramp is neither, so it's walked up — the auto-step keeps
+        // pace at walk speed and jumping there is wasteful (and builds momentum
+        // that overshoots what follows).
+        const dir = Math.sign(destination.to.x - destination.from.x) || 1;
+        const rX = Math.round(x);
+        const rY = Math.round(y);
+        const stepTooTall = getLevel().collidesWith(
+          this.character.body.mask,
+          rX + dir * 2,
+          rY - MAX_STEP,
+        );
+        if (destination.to.isLadder() || stepTooTall) {
+          commands.push({ type: CommandType.KeyDown, key: Key.Up });
+        }
       }
 
       this.lastX = x;
@@ -261,29 +378,56 @@ export class Path {
       if (!this.done) {
         getLevel().debugLayer.highlightEdge(this.edges[this.pathIndex]);
 
-        // If the new edge is a Jump and we're starting cold (low speed, short distance
-        // to from.x), schedule a backwards pre-roll. We walk away from from.x for
-        // enough frames to build run-up distance.
+        // If the new edge is a Jump, schedule a backwards pre-roll when the bot
+        // can't reach launch speed in the room it has ahead of the launch node.
+        // We walk away from from.x for enough frames to build run-up distance.
         const newEdge = this.edges[this.pathIndex];
         if (newEdge?.type === EdgeType.Jump) {
           const md = Math.sign(newEdge.to.x - newEdge.from.x);
           const distToLaunch = (newEdge.from.x - (x + 3)) * md;
           const speedAlong = this.character.body.xVelocity * md;
 
-          // Only pre-roll when effectively stationary or moving the wrong way.
-          // If already moving forward (even slowly), natural acceleration will
-          // bring us to speed before launch — pre-rolling would waste momentum.
+          // Pre-roll unless we're already fast enough, OR have enough room ahead
+          // of the launch node to accelerate up to speed. The room check (not a
+          // speed-only check) is what matters: when the bot drops directly onto
+          // the launch node before a wide jump (distToLaunch ≤ 0, no room ahead),
+          // natural acceleration can't save it — it would walk straight off the
+          // edge with no run-up. Backing up first is the only way to gain speed.
+          const roomAhead = Math.max(0, distToLaunch);
           if (
-            speedAlong < 0.1 &&
-            distToLaunch > 0 &&
-            distToLaunch < runUpDistanceFromRest()
+            speedAlong < REVERSE_INPUT_SPEED &&
+            roomAhead < runUpDistanceFromRest()
           ) {
-            // Walk backwards until we have enough room to accelerate.
-            const needed = runUpDistanceFromRest() - Math.max(0, distToLaunch);
-            // Convert pixels-to-walk-back into frames by dividing by terminal velocity.
-            // We're walking backwards from rest so the average velocity is lower — this
-            // conversion already accounts for that, no extra margin needed.
-            this.prerollFrames = Math.ceil(needed / WALK_TERMINAL_VELOCITY);
+            // Walk backwards until we have enough room to accelerate. When the
+            // bot is at or past the launch node, roomAhead is 0 and we back up
+            // the full run-up distance.
+            const needed = runUpDistanceFromRest() - roomAhead;
+            // Only back up if there's solid ground beneath the whole reverse
+            // run-up. Otherwise we'd walk off a cliff behind us — e.g. the ledge
+            // of a Fall edge we just descended (the bot lands moving slowly and
+            // would reverse straight back off it). A wall behind is fine: it
+            // reads as solid here and merely caps how far we actually back up.
+            const rX = Math.round(x);
+            const rY = Math.round(y);
+            let safeToBackUp = true;
+            for (let b = 1; b <= Math.ceil(needed); b++) {
+              if (
+                !getLevel().collidesWith(
+                  this.character.body.mask,
+                  rX - md * b,
+                  rY + 1,
+                )
+              ) {
+                safeToBackUp = false;
+                break;
+              }
+            }
+            if (safeToBackUp) {
+              // Convert pixels-to-walk-back into frames by dividing by terminal velocity.
+              // We're walking backwards from rest so the average velocity is lower — this
+              // conversion already accounts for that, no extra margin needed.
+              this.prerollFrames = Math.ceil(needed / WALK_TERMINAL_VELOCITY);
+            }
           }
         }
       }
