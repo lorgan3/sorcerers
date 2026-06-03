@@ -35,6 +35,11 @@ export class Path {
   // Squared arrival radius used only by the stall rescue (~12px) — looser than
   // WALKING_NEXT_DISTANCE so a body wedged just off a node can still advance.
   private static STALL_ARRIVE_DISTANCE = 144;
+  // Horizontal dead-band (px) around the ladder column while climbing. The
+  // climb arrival ignores x, so chasing the exact node x serves no purpose —
+  // it only makes the follower flip Left/Right each tick and jitter the body.
+  // Within this band of the target column, issue no horizontal correction.
+  private static LADDER_COLUMN_DEADZONE = 3;
 
   private pathIndex = 0;
   private lastX = 0;
@@ -377,6 +382,15 @@ export class Path {
         // intentionally no horizontal input this tick
       } else if (brakeKey !== null) {
         commands.push({ type: CommandType.KeyDown, key: brakeKey });
+      } else if (
+        climbingLadder &&
+        Math.abs(x + 3 - targetX) <= Path.LADDER_COLUMN_DEADZONE
+      ) {
+        // Already within the ladder column: no horizontal input. Chasing the
+        // exact node x here only flip-flops Left/Right and jitters the body —
+        // the climb keeps going on Up alone, and a real obstruction still
+        // re-routes via the climb-blocked center-bias (which pushes from
+        // outside this band).
       } else if (
         targetX > x + offset &&
         (sameDirection || this.character.body.xVelocity < REVERSE_INPUT_SPEED)

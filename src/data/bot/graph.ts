@@ -337,6 +337,15 @@ export class Graph {
   }
 
   private createNode(x: number, y: number, type: NodeType) {
+    // A node sits at the standing body's foot centre, so the body's lower edge
+    // is CHARACTER_HEIGHT/2 below it. If that edge is past the killbox level the
+    // bot dies the instant it arrives — skip the node rather than route through
+    // a lethal cell. (Floor nodes already clear this via the build-loop bound;
+    // ladder nodes, placed without the floor's 8px offset, can dip into it.)
+    if (y + Graph.CHARACTER_HEIGHT / 2 > this.killboxLevel) {
+      return undefined;
+    }
+
     const node = new Node(x, y, type);
     this.nodes.set(node.toString(), node);
     return node;
