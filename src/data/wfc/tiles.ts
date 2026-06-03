@@ -136,8 +136,12 @@ export function mirrorTile(tile: WfcTile): WfcTile {
     const swapped: Partial<Record<Direction, string[]>> = {};
     for (const [dir, ids] of Object.entries(tile.mandatoryNeighbors)) {
       const newDir = dir === "left" ? "right" : dir === "right" ? "left" : dir;
-      // Mirrored tiles should only reference mirrored mandatory neighbors
-      swapped[newDir as Direction] = ids!.map((id) => `${id}_m`);
+      // A mirrored tile references the mirror of each neighbor: toggle the _m
+      // suffix so an already-mirrored id maps back to its base, not to a
+      // nonexistent double-mirror.
+      swapped[newDir as Direction] = ids!.map((id) =>
+        id.endsWith("_m") ? id.slice(0, -2) : `${id}_m`,
+      );
     }
     mirrored.mandatoryNeighbors = swapped;
   }
@@ -215,6 +219,10 @@ import tubeBendImg from "./tiles/tubeBend.png";
 import tubeImg from "./tiles/tube.png";
 import ceilingRampImg from "./tiles/ceilingRamp.png";
 import halfCeilingRampImg from "./tiles/halfCeilingRamp.png";
+import highFloorImg from "./tiles/highFloor.png";
+import highFloorHoleImg from "./tiles/highFloorHole.png";
+import highFloorRampImg from "./tiles/highFloorRamp.png";
+import highFloorStepImg from "./tiles/highFloorStep.png";
 
 const BASE_TILES: WfcTile[] = [
   {
@@ -865,6 +873,105 @@ const BASE_TILES: WfcTile[] = [
       ],
     },
     mandatoryNeighbors: { left: ["empty"] },
+  },
+  {
+    id: "highFloor",
+    imagePath: highFloorImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_HIGH,
+      bottom: Socket.EMPTY,
+      left: Socket.SURFACE_HIGH,
+    },
+    weight: 1,
+    density: 0.2,
+  },
+  {
+    id: "highFloorHole",
+    imagePath: highFloorHoleImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_HIGH,
+      bottom: Socket.EMPTY,
+      left: Socket.SURFACE_HIGH,
+    },
+    weight: 1,
+    density: 0.2,
+  },
+  {
+    id: "highFloorRamp",
+    imagePath: highFloorRampImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.EMPTY,
+      bottom: Socket.EMPTY,
+      left: Socket.SURFACE_HIGH,
+    },
+    weight: 1,
+    density: 0.2,
+  },
+  {
+    id: "highFloorLadderTop",
+    imagePath: highFloorHoleImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_HIGH,
+      bottom: Socket.LADDER,
+      left: Socket.SURFACE_HIGH,
+    },
+    weight: 2,
+    density: 0.2,
+    avoidEdge: ["bottom"],
+  },
+  {
+    id: "highFloorHoleLadder",
+    imagePath: highFloorHoleImg,
+    sockets: {
+      top: Socket.LADDER,
+      right: Socket.SURFACE_HIGH,
+      bottom: Socket.LADDER,
+      left: Socket.SURFACE_HIGH,
+    },
+    weight: 2,
+    density: 0.2,
+    avoidEdge: ["top", "bottom"],
+  },
+  {
+    id: "highFloorStep",
+    imagePath: highFloorStepImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_HIGH,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 1,
+    density: 0.2,
+    mandatoryNeighbors: {
+      left: [
+        "floor",
+        "halfRamp",
+        "halfCeiling",
+        "floorBox",
+        "floorStackedBox",
+        "floorLadder",
+        "floorHole",
+        "floorLadderHole",
+        "floorLadderTop",
+        "rampEntry",
+        "emptyRampEntry",
+        "doubleRampFloor",
+        "doubleRampStepFloor",
+        "floorNarrow",
+        "ramp_m",
+        "steepWall_m",
+        "halfDoubleFloorSolid_m",
+        "halfDoubleFloorStep_m",
+        "rampEntry_m",
+        "emptyRampEntry_m",
+        "tubeBend_m",
+      ],
+    },
   },
 ];
 
