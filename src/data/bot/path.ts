@@ -29,6 +29,12 @@ export class Path {
   // Frames spent stationary before nudging Up. Compared against `dt`-accumulated
   // `stuckFrames`, so the threshold is in 60Hz-equivalent frames.
   private static STUCK_FRAMES_THRESHOLD = 2;
+  // A grounded body this many pixels above a Fall's target floor has overshot
+  // onto a wrong platform (one body height — clearly not just a small step).
+  private static WRONG_PLATFORM_DROP = 16;
+  // Squared arrival radius used only by the stall rescue (~12px) — looser than
+  // WALKING_NEXT_DISTANCE so a body wedged just off a node can still advance.
+  private static STALL_ARRIVE_DISTANCE = 144;
 
   private pathIndex = 0;
   private lastX = 0;
@@ -41,6 +47,14 @@ export class Path {
   // we may need to walk backwards first to gain run-up. Counts down by `dt`
   // each tick; when > 0, override the walk direction.
   private prerollFrames = 0;
+
+  // When a Fall overshoots and lands the body on a platform ABOVE the target
+  // floor (e.g. the roof of an overhang flanking a narrow landing), the body
+  // won't descend on its own. These drive a brief sideways nudge toward the
+  // side that drops away, walking the body off the wrong platform so it
+  // continues falling to the target. Counts down by `dt` like prerollFrames.
+  private fallRecoverFrames = 0;
+  private fallRecoverDir: -1 | 1 = -1;
 
   // Frame counter used to toggle horizontal direction input while on a ladder.
   // characterMovement's dismount rule fires on the RISING edge of Left/Right.
@@ -135,7 +149,13 @@ export class Path {
       ? Math.sign(nextDestination.from.x - nextDestination.to.x)
       : direction;
 
-    const offset = direction > 0 ? 6 : 0;
+    // Switch walk direction when the body CENTER (x + 3, half the 6px body)
+    // reaches targetX, so the body settles centered on the node — the same
+    // x + 3 the arrival check uses. A direction-dependent offset (e.g. 6 vs 0)
+    // would rest the body 3px off-centre to one side or the other depending on
+    // travel direction, a left/right bias that walks the body off a narrow
+    // ladder column when it's approached from the "wrong" side.
+    const offset = 3;
 
     // On a ladder mid-climb, body.x is snapped by ladder physics to the
     // ladder's column. The graph node may sit on a different x within that
@@ -212,6 +232,21 @@ export class Path {
       }
     }
 
+    // Stall rescue. Climbing a steep wall, the body rides up the wall face and
+    // ends up a handful of pixels off each node — outside the tight arrival
+    // radius — so the edge never advances and the run stalls into a re-plan.
+    // Once progress has actually stalled (busted timer half-spent), accept a
+    // node the body is merely near. Gated on the stall, so smooth following
+    // still uses the tight radius and is unaffected.
+    if (
+      !hasArrived &&
+      !this.character.body.onLadder &&
+      this.bustedTimer < Path.BUSTED_TIMER / 2 &&
+      distance < Path.STALL_ARRIVE_DISTANCE
+    ) {
+      hasArrived = true;
+    }
+
     // While on a ladder, suppress the horizontal direction key every 4th tick.
     // characterMovement's dismount-via-edge rule needs a Left/Right rising edge
     // (`!wasRight && rightHeld`); a held key never triggers it.
@@ -252,7 +287,12 @@ export class Path {
       Math.abs(e.to.y - e.from.y) > Math.abs(e.to.x - e.from.x);
     const steepJump = isSteepJump(destination)
       ? destination
-      : isSteepJump(nextDestination)
+      : // Only pre-brake for a steep jump that's still ahead when we're WALKING
+        // into it — there the worry is overshooting its tiny launch node. If the
+        // current edge is itself a Jump, it needs its own run-up speed; braking
+        // it down for the steep jump beyond would starve that launch and the bot
+        // would stall on (or overshoot) the current jump.
+        destination.type !== EdgeType.Jump && isSteepJump(nextDestination)
         ? nextDestination
         : null;
     if (!brakeKey && steepJump) {
@@ -263,9 +303,45 @@ export class Path {
       }
     }
 
+    // Detect an overshot Fall that has parked the body on a platform well above
+    // the target floor — it won't descend on its own. Pick the side that drops
+    // away and nudge that way for a few frames so the body walks off the wrong
+    // platform and resumes falling toward the target.
+    if (
+      destination.type === EdgeType.Fall &&
+      !hasArrived &&
+      this.fallRecoverFrames <= 0 &&
+      this.character.body.grounded &&
+      destination.to.y - (y + 8) > Path.WRONG_PLATFORM_DROP
+    ) {
+      const rX = Math.round(x);
+      const rY = Math.round(y);
+      const mask = this.character.body.mask;
+      const leftSolid = getLevel().collidesWith(mask, rX - 4, rY + 1);
+      const rightSolid = getLevel().collidesWith(mask, rX + 4, rY + 1);
+      if (!leftSolid && rightSolid) {
+        this.fallRecoverDir = -1;
+      } else if (!rightSolid && leftSolid) {
+        this.fallRecoverDir = 1;
+      } else {
+        // Both sides open (or both blocked): head back toward the target x —
+        // the body overshot past it, so the drop is the way it came.
+        this.fallRecoverDir = destination.to.x - (x + 3) >= 0 ? 1 : -1;
+      }
+      this.fallRecoverFrames = 8;
+      this.stuckFrames = 0;
+    }
+
     if (!hasArrived) {
-      // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
-      if (this.prerollFrames > 0) {
+      // Walk off a wrong (too-high) landing platform toward the drop side.
+      if (this.fallRecoverFrames > 0) {
+        this.fallRecoverFrames -= dt;
+        commands.push({
+          type: CommandType.KeyDown,
+          key: this.fallRecoverDir < 0 ? Key.Left : Key.Right,
+        });
+        // During pre-roll, walk OPPOSITE to the jump direction to build run-up.
+      } else if (this.prerollFrames > 0) {
         this.prerollFrames -= dt;
         const md = Math.sign(destination.to.x - destination.from.x);
         // md is the JUMP direction; pre-roll walks the OPPOSITE way.
@@ -381,8 +457,18 @@ export class Path {
         // If the new edge is a Jump, schedule a backwards pre-roll when the bot
         // can't reach launch speed in the room it has ahead of the launch node.
         // We walk away from from.x for enough frames to build run-up distance.
+        //
+        // Steep/vertical jumps are excluded: they launch from a near-standstill
+        // (air-control drifts the small horizontal offset during the arc — see
+        // the steep branch above), so they need no run-up. Backing up off a
+        // steep wall's narrow ledge just walks the body off it and fails the
+        // jump, so hug the wall and launch in place instead.
         const newEdge = this.edges[this.pathIndex];
-        if (newEdge?.type === EdgeType.Jump) {
+        const newEdgeSteep =
+          !!newEdge &&
+          Math.abs(newEdge.to.y - newEdge.from.y) >
+            Math.abs(newEdge.to.x - newEdge.from.x);
+        if (newEdge?.type === EdgeType.Jump && !newEdgeSteep) {
           const md = Math.sign(newEdge.to.x - newEdge.from.x);
           const distToLaunch = (newEdge.from.x - (x + 3)) * md;
           const speedAlong = this.character.body.xVelocity * md;
