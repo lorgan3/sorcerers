@@ -232,6 +232,29 @@ export class Path {
       }
     }
 
+    // Vertical-overshoot arrival for steep up-jumps. A steep jump climbs a
+    // near-vertical wall: the body launches into the wall and rides UP its face,
+    // often past the tiny target node (a multi-node climb). It reaches the
+    // node's height pinned at the node's x but keeps riding up, so it never
+    // settles within the tight arrival radius — and by the time the stall
+    // rescue's busted-timer window opens it has overshot above the node, back
+    // outside the radius, so the edge never advances. Accept the node the moment
+    // the foot has risen to/above it while horizontally on top of it; the next
+    // (also steep) edge then continues the climb. Gated to steep up-jumps with
+    // the body essentially at the node's x, so walks/falls/horizontal jumps are
+    // untouched.
+    if (
+      !hasArrived &&
+      destination.type === EdgeType.Jump &&
+      Math.abs(destination.to.y - destination.from.y) >
+        Math.abs(destination.to.x - destination.from.x) &&
+      destination.to.y < destination.from.y &&
+      y + 8 <= destination.to.y &&
+      Math.abs(x + 3 - destination.to.x) <= 4
+    ) {
+      hasArrived = true;
+    }
+
     // Stall rescue. Climbing a steep wall, the body rides up the wall face and
     // ends up a handful of pixels off each node — outside the tight arrival
     // radius — so the edge never advances and the run stalls into a re-plan.
@@ -473,15 +496,24 @@ export class Path {
           const distToLaunch = (newEdge.from.x - (x + 3)) * md;
           const speedAlong = this.character.body.xVelocity * md;
 
-          // Pre-roll unless we're already fast enough, OR have enough room ahead
-          // of the launch node to accelerate up to speed. The room check (not a
-          // speed-only check) is what matters: when the bot drops directly onto
-          // the launch node before a wide jump (distToLaunch ≤ 0, no room ahead),
-          // natural acceleration can't save it — it would walk straight off the
-          // edge with no run-up. Backing up first is the only way to gain speed.
+          // Pre-roll only when the bot lacks run-up AND isn't already moving
+          // INTO the jump. The room check matters: when the bot drops directly
+          // onto the launch node before a wide jump (distToLaunch ≤ 0, no room
+          // ahead) from a standstill, natural acceleration can't save it — it
+          // would walk straight off the edge with no run-up, so it must back up.
+          //
+          // But if the bot arrives already carrying speed toward the jump,
+          // backing up is actively harmful: pre-roll walks the OPPOSITE way, so
+          // it spends its frames reversing that aligned velocity, and at a launch
+          // node sitting on the platform's edge it gains no real room (the
+          // reversal nets ~0 displacement) — leaving the bot to re-accelerate
+          // from rest into a too-short runway and drop into the gap. With
+          // forward momentum the bot instead reaches launch speed within the
+          // launch-tolerance zone, the same way the mirror-image launch succeeds
+          // without pre-rolling. So pre-roll only when stopped or moving AWAY.
           const roomAhead = Math.max(0, distToLaunch);
           if (
-            speedAlong < REVERSE_INPUT_SPEED &&
+            speedAlong <= 0 &&
             roomAhead < runUpDistanceFromRest()
           ) {
             // Walk backwards until we have enough room to accelerate. When the
