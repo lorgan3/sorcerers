@@ -12,6 +12,7 @@ import { MagicMissile } from "./strategies/magicMissile";
 import { ArthurSword } from "./strategies/arthurSword";
 import { Babylon } from "./strategies/babylon";
 import { Meteor } from "./strategies/meteor";
+import { Lightning } from "./strategies/lightning";
 import { StrategyConstructor } from "./strategies/strategy";
 
 export class Targeting {
@@ -31,6 +32,7 @@ export class Targeting {
     ArthurSword,
     Babylon,
     Meteor,
+    Lightning,
   ];
 
   static evaluateStrategies(self: Character) {

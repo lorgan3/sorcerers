@@ -6,6 +6,7 @@ import {
   predictExplosiveDamage,
   predictImpactDamage,
   predictFallDamage,
+  predictChainTargets,
   scoreCandidate,
   collectAllies,
   hasLineOfSight,
@@ -213,5 +214,32 @@ describe("predictFallDamage", () => {
     // SwordTip range = 80px = ~13.33 game units
     expect(predictFallDamage(10, 80 / 6, 4)).toBe(4);
     expect(predictFallDamage(20, 80 / 6, 4)).toBe(0);
+  });
+});
+
+describe("predictChainTargets", () => {
+  it("counts enemies reachable by chaining within range, capped at maxChains", () => {
+    const start: [number, number] = [0, 0];
+    const enemies: [number, number][] = [
+      [200, 0],   // chain 1 from start
+      [400, 0],   // chain 2 (within 260 of #1)
+      [2000, 0],  // far away — unreachable
+    ];
+    expect(predictChainTargets(start, enemies, 260, 5)).toBe(2);
+  });
+
+  it("never exceeds maxChains", () => {
+    const start: [number, number] = [0, 0];
+    const enemies: [number, number][] = Array.from(
+      { length: 10 },
+      (_, i) => [i * 100, 0] as [number, number],
+    );
+    expect(predictChainTargets(start, enemies, 260, 5)).toBe(5);
+  });
+
+  it("returns 0 when there are no reachable enemies", () => {
+    const start: [number, number] = [0, 0];
+    expect(predictChainTargets(start, [], 260, 5)).toBe(0);
+    expect(predictChainTargets(start, [[1000, 0]], 260, 5)).toBe(0);
   });
 });

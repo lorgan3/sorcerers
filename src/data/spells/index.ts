@@ -408,7 +408,7 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   range: "L",
 });
 
-const LIGHTNING = spell(ArcaneCircle, {
+export const LIGHTNING = spell(ArcaneCircle, {
   name: "Judradjim",
   description: "Generate chain lightning",
   elements: [Element.Elemental],
