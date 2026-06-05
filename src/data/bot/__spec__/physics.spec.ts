@@ -3,7 +3,9 @@ import {
   APEX_FRAMES,
   MAX_JUMP_DISTANCE,
   MAX_JUMP_HEIGHT,
+  MAX_SAFE_FALL_HEIGHT,
   MIN_LAUNCH_SPEED,
+  SAFE_LANDING_SPEED,
   WALK_TERMINAL_VELOCITY,
   runUpDistanceFromRest,
 } from "../physics";
@@ -183,5 +185,32 @@ describe("physics.ts mirrors the real Body integration", () => {
     // MAX_JUMP_DISTANCE is floor()'d, so the live landing sits within [D, D + 1).
     expect(landingX).toBeGreaterThanOrEqual(MAX_JUMP_DISTANCE);
     expect(landingX).toBeLessThan(MAX_JUMP_DISTANCE + 1);
+  });
+
+  // Returns body.yVelocity (what onCollide checks for fall damage) at landing.
+  function landingSpeedAfterFalling(height: number): number {
+    const surface = {
+      collidesWith: () => false,
+    } as unknown as CollisionMask;
+    const body = new Body(surface, { mask: {} as unknown as CollisionMask });
+    for (let frame = 0; frame < 200; frame++) {
+      body.tick(1);
+      if (body.precisePosition[1] >= height) {
+        return body.yVelocity;
+      }
+    }
+    return body.yVelocity;
+  }
+
+  it("a fall of MAX_SAFE_FALL_HEIGHT lands within the safe landing speed", () => {
+    expect(landingSpeedAfterFalling(MAX_SAFE_FALL_HEIGHT)).toBeLessThanOrEqual(
+      SAFE_LANDING_SPEED
+    );
+  });
+
+  it("a fall well past MAX_SAFE_FALL_HEIGHT exceeds the safe landing speed", () => {
+    expect(
+      landingSpeedAfterFalling(MAX_SAFE_FALL_HEIGHT + 12)
+    ).toBeGreaterThan(SAFE_LANDING_SPEED);
   });
 });

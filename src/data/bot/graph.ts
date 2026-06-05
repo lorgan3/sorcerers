@@ -19,7 +19,6 @@ export class Graph {
   public static JUMP_DISTANCE = MAX_JUMP_DISTANCE;
   public static DIAGONAL_DISTANCE = MAX_JUMP_DISTANCE + 4;
 
-  public static FALL_LIMIT = 60;
   public static CHARACTER_HEIGHT = 16;
 
   public static RESOLUTION = 12;
