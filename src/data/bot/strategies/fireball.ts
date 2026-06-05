@@ -7,7 +7,7 @@ import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { getLevel, getManager } from "../../context";
 import { Element } from "../../spells/types";
-import { collectAllies, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
+import { collectAllies, hasLineOfSight, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
 
 // PoweredArcaneCircle charges power at 0.1/tick starting from ~0.
 // 50 ticks → power ≈ 5.0, near-max (5.49) — gives Fireball maximum range.
@@ -73,14 +73,7 @@ export class Fireball extends RangedStrategy {
         if (distance > MAX_RANGE_SCREEN || distance < MIN_RANGE_SCREEN) return null;
 
         // LOS check vs terrain.
-        if (
-          surface.collidesWithLine(
-            Math.round(myCenter[0] / 6),
-            Math.round(myCenter[1] / 6),
-            Math.round(targetCenter[0] / 6),
-            Math.round(targetCenter[1] / 6),
-          )
-        ) {
+        if (!hasLineOfSight(surface, myCenter, targetCenter)) {
           return null;
         }
 

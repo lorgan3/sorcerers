@@ -7,7 +7,7 @@ import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { RangedStrategy } from "./rangedStrategy";
-import { scoreCandidate } from "./scoring";
+import { hasLineOfSight, scoreCandidate } from "./scoring";
 
 // Hold M1 for ~60 ticks so the cursor's charge indicator becomes fully visible
 // (matches a normal player cast).
@@ -55,14 +55,7 @@ export class Zoltraak extends RangedStrategy {
         const targetCenter = target.getCenter();
 
         // LOS check vs terrain.
-        if (
-          surface.collidesWithLine(
-            Math.round(myCenter[0] / 6),
-            Math.round(myCenter[1] / 6),
-            Math.round(targetCenter[0] / 6),
-            Math.round(targetCenter[1] / 6),
-          )
-        ) {
+        if (!hasLineOfSight(surface, myCenter, targetCenter)) {
           return null;
         }
 

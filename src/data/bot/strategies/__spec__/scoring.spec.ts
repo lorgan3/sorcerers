@@ -6,7 +6,9 @@ import {
   predictExplosiveDamage,
   scoreCandidate,
   collectAllies,
+  hasLineOfSight,
 } from "../scoring";
+import { CollisionMask } from "../../../collision/collisionMask";
 import { Character } from "../../../entity/character";
 
 describe("predictExplosiveDamage", () => {
@@ -176,5 +178,23 @@ describe("collectAllies", () => {
     const self = makeChar(playerA);
     const allies = collectAllies(self, [self]);
     expect(allies).toEqual([self]);
+  });
+});
+
+describe("hasLineOfSight", () => {
+  it("is true across an empty mask and false through a solid column", () => {
+    // 100x100 game-unit mask, all empty.
+    const empty = CollisionMask.forRect(100, 100);
+    empty.subtract(CollisionMask.forRect(100, 100), 0, 0);
+    expect(
+      hasLineOfSight(empty, [60, 60], [540, 60]) // screen px → game units 10..90
+    ).toBe(true);
+
+    // Fill a vertical wall at game x=50 (the midpoint of the ray).
+    const walled = CollisionMask.forRect(100, 100);
+    walled.subtract(CollisionMask.forRect(100, 100), 0, 0);
+    const wallColumn = CollisionMask.forRect(1, 100);
+    walled.add(wallColumn, 50, 0);
+    expect(hasLineOfSight(walled, [60, 60], [540, 60])).toBe(false);
   });
 });

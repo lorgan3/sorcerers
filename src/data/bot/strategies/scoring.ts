@@ -1,5 +1,6 @@
 import { Character } from "../../entity/character";
 import { Spell, getSpellCost } from "../../spells";
+import { CollisionMask } from "../../collision/collisionMask";
 
 export const COST_FLOOR = 15;
 export const KILL_BONUS = 50;
@@ -89,4 +90,18 @@ export function scoreAOECandidate(args: {
     spellCost: getSpellCost(args.spell),
     currentMana: args.currentMana,
   });
+}
+
+// Coordinates are screen px; the mask works in game units, hence the ÷6.
+export function hasLineOfSight(
+  surface: CollisionMask,
+  fromScreen: [number, number],
+  toScreen: [number, number],
+): boolean {
+  return !surface.collidesWithLine(
+    Math.round(fromScreen[0] / 6),
+    Math.round(fromScreen[1] / 6),
+    Math.round(toScreen[0] / 6),
+    Math.round(toScreen[1] / 6),
+  );
 }
