@@ -2,6 +2,13 @@ import { getDistance } from "../../util/math";
 import { Graph } from "./graph";
 import { Node } from "./node";
 
+const JUMP_COST_FACTOR = 1.2;
+const FALL_COST_FACTOR = 1.4;
+const VERTICAL_JUMP_PENALTY = 50;
+const NARROW_JUMP_XDIFF = 5;
+const FALL_LIMIT_HEIGHT = 72;
+const UNREACHABLE_FALL_COST = 1000;
+
 export enum EdgeType {
   Jump = "jump",
   Fall = "fall",
@@ -14,33 +21,39 @@ export class Edge {
   public to: Node;
   public type: EdgeType;
   public cost: number;
+  public readonly dx: number;
+  public readonly dy: number;
+  public readonly direction: -1 | 0 | 1;
+  public readonly isSteep: boolean;
+  public readonly isVertical: boolean;
 
   constructor(from: Node, to: Node, type: EdgeType) {
     this.from = from;
     this.to = to;
     this.type = type;
 
-    // Use Euclidean (not squared) so g-cost is comparable to the Manhattan
-    // heuristic in Pathfinding; that makes Manhattan slightly inadmissible
-    // (Manhattan ≥ Euclidean), which lets A* run as weighted A* — fewer
-    // node expansions at the cost of occasionally suboptimal paths.
+    this.dx = to.x - from.x;
+    this.dy = to.y - from.y;
+    this.direction = Math.sign(this.dx) as -1 | 0 | 1;
+    this.isSteep = Math.abs(this.dy) > Math.abs(this.dx);
+    this.isVertical = this.dx === 0;
+
     const distance = getDistance(to.x, to.y, from.x, from.y);
     if (type === EdgeType.Walk || type === EdgeType.Climb) {
       this.cost = distance;
     } else if (type === EdgeType.Jump) {
-      const xDiff = Math.abs(to.x - from.x);
-      if (xDiff < 5) {
-        this.cost = distance * 1.2 + 50 / xDiff;
+      const xDiff = Math.abs(this.dx);
+      if (xDiff < NARROW_JUMP_XDIFF) {
+        this.cost = distance * JUMP_COST_FACTOR + VERTICAL_JUMP_PENALTY / xDiff;
       } else {
-        this.cost = distance * 1.2;
+        this.cost = distance * JUMP_COST_FACTOR;
       }
     } else {
-      const heightDiff = Math.abs(to.y - from.y);
-      if (heightDiff > 72) {
-        // Graph fall limit
-        this.cost = 1000 + distance;
+      const heightDiff = Math.abs(this.dy);
+      if (heightDiff > FALL_LIMIT_HEIGHT) {
+        this.cost = UNREACHABLE_FALL_COST + distance;
       } else {
-        this.cost = distance * 1.4;
+        this.cost = distance * FALL_COST_FACTOR;
       }
     }
   }

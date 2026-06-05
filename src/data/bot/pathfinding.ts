@@ -4,18 +4,17 @@ import { Node } from "./node";
 
 interface AStarNode {
   node: Node;
-  gCost: number; // Cost from start to this node
-  hCost: number; // Heuristic cost from this node to goal
-  fCost: number; // Total cost (g + h)
+  gCost: number;
+  hCost: number;
+  fCost: number;
   parent: AStarNode | null;
   edge: Edge | null;
 }
 
 interface HeapEntry {
   aStarNode: AStarNode;
-  // Snapshot of fCost at push time. The canonical fCost lives on the
-  // AStarNode and may have improved since this entry was pushed. On pop,
-  // entries whose snapshot disagrees with the canonical fCost are stale.
+  // Snapshot of fCost at push time; differs from aStarNode.fCost once a
+  // cheaper path is found, marking this entry stale.
   fCost: number;
 }
 
@@ -24,12 +23,8 @@ export type PathResult =
   | { success: false; path: undefined; totalCost: undefined };
 
 export class Pathfinding {
-  /**
-   * Find a path between two nodes using A* with a Manhattan heuristic.
-   * Edge cost is Euclidean (see edge.ts), so the heuristic is mildly
-   * inadmissible — A* runs as weighted A* (fewer expansions, paths
-   * occasionally suboptimal).
-   */
+  // A* with a Manhattan heuristic over Euclidean edge costs, so it runs as
+  // weighted A*: fewer expansions, occasionally suboptimal paths.
   public static findPath(
     startNode: Node,
     goalNode: Node,
@@ -78,9 +73,6 @@ export class Pathfinding {
       iterations++;
 
       const entry = openSet.pop()!;
-      // Stale-entry skip: the AStarNode's fCost improved since this entry
-      // was pushed. The improved entry was pushed separately and will be
-      // popped (or already was) in the correct order.
       if (entry.fCost !== entry.aStarNode.fCost) continue;
 
       const currentNode = entry.aStarNode;
@@ -131,8 +123,6 @@ export class Pathfinding {
           neighborAStarNode.parent = currentNode;
           neighborAStarNode.edge = edge;
 
-          // Push a fresh entry at the new (lower) fCost. The previous
-          // entry, if still on the heap, becomes stale and is skipped.
           openSet.push({
             aStarNode: neighborAStarNode,
             fCost: neighborAStarNode.fCost,
@@ -154,52 +144,48 @@ export class Pathfinding {
     return dx + dy;
   }
 
-  /**
-   * Reconstruct the path from goal to start.
-   *
-   * Walks the parent chain backward and pushes edges in reverse order
-   * (O(1) per push), then reverses once at the end. The preroll detour
-   * is also pushed in reverse (currentEdge → reverseEdge → extraEdge),
-   * which yields the correct forward order [extraEdge, reverseEdge,
-   * currentEdge, ...] after the final reverse.
-   */
   private static reconstructPath(goalNode: AStarNode) {
     const path: Edge[] = [];
     let currentNode: AStarNode | null = goalNode;
 
+    // Walk the parent chain backward, pushing edges in reverse, then reverse
+    // once at the end. Detour edges are pushed in reverse here too so they
+    // land in forward order after the final reverse.
     while (currentNode?.edge) {
       const currentEdge = currentNode.edge;
       path.push(currentEdge);
       currentNode = currentNode.parent;
 
-      // If the direction changed, try first walking a bit further to build
-      // momentum for the upcoming jump.
       if (currentNode?.edge && currentEdge.type === EdgeType.Jump) {
-        const currentDir = Math.sign(currentEdge.from.x - currentEdge.to.x);
-        const newDir = Math.sign(
-          currentNode.edge.from.x - currentNode.edge.to.x
-        );
-        if (currentDir !== newDir) {
-          const extraEdge = Pathfinding.findOppositeEdge(
-            currentEdge,
-            currentDir
-          );
-
-          if (extraEdge) {
-            const reverseEdge = extraEdge.to.edges.find(
-              (edge) => edge.to === currentEdge.from
-            );
-            if (reverseEdge) {
-              path.push(reverseEdge);
-              path.push(extraEdge);
-            }
-          }
-        }
+        this.insertPrerollDetour(currentEdge, currentNode.edge, path);
       }
     }
 
     path.reverse();
     return path;
+  }
+
+  // When the path reverses direction into a jump, walk a bit further first to
+  // build momentum before the jump.
+  private static insertPrerollDetour(
+    currentEdge: Edge,
+    prevEdge: Edge,
+    path: Edge[]
+  ) {
+    const currentDir = Math.sign(currentEdge.from.x - currentEdge.to.x);
+    const newDir = Math.sign(prevEdge.from.x - prevEdge.to.x);
+    if (currentDir === newDir) return;
+
+    const extraEdge = Pathfinding.findOppositeEdge(currentEdge, currentDir);
+    if (!extraEdge) return;
+
+    const reverseEdge = extraEdge.to.edges.find(
+      (edge) => edge.to === currentEdge.from
+    );
+    if (reverseEdge) {
+      path.push(reverseEdge);
+      path.push(extraEdge);
+    }
   }
 
   private static findOppositeEdge(edge: Edge, direction: number) {
