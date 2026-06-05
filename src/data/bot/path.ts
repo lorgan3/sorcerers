@@ -267,7 +267,8 @@ export class Path {
     const fallAhead =
       destination.type === EdgeType.Fall
         ? destination
-        : nextDestination?.type === EdgeType.Fall
+        : destination.type !== EdgeType.Jump &&
+            nextDestination?.type === EdgeType.Fall
           ? nextDestination
           : null;
     if (fallAhead) {
