@@ -1,4 +1,3 @@
-import { Command, CommandType, Key } from "../../controller/controller";
 import { ZOLTRAAK, getSpellCost } from "../../spells";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
@@ -6,7 +5,7 @@ import { Element } from "../../spells/types";
 import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
-import { RangedStrategy } from "./rangedStrategy";
+import { ChargedHoldReleaseCast } from "./chargedHoldReleaseCast";
 import { hasLineOfSight, scoreCandidate } from "./scoring";
 
 // Hold M1 for ~60 ticks so the cursor's charge indicator becomes fully visible
@@ -22,8 +21,14 @@ const BEAM_LENGTH_SCREEN = 912;
 // same hits the engine produces.
 const BEAM_HALF_WIDTH_SCREEN = 48;
 
-export class Zoltraak extends RangedStrategy {
+export class Zoltraak extends ChargedHoldReleaseCast {
   public static spell = ZOLTRAAK;
+
+  protected readonly holdTicks = HOLD_TICKS;
+
+  protected aimPoint(): [number, number] {
+    return this.evaluation!.target.centerScreen;
+  }
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
@@ -145,57 +150,4 @@ export class Zoltraak extends RangedStrategy {
     return perpX * perpX + perpY * perpY <= BEAM_HALF_WIDTH_SCREEN * BEAM_HALF_WIDTH_SCREEN;
   }
 
-  // Hold duration is wall-clock-equivalent (matches a normal player cast), so
-  // accumulate dt rather than counting calls.
-  private castTime = 0;
-  private released = false;
-
-  execute(dt: number): Command[] | null {
-    const justStarted = this.castTime === 0;
-    this.castTime += dt;
-
-    const targetCenter = this.evaluation!.target.centerScreen;
-    const mouseX = targetCenter[0];
-    const mouseY = targetCenter[1];
-
-    // Phase 1: hold M1 with mouse pointed at target so the cursor aims correctly.
-    if (this.castTime < HOLD_TICKS) {
-      const commands: Command[] = [];
-
-      if (justStarted) {
-        commands.push({ type: CommandType.ResetKeys });
-      }
-
-      commands.push(
-        {
-          type: CommandType.MouseMove,
-          x: mouseX,
-          y: mouseY,
-        },
-        { type: CommandType.KeyDown, key: Key.M1 }
-      );
-
-      return commands;
-    }
-
-    // Phase 2: first tick past HOLD_TICKS — release M1 so the cursor fires.
-    if (!this.released) {
-      this.released = true;
-      return [
-        { type: CommandType.KeyUp, key: Key.M1 },
-        {
-          type: CommandType.MouseMove,
-          x: mouseX,
-          y: mouseY,
-        },
-      ];
-    }
-
-    // Phase 3: cast issued; idle for a few frames so the cursor's tick observes M1 released.
-    if (this.castTime > HOLD_TICKS + 5) {
-      return null;
-    }
-
-    return [];
-  }
 }
