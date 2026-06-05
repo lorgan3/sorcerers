@@ -209,7 +209,7 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
   range: "M",
 });
 
-const MAGIC_MISSILE = spell(ApplyCursor, {
+export const MAGIC_MISSILE = spell(ApplyCursor, {
   name: "Vollzanbel",
   description: "Guided missile",
   elements: [Element.Arcane, Element.Life],

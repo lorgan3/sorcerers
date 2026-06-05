@@ -5,6 +5,7 @@ import { Bakuretsu } from "./strategies/bakuretsu";
 import { Fireball } from "./strategies/fireball";
 import { Zoltraak } from "./strategies/zoltraak";
 import { Nephtear } from "./strategies/nephtear";
+import { MagicMissile } from "./strategies/magicMissile";
 import { StrategyConstructor } from "./strategies/strategy";
 
 export class Targeting {
@@ -17,6 +18,7 @@ export class Targeting {
     Fireball,
     Zoltraak,
     Nephtear,
+    MagicMissile,
   ];
 
   static evaluateStrategies(self: Character) {
