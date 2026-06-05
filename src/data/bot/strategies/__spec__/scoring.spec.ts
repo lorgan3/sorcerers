@@ -4,6 +4,8 @@ import {
   KILL_BONUS,
   MIN_RESERVE,
   predictExplosiveDamage,
+  predictImpactDamage,
+  predictFallDamage,
   scoreCandidate,
   collectAllies,
   hasLineOfSight,
@@ -196,5 +198,20 @@ describe("hasLineOfSight", () => {
     const wallColumn = CollisionMask.forRect(1, 100);
     walled.add(wallColumn, 50, 0);
     expect(hasLineOfSight(walled, [60, 60], [540, 60])).toBe(false);
+  });
+});
+
+describe("predictImpactDamage", () => {
+  it("returns full power within 16 game units, else 0", () => {
+    expect(predictImpactDamage(10, 25)).toBe(25);
+    expect(predictImpactDamage(20, 25)).toBe(0);
+  });
+});
+
+describe("predictFallDamage", () => {
+  it("returns full power within the shape range, else 0", () => {
+    // SwordTip range = 80px = ~13.33 game units
+    expect(predictFallDamage(10, 80 / 6, 4)).toBe(4);
+    expect(predictFallDamage(20, 80 / 6, 4)).toBe(0);
   });
 });

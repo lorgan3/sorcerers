@@ -92,6 +92,25 @@ export function scoreAOECandidate(args: {
   });
 }
 
+// ImpactDamage applies a flat `power` to entities within a 16-game-unit circle
+// (no distance falloff — see impactDamage.ts). `distanceGameUnits` is target → impact.
+export function predictImpactDamage(
+  distanceGameUnits: number,
+  power: number,
+): number {
+  return distanceGameUnits <= 16 ? power : 0;
+}
+
+// FallDamage applies a flat `power` within the shape's range (no falloff — see
+// fallDamage.ts). Pass the shape's range in GAME units (engine constants are px; ÷6).
+export function predictFallDamage(
+  distanceGameUnits: number,
+  rangeGameUnits: number,
+  power: number,
+): number {
+  return distanceGameUnits <= rangeGameUnits ? power : 0;
+}
+
 // Coordinates are screen px; the mask works in game units, hence the ÷6.
 export function hasLineOfSight(
   surface: CollisionMask,
