@@ -84,7 +84,7 @@ export function renderGrid(grid: WfcTile[][]): OffscreenCanvas {
 
 // Blur strength, in pixels of Gaussian σ. The old `ctx.filter = "blur(4px)"`
 // was σ ≈ 4; lower = sharper terrain edges. Tune this single knob to taste.
-const BLUR_SIGMA = 3.5;
+const BLUR_SIGMA = 3.0;
 const BLUR_PASSES = 3;
 const SOLID_ALPHA_THRESHOLD = 64;
 

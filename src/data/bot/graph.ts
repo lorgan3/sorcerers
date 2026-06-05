@@ -25,6 +25,13 @@ export class Graph {
 
   public static RESOLUTION = 12;
 
+  // Max horizontal offset (px) for which a jump counts as "near-vertical": the
+  // bot can withhold air-control and rise almost straight up, so the launch
+  // column is a fair proxy for its travel path and a diagonal that only nicks
+  // the ledge corner can still be cleared. Beyond this, the straight line is the
+  // honest model and a clipped line means blocked travel.
+  public static MAX_VERTICAL_JUMP_DRIFT = 2;
+
   private nodes = new Map<string, Node>();
   private surface: CollisionMask;
   private killboxLevel: number;
@@ -177,18 +184,35 @@ export class Graph {
     // `from` is now the lower node, `to` the upper.
 
     if (this.surface.collidesWithLine(from.x, from.y, to.x, to.y)) {
-      // The straight line clips terrain. For a near-vertical jump that's the
-      // wrong model: the bot rises in its own column and steps onto the ledge,
-      // and the diagonal only clips the ledge's wall corner. Allow it if the
-      // vertical rise at the launch column is itself clear. Stays rejected for
-      // shallower jumps/falls/walks, where the straight line is a fair proxy.
-      const steep = yDiff > xDiff;
+      // The straight line clips terrain. Only a genuine near-vertical jump
+      // survives: the bot rises in its own column and clambers onto the ledge,
+      // so the diagonal only nicks the ledge corner. Require a tiny horizontal
+      // offset (launch column ≈ travel path), that the jump can actually reach
+      // the height, and that the vertical rise itself is clear. Falls and wider
+      // diagonals stay rejected — there the straight line is a fair proxy and a
+      // clipped line means the bot would plough through terrain en route.
       if (
-        !steep ||
+        xDiff > Graph.MAX_VERTICAL_JUMP_DRIFT ||
+        !jumpReaches(xDiff, yDiff) ||
         this.surface.collidesWithLine(from.x, from.y, from.x, to.y)
       ) {
         return;
       }
+    }
+
+    // Ladder mount: a floor node just below a ladder can grab it and climb up.
+    // Unlike a plain walk this tolerates an Edge-typed floor (not only Regular)
+    // and a step up to the character's height — the body overlaps the ladder
+    // base, so the bot pulls itself on rather than needing a flush step. Mounts
+    // are upward only (`to` is the upper node); LadderTop stays a walk target.
+    if (
+      to.type === NodeType.Ladder &&
+      !from.isLadder() &&
+      xDiff <= Graph.RESOLUTION + 1 &&
+      yDiff <= Graph.CHARACTER_HEIGHT
+    ) {
+      to.connect(from, EdgeType.Walk);
+      return;
     }
 
     if (
@@ -313,6 +337,15 @@ export class Graph {
   }
 
   private createNode(x: number, y: number, type: NodeType) {
+    // A node sits at the standing body's foot centre, so the body's lower edge
+    // is CHARACTER_HEIGHT/2 below it. If that edge is past the killbox level the
+    // bot dies the instant it arrives — skip the node rather than route through
+    // a lethal cell. (Floor nodes already clear this via the build-loop bound;
+    // ladder nodes, placed without the floor's 8px offset, can dip into it.)
+    if (y + Graph.CHARACTER_HEIGHT / 2 > this.killboxLevel) {
+      return undefined;
+    }
+
     const node = new Node(x, y, type);
     this.nodes.set(node.toString(), node);
     return node;

@@ -54,3 +54,55 @@ describe("Graph.getClosestNode", () => {
     expect(cache.get("5,0")).toBe(a);
   });
 });
+
+describe("Graph.build killbox exclusion", () => {
+  // Solid-free stub surface: probeX finds no floor (so the floor loop makes no
+  // nodes) and every collision query is empty, letting us exercise just the
+  // ladder-node placement against the killbox level.
+  const emptySurface = {
+    width: 200,
+    height: 200,
+    collidesWith: () => false,
+    collidesWithPoint: () => false,
+    collidesWithLine: () => false,
+  };
+
+  function buildWithLadder(killboxLevel: number, ladder: object): Node[] {
+    const graph = Object.create(Graph.prototype) as Graph;
+    Object.assign(graph as unknown as Record<string, unknown>, {
+      surface: emptySurface,
+      killboxLevel,
+      terrain: { ladders: [ladder] },
+      nodes: new Map<string, Node>(),
+      closestNodeCache: new Map<string, Node>(),
+    });
+    graph.build();
+    return graph.getNodes();
+  }
+
+  it("places no ladder node whose standing body would enter the killbox", () => {
+    const killboxLevel = 100;
+    // Single-column ladder (width ≤ RESOLUTION) descending past the killbox.
+    // Ladder nodes step down by RESOLUTION (12) from top: 50, 62, 74, 86, 98.
+    const nodes = buildWithLadder(killboxLevel, {
+      top: 50,
+      bottom: 130,
+      left: 47,
+      right: 55,
+      width: 8,
+      horizontalCenter: 50,
+    });
+
+    expect(nodes.length).toBeGreaterThan(0);
+    for (const node of nodes) {
+      // Body lower edge sits CHARACTER_HEIGHT/2 below the node.
+      expect(node.y + Graph.CHARACTER_HEIGHT / 2).toBeLessThanOrEqual(
+        killboxLevel
+      );
+    }
+    // The safe step (86 + 8 = 94 ≤ 100) survives; the lethal one (98 + 8 = 106)
+    // is dropped.
+    expect(nodes.some((n) => n.y === 86)).toBe(true);
+    expect(nodes.some((n) => n.y === 98)).toBe(false);
+  });
+});
