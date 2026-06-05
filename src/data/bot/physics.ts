@@ -59,6 +59,23 @@ export const MAX_JUMP_HEIGHT = Math.floor(STANDING_JUMP.peakHeight);
 
 export const MAX_JUMP_DISTANCE = Math.floor(RUNNING_JUMP.distance);
 
+// Mirror of BOUNCE_TRIGGER_ACTIVE in character.ts; landing faster deals damage.
+export const SAFE_LANDING_SPEED = 4;
+
+export const MAX_SAFE_FALL_HEIGHT: number = (() => {
+  let s = { x: 0, y: 0, xv: 0, yv: 0 };
+  let safeHeight = 0;
+  for (let frame = 0; frame < 200; frame++) {
+    const next = airStep(s, 0);
+    if (next.yv > SAFE_LANDING_SPEED) {
+      break;
+    }
+    safeHeight = next.y;
+    s = next;
+  }
+  return Math.floor(safeHeight);
+})();
+
 const JUMP_HEIGHT_AT_DISTANCE: number[] = (() => {
   const env: number[] = [0];
   const samples = 24;

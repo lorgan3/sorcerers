@@ -1,12 +1,12 @@
 import { getDistance } from "../../util/math";
 import { Graph } from "./graph";
 import { Node } from "./node";
+import { MAX_SAFE_FALL_HEIGHT } from "./physics";
 
 const JUMP_COST_FACTOR = 1.2;
 const FALL_COST_FACTOR = 1.4;
 const VERTICAL_JUMP_PENALTY = 50;
 const NARROW_JUMP_XDIFF = 5;
-const FALL_LIMIT_HEIGHT = 72;
 const UNREACHABLE_FALL_COST = 1000;
 
 export enum EdgeType {
@@ -50,7 +50,7 @@ export class Edge {
       }
     } else {
       const heightDiff = Math.abs(this.dy);
-      if (heightDiff > FALL_LIMIT_HEIGHT) {
+      if (heightDiff > MAX_SAFE_FALL_HEIGHT) {
         this.cost = UNREACHABLE_FALL_COST + distance;
       } else {
         this.cost = distance * FALL_COST_FACTOR;

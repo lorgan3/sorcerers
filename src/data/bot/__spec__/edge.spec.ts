@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Edge, EdgeType } from "../edge";
 import { Node, NodeType } from "../node";
+import { MAX_SAFE_FALL_HEIGHT } from "../physics";
 
 const node = (x: number, y: number) => new Node(x, y, NodeType.Regular);
 
@@ -76,18 +77,19 @@ describe("Edge", () => {
       ).toBeCloseTo(distance * JUMP_COST_FACTOR + VERTICAL_JUMP_PENALTY / xDiff);
     });
 
-    it("a fall within the height limit costs distance × the fall factor", () => {
-      // |dy| 40 ≤ FALL_LIMIT_HEIGHT (72).
-      expect(new Edge(node(0, 0), node(30, 40), EdgeType.Fall).cost).toBeCloseTo(
-        DISTANCE * FALL_COST_FACTOR
-      );
+    it("a fall within the damage-free height costs distance × the fall factor", () => {
+      const dy = MAX_SAFE_FALL_HEIGHT - 5;
+      const distance = Math.hypot(10, dy);
+      expect(
+        new Edge(node(0, 0), node(10, dy), EdgeType.Fall).cost
+      ).toBeCloseTo(distance * FALL_COST_FACTOR);
     });
 
-    it("a fall past the height limit is heavily penalised", () => {
-      // |dy| 80 > FALL_LIMIT_HEIGHT — effectively unreachable.
-      const distance = Math.hypot(10, 80);
+    it("a fall past the damage-free height is priced as unreachable", () => {
+      const dy = MAX_SAFE_FALL_HEIGHT + 20;
+      const distance = Math.hypot(10, dy);
       expect(
-        new Edge(node(0, 0), node(10, 80), EdgeType.Fall).cost
+        new Edge(node(0, 0), node(10, dy), EdgeType.Fall).cost
       ).toBeCloseTo(1000 + distance);
     });
   });
