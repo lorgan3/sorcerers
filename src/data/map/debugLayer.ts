@@ -8,9 +8,9 @@ export class DebugLayer extends Graphics {
   private graph: Graph | null = null;
 
   draw(graph: Graph) {
+    this.graph = graph;
     if (!isBotDebugEnabled()) return;
     this.clear();
-    this.graph = graph;
 
     for (let node of this.graph.getNodes()) {
       for (let edge of node.edges) {
@@ -41,8 +41,8 @@ export class DebugLayer extends Graphics {
   }
 
   highlightEdge(edge: Edge) {
-    if (!isBotDebugEnabled()) return;
-    this.draw(this.graph!);
+    if (!isBotDebugEnabled() || !this.graph) return;
+    this.draw(this.graph);
     this.drawEdge(edge, 3);
 
     this.circle(edge.from.x * 6, edge.from.y * 6, 10);
