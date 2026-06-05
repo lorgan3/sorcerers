@@ -482,7 +482,7 @@ const MIND_CONTROL = spell(Lock, {
   range: null,
 });
 
-const DORAGATE = spell(ArcaneCircle, {
+export const DORAGATE = spell(ArcaneCircle, {
   name: "Doragate",
   description: "Rocks to bullets",
   elements: [Element.Physical, Element.Arcane],
