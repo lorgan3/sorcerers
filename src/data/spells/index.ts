@@ -289,7 +289,7 @@ const REELSEIDEN = spell(Lock, {
   range: null,
 });
 
-const NEPHTEAR = spell(PoweredArcaneCircle, {
+export const NEPHTEAR = spell(PoweredArcaneCircle, {
   name: "Nephtear",
   description: "Ice spike",
   elements: [Element.Elemental],

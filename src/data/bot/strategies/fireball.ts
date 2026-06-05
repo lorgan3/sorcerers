@@ -28,14 +28,6 @@ const MIN_RANGE_SCREEN = 150;
 export class Fireball extends ChargedHoldReleaseCast {
   public static spell = FIREBALL;
 
-  protected maxRange(): number {
-    return MAX_RANGE_SCREEN;
-  }
-
-  protected minRange(): number {
-    return MIN_RANGE_SCREEN;
-  }
-
   protected readonly holdTicks = HOLD_TICKS;
 
   protected aimPoint(): [number, number] {
