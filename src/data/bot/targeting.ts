@@ -7,6 +7,7 @@ import { Zoltraak } from "./strategies/zoltraak";
 import { Nephtear } from "./strategies/nephtear";
 import { MagicMissile } from "./strategies/magicMissile";
 import { ArthurSword } from "./strategies/arthurSword";
+import { Babylon } from "./strategies/babylon";
 import { StrategyConstructor } from "./strategies/strategy";
 
 export class Targeting {
@@ -21,6 +22,7 @@ export class Targeting {
     Nephtear,
     MagicMissile,
     ArthurSword,
+    Babylon,
   ];
 
   static evaluateStrategies(self: Character) {

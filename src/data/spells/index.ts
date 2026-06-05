@@ -237,7 +237,7 @@ export const MAGIC_MISSILE = spell(ApplyCursor, {
   range: "L",
 });
 
-const BABYLON = spell(ArrowDown, {
+export const BABYLON = spell(ArrowDown, {
   name: "Gates of babylon",
   description: "Drop swords from the sky",
   elements: [Element.Physical],
