@@ -377,7 +377,7 @@ const ROCK = spell(RockCursor, {
   range: null,
 });
 
-const METEOR = spell(Lock, {
+export const METEOR = spell(Lock, {
   name: "Waldgose",
   description: "Cause a meteor to fall from the sky",
   elements: [Element.Physical, Element.Elemental],
