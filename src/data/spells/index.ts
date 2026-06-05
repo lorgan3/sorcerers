@@ -326,7 +326,7 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
   range: "S",
 });
 
-const HAIRPIN = spell(PoweredArcaneCircle, {
+export const HAIRPIN = spell(PoweredArcaneCircle, {
   name: "Balterie",
   description: "Launch several bombs that detonate on contact",
   elements: [Element.Elemental],
