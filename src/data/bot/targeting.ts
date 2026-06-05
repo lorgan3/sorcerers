@@ -4,6 +4,7 @@ import { Melee } from "./strategies/melee";
 import { Bakuretsu } from "./strategies/bakuretsu";
 import { Fireball } from "./strategies/fireball";
 import { Zoltraak } from "./strategies/zoltraak";
+import { Catastravia } from "./strategies/catastravia";
 import { Nephtear } from "./strategies/nephtear";
 import { MagicMissile } from "./strategies/magicMissile";
 import { ArthurSword } from "./strategies/arthurSword";
@@ -20,6 +21,7 @@ export class Targeting {
     Bakuretsu,
     Fireball,
     Zoltraak,
+    Catastravia,
     Nephtear,
     MagicMissile,
     ArthurSword,

@@ -192,7 +192,7 @@ const WINGS = spell(ApplyCursor, {
   range: null,
 });
 
-const CATASTRAVIA = spell(PoweredArcaneCircle, {
+export const CATASTRAVIA = spell(PoweredArcaneCircle, {
   name: "Catastravia",
   description: "Holy missile volley",
   elements: [Element.Life, Element.Arcane],
