@@ -425,7 +425,7 @@ export const LIGHTNING = spell(ArcaneCircle, {
   range: "S",
 });
 
-const ACID = spell(ApplyCursor, {
+export const ACID = spell(ApplyCursor, {
   name: "Reamstroha",
   description: "Spray a stream of acid",
   elements: [Element.Life],
