@@ -13,10 +13,9 @@ interface EdgeWithCost {
 }
 
 export class Graph {
-  // Use Math.floor for a conservative upper bound: don't let the graph generate
-  // jumps that exceed what the body can actually clear. Jump reachability itself
-  // is gated by physics.jumpReaches (couples height and distance); these caps
-  // bound the candidate-pair search and the diagonal climb/ladder range.
+  // Conservative upper bounds on jump reach (Math.floor in physics). These cap
+  // the candidate-pair search and the diagonal climb/ladder range; actual jump
+  // reachability is gated by physics.jumpReaches (couples height and distance).
   public static JUMP_DISTANCE = MAX_JUMP_DISTANCE;
   public static DIAGONAL_DISTANCE = MAX_JUMP_DISTANCE + 4;
 
@@ -26,11 +25,12 @@ export class Graph {
   public static RESOLUTION = 12;
 
   // Max horizontal offset (px) for which a jump counts as "near-vertical": the
-  // bot can withhold air-control and rise almost straight up, so the launch
-  // column is a fair proxy for its travel path and a diagonal that only nicks
-  // the ledge corner can still be cleared. Beyond this, the straight line is the
-  // honest model and a clipped line means blocked travel.
+  // bot can rise almost straight up, so a diagonal that only nicks the ledge
+  // corner can still be cleared. Beyond this a clipped line means blocked travel.
   public static MAX_VERTICAL_JUMP_DRIFT = 2;
+
+  private static WALK_REACH = Graph.RESOLUTION + 1;
+  private static MIN_FALL_DISTANCE = 6;
 
   private nodes = new Map<string, Node>();
   private surface: CollisionMask;
@@ -39,18 +39,22 @@ export class Graph {
 
   constructor(private terrain: Terrain) {
     this.surface = terrain.characterMask;
-    // Nodes at or below the killbox level are useless — a character standing
-    // there dies the moment it arrives. The killbox rises during the game but
-    // the graph is rebuilt every turn, so this reflects the current level.
+    // The killbox rises during the game but the graph is rebuilt every turn, so
+    // this reflects the current level; nodes at or below it are lethal.
     this.killboxLevel = terrain.killbox.level;
   }
 
   build() {
     this.closestNodeCache.clear();
+    this.placeFloorNodes();
+    this.placeLadderNodes();
+    this.connectNodes();
+  }
+
+  private placeFloorNodes() {
     for (let x = 0; x < this.surface.width - 6; x++) {
       let y = probeX(this.surface, x);
 
-      // Check vertical rows
       while (y < this.surface.height && y < this.killboxLevel) {
         let offset = 0;
 
@@ -82,7 +86,9 @@ export class Graph {
         y = probeX(this.surface, x, y);
       }
     }
+  }
 
+  private placeLadderNodes() {
     for (const ladder of this.terrain.ladders) {
       const multi = ladder.width > Graph.RESOLUTION;
       let y = Math.floor(ladder.top);
@@ -124,15 +130,12 @@ export class Graph {
         top = false;
       }
     }
-
-    this.connectNodes();
   }
 
   private connectNodes() {
     const RESOLUTION = Graph.RESOLUTION;
     const K = Math.ceil(Graph.JUMP_DISTANCE / RESOLUTION);
 
-    // 1D x-bin all nodes.
     const bins = new Map<number, Node[]>();
     for (const node of this.nodes.values()) {
       const bin = Math.floor(node.x / RESOLUTION);
@@ -144,18 +147,14 @@ export class Graph {
       arr.push(node);
     }
 
-    // Iterate bins in sorted order so cross-bin pairs are visited from low
-    // to high — each pair appears exactly once (own bin via index ordering,
-    // higher bins via forward-only scan).
+    // Sorted bins + forward-only cross-bin scan ensure each pair is visited once.
     const sortedBins = [...bins.keys()].sort((a, b) => a - b);
     for (const bin of sortedBins) {
       const here = bins.get(bin)!;
       for (let i = 0; i < here.length; i++) {
-        // Within-bin pairs (j > i so each pair visited once).
         for (let j = i + 1; j < here.length; j++) {
           this.tryConnect(here[i], here[j]);
         }
-        // Cross-bin pairs to the next K bins.
         for (let offset = 1; offset <= K; offset++) {
           const neighbours = bins.get(bin + offset);
           if (!neighbours) continue;
@@ -183,70 +182,24 @@ export class Graph {
     }
     // `from` is now the lower node, `to` the upper.
 
-    if (this.surface.collidesWithLine(from.x, from.y, to.x, to.y)) {
-      // The straight line clips terrain. Only a genuine near-vertical jump
-      // survives: the bot rises in its own column and clambers onto the ledge,
-      // so the diagonal only nicks the ledge corner. Require a tiny horizontal
-      // offset (launch column ≈ travel path), that the jump can actually reach
-      // the height, and that the vertical rise itself is clear. Falls and wider
-      // diagonals stay rejected — there the straight line is a fair proxy and a
-      // clipped line means the bot would plough through terrain en route.
-      if (
-        xDiff > Graph.MAX_VERTICAL_JUMP_DRIFT ||
-        !jumpReaches(xDiff, yDiff) ||
-        this.surface.collidesWithLine(from.x, from.y, from.x, to.y)
-      ) {
-        return;
-      }
-    }
-
-    // Ladder mount: a floor node just below a ladder can grab it and climb up.
-    // Unlike a plain walk this tolerates an Edge-typed floor (not only Regular)
-    // and a step up to the character's height — the body overlaps the ladder
-    // base, so the bot pulls itself on rather than needing a flush step. Mounts
-    // are upward only (`to` is the upper node); LadderTop stays a walk target.
-    if (
-      to.type === NodeType.Ladder &&
-      !from.isLadder() &&
-      xDiff <= Graph.RESOLUTION + 1 &&
-      yDiff <= Graph.CHARACTER_HEIGHT
-    ) {
-      to.connect(from, EdgeType.Walk);
+    if (this.lineOfSightBlocked(from, to, xDiff, yDiff)) {
       return;
     }
 
-    if (
-      xDiff > 0 &&
-      (from.type === NodeType.Regular || to.type === NodeType.Regular) &&
-      Math.abs(yDiff) < Graph.RESOLUTION + 1
-    ) {
-      if (xDiff <= Graph.RESOLUTION + 1) {
-        to.connect(from, EdgeType.Walk);
-        return;
-      }
-      // Too far to walk. If both ends are interior (Regular) ground, a long
-      // flat span is already covered by the walk chain between the intermediate
-      // checkpoint nodes, so don't add a redundant jump. But if either end is an
-      // Edge node, this is a gap boundary (a cliff edge facing another ledge at
-      // the same height) — fall through to the jump logic so the bot can clear
-      // it, instead of being forced into a fall-then-jump detour.
-      if (from.type === NodeType.Regular && to.type === NodeType.Regular) {
-        return;
-      }
+    if (this.tryLadderMount(from, to, xDiff, yDiff)) {
+      return;
+    }
+
+    const walkResult = this.tryWalkOrShortGap(from, to, xDiff, yDiff);
+    if (walkResult === "connected" || walkResult === "rejected") {
+      return;
     }
 
     const distance = getDistance(from.x, from.y, to.x, to.y);
-    if (from.type === NodeType.Ladder && to.isLadder()) {
-      if (distance < Graph.DIAGONAL_DISTANCE) {
-        to.connect(from, EdgeType.Climb);
-      }
+    if (this.tryClimb(from, to, distance)) {
       return;
     }
 
-    // Only reject perfectly-stacked nodes (dx 0): their jump cost is infinite
-    // (50/xDiff) and they're degenerate. A 1px horizontal offset is a genuine
-    // near-vertical jump — the bot can hop almost straight up onto a ledge — so
-    // let it through to the jump logic, gated by jumpReaches on height.
     if (xDiff === 0) {
       return;
     }
@@ -259,27 +212,100 @@ export class Graph {
       [from, to] = [to, from];
     }
 
+    this.tryJumpOrFall(from, to, xDiff, yDiff, distance);
+  }
+
+  // The straight line clips terrain. Only a genuine near-vertical jump survives:
+  // a tiny horizontal offset, a jump that reaches the height, and a clear
+  // vertical rise. Falls and wider diagonals stay rejected.
+  private lineOfSightBlocked(
+    from: Node,
+    to: Node,
+    xDiff: number,
+    yDiff: number
+  ) {
+    if (!this.surface.collidesWithLine(from.x, from.y, to.x, to.y)) {
+      return false;
+    }
+    return (
+      xDiff > Graph.MAX_VERTICAL_JUMP_DRIFT ||
+      !jumpReaches(xDiff, yDiff) ||
+      this.surface.collidesWithLine(from.x, from.y, from.x, to.y)
+    );
+  }
+
+  // A floor node just below a ladder can grab it and climb up. Tolerates an
+  // Edge-typed floor and a step up to character height — the body overlaps the
+  // ladder base. Upward only; LadderTop stays a walk target.
+  private tryLadderMount(from: Node, to: Node, xDiff: number, yDiff: number) {
     if (
-      (from.y > to.y || distance > 6) &&
+      to.type === NodeType.Ladder &&
+      !from.isLadder() &&
+      xDiff <= Graph.WALK_REACH &&
+      yDiff <= Graph.CHARACTER_HEIGHT
+    ) {
+      to.connect(from, EdgeType.Walk);
+      return true;
+    }
+    return false;
+  }
+
+  // "connected": a walk edge was added. "rejected": a long flat Regular/Regular
+  // span (covered by the walk chain between checkpoints). "passthrough": fall
+  // through to jump/fall logic (e.g. an Edge gap boundary).
+  private tryWalkOrShortGap(
+    from: Node,
+    to: Node,
+    xDiff: number,
+    yDiff: number
+  ): "connected" | "rejected" | "passthrough" {
+    if (
+      xDiff > 0 &&
+      (from.type === NodeType.Regular || to.type === NodeType.Regular) &&
+      Math.abs(yDiff) < Graph.WALK_REACH
+    ) {
+      if (xDiff <= Graph.WALK_REACH) {
+        to.connect(from, EdgeType.Walk);
+        return "connected";
+      }
+      if (from.type === NodeType.Regular && to.type === NodeType.Regular) {
+        return "rejected";
+      }
+    }
+    return "passthrough";
+  }
+
+  private tryClimb(from: Node, to: Node, distance: number) {
+    if (from.type === NodeType.Ladder && to.isLadder()) {
+      if (distance < Graph.DIAGONAL_DISTANCE) {
+        to.connect(from, EdgeType.Climb);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  private tryJumpOrFall(
+    from: Node,
+    to: Node,
+    xDiff: number,
+    yDiff: number,
+    distance: number
+  ) {
+    if (
+      (from.y > to.y || distance > Graph.MIN_FALL_DISTANCE) &&
       jumpReaches(xDiff, yDiff)
     ) {
-      // The character can only jump from a surface, not from the middle of a
-      // ladder (sideways dismount only fires at ladder.left/ladder.right edges
-      // per characterMovement.ts). LadderTop is exempt: it's the floor the
-      // character emerges onto at the top of the ladder.
+      // The character can only jump from a surface, not the middle of a ladder
+      // (sideways dismount only fires at ladder edges). LadderTop is exempt.
       if (from.type === NodeType.Ladder || to.type === NodeType.Ladder) {
         return;
       }
       to.connect(from, EdgeType.Jump);
     } else {
       if (to.type === NodeType.Ladder) {
-        // Ladders should be climbed, not abused as fall targets.
-        // After the swap above, `to` can be either side:
-        //   - upper ladder + lower non-ladder: a fall edge would go DOWN
-        //     off the ladder. Reject — the bot should climb down instead.
-        //   - lower ladder + upper non-ladder: a fall edge would land ON
-        //     the ladder. Allow shallow drops only; steep diagonals are
-        //     better handled by the ladder itself.
+        // Ladders should be climbed, not abused as fall targets. Reject falls
+        // that go down off a ladder; allow only shallow drops onto a ladder.
         const ladderIsBelow = to.y > from.y;
         if (!ladderIsBelow) {
           return;
@@ -337,11 +363,7 @@ export class Graph {
   }
 
   private createNode(x: number, y: number, type: NodeType) {
-    // A node sits at the standing body's foot centre, so the body's lower edge
-    // is CHARACTER_HEIGHT/2 below it. If that edge is past the killbox level the
-    // bot dies the instant it arrives — skip the node rather than route through
-    // a lethal cell. (Floor nodes already clear this via the build-loop bound;
-    // ladder nodes, placed without the floor's 8px offset, can dip into it.)
+    // Skip nodes whose body lower edge sits past the killbox — lethal on arrival.
     if (y + Graph.CHARACTER_HEIGHT / 2 > this.killboxLevel) {
       return undefined;
     }

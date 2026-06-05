@@ -30,12 +30,10 @@ export class Node {
     );
     this.edges.push(toEdge);
 
-    // If we fall somewhere we can't jump back.
     if (type === EdgeType.Fall) {
       return;
     }
 
-    // Can't jump from the middle of a ladder
     if (other.type === NodeType.Ladder && type !== EdgeType.Climb) {
       return;
     }
@@ -58,18 +56,6 @@ export class Node {
 
   getDirection(other: Node) {
     return Math.sign(this.x - other.x);
-  }
-
-  getLeftNode() {
-    return this.edges
-      .filter((edge) => edge.to.getDirection(this) === -1)
-      .sort((a, b) => a.cost - b.cost)[0]?.to;
-  }
-
-  getRightNode() {
-    return this.edges
-      .filter((edge) => edge.to.getDirection(this) === 1)
-      .sort((a, b) => a.cost - b.cost)[0]?.to;
   }
 
   static createKey(x: number, y: number) {

@@ -15,6 +15,8 @@ import {
   JUMP_STRENGTH,
   SPEED,
 } from "../../collision/physicsConstants";
+import { Body } from "../../collision/body";
+import { CollisionMask } from "../../collision/collisionMask";
 
 /**
  * One in-air integration step matching body.ts:tick(dt=1) exactly:
@@ -127,5 +129,59 @@ describe("physics", () => {
     expect(reached).toBe(true);
     expect(distance).toBeGreaterThan(0);
     expect(distance).toBeLessThan(50);
+  });
+});
+
+// The reimplemented airStep above (and physics.ts itself) are hand-copies of
+// body.ts's integration. These tests pin the derived constants to the REAL Body
+// so that a future change to body.ts's tick can't silently drift the bot's
+// jump-reach math while every other physics test stays green.
+describe("physics.ts mirrors the real Body integration", () => {
+  function airborneBody(launchX: number): Body {
+    // An empty surface — every collision query misses — so the body flies a pure
+    // ballistic arc, exactly the regime physics.ts models.
+    const surface = {
+      collidesWith: () => false,
+    } as unknown as CollisionMask;
+    const body = new Body(surface, { mask: {} as unknown as CollisionMask });
+    body.yVelocity = -JUMP_STRENGTH;
+    body.xVelocity = launchX;
+    return body;
+  }
+
+  it("standing-jump apex frame and height match a live Body", () => {
+    const body = airborneBody(0);
+    let peak = 0;
+    let apexFrame = 0;
+    for (let frame = 1; frame <= 120; frame++) {
+      body.tick(1);
+      const [, y] = body.precisePosition;
+      if (y < peak) {
+        peak = y;
+        apexFrame = frame;
+      }
+      if (y > 0) break;
+    }
+    expect(apexFrame).toBe(APEX_FRAMES);
+    // MAX_JUMP_HEIGHT is floor()'d, so the live peak sits within [H, H + 1).
+    expect(-peak).toBeGreaterThanOrEqual(MAX_JUMP_HEIGHT);
+    expect(-peak).toBeLessThan(MAX_JUMP_HEIGHT + 1);
+  });
+
+  it("running-jump distance matches a live Body holding air-control", () => {
+    const body = airborneBody(WALK_TERMINAL_VELOCITY);
+    let landingX = 0;
+    for (let frame = 1; frame <= 200; frame++) {
+      body.walk(1);
+      body.tick(1);
+      const [x, y] = body.precisePosition;
+      if (y > 0) {
+        landingX = x;
+        break;
+      }
+    }
+    // MAX_JUMP_DISTANCE is floor()'d, so the live landing sits within [D, D + 1).
+    expect(landingX).toBeGreaterThanOrEqual(MAX_JUMP_DISTANCE);
+    expect(landingX).toBeLessThan(MAX_JUMP_DISTANCE + 1);
   });
 });
