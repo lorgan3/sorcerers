@@ -90,7 +90,7 @@ export const FIREBALL = spell(PoweredArcaneCircle, {
   range: "M",
 });
 
-const ARTHUR_SWORD = spell(ArrowDown, {
+export const ARTHUR_SWORD = spell(ArrowDown, {
   name: "Excalibur",
   description: "Giant sword from the sky",
   elements: [Element.Physical, Element.Arcane],
