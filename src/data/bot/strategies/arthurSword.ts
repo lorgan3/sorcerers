@@ -1,12 +1,11 @@
 import { ARTHUR_SWORD } from "../../spells";
-import { getLevel, getManager } from "../../context";
+import { getManager } from "../../context";
 import { Character } from "../../entity/character";
 import { Element } from "../../spells/types";
-import { Cluster } from "../cluster";
 import { Graph } from "../graph";
-import { Evaluation } from "./strategy";
 import { ChargedHoldReleaseCast } from "./chargedHoldReleaseCast";
-import { collectAllies, predictFallDamage, scoreAOECandidate } from "./scoring";
+import { predictFallDamage } from "./scoring";
+import { evaluateAOECandidates } from "./aoeEvaluation";
 import { probeX } from "../../map/utils";
 
 const HOLD_TICKS = 30;
@@ -33,45 +32,19 @@ export class ArthurSword extends ChargedHoldReleaseCast {
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
-    const myNode = graph.getClosestNode(...this.character.bodyFootCenter);
-    const currentMana = this.character.player.mana;
-    const surface = getLevel().terrain.collisionMask;
     const arcane = getManager().getElementValue(Element.Arcane);
 
-    const everyone: Character[] = [];
-    getLevel().withNearbyEntities(
-      ...this.character.getCenter(),
-      SWORD_RANGE_GAME * 6 * 4,
-      (entity) => {
-        if (entity instanceof Character) everyone.push(entity);
-      },
-    );
-    const allies = collectAllies(this.character, everyone);
-
-    this.evaluations = targets
-      .slice(0, 3)
-      .map((target) => {
+    this.evaluations = evaluateAOECandidates(this.character, graph, targets, {
+      spell: ArthurSword.spell,
+      reachScreen: SWORD_RANGE_GAME * 6,
+      // The sword lands on the ground under the target, not at its body center.
+      impactPoint: (target, { surface }) => {
         const feetXGame = target.body.position[0] + 3;
         const feetYGame = probeX(surface, feetXGame);
-        const predict = (c: Character) => {
-          const [sx, sy] = c.getCenter();
-          const d = Math.sqrt(
-            (sx / 6 - feetXGame) ** 2 + (sy / 6 - feetYGame) ** 2,
-          );
-          return ArthurSword.predictDamageAt(d, arcane);
-        };
-        const value = scoreAOECandidate({
-          target,
-          allies,
-          predictDamage: predict,
-          spell: ArthurSword.spell,
-          currentMana,
-        });
-        if (value === null) return null;
-        return { target: Cluster.onCharacter(target), value, to: [myNode] };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b!.value - a!.value) as Evaluation[];
+        return [feetXGame * 6, feetYGame * 6];
+      },
+      predictDamageAt: (d) => ArthurSword.predictDamageAt(d, arcane),
+    });
 
     this.getNextEvaluation();
   }

@@ -1,12 +1,11 @@
 import { METEOR } from "../../spells";
-import { getLevel, getManager } from "../../context";
+import { getManager } from "../../context";
 import { Character } from "../../entity/character";
 import { Element } from "../../spells/types";
-import { Cluster } from "../cluster";
 import { Graph } from "../graph";
-import { Evaluation } from "./strategy";
 import { ChargedHoldReleaseCast } from "./chargedHoldReleaseCast";
-import { collectAllies, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
+import { predictExplosiveDamage } from "./scoring";
+import { evaluateAOECandidates } from "./aoeEvaluation";
 import { probeX } from "../../map/utils";
 
 // Long enough for the Lock cursor to acquire the target before release — the Lock
@@ -36,45 +35,19 @@ export class Meteor extends ChargedHoldReleaseCast {
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
-    const myNode = graph.getClosestNode(...this.character.bodyFootCenter);
-    const currentMana = this.character.player.mana;
-    const surface = getLevel().terrain.collisionMask;
     const elemental = getManager().getElementValue(Element.Elemental);
 
-    const everyone: Character[] = [];
-    getLevel().withNearbyEntities(
-      ...this.character.getCenter(),
-      BLAST_RADIUS_GAME * 6 * 5,
-      (entity) => {
-        if (entity instanceof Character) everyone.push(entity);
-      },
-    );
-    const allies = collectAllies(this.character, everyone);
-
-    this.evaluations = targets
-      .slice(0, 3)
-      .map((target) => {
+    this.evaluations = evaluateAOECandidates(this.character, graph, targets, {
+      spell: Meteor.spell,
+      reachScreen: (BLAST_RADIUS_GAME + 5) * 6,
+      // The meteor lands on the ground under the target, not at its body center.
+      impactPoint: (target, { surface }) => {
         const feetXGame = target.body.position[0] + 3;
         const feetYGame = probeX(surface, feetXGame);
-        const predict = (c: Character) => {
-          const [sx, sy] = c.getCenter();
-          const d = Math.sqrt(
-            (sx / 6 - feetXGame) ** 2 + (sy / 6 - feetYGame) ** 2,
-          );
-          return Meteor.predictDamageAt(d, elemental);
-        };
-        const value = scoreAOECandidate({
-          target,
-          allies,
-          predictDamage: predict,
-          spell: Meteor.spell,
-          currentMana,
-        });
-        if (value === null) return null;
-        return { target: Cluster.onCharacter(target), value, to: [myNode] };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b!.value - a!.value) as Evaluation[];
+        return [feetXGame * 6, feetYGame * 6];
+      },
+      predictDamageAt: (d) => Meteor.predictDamageAt(d, elemental),
+    });
 
     this.getNextEvaluation();
   }

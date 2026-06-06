@@ -1,11 +1,9 @@
 import { BABYLON } from "../../spells";
-import { getLevel } from "../../context";
 import { Character } from "../../entity/character";
-import { Cluster } from "../cluster";
 import { Graph } from "../graph";
-import { Evaluation } from "./strategy";
 import { ChargedHoldReleaseCast } from "./chargedHoldReleaseCast";
-import { collectAllies, predictFallDamage, scoreAOECandidate } from "./scoring";
+import { predictFallDamage } from "./scoring";
+import { evaluateAOECandidates } from "./aoeEvaluation";
 import { probeX } from "../../map/utils";
 
 const HOLD_TICKS = 30;
@@ -32,44 +30,18 @@ export class Babylon extends ChargedHoldReleaseCast {
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
-    const myNode = graph.getClosestNode(...this.character.bodyFootCenter);
-    const currentMana = this.character.player.mana;
-    const surface = getLevel().terrain.collisionMask;
 
-    const everyone: Character[] = [];
-    getLevel().withNearbyEntities(
-      ...this.character.getCenter(),
-      SMALL_SWORD_RANGE_GAME * 6 * 4,
-      (entity) => {
-        if (entity instanceof Character) everyone.push(entity);
-      },
-    );
-    const allies = collectAllies(this.character, everyone);
-
-    this.evaluations = targets
-      .slice(0, 3)
-      .map((target) => {
+    this.evaluations = evaluateAOECandidates(this.character, graph, targets, {
+      spell: Babylon.spell,
+      reachScreen: SMALL_SWORD_RANGE_GAME * 6,
+      // The swords land on the ground under the target, not at its body center.
+      impactPoint: (target, { surface }) => {
         const feetXGame = target.body.position[0] + 3;
         const feetYGame = probeX(surface, feetXGame);
-        const predict = (c: Character) => {
-          const [sx, sy] = c.getCenter();
-          const d = Math.sqrt(
-            (sx / 6 - feetXGame) ** 2 + (sy / 6 - feetYGame) ** 2,
-          );
-          return Babylon.predictDamageAt(d);
-        };
-        const value = scoreAOECandidate({
-          target,
-          allies,
-          predictDamage: predict,
-          spell: Babylon.spell,
-          currentMana,
-        });
-        if (value === null) return null;
-        return { target: Cluster.onCharacter(target), value, to: [myNode] };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b!.value - a!.value) as Evaluation[];
+        return [feetXGame * 6, feetYGame * 6];
+      },
+      predictDamageAt: (d) => Babylon.predictDamageAt(d),
+    });
 
     this.getNextEvaluation();
   }
