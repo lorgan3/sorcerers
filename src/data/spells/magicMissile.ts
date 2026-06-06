@@ -103,6 +103,10 @@ export class MagicMissile extends Container implements Syncable {
     return [this.position.x + 24, this.position.y + 24];
   }
 
+  get owner(): Character {
+    return this.character;
+  }
+
   private onCollide = (x: number, y: number) => {
     this._die(x, y);
   };

@@ -1,18 +1,13 @@
 import { Command, CommandType, Key } from "../../controller/controller";
 import { MAGIC_MISSILE } from "../../spells";
+import { MagicMissile as MagicMissileEntity } from "../../spells/magicMissile";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
-import { EntityType, isSpawnableEntity, Spawnable } from "../../entity/types";
 import { Element } from "../../spells/types";
-import { Cluster } from "../cluster";
 import { Graph } from "../graph";
-import { Evaluation } from "./strategy";
 import { RangedStrategy } from "./rangedStrategy";
-import {
-  collectAllies,
-  predictExplosiveDamage,
-  scoreAOECandidate,
-} from "./scoring";
+import { predictExplosiveDamage } from "./scoring";
+import { evaluateAOECandidates } from "./aoeEvaluation";
 import { chooseGuidanceHeading } from "./guidanceHeading";
 
 const BLAST_RADIUS_GAME = 16;
@@ -22,6 +17,10 @@ const SAFETY_TIMEOUT = 600; // ticks; bail if the missile never reports gone
 // Screen-px vector length used to turn a steering heading into a mouse position —
 // long enough that the missile tracks the angle, not the cursor's distance.
 const AIM_PROJECTION_SCREEN = 300;
+// target.centerScreen is the foot center (≈ ground level for a grounded character).
+// Aim at the body instead so the missile flies above the terrain and strikes the
+// enemy's body, rather than nosediving into the ground at our own feet. Empirical.
+const AIM_LIFT_PIXELS = 24;
 
 export class MagicMissile extends RangedStrategy {
   public static spell = MAGIC_MISSILE;
@@ -39,65 +38,34 @@ export class MagicMissile extends RangedStrategy {
 
   evaluate(graph: Graph, targets: Character[]) {
     this.graph = graph;
-    const myCenter = this.character.getCenter();
-    const myNode = graph.getClosestNode(...this.character.bodyFootCenter);
-    const currentMana = this.character.player.mana;
     const arcane = getManager().getElementValue(Element.Arcane);
 
-    const everyone: Character[] = [];
-    getLevel().withNearbyEntities(
-      myCenter[0],
-      myCenter[1],
-      MAX_RANGE_SCREEN,
-      (entity) => {
-        if (entity instanceof Character) everyone.push(entity);
+    this.evaluations = evaluateAOECandidates(this.character, graph, targets, {
+      spell: MagicMissile.spell,
+      reachScreen: (BLAST_RADIUS_GAME + 5) * 6,
+      // No LOS check — the missile steers around terrain, so range alone gates viability.
+      impactPoint: (target, { myCenter }) => {
+        const center = target.getCenter();
+        if (Math.hypot(center[0] - myCenter[0], center[1] - myCenter[1]) > MAX_RANGE_SCREEN) {
+          return null;
+        }
+        return center;
       },
-    );
-    const allies = collectAllies(this.character, everyone);
-
-    // No LOS check — the missile steers around terrain, so range alone gates viability.
-    this.evaluations = targets
-      .slice(0, 3)
-      .map((target) => {
-        const targetCenter = target.getCenter();
-        const dx = targetCenter[0] - myCenter[0];
-        const dy = targetCenter[1] - myCenter[1];
-        if (Math.sqrt(dx * dx + dy * dy) > MAX_RANGE_SCREEN) return null;
-
-        const impactXGame = targetCenter[0] / 6;
-        const impactYGame = targetCenter[1] / 6;
-        const predict = (c: Character) => {
-          const [sx, sy] = c.getCenter();
-          const d = Math.sqrt(
-            (sx / 6 - impactXGame) ** 2 + (sy / 6 - impactYGame) ** 2,
-          );
-          return MagicMissile.predictDamageAt(d, arcane);
-        };
-
-        const value = scoreAOECandidate({
-          target,
-          allies,
-          predictDamage: predict,
-          spell: MagicMissile.spell,
-          currentMana,
-        });
-        if (value === null) return null;
-
-        return { target: Cluster.onCharacter(target), value, to: [myNode] };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b!.value - a!.value) as Evaluation[];
+      predictDamageAt: (d) => MagicMissile.predictDamageAt(d, arcane),
+    });
 
     this.getNextEvaluation();
   }
 
   private fired = false;
   private castTime = 0;
+  private cleanedUp = false;
 
-  private findMissile(): Spawnable | null {
-    let found: Spawnable | null = null;
+  // Only our own missile, so a missile fired by another bot/player isn't steered.
+  private findMissile(): MagicMissileEntity | null {
+    let found: MagicMissileEntity | null = null;
     getLevel().entities.forEach((entity) => {
-      if (isSpawnableEntity(entity) && entity.type === EntityType.MagicMissile) {
+      if (entity instanceof MagicMissileEntity && entity.owner === this.character) {
         found = entity;
       }
     });
@@ -107,7 +75,8 @@ export class MagicMissile extends RangedStrategy {
   execute(dt: number): Command[] | null {
     this.castTime += dt;
     const surface = getLevel().terrain.collisionMask;
-    const [targetX, targetY] = this.evaluation!.target.centerScreen;
+    const [targetX, footY] = this.evaluation!.target.centerScreen;
+    const targetY = footY - AIM_LIFT_PIXELS;
 
     if (!this.fired) {
       this.fired = true;
@@ -120,6 +89,12 @@ export class MagicMissile extends RangedStrategy {
 
     const missile = this.findMissile();
     if (!missile || this.castTime > SAFETY_TIMEOUT) {
+      // Release M1 once before finishing so we don't leave the button held down for
+      // the next strategy (it would steer/charge whatever comes next).
+      if (!this.cleanedUp) {
+        this.cleanedUp = true;
+        return [{ type: CommandType.ResetKeys }];
+      }
       return null;
     }
 
