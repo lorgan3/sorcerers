@@ -1,4 +1,3 @@
-import { Command, CommandType, Key } from "../../controller/controller";
 import { BAKURETSU } from "../../spells";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
@@ -6,17 +5,12 @@ import { Element } from "../../spells/types";
 import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
-import { RangedStrategy } from "./rangedStrategy";
 import { collectAllies, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
 import { probeX } from "../../map/utils";
+import { InstantPressCast } from "./instantPressCast";
 
-export class Bakuretsu extends RangedStrategy {
+export class Bakuretsu extends InstantPressCast {
   public static spell = BAKURETSU;
-
-  // Bakuretsu falls from the sky regardless of the bot's position — no LOS needed.
-  protected requiresLineOfSight(): boolean {
-    return false;
-  }
 
   // Bakuretsu blast radius in game units (matches ExplosiveDamage radius in the spell).
   private static BLAST_RADIUS_GAME = 32;
@@ -87,37 +81,10 @@ export class Bakuretsu extends RangedStrategy {
     return predictExplosiveDamage(distance, Bakuretsu.BLAST_RADIUS_GAME, damageMultiplier);
   }
 
-  private pressed = false;
-  private castTime = 0;
-
-  execute(dt: number): Command[] | null {
-    this.castTime += dt;
-
+  protected aimPoint(): [number, number] {
     const [centerX, centerY] = this.evaluation!.target.centerScreen;
-
-    // First call: press M1 (cursor's x maps to projectile spawn x).
-    // Add a small random horizontal offset so explosions don't always land directly on
-    // the target's head — gives the bot a bit of imperfection / variety.
-    // The y component is irrelevant for Bakuretsu (always falls from sky).
-    if (!this.pressed) {
-      this.pressed = true;
-      const offsetX = (Math.random() - 0.5) * 60; // ±30 screen px = ±5 game units
-      return [
-        { type: CommandType.ResetKeys },
-        {
-          type: CommandType.MouseMove,
-          x: centerX + offsetX,
-          y: centerY,
-        },
-        { type: CommandType.KeyPress, key: Key.M1 },
-      ];
-    }
-
-    // Cast already issued — idle a few frames so the cursor's tick observes it, then finish.
-    if (this.castTime > 5) {
-      return null;
-    }
-
-    return [];
+    // ±30 screen px horizontal jitter so explosions don't always land dead-center.
+    const offsetX = (Math.random() - 0.5) * 60;
+    return [centerX + offsetX, centerY];
   }
 }

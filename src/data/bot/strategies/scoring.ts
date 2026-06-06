@@ -1,5 +1,6 @@
 import { Character } from "../../entity/character";
 import { Spell, getSpellCost } from "../../spells";
+import { CollisionMask } from "../../collision/collisionMask";
 
 export const COST_FLOOR = 15;
 export const KILL_BONUS = 50;
@@ -89,4 +90,68 @@ export function scoreAOECandidate(args: {
     spellCost: getSpellCost(args.spell),
     currentMana: args.currentMana,
   });
+}
+
+// ImpactDamage applies a flat `power` to entities within a 16-game-unit circle
+// (no distance falloff — see impactDamage.ts). `distanceGameUnits` is target → impact.
+export function predictImpactDamage(
+  distanceGameUnits: number,
+  power: number,
+): number {
+  return distanceGameUnits <= 16 ? power : 0;
+}
+
+// FallDamage applies a flat `power` within the shape's range (no falloff — see
+// fallDamage.ts). Pass the shape's range in GAME units (engine constants are px; ÷6).
+export function predictFallDamage(
+  distanceGameUnits: number,
+  rangeGameUnits: number,
+  power: number,
+): number {
+  return distanceGameUnits <= rangeGameUnits ? power : 0;
+}
+
+// Greedy estimate of how many enemies a chain effect reaches: from `start`, repeatedly
+// hop to the nearest not-yet-hit enemy within `chainRange` (screen px), up to `maxChains`.
+export function predictChainTargets(
+  start: [number, number],
+  enemiesScreen: [number, number][],
+  chainRange: number,
+  maxChains: number,
+): number {
+  const remaining = enemiesScreen.slice();
+  let from = start;
+  let hits = 0;
+  while (hits < maxChains && remaining.length > 0) {
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const dx = remaining[i][0] - from[0];
+      const dy = remaining[i][1] - from[1];
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= chainRange && d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    }
+    if (bestIdx === -1) break;
+    from = remaining[bestIdx];
+    remaining.splice(bestIdx, 1);
+    hits++;
+  }
+  return hits;
+}
+
+// Coordinates are screen px; the mask works in game units, hence the ÷6.
+export function hasLineOfSight(
+  surface: CollisionMask,
+  fromScreen: [number, number],
+  toScreen: [number, number],
+): boolean {
+  return !surface.collidesWithLine(
+    Math.round(fromScreen[0] / 6),
+    Math.round(fromScreen[1] / 6),
+    Math.round(toScreen[0] / 6),
+    Math.round(toScreen[1] / 6),
+  );
 }

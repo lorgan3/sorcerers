@@ -4,6 +4,16 @@ import { Melee } from "./strategies/melee";
 import { Bakuretsu } from "./strategies/bakuretsu";
 import { Fireball } from "./strategies/fireball";
 import { Zoltraak } from "./strategies/zoltraak";
+import { Catastravia } from "./strategies/catastravia";
+import { Hairpin } from "./strategies/hairpin";
+import { Doragate } from "./strategies/doragate";
+import { Nephtear } from "./strategies/nephtear";
+import { MagicMissile } from "./strategies/magicMissile";
+import { ArthurSword } from "./strategies/arthurSword";
+import { Babylon } from "./strategies/babylon";
+import { Meteor } from "./strategies/meteor";
+import { Lightning } from "./strategies/lightning";
+import { Acid } from "./strategies/acid";
 import { StrategyConstructor } from "./strategies/strategy";
 
 export class Targeting {
@@ -15,6 +25,16 @@ export class Targeting {
     Bakuretsu,
     Fireball,
     Zoltraak,
+    Catastravia,
+    Hairpin,
+    Doragate,
+    Nephtear,
+    MagicMissile,
+    ArthurSword,
+    Babylon,
+    Meteor,
+    Lightning,
+    Acid,
   ];
 
   static evaluateStrategies(self: Character) {

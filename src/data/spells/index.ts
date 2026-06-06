@@ -90,7 +90,7 @@ export const FIREBALL = spell(PoweredArcaneCircle, {
   range: "M",
 });
 
-const ARTHUR_SWORD = spell(ArrowDown, {
+export const ARTHUR_SWORD = spell(ArrowDown, {
   name: "Excalibur",
   description: "Giant sword from the sky",
   elements: [Element.Physical, Element.Arcane],
@@ -192,7 +192,7 @@ const WINGS = spell(ApplyCursor, {
   range: null,
 });
 
-const CATASTRAVIA = spell(PoweredArcaneCircle, {
+export const CATASTRAVIA = spell(PoweredArcaneCircle, {
   name: "Catastravia",
   description: "Holy missile volley",
   elements: [Element.Life, Element.Arcane],
@@ -209,7 +209,7 @@ const CATASTRAVIA = spell(PoweredArcaneCircle, {
   range: "M",
 });
 
-const MAGIC_MISSILE = spell(ApplyCursor, {
+export const MAGIC_MISSILE = spell(ApplyCursor, {
   name: "Vollzanbel",
   description: "Guided missile",
   elements: [Element.Arcane, Element.Life],
@@ -237,7 +237,7 @@ const MAGIC_MISSILE = spell(ApplyCursor, {
   range: "L",
 });
 
-const BABYLON = spell(ArrowDown, {
+export const BABYLON = spell(ArrowDown, {
   name: "Gates of babylon",
   description: "Drop swords from the sky",
   elements: [Element.Physical],
@@ -289,7 +289,7 @@ const REELSEIDEN = spell(Lock, {
   range: null,
 });
 
-const NEPHTEAR = spell(PoweredArcaneCircle, {
+export const NEPHTEAR = spell(PoweredArcaneCircle, {
   name: "Nephtear",
   description: "Ice spike",
   elements: [Element.Elemental],
@@ -326,7 +326,7 @@ const WIND_BLAST = spell(PoweredArcaneCircle, {
   range: "S",
 });
 
-const HAIRPIN = spell(PoweredArcaneCircle, {
+export const HAIRPIN = spell(PoweredArcaneCircle, {
   name: "Balterie",
   description: "Launch several bombs that detonate on contact",
   elements: [Element.Elemental],
@@ -377,7 +377,7 @@ const ROCK = spell(RockCursor, {
   range: null,
 });
 
-const METEOR = spell(Lock, {
+export const METEOR = spell(Lock, {
   name: "Waldgose",
   description: "Cause a meteor to fall from the sky",
   elements: [Element.Physical, Element.Elemental],
@@ -408,7 +408,7 @@ const FIRE_WHEEL = spell(PoweredArcaneCircle, {
   range: "L",
 });
 
-const LIGHTNING = spell(ArcaneCircle, {
+export const LIGHTNING = spell(ArcaneCircle, {
   name: "Judradjim",
   description: "Generate chain lightning",
   elements: [Element.Elemental],
@@ -425,7 +425,7 @@ const LIGHTNING = spell(ArcaneCircle, {
   range: "S",
 });
 
-const ACID = spell(ApplyCursor, {
+export const ACID = spell(ApplyCursor, {
   name: "Reamstroha",
   description: "Spray a stream of acid",
   elements: [Element.Life],
@@ -482,7 +482,7 @@ const MIND_CONTROL = spell(Lock, {
   range: null,
 });
 
-const DORAGATE = spell(ArcaneCircle, {
+export const DORAGATE = spell(ArcaneCircle, {
   name: "Doragate",
   description: "Rocks to bullets",
   elements: [Element.Physical, Element.Arcane],

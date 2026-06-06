@@ -4,9 +4,14 @@ import {
   KILL_BONUS,
   MIN_RESERVE,
   predictExplosiveDamage,
+  predictImpactDamage,
+  predictFallDamage,
+  predictChainTargets,
   scoreCandidate,
   collectAllies,
+  hasLineOfSight,
 } from "../scoring";
+import { CollisionMask } from "../../../collision/collisionMask";
 import { Character } from "../../../entity/character";
 
 describe("predictExplosiveDamage", () => {
@@ -176,5 +181,65 @@ describe("collectAllies", () => {
     const self = makeChar(playerA);
     const allies = collectAllies(self, [self]);
     expect(allies).toEqual([self]);
+  });
+});
+
+describe("hasLineOfSight", () => {
+  it("is true across an empty mask and false through a solid column", () => {
+    // 100x100 game-unit mask, all empty.
+    const empty = CollisionMask.forRect(100, 100);
+    empty.subtract(CollisionMask.forRect(100, 100), 0, 0);
+    expect(
+      hasLineOfSight(empty, [60, 60], [540, 60]) // screen px → game units 10..90
+    ).toBe(true);
+
+    // Fill a vertical wall at game x=50 (the midpoint of the ray).
+    const walled = CollisionMask.forRect(100, 100);
+    walled.subtract(CollisionMask.forRect(100, 100), 0, 0);
+    const wallColumn = CollisionMask.forRect(1, 100);
+    walled.add(wallColumn, 50, 0);
+    expect(hasLineOfSight(walled, [60, 60], [540, 60])).toBe(false);
+  });
+});
+
+describe("predictImpactDamage", () => {
+  it("returns full power within 16 game units, else 0", () => {
+    expect(predictImpactDamage(10, 25)).toBe(25);
+    expect(predictImpactDamage(20, 25)).toBe(0);
+  });
+});
+
+describe("predictFallDamage", () => {
+  it("returns full power within the shape range, else 0", () => {
+    // SwordTip range = 80px = ~13.33 game units
+    expect(predictFallDamage(10, 80 / 6, 4)).toBe(4);
+    expect(predictFallDamage(20, 80 / 6, 4)).toBe(0);
+  });
+});
+
+describe("predictChainTargets", () => {
+  it("counts enemies reachable by chaining within range, capped at maxChains", () => {
+    const start: [number, number] = [0, 0];
+    const enemies: [number, number][] = [
+      [200, 0],   // chain 1 from start
+      [400, 0],   // chain 2 (within 260 of #1)
+      [2000, 0],  // far away — unreachable
+    ];
+    expect(predictChainTargets(start, enemies, 260, 5)).toBe(2);
+  });
+
+  it("never exceeds maxChains", () => {
+    const start: [number, number] = [0, 0];
+    const enemies: [number, number][] = Array.from(
+      { length: 10 },
+      (_, i) => [i * 100, 0] as [number, number],
+    );
+    expect(predictChainTargets(start, enemies, 260, 5)).toBe(5);
+  });
+
+  it("returns 0 when there are no reachable enemies", () => {
+    const start: [number, number] = [0, 0];
+    expect(predictChainTargets(start, [], 260, 5)).toBe(0);
+    expect(predictChainTargets(start, [[1000, 0]], 260, 5)).toBe(0);
   });
 });

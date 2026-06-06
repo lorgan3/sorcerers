@@ -1,13 +1,12 @@
-import { Command, CommandType, Key } from "../../controller/controller";
 import { FIREBALL } from "../../spells";
-import { RangedStrategy } from "./rangedStrategy";
+import { ChargedHoldReleaseCast } from "./chargedHoldReleaseCast";
 import { Character } from "../../entity/character";
 import { Cluster } from "../cluster";
 import { Graph } from "../graph";
 import { Evaluation } from "./strategy";
 import { getLevel, getManager } from "../../context";
 import { Element } from "../../spells/types";
-import { collectAllies, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
+import { collectAllies, hasLineOfSight, predictExplosiveDamage, scoreAOECandidate } from "./scoring";
 
 // PoweredArcaneCircle charges power at 0.1/tick starting from ~0.
 // 50 ticks → power ≈ 5.0, near-max (5.49) — gives Fireball maximum range.
@@ -26,15 +25,14 @@ const MAX_RANGE_SCREEN = 600;
 // distance, prefer Melee.
 const MIN_RANGE_SCREEN = 150;
 
-export class Fireball extends RangedStrategy {
+export class Fireball extends ChargedHoldReleaseCast {
   public static spell = FIREBALL;
 
-  protected maxRange(): number {
-    return MAX_RANGE_SCREEN;
-  }
+  protected readonly holdTicks = HOLD_TICKS;
 
-  protected minRange(): number {
-    return MIN_RANGE_SCREEN;
+  protected aimPoint(): [number, number] {
+    const [centerX, centerY] = this.evaluation!.target.centerScreen;
+    return [centerX, centerY - AIM_LIFT_PIXELS];
   }
 
   private static BLAST_RADIUS_GAME = 16;
@@ -73,14 +71,7 @@ export class Fireball extends RangedStrategy {
         if (distance > MAX_RANGE_SCREEN || distance < MIN_RANGE_SCREEN) return null;
 
         // LOS check vs terrain.
-        if (
-          surface.collidesWithLine(
-            Math.round(myCenter[0] / 6),
-            Math.round(myCenter[1] / 6),
-            Math.round(targetCenter[0] / 6),
-            Math.round(targetCenter[1] / 6),
-          )
-        ) {
+        if (!hasLineOfSight(surface, myCenter, targetCenter)) {
           return null;
         }
 
@@ -127,58 +118,4 @@ export class Fireball extends RangedStrategy {
     return predictExplosiveDamage(distance, Fireball.BLAST_RADIUS_GAME, damageMultiplier);
   }
 
-  // PoweredArcaneCircle charges power by ~0.1 * dt per tick, so total charge is
-  // proportional to accumulated time, not call count. Track dt so we hold for the
-  // same wall-clock duration regardless of frame rate.
-  private castTime = 0;
-  private released = false;
-
-  execute(dt: number): Command[] | null {
-    const justStarted = this.castTime === 0;
-    this.castTime += dt;
-
-    const [centerX, centerY] = this.evaluation!.target.centerScreen;
-    const mouseX = centerX;
-    const mouseY = centerY - AIM_LIFT_PIXELS;
-
-    // Phase 1: hold M1 with mouse pointed slightly above target.
-    if (this.castTime < HOLD_TICKS) {
-      const commands: Command[] = [];
-
-      if (justStarted) {
-        commands.push({ type: CommandType.ResetKeys });
-      }
-
-      commands.push(
-        {
-          type: CommandType.MouseMove,
-          x: mouseX,
-          y: mouseY,
-        },
-        { type: CommandType.KeyDown, key: Key.M1 }
-      );
-
-      return commands;
-    }
-
-    // Phase 2: first tick past HOLD_TICKS — release M1 to fire at the charged power.
-    if (!this.released) {
-      this.released = true;
-      return [
-        { type: CommandType.KeyUp, key: Key.M1 },
-        {
-          type: CommandType.MouseMove,
-          x: mouseX,
-          y: mouseY,
-        },
-      ];
-    }
-
-    // Phase 3: idle so the cursor observes M1 released.
-    if (this.castTime > HOLD_TICKS + 5) {
-      return null;
-    }
-
-    return [];
-  }
 }
