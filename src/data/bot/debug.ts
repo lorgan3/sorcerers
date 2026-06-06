@@ -9,6 +9,10 @@ export function isBotDebugEnabled(): boolean {
   return enabled;
 }
 
+export function setBotDebugEnabled(value: boolean) {
+  setEnabled(value);
+}
+
 function setEnabled(value: boolean) {
   enabled = value;
   const layer = getContextOrNull()?.level?.debugLayer;

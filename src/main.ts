@@ -85,6 +85,13 @@ const routes: RouteRecordRaw[] = [
   },
 ];
 
+if (import.meta.env.DEV) {
+  routes.push({
+    path: "/test/pathfinding",
+    component: () => import("./components/pages/PathfindingTest.vue"),
+  });
+}
+
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
