@@ -37,6 +37,18 @@ The character spawns and immediately starts walking the planned path. The camera
 
 Append `?mirror=1` (`#/test/pathfinding?mirror=1`) to run the whole fixture mirrored left↔right — map, spawn, and target are all reflected across `MAP_WIDTH`, so the follower is exercised right-to-left as well. A directional bias in the path logic shows up as a different result (re-plans / stuck) than the unmirrored run.
 
+### Running a real map
+
+`?map=<Name>` swaps the zigzag fixture for a bundled map (the keys in `defaultMaps`, `src/util/assets/constants.ts`): `Playground`, `Castle`, `Stadium`, `Mario_World`, `Office`. The map is loaded straight from its `.png` (`Map.fromBlob`), so its baked-in collision mask is used — no browser-dependent mask blur.
+
+`?pair=N` (default `0`) picks the spawn/target from the map's own spawn locations (`Terrain.getSpawnLocations`), sorted by x: pair `N` runs the Nth-leftmost spawn to the Nth-rightmost, i.e. a left↔right crossing. Successive `N` probe different crossings.
+
+```
+# open http://localhost:3000/#/test/pathfinding?map=Stadium&pair=1
+```
+
+Real maps run without a Server, so the engine's killbox damage never fires — instead the harness detects a fall into the killbox itself and ends the run `died` (see below). Some pairs sit on disconnected platforms; those end `no-path` and are expected (the spawn picker doesn't guarantee connectivity). Note the route uses hash-based routing, so a `?map=`/`?pair=` change needs a full reload (`location.reload()`), not just a hash edit, to re-run.
+
 ## Reading the console logs
 
 Open devtools → console. You'll see lines like:
@@ -49,7 +61,7 @@ Open devtools → console. You'll see lines like:
 …
 [pathfinding-test] re-plan #1: 284 new edges from (362.8, 597.0)
 …
-[pathfinding-test] stuck:   1310 frames, 21.83s sim time, 342/587 edges, at (792.0, 612.0)
+[pathfinding-test] stuck 1310 frames 342/587 edges 3 re-plans at (792.0, 612.0), 21.83s sim time
 ```
 
 (Numbers are illustrative of a current run — the follower doesn't complete this map, so it re-plans and ends `stuck`; an `arrived` run ends with that line instead. The `<completed>/<total>` total grows past the initial 310 because each re-plan appends its edges.)
@@ -77,14 +89,15 @@ A new edge logs **only when the path advances** (`Path.remainingNodes` decreases
 - `re-plan #N: <k> new edges from (x, y)` — a fresh path was found; following resumes.
 - `re-plan FAILED: success=false …` — no path from the current node; the run ends with a `stuck` summary next.
 
-**Result line** (terminal — only after re-planning is exhausted):
+**Result line** (terminal — only after re-planning is exhausted). All carry `<r> re-plans`: `0 re-plans` is a clean run; a higher count means the follower stalled and recovered that many times, so a stalling run is no longer hidden behind a final `arrived`.
 
-- `arrived: <frames> frames, <s>s sim time, <completed>/<total> edges` — full completion.
-- `stuck:   <frames> frames, <s>s sim time, <completed>/<total> edges, at (x, y)` — `Path.bustedTimer` (in `path.ts`) ran out (~2 sim seconds of no edge advance) and re-planning couldn't recover. `(x, y)` is the body's precise position when the run ended — useful for going back to the screenshot and seeing where the bot wedged.
+- `arrived <frames> frames <completed>/<total> edges <r> re-plans` — full completion. Confirmed only after the bot stays clear of the killbox for `SETTLE_FRAMES` (90) past the last edge.
+- `stuck <frames> frames <completed>/<total> edges <r> re-plans at (x, y)` — `Path.bustedTimer` (in `path.ts`) ran out (~2 sim seconds of no edge advance) and re-planning couldn't recover. `(x, y)` is the body's precise position when the run ended.
+- `died <frames> frames <completed>/<total> edges <r> re-plans at (x, y)` — the body fell into the killbox (during the path or the post-arrival settle window). Real maps only — the zigzag fixture has no killbox.
+
+`<completed>/<total>` total grows past the initial path length because each re-plan appends its edges. The console also appends `, <s>s sim time` (sim time = `frames / 60`; one frame = one Pixi `deltaTime` of 1.0 at 60 fps).
 
 The terminal result is also written to the DOM (a `[data-test-status]` element, text prefixed with `pathfinding-test:done`) so automation can wait on it without a timeout — see below.
-
-Sim time = `frames / 60`. One frame = one Pixi `deltaTime` of 1.0 at 60 fps.
 
 ## Iterating on the node follower
 
@@ -114,10 +127,10 @@ The test page is a good candidate for fully-automated regression: deterministic 
 When Playwright MCP is available, a single recipe drives the whole loop (verified with the current MCP plugin):
 
 1. **Start the dev server** — `yarn dev` (background; serves `localhost:3000`). Skip if already running.
-2. **Navigate** — `browser_navigate("http://localhost:3000/#/test/pathfinding")`.
-3. **Wait for the run to finish** — `browser_wait_for({ text: "pathfinding-test:done" })`. The harness writes the terminal result into a `[data-test-status]` DOM element prefixed with `pathfinding-test:done` (`… arrived …`, `… stuck …`, or `… no-path`), so `wait_for` resolves the moment the run ends — no fixed sleep, regardless of how long re-planning takes or how big the map grows.
+2. **Navigate** — `browser_navigate("http://localhost:3000/#/test/pathfinding")` (append `?map=…&pair=…` for a real map). The route is hash-based, so when only the query changes between runs follow the navigate with `browser_evaluate(() => location.reload())` to force a fresh run.
+3. **Wait for the run to finish** — `browser_wait_for({ text: "pathfinding-test:done" })`. The harness writes the terminal result into a `[data-test-status]` DOM element prefixed with `pathfinding-test:done` (`… arrived …`, `… stuck …`, `… died …`, or `… no-path`), so `wait_for` resolves the moment the run ends — no fixed sleep, regardless of how long re-planning takes or how big the map grows. (The zigzag fixture runs ~108 s of sim time, so it can exceed a single 30 s `wait_for`; call `wait_for` again.)
 4. **Read the result** — either read the DOM element directly (`browser_evaluate(() => document.querySelector("[data-test-status]").textContent)`), or pull the full per-edge trace from `browser_console_messages({ level: "info" })` and filter for `[pathfinding-test]`.
-5. **Parse the result line** — from the DOM marker: `/pathfinding-test:done (arrived|stuck|no-path)(?: (\d+) frames (\d+)\/(\d+) edges(?: at \(([\d.]+), ([\d.]+)\))?)?/`. Or, from the console, the `arrived`/`stuck` lines: `/arrived:\s+(\d+) frames, ([\d.]+)s sim time, (\d+)\/(\d+) edges/` and `/stuck:\s+(\d+) frames, ([\d.]+)s sim time, (\d+)\/(\d+) edges, at \(([\d.]+), ([\d.]+)\)/`.
+5. **Parse the result line** — from the DOM marker: `/pathfinding-test:done (arrived|stuck|died|no-path)(?: (\d+) frames (\d+)\/(\d+) edges (\d+) re-plans(?: at \(([\d.]+), ([\d.]+)\))?)?/`. Always inspect the `re-plans` count: a run can end `arrived` yet have stalled and recovered several times.
 
 A regression check looks like: run the recipe, compare the tick count to a baseline. If the bot now arrives in fewer frames, the change improved the follower. If it stuck where it didn't before, the change regressed.
 

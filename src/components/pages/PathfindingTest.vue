@@ -5,6 +5,8 @@ import { Ticker, UPDATE_PRIORITY } from "pixi.js";
 import { AssetsContainer } from "../../util/assets/assetsContainer";
 import { Level } from "../../data/map/level";
 import { buildZigzagMap, MAP_WIDTH } from "../../data/wfc/fixtures/zigzagMap";
+import { Map as GameMap } from "../../data/map";
+import { defaultMaps } from "../../util/assets/constants";
 import { setGameContext } from "../../data/context";
 import { Player } from "../../data/network/player";
 import { Character } from "../../data/entity/character";
@@ -120,8 +122,15 @@ function applyCommands(commands: Command[], state: TestController) {
 const route = useRoute();
 const mirror = !!route.query.mirror && route.query.mirror !== "0";
 
+// ?map=<Name> swaps the zigzag fixture for a bundled map; ?pair=N runs the
+// Nth-leftmost spawn to the Nth-rightmost (a left↔right crossing).
+const mapName =
+  typeof route.query.map === "string" ? route.query.map : undefined;
+const realMapConfig = mapName ? defaultMaps[mapName] : undefined;
+const pairIndex = route.query.pair ? parseInt(String(route.query.pair), 10) : 0;
+
 // Unmirrored spawn/target; mirrored variants reflect across MAP_WIDTH. The body
-// is 6px wide, so its left edge mirrors to `MAP_WIDTH - x - 6`.
+// is 6px wide, so its left edge mirrors to `MAP_WIDTH - x - 6`. (Zigzag only.)
 const SPAWN_X = mirror ? MAP_WIDTH - 40 - 6 : 40;
 const TARGET_X = mirror ? MAP_WIDTH - 40 : 40;
 
@@ -146,6 +155,23 @@ let targetNodeRef: Node | null = null;
 let replanCount = 0;
 const MAX_REPLANS = 3;
 
+// No Server here, so the engine's killbox damage never fires — detect falls
+// ourselves, and confirm `arrived` only after the bot stays clear of the
+// killbox for SETTLE_FRAMES (it can reach a cliff-edge node and then slide off).
+const SETTLE_FRAMES = 90;
+let pendingArrival = false;
+let settleFrames = 0;
+let arrivedFrames = 0;
+let arrivedCompleted = 0;
+
+function inKillbox(character: Character): boolean {
+  return level!.terrain.killbox.collidesWith(
+    character.body.mask,
+    character.position.x,
+    character.position.y,
+  );
+}
+
 function createStubManager(getActive: () => Character | null) {
   return {
     getActiveCharacter: () => getActive(),
@@ -167,6 +193,21 @@ const frameTicker = (_ticker: Ticker) => {
   if (!level || !trackedCharacter || !testController) return;
   const dt = FIXED_DT;
 
+  // A killbox fall is terminal and outranks a pending arrival.
+  if ((path || pendingArrival) && inKillbox(trackedCharacter)) {
+    const completed = path ? totalEdges - path.remainingNodes : arrivedCompleted;
+    logResult("died", simFrames, completed);
+    path = null;
+    pendingArrival = false;
+    testController.resetKeys();
+  } else if (pendingArrival) {
+    settleFrames -= dt;
+    if (settleFrames <= 0) {
+      logResult("arrived", arrivedFrames, arrivedCompleted);
+      pendingArrival = false;
+    }
+  }
+
   if (path) {
     simFrames += dt;
     const commands = path.getCommand(dt);
@@ -184,7 +225,10 @@ const frameTicker = (_ticker: Ticker) => {
     }
 
     if (path.done) {
-      logResult(path, simFrames, trackedCharacter, totalEdges);
+      pendingArrival = true;
+      settleFrames = SETTLE_FRAMES;
+      arrivedFrames = simFrames;
+      arrivedCompleted = totalEdges - path.remainingNodes;
       path = null;
       testController.resetKeys();
     } else if (path.stuck) {
@@ -212,7 +256,7 @@ const frameTicker = (_ticker: Ticker) => {
           `[pathfinding-test] re-plan FAILED: success=${result.success} pathLen=${result.path?.length ?? "n/a"}`,
         );
       }
-      logResult(path, simFrames, trackedCharacter, totalEdges);
+      logResult("stuck", simFrames, totalEdges - path.remainingNodes);
       path = null;
       testController.resetKeys();
     }
@@ -226,28 +270,47 @@ const frameTicker = (_ticker: Ticker) => {
   level.tick(dt);
 };
 
-function logResult(p: Path, frames: number, character: Character, edges: number) {
-  const simSeconds = (frames / 60).toFixed(2);
-  const completed = edges - p.remainingNodes;
-  if (p.done) {
-    console.log(
-      `[pathfinding-test] arrived: ${frames.toFixed(0)} frames, ${simSeconds}s sim time, ${completed}/${edges} edges`,
-    );
-    status.value = `pathfinding-test:done arrived ${frames.toFixed(0)} frames ${completed}/${edges} edges`;
-  } else {
-    const [x, y] = character.body.precisePosition;
-    console.log(
-      `[pathfinding-test] stuck:   ${frames.toFixed(0)} frames, ${simSeconds}s sim time, ${completed}/${edges} edges, at (${x.toFixed(1)}, ${y.toFixed(1)})`,
-    );
-    status.value = `pathfinding-test:done stuck ${frames.toFixed(0)} frames ${completed}/${edges} edges at (${x.toFixed(1)}, ${y.toFixed(1)})`;
-  }
+function logResult(
+  kind: "arrived" | "stuck" | "died",
+  frames: number,
+  completed: number,
+) {
+  const [x, y] = trackedCharacter!.body.precisePosition;
+  const at = kind === "arrived" ? "" : ` at (${x.toFixed(1)}, ${y.toFixed(1)})`;
+  const summary = `${kind} ${frames.toFixed(0)} frames ${completed}/${totalEdges} edges ${replanCount} re-plans${at}`;
+  console.log(`[pathfinding-test] ${summary}, ${(frames / 60).toFixed(2)}s sim time`);
+  status.value = `pathfinding-test:done ${summary}`;
 }
 
 watch(canvas, (el) => {
   if (!el) return;
   AssetsContainer.instance.onComplete(async () => {
-    const map = await buildZigzagMap(mirror);
+    let map: GameMap;
+    if (realMapConfig) {
+      const blob = await fetch(realMapConfig.path).then((r) => r.blob());
+      map = await GameMap.fromBlob(blob);
+    } else {
+      map = await buildZigzagMap(mirror);
+    }
     level = new Level(el, map);
+
+    // Zigzag keeps its fixed corner-to-corner coordinates; real maps pick from
+    // their own spawn locations, sorted by x.
+    let spawnPos: [number, number] = [SPAWN_X, 540];
+    let targetPos: [number, number] = [TARGET_X, 80];
+    if (realMapConfig) {
+      const spawns = level.terrain
+        .getSpawnLocations()
+        .slice()
+        .sort((a, b) => a[0] - b[0]);
+      const leftIdx = Math.min(pairIndex, spawns.length - 1);
+      const rightIdx = Math.max(0, spawns.length - 1 - pairIndex);
+      spawnPos = spawns[leftIdx];
+      targetPos = spawns[rightIdx];
+      console.log(
+        `[pathfinding-test] map=${mapName} pair=${pairIndex} of ${spawns.length} spawns; spawn (${spawnPos[0]}, ${spawnPos[1]}) -> target (${targetPos[0]}, ${targetPos[1]})`,
+      );
+    }
 
     let activeCharacter: Character | null = null;
     const stubManager = createStubManager(() => activeCharacter);
@@ -258,7 +321,7 @@ watch(canvas, (el) => {
     const player = new Player();
     player.connect("TestBot", Team.empty(), COLORS[0], testController);
 
-    const character = new Character(player, SPAWN_X, 540, "TestBot");
+    const character = new Character(player, spawnPos[0], spawnPos[1], "TestBot");
     activeCharacter = character;
     trackedCharacter = character;
     player.addCharacter(character);
@@ -278,11 +341,13 @@ watch(canvas, (el) => {
 
     const [spawnX, spawnY] = character.bodyFootCenter;
     const startNode = graph.getClosestNode(spawnX, spawnY);
-    const targetNode = graph.getClosestNode(TARGET_X, 80);
+    const targetNode = graph.getClosestNode(targetPos[0], targetPos[1]);
 
     graphRef = graph;
     targetNodeRef = targetNode;
     replanCount = 0;
+    pendingArrival = false;
+    settleFrames = 0;
 
     const result = Pathfinding.findPath(startNode, targetNode);
     if (!result.success) {
