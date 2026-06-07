@@ -245,6 +245,19 @@ export class Path {
       hasArrived = true;
     }
 
+    // Hold a final jump/fall until grounded: arriving mid-air stops the
+    // follower, dropping the bot back into the gap before it can land.
+    if (
+      hasArrived &&
+      !nextDestination &&
+      (destination.type === EdgeType.Jump ||
+        destination.type === EdgeType.Fall) &&
+      !this.character.body.grounded &&
+      this.bustedTimer >= Path.BUSTED_TIMER / 2
+    ) {
+      hasArrived = false;
+    }
+
     return hasArrived;
   }
 
@@ -279,8 +292,10 @@ export class Path {
       }
     }
 
+    // Brake only narrow steep jumps; a wide steep jump needs its run-up speed
+    // to clear the gap, so braking it would fall short.
     const isSteepJump = (e: Edge | undefined) =>
-      !!e && e.type === EdgeType.Jump && e.isSteep;
+      !!e && e.type === EdgeType.Jump && e.isSteep && e.isNarrow;
     const steepJump = isSteepJump(destination)
       ? destination
       : destination.type !== EdgeType.Jump && isSteepJump(nextDestination)

@@ -26,6 +26,7 @@ export class Edge {
   public readonly direction: -1 | 0 | 1;
   public readonly isSteep: boolean;
   public readonly isVertical: boolean;
+  public readonly isNarrow: boolean;
 
   constructor(from: Node, to: Node, type: EdgeType) {
     this.from = from;
@@ -37,6 +38,7 @@ export class Edge {
     this.direction = Math.sign(this.dx) as -1 | 0 | 1;
     this.isSteep = Math.abs(this.dy) > Math.abs(this.dx);
     this.isVertical = this.dx === 0;
+    this.isNarrow = Math.abs(this.dx) < NARROW_JUMP_XDIFF;
 
     const distance = getDistance(to.x, to.y, from.x, from.y);
     if (type === EdgeType.Walk || type === EdgeType.Climb) {
