@@ -69,15 +69,18 @@ export function scoreAOECandidate(args: {
   target: Character;
   allies: Character[];
   predictDamage: (character: Character) => number;
+  // Override for allies when secondary effects drift beyond the initial blast.
+  predictAllyDamage?: (character: Character) => number;
   spell: Spell;
   currentMana: number;
 }): number | null {
   const enemyDamage = args.predictDamage(args.target);
+  const predictAlly = args.predictAllyDamage ?? args.predictDamage;
 
   let friendlyDamage = 0;
   let killsAlly = false;
   for (const ally of args.allies) {
-    const d = args.predictDamage(ally);
+    const d = predictAlly(ally);
     friendlyDamage += d;
     if (d >= ally.hp) killsAlly = true;
   }

@@ -24,6 +24,9 @@ export interface AOEStrategyConfig {
   impactPoint: (target: Character, context: AOEContext) => [number, number] | null;
   // Damage dealt at `distanceGameUnits` from the impact point (element scaling baked in).
   predictDamageAt: (distanceGameUnits: number) => number;
+  // Ally-specific damage prediction, for spells whose secondary effects (bounces,
+  // lingering areas) can drift beyond the initial blast. Defaults to predictDamageAt.
+  predictAllyDamageAt?: (distanceGameUnits: number) => number;
 }
 
 /**
@@ -64,18 +67,20 @@ export function evaluateAOECandidates(
 
       const impactXGame = impact[0] / 6;
       const impactYGame = impact[1] / 6;
-      const predict = (c: Character) => {
+      const distanceTo = (c: Character) => {
         const [sx, sy] = c.getCenter();
-        const d = Math.sqrt(
+        return Math.sqrt(
           (sx / 6 - impactXGame) ** 2 + (sy / 6 - impactYGame) ** 2,
         );
-        return config.predictDamageAt(d);
       };
 
       const value = scoreAOECandidate({
         target,
         allies,
-        predictDamage: predict,
+        predictDamage: (c) => config.predictDamageAt(distanceTo(c)),
+        predictAllyDamage: config.predictAllyDamageAt
+          ? (c) => config.predictAllyDamageAt!(distanceTo(c))
+          : undefined,
         spell: config.spell,
         currentMana,
       });
