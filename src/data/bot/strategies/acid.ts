@@ -1,6 +1,6 @@
 import { ACID } from "../../spells";
 import { AcidSpray } from "../../spells/acidSpray";
-import { Command, CommandType, Key } from "../../controller/controller";
+import { Command, CommandType } from "../../controller/controller";
 import { getLevel, getManager } from "../../context";
 import { Character } from "../../entity/character";
 import { Element } from "../../spells/types";
@@ -36,48 +36,24 @@ interface BallisticAim {
 export class Acid extends InstantPressCast {
   public static spell = ACID;
 
-  private step = 0;
-  private sprayTime = 0;
-
-  // Aim one tick before pressing so the look direction flips before the cast
-  // animation blocks it (the droplets spawn at the staff tip on the facing side,
-  // and a back-tip spawn can clip the caster's own body). Then keep the ballistic
-  // aim held until our spray entity is gone — the spray re-reads the mouse every
-  // tick for its full ~130-tick duration.
-  execute(dt: number): Command[] | null {
-    this.sprayTime += dt;
-    const [x, y] = this.aimPoint();
-
-    if (this.step === 0) {
-      this.step = 1;
-      return [
-        { type: CommandType.ResetKeys },
-        { type: CommandType.MouseMove, x, y },
-      ];
-    }
-
-    if (this.step === 1) {
-      this.step = 2;
-      return [
-        { type: CommandType.MouseMove, x, y },
-        { type: CommandType.KeyPress, key: Key.M1 },
-      ];
-    }
-
-    const sprayAlive = (() => {
-      let found = false;
-      getLevel().entities.forEach((entity) => {
-        if (entity instanceof AcidSpray && entity.owner === this.character) {
-          found = true;
-        }
-      });
-      return found;
-    })();
-
+  // Keep the ballistic aim held until our spray entity is gone — the spray
+  // re-reads the mouse every tick for its full ~130-tick duration.
+  protected afterPress(castTime: number): Command[] | null {
     // Give the cast a few ticks to spawn the spray before checking liveness.
-    if (this.sprayTime > 10 && !sprayAlive) return null;
-    if (this.sprayTime > 300) return null;
+    if (castTime > 10 && !this.sprayAlive()) return null;
+    if (castTime > 300) return null;
+    const [x, y] = this.aimPoint();
     return [{ type: CommandType.MouseMove, x, y }];
+  }
+
+  private sprayAlive(): boolean {
+    let found = false;
+    getLevel().entities.forEach((entity) => {
+      if (entity instanceof AcidSpray && entity.owner === this.character) {
+        found = true;
+      }
+    });
+    return found;
   }
 
   protected aimPoint(): [number, number] {
