@@ -114,7 +114,11 @@ export class FlowField {
 
     // Dijkstra over the 8-connected grid; diagonals only when both orthogonal
     // neighbours are open, so routes can't squeeze through corners.
-    const heap: number[] = []; // packed (cost << 20) | index — cost stays well below 2^20
+    // Packed (cost << 20) | index. Index gets 20 bits; cost must stay below 2^11
+    // or the shift hits the sign bit and heap ordering breaks — routes long enough
+    // to get near that are capped instead (≈1000 cells at COST_STRAIGHT).
+    const MAX_COST = (1 << 11) - 1;
+    const heap: number[] = [];
     const push = (cost: number, index: number) => {
       heap.push((cost << 20) | index);
       let i = heap.length - 1;
@@ -170,7 +174,7 @@ export class FlowField {
             continue;
           }
           const step = dr && dc ? COST_DIAGONAL : COST_STRAIGHT;
-          const next = cost + step + hazardCost[ni];
+          const next = Math.min(cost + step + hazardCost[ni], MAX_COST);
           if (this.dist[ni] === -1 || next < this.dist[ni]) {
             this.dist[ni] = next;
             push(next, ni);
@@ -247,10 +251,20 @@ export class FlowField {
           if (nc < 0 || nc >= this.cols || nr < 0 || nr >= this.rows) continue;
           const ni = nr * this.cols + nc;
           if (this.dist[ni] === -1) continue;
+          // Same corner rule as the build phase: a diagonal neighbour can have a
+          // lower cost via another path, but stepping to it directly would cut a
+          // corner the missile can't fly.
+          if (
+            dr &&
+            dc &&
+            (!this.open[r * this.cols + nc] || !this.open[nr * this.cols + c])
+          ) {
+            continue;
+          }
           if (this.dist[ni] < this.dist[best]) best = ni;
         }
       }
-      if (best === current) break; // at the seed
+      if (best === current) break; // at the seed, or boxed in by the corner rule
       current = best;
     }
 

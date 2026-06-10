@@ -43,6 +43,9 @@ export class Lightning extends ChargedHoldReleaseCast {
    * along `direction`, in hit order. Mirrors `ChainLightning.cast`: the first hop
    * goes to the smallest angular offset within a ±45° cone (range-limited), every
    * later hop to the nearest not-yet-hit character — friend or foe alike.
+   *
+   * Known gap: the real cast hops over any HurtableEntity and Shields divert or
+   * absorb the chain; only characters are modelled here.
    */
   static simulateChain(
     originScreen: [number, number],

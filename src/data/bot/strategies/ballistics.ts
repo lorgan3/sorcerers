@@ -39,8 +39,11 @@ export function simulateBallisticLanding(
   for (let t = 2; t < maxTicks; t += 2) {
     const x = fromGame[0] + vx * t;
     const y = fromGame[1] + vy * t + (gravity / 2) * t * t;
-    if (y >= surface.height || x < 0 || x > surface.width) return null;
-    if (y >= 0 && surface.collidesWithPoint(Math.round(x), Math.round(y))) {
+    // Bounds-check the rounded sample so the mask is never probed at width/height.
+    const rx = Math.round(x);
+    const ry = Math.round(y);
+    if (ry >= surface.height || rx < 0 || rx >= surface.width) return null;
+    if (ry >= 0 && surface.collidesWithPoint(rx, ry)) {
       return [x, y];
     }
   }
