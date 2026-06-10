@@ -46,6 +46,10 @@ export class AcidSpray extends Container implements Spawnable {
     return this.character.getCenter();
   }
 
+  get owner(): Character {
+    return this.character;
+  }
+
   private getStaffTip(): [number, number] {
     return [
       (this.character.position.x + 18 + this.character.direction * 56) / 6,
