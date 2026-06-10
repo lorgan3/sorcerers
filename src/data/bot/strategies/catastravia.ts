@@ -12,6 +12,11 @@ const MISSILE_MULTIPLIER = 2;
 // starting value — refine during playtesting.
 const EXPECTED_HITS_ON_TARGET = 3;
 const MAX_RANGE_SCREEN = 800;
+// The volley converges on the lock point but missiles overshoot and detonate up
+// to roughly this far around it (observed in the spell-test harness). Allies are
+// scored as if this much closer so a teammate "safely" beside the target still
+// registers as friendly fire.
+const VOLLEY_SCATTER_GAME = 35;
 
 export class Catastravia extends ChargedHoldReleaseCast {
   public static spell = CATASTRAVIA;
@@ -34,7 +39,7 @@ export class Catastravia extends ChargedHoldReleaseCast {
 
     this.evaluations = evaluateAOECandidates(this.character, graph, targets, {
       spell: Catastravia.spell,
-      reachScreen: (MISSILE_RADIUS_GAME + 5) * 6,
+      reachScreen: (MISSILE_RADIUS_GAME + 5 + VOLLEY_SCATTER_GAME) * 6,
       impactPoint: (target, { myCenter, surface }) => {
         const center = target.getCenter();
         if (Math.hypot(center[0] - myCenter[0], center[1] - myCenter[1]) > MAX_RANGE_SCREEN) {
@@ -44,6 +49,8 @@ export class Catastravia extends ChargedHoldReleaseCast {
         return center;
       },
       predictDamageAt: (d) => Catastravia.predictDamageAt(d),
+      predictAllyDamageAt: (d) =>
+        Catastravia.predictDamageAt(Math.max(0, d - VOLLEY_SCATTER_GAME)),
     });
 
     this.getNextEvaluation();
