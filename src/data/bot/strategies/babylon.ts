@@ -13,6 +13,9 @@ const PER_HIT = 8; // flat, no element scaling (smallSword.ts)
 // Several of the ~10+ swords land near a target under the spread. Conservative
 // starting value — refine during playtesting.
 const EXPECTED_HITS = 4;
+// The rain of swords scatters around the aim column up to roughly this far; allies
+// are scored as if this much closer so neighbours of the target count as friendly fire.
+const SWORD_SPREAD_GAME = 20;
 
 export class Babylon extends ChargedHoldReleaseCast {
   public static spell = BABYLON;
@@ -33,14 +36,20 @@ export class Babylon extends ChargedHoldReleaseCast {
 
     this.evaluations = evaluateAOECandidates(this.character, graph, targets, {
       spell: Babylon.spell,
-      reachScreen: SMALL_SWORD_RANGE_GAME * 6,
-      // The swords land on the ground under the target, not at its body center.
+      reachScreen: (SMALL_SWORD_RANGE_GAME + SWORD_SPREAD_GAME) * 6,
+      // Characters are baked into the collision mask the swords fall against, so
+      // an unobstructed target is struck at its body — and the damage point sits
+      // 10 units below the collision (fallDamage.ts) — not on the ground beside
+      // it. Only terrain above the target's center (a roof) stops the rain.
       impactPoint: (target, { surface }) => {
-        const feetXGame = target.body.position[0] + 3;
-        const feetYGame = probeX(surface, feetXGame);
-        return [feetXGame * 6, feetYGame * 6];
+        const center = target.getCenter();
+        const firstTerrainY = probeX(surface, target.body.position[0] + 3);
+        if (firstTerrainY < center[1] / 6) return null;
+        return center;
       },
       predictDamageAt: (d) => Babylon.predictDamageAt(d),
+      predictAllyDamageAt: (d) =>
+        Babylon.predictDamageAt(Math.max(0, d - SWORD_SPREAD_GAME)),
     });
 
     this.getNextEvaluation();
