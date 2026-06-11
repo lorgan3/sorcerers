@@ -76,7 +76,7 @@ export const MAX_SAFE_FALL_HEIGHT: number = (() => {
   return Math.floor(safeHeight);
 })();
 
-const JUMP_HEIGHT_AT_DISTANCE: number[] = (() => {
+const { env: JUMP_HEIGHT_AT_DISTANCE, peakIdx: JUMP_APEX_DISTANCE } = (() => {
   const env: number[] = [0];
   const samples = 24;
   for (let i = 0; i <= samples; i++) {
@@ -102,7 +102,7 @@ const JUMP_HEIGHT_AT_DISTANCE: number[] = (() => {
     if (env[x] > env[peakIdx]) peakIdx = x;
   }
   for (let x = 0; x < peakIdx; x++) env[x] = env[peakIdx];
-  return env;
+  return { env, peakIdx };
 })();
 
 // Body's MAX_STEP (body.ts): feet clamber up this far onto a ledge corner, so a
@@ -114,7 +114,98 @@ export function jumpReaches(dx: number, dyUp: number): boolean {
   if (i >= JUMP_HEIGHT_AT_DISTANCE.length) {
     return false;
   }
-  return dyUp <= JUMP_HEIGHT_AT_DISTANCE[i] + LANDING_CLAMBER;
+  // The clamber only helps on the descending side of the arc, where leftover
+  // horizontal motion slides the feet onto the lip top. A near-vertical ascent
+  // (dx before the apex) meets the ledge face with no sideways motion left, so
+  // it must clear the full height.
+  const clamber = i >= JUMP_APEX_DISTANCE ? LANDING_CLAMBER : 0;
+  return dyUp <= JUMP_HEIGHT_AT_DISTANCE[i] + clamber;
+}
+
+// Height (px) the arc passes through at horizontal distance `dx`, launching at
+// `launchX` while holding air-control toward the target. -Infinity if the arc
+// lands before reaching dx.
+function jumpHeightAtDistance(launchX: number, dx: number): number {
+  let s = { x: 0, y: 0, xv: launchX, yv: -JUMP_STRENGTH };
+  let prev = s;
+  for (let frame = 1; frame <= 200; frame++) {
+    s = airStep(s, 1);
+    if (prev.x <= dx && s.x >= dx) {
+      const t = (dx - prev.x) / (s.x - prev.x || 1);
+      return -(prev.y + t * (s.y - prev.y));
+    }
+    if (s.y > 0 && frame > 1) {
+      return -Infinity;
+    }
+    prev = s;
+  }
+  return -Infinity;
+}
+
+const requiredLaunchSpeedCache = new Map<string, number>();
+
+// Smallest launch speed whose arc passes the full `dyUp` at horizontal
+// distance `dx`. No clamber discount here: an arc that meets the ledge's wall
+// face even fractionally below the lip is stopped dead, not clambered (the
+// auto-step only applies to grounded movement). Falls back to the best-effort
+// speed when no sampled arc reaches the target.
+export function requiredLaunchSpeed(dx: number, dyUp: number): number {
+  const target = Math.ceil(Math.abs(dx));
+  if (target < 1 || dyUp <= 0) {
+    return 0;
+  }
+
+  const key = `${target},${Math.ceil(dyUp)}`;
+  const cached = requiredLaunchSpeedCache.get(key);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const samples = 24;
+  let best = 0;
+  let bestHeight = -Infinity;
+  let result: number | undefined;
+  for (let i = 0; i <= samples; i++) {
+    const speed = (WALK_TERMINAL_VELOCITY * i) / samples;
+    const height = jumpHeightAtDistance(speed, target);
+    if (height >= dyUp) {
+      result = speed;
+      break;
+    }
+    if (height > bestHeight) {
+      bestHeight = height;
+      best = speed;
+    }
+  }
+  if (result === undefined) {
+    result = best;
+  }
+  requiredLaunchSpeedCache.set(key, result);
+  return result;
+}
+
+// Horizontal travel of the remaining arc when braking as hard as air-control
+// allows, from velocity (xv, yv), until the arc has descended `dyDown` px below
+// the current height. Lets the follower ask "if I brake right now, where do I
+// land?" — if even that overshoots the target, it must brake immediately.
+export function brakingLandingOffset(
+  xv: number,
+  yv: number,
+  dyDown: number,
+): number {
+  if (dyDown <= 0) {
+    return 0;
+  }
+  const direction = Math.sign(xv);
+  let s = { x: 0, y: 0, xv, yv };
+  for (let frame = 1; frame <= 240; frame++) {
+    const brake = Math.sign(s.xv) === direction ? -direction : 0;
+    s = airStep(s, brake as -1 | 0 | 1);
+    if (s.y >= dyDown) {
+      return s.x;
+    }
+  }
+  return s.x;
 }
 
 export const MIN_LAUNCH_SPEED = WALK_TERMINAL_VELOCITY * 0.75;

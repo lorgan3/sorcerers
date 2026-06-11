@@ -6,6 +6,8 @@ import { Edge, EdgeType } from "./edge";
 import {
   MIN_LAUNCH_SPEED,
   WALK_TERMINAL_VELOCITY,
+  brakingLandingOffset,
+  requiredLaunchSpeed,
   runUpDistanceFromRest,
 } from "./physics";
 
@@ -292,19 +294,51 @@ export class Path {
       }
     }
 
-    // Brake only narrow steep jumps; a wide steep jump needs its run-up speed
-    // to clear the gap, so braking it would fall short.
+    // Airborne on a jump edge: project where braking right now would land.
+    // If even full braking overshoots the target, brake immediately — holding
+    // toward-target input the whole flight overflies downward jumps and drops
+    // the bot past the landing platform.
+    if (
+      !brakeKey &&
+      destination.type === EdgeType.Jump &&
+      !this.character.body.grounded
+    ) {
+      const jumpDir = destination.direction || 1;
+      const { xVelocity, yVelocity } = this.character.body;
+      if (xVelocity * jumpDir > 0) {
+        const [x, y] = this.character.body.precisePosition;
+        const drop = destination.to.y - (y + 8);
+        const landingX =
+          x + 3 + brakingLandingOffset(xVelocity, yVelocity, drop);
+        if ((landingX - destination.to.x) * jumpDir > 0) {
+          brakeKey = jumpDir > 0 ? Key.Left : Key.Right;
+        }
+      }
+    }
+
+    // The launch-speed threshold below subsumes the previous narrow-only gate:
+    // a wide steep jump's required speed is near its run-up speed, so braking
+    // only trims the excess instead of being skipped entirely.
     const isSteepJump = (e: Edge | undefined) =>
-      !!e && e.type === EdgeType.Jump && e.isSteep && e.isNarrow;
+      !!e && e.type === EdgeType.Jump && e.isSteep;
     const steepJump = isSteepJump(destination)
       ? destination
       : destination.type !== EdgeType.Jump && isSteepJump(nextDestination)
         ? nextDestination
         : null;
-    if (!brakeKey && steepJump) {
+    // Grounded only: this caps the LAUNCH speed. Once airborne the arc needs
+    // air-control held toward the target (the reach model assumes it); braking
+    // mid-flight starves the jump, and overshoot is already handled above.
+    if (!brakeKey && steepJump && this.character.body.grounded) {
       const jumpDir = steepJump.direction || 1;
       const speedAlong = this.character.body.xVelocity * jumpDir;
-      if (speedAlong > REVERSE_INPUT_SPEED) {
+      // A steep jump with real horizontal travel still needs launch speed —
+      // braking it to a near-standing jump undershoots the ledge corner.
+      const launchSpeed = Math.max(
+        REVERSE_INPUT_SPEED,
+        requiredLaunchSpeed(steepJump.dx, -steepJump.dy),
+      );
+      if (speedAlong > launchSpeed) {
         brakeKey = jumpDir > 0 ? Key.Left : Key.Right;
       }
     }
@@ -416,7 +450,20 @@ export class Path {
       const steep = destination.isSteep;
       const fastEnough = steep || speedAlong >= MIN_LAUNCH_SPEED;
       const overshot = pastEdge > 4 && speedAlong > 0;
-      if ((atLaunchPoint && fastEnough) || overshot) {
+      // Past the launch node but still building speed: if the floor ends
+      // within a few px ahead, jump now with the speed we have — running off
+      // the lip waiting for MIN_LAUNCH_SPEED falls into the gap instead.
+      let lipAhead = false;
+      if (atLaunchPoint && speedAlong > 0 && !fastEnough) {
+        const rX = Math.round(x);
+        const rY = Math.round(y);
+        lipAhead = !getLevel().collidesWith(
+          this.character.body.mask,
+          rX + md * 4,
+          rY + 1,
+        );
+      }
+      if ((atLaunchPoint && fastEnough) || overshot || lipAhead) {
         commands.push({ type: CommandType.KeyDown, key: Key.Up });
       }
     } else if (
