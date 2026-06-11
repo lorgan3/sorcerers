@@ -54,11 +54,10 @@ watch(
 const previewCanvas = ref<HTMLCanvasElement>();
 
 watch(
-  [alphaData, seed, overrides, previewCanvas, showBackgroundOnly, () => props.ladders],
+  [alphaData, seed, overrides, () => props.ladders],
   () => {
     const ad = alphaData.value;
-    const canvas = previewCanvas.value;
-    if (!ad || !canvas) return;
+    if (!ad) return;
 
     const res = paintTerrain({
       alpha: ad.alpha,
@@ -70,6 +69,19 @@ watch(
     });
     result.value = res;
     zones.value = res.zones;
+  },
+  { immediate: true }
+);
+
+// composing the preview is cheap; repainting is not — keep them separate so
+// toggling the background view doesn't re-run the whole paint pipeline
+watch(
+  [result, previewCanvas, showBackgroundOnly],
+  () => {
+    const ad = alphaData.value;
+    const res = result.value;
+    const canvas = previewCanvas.value;
+    if (!ad || !res || !canvas) return;
 
     const compose = new OffscreenCanvas(ad.width, ad.height);
     const cctx = compose.getContext("2d")!;
