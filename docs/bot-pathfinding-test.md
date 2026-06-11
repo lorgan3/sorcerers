@@ -43,6 +43,10 @@ Append `?mirror=1` (`#/test/pathfinding?mirror=1`) to run the whole fixture mirr
 
 `?pair=N` (default `0`) picks the spawn/target from the map's own spawn locations (`Terrain.getSpawnLocations`), sorted by x: pair `N` runs the Nth-leftmost spawn to the Nth-rightmost, i.e. a left↔right crossing. Successive `N` probe different crossings.
 
+`?from=x,y&to=x,y` (mask-space px, real maps only) override the pair-derived spawn/target, for probing specific map regions — e.g. `?map=Office&from=140,247&to=167,107` runs the bottom-left → top-left corner. Points snap to the closest graph node; the map's spawn locations are safe values. The character settles onto the ground before the path is planned (spawn locations can sit a few dozen px in the air).
+
+`?trace=1` additionally logs the full planned path (`[pathfinding-plan]` lines) at build time plus a per-frame `[pathfinding-trace]` line (foot position, velocities, grounded, pressed keys) while a path is being followed — the primary tool for diagnosing why a specific edge fails. `window.__pathfindingTest` exposes `{ level, graph, character }` for ad-hoc queries from the console.
+
 ```
 # open http://localhost:3000/#/test/pathfinding?map=Stadium&pair=1
 ```

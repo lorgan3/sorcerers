@@ -128,6 +128,20 @@ const mapName =
   typeof route.query.map === "string" ? route.query.map : undefined;
 const realMapConfig = mapName ? defaultMaps[mapName] : undefined;
 const pairIndex = route.query.pair ? parseInt(String(route.query.pair), 10) : 0;
+// ?from=x,y&to=x,y (mask-space px) override the pair-derived spawn/target on
+// real maps, for probing specific map regions.
+function parsePoint(value: unknown): [number, number] | undefined {
+  if (typeof value !== "string") return undefined;
+  const parts = value.split(",").map((p) => parseInt(p, 10));
+  return parts.length === 2 && parts.every(Number.isFinite)
+    ? [parts[0], parts[1]]
+    : undefined;
+}
+const fromOverride = parsePoint(route.query.from);
+const toOverride = parsePoint(route.query.to);
+// ?trace=1 logs per-frame body state while the current edge is a Jump, for
+// diagnosing failed jumps.
+const trace = !!route.query.trace && route.query.trace !== "0";
 
 // Unmirrored spawn/target; mirrored variants reflect across MAP_WIDTH. The body
 // is 6px wide, so its left edge mirrors to `MAP_WIDTH - x - 6`. (Zigzag only.)
@@ -214,6 +228,14 @@ const frameTicker = (_ticker: Ticker) => {
     applyCommands(commands, testController);
 
     const currentIndex = path.edges.length - path.remainingNodes;
+    if (trace && currentIndex < path.edges.length) {
+      const e = path.edges[currentIndex];
+      const body = trackedCharacter.body as any;
+      const [bx, by] = trackedCharacter.bodyFootCenter;
+      console.log(
+        `[pathfinding-trace] f${simFrames} edge#${currentIndex + 1} ${e.type} foot (${bx.toFixed(2)}, ${by.toFixed(2)}) xv ${body.xVelocity.toFixed(3)} yv ${body.yVelocity.toFixed(3)} grounded ${body.grounded} keys ${testController.pressedKeys}`,
+      );
+    }
     if (currentIndex !== lastEdgeIndex && currentIndex < path.edges.length) {
       const e = path.edges[currentIndex];
       const dx = (e.to.x - e.from.x).toFixed(0);
@@ -305,8 +327,8 @@ watch(canvas, (el) => {
         .sort((a, b) => a[0] - b[0]);
       const leftIdx = Math.min(pairIndex, spawns.length - 1);
       const rightIdx = Math.max(0, spawns.length - 1 - pairIndex);
-      spawnPos = spawns[leftIdx];
-      targetPos = spawns[rightIdx];
+      spawnPos = fromOverride ?? spawns[leftIdx];
+      targetPos = toOverride ?? spawns[rightIdx];
       console.log(
         `[pathfinding-test] map=${mapName} pair=${pairIndex} of ${spawns.length} spawns; spawn (${spawnPos[0]}, ${spawnPos[1]}) -> target (${targetPos[0]}, ${targetPos[1]})`,
       );
@@ -337,6 +359,19 @@ watch(canvas, (el) => {
 
     console.log("[pathfinding-test] character spawned at", character.body.precisePosition);
 
+    // Spawn locations can sit a few dozen px in the air; settle the body onto
+    // the ground before planning, like a real bot planning from where it
+    // stands — otherwise the plan starts on a platform the bot falls off of.
+    for (let i = 0; i < 600 && !character.body.grounded; i++) {
+      level.tick(FIXED_DT);
+    }
+    console.log(
+      "[pathfinding-test] settled at",
+      character.body.precisePosition,
+      "grounded",
+      character.body.grounded,
+    );
+
     const graph = level.buildGraph(character);
 
     const [spawnX, spawnY] = character.bodyFootCenter;
@@ -345,6 +380,7 @@ watch(canvas, (el) => {
 
     graphRef = graph;
     targetNodeRef = targetNode;
+    (window as any).__pathfindingTest = { level, graph, character };
     replanCount = 0;
     pendingArrival = false;
     settleFrames = 0;
@@ -359,6 +395,14 @@ watch(canvas, (el) => {
     path = new Path(character, result.path);
     totalEdges = result.path.length;
     console.log("[pathfinding-test] path built, edges:", result.path.length);
+    if (trace) {
+      for (let i = 0; i < result.path.length; i++) {
+        const e = result.path[i];
+        console.log(
+          `[pathfinding-plan] ${i + 1}/${result.path.length}: ${e.type} (${e.from.x}, ${e.from.y}) -> (${e.to.x}, ${e.to.y})`,
+        );
+      }
+    }
 
     simFrames = 0;
     lastEdgeIndex = -1;
