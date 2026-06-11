@@ -21,6 +21,8 @@ export interface PaintResult {
   /** Debris + ladders, transparent elsewhere. */
   background: ImageData;
   zones: ZoneInfo[];
+  /** Zone index per pixel, -1 for empty — lets the UI map clicks to zones. */
+  zoneMap: Int32Array;
 }
 
 const OUTLINE_DEPTH = 2.5;
@@ -58,7 +60,7 @@ export function paintTerrain(input: PaintInput): PaintResult {
       const theme = THEMES[zones[zi].themeId];
 
       let hex: string;
-      if (depth[i] <= OUTLINE_DEPTH) {
+      if (theme.outline && depth[i] <= OUTLINE_DEPTH) {
         hex = theme.outline;
       } else if (sky[i] < theme.surface.thickness) {
         const idx = rampIndex(
@@ -106,5 +108,5 @@ export function paintTerrain(input: PaintInput): PaintResult {
     seed,
   });
 
-  return { terrain, background, zones };
+  return { terrain, background, zones, zoneMap };
 }

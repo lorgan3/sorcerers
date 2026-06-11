@@ -17,6 +17,8 @@ export interface DebrisInput {
 const KEEP_BASE = 0.4;
 const KEEP_VARIATION = 0.2;
 const ROUGHEN_PX = 3;
+// deep terrain shouldn't crater: never erode more than this from a span's top
+const MAX_EROSION_PX = 48;
 const RUBBLE_BAND_PX = 22;
 const RAIL_WIDTH = 2;
 const RUNG_SPACING = 8;
@@ -51,7 +53,11 @@ export function buildDebris(input: DebrisInput): ImageData {
       const keep =
         KEEP_BASE + noise2d(seed, lm * 131 + (x >> 3), 0) * KEEP_VARIATION;
       const roughen = Math.floor(noise2d(seed, x, lm + 1) * ROUGHEN_PX);
-      const kept = Math.max(0, Math.floor(spanH * keep) - roughen);
+      const kept = Math.max(
+        Math.floor(spanH * keep) - roughen,
+        spanH - MAX_EROSION_PX,
+        0
+      );
       const newTop = Math.max(y, end - kept);
       for (let yy = newTop; yy < end; yy++) {
         const zi = pickZone(zoneMap, width, height, x, yy, seed);

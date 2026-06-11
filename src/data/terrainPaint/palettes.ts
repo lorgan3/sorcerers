@@ -18,15 +18,16 @@ export interface Theme {
   deep: MaterialBand;
   rubble: MaterialBand;
   ladder: { rail: string; rung: string };
-  outline: string;
+  /** Pillow-shading silhouette outline; omit to disable for the theme. */
+  outline?: string;
 }
 
-/** Brick coursing: 16×8 bricks offset every other row; last ramp color = mortar. */
+/** Brick coursing: 12×6 bricks offset every other row; last ramp color = mortar. */
 const brickPattern: PatternFn = (x, y, rampIndex, rampLength) => {
-  const row = Math.floor(y / 8);
-  const xo = row % 2 === 1 ? x + 8 : x;
-  if (y % 8 === 7 || xo % 16 === 15) return rampLength - 1;
-  const brickId = Math.floor(xo / 16) + row * 31;
+  const row = Math.floor(y / 6);
+  const xo = row % 2 === 1 ? x + 6 : x;
+  if (y % 6 === 5 || xo % 12 === 11) return rampLength - 1;
+  const brickId = Math.floor(xo / 12) + row * 31;
   return Math.min(rampLength - 2, rampIndex + (brickId % 2));
 };
 
@@ -45,6 +46,15 @@ const rebarPattern: PatternFn = (x, y, rampIndex, rampLength) => {
   return Math.min(rampLength - 2, rampIndex);
 };
 
+/** Horizontal planks: 32×6 boards with staggered end seams; last ramp color = seam. */
+const plankPattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const row = Math.floor(y / 6);
+  const xo = x + ((row * 13) % 32);
+  if (y % 6 === 5 || xo % 32 === 31) return rampLength - 1;
+  const plankId = Math.floor(xo / 32) + row * 17;
+  return Math.min(rampLength - 2, rampIndex + (plankId % 2));
+};
+
 export const THEMES: Record<string, Theme> = {
   grassland: {
     id: "grassland",
@@ -52,9 +62,8 @@ export const THEMES: Record<string, Theme> = {
     surface: { ramp: ["#8bc34a", "#689f38", "#4a7729"], thickness: 12 },
     shallow: { ramp: ["#a9714b", "#8a5a3b", "#6f4730"], depth: 52 },
     deep: { ramp: ["#8a8478", "#6e695f", "#544f47"] },
-    rubble: { ramp: ["#6f5640", "#5a4634", "#463628"] },
+    rubble: { ramp: ["#cbb59b", "#bca68b", "#ad967b"] },
     ladder: { rail: "#6f4730", rung: "#a9714b" },
-    outline: "#2e2a23",
   },
   cave: {
     id: "cave",
@@ -62,7 +71,7 @@ export const THEMES: Record<string, Theme> = {
     surface: { ramp: ["#7d7b74", "#666460"], thickness: 8 },
     shallow: { ramp: ["#5c5a55", "#4c4a46", "#3e3c39"], depth: 48 },
     deep: { ramp: ["#37352f", "#2c2a26", "#211f1c"] },
-    rubble: { ramp: ["#45433e", "#383631", "#2b2925"] },
+    rubble: { ramp: ["#a8a69f", "#97958e", "#86847d"] },
     ladder: { rail: "#5a4634", rung: "#6f5640" },
     outline: "#15140f",
   },
@@ -72,9 +81,8 @@ export const THEMES: Record<string, Theme> = {
     surface: { ramp: ["#f4f8fb", "#dde7ee", "#c2d2dc"], thickness: 12 },
     shallow: { ramp: ["#9aa8b5", "#828f9c", "#6b7884"], depth: 52 },
     deep: { ramp: ["#5d6a78", "#4a5563", "#3a4350"] },
-    rubble: { ramp: ["#76828d", "#616c77", "#4d5761"] },
+    rubble: { ramp: ["#e2e8ee", "#d2dae2", "#c1cbd5"] },
     ladder: { rail: "#5a4634", rung: "#8a5a3b" },
-    outline: "#27303c",
   },
   urban: {
     id: "urban",
@@ -93,11 +101,24 @@ export const THEMES: Record<string, Theme> = {
     },
     rubble: {
       // last color is the rebar rust
-      ramp: ["#6e6e68", "#5a5a55", "#464642", "#8a5a2b"],
+      ramp: ["#c6c6c0", "#b4b4ae", "#a2a29c", "#b97f50"],
       pattern: rebarPattern,
     },
     ladder: { rail: "#4a4d52", rung: "#6e6e68" },
-    outline: "#1d1e20",
+  },
+  planks: {
+    id: "planks",
+    name: "Wood planks",
+    surface: { ramp: ["#c69a6d", "#b08653", "#997243"], thickness: 10 },
+    shallow: {
+      // last color is the board seam
+      ramp: ["#a87f4f", "#967040", "#855f31", "#5a4226"],
+      depth: 56,
+      pattern: plankPattern,
+    },
+    deep: { ramp: ["#6e5233", "#5d4429", "#4c3720"] },
+    rubble: { ramp: ["#dcc39c", "#cdb189", "#bd9f76"] },
+    ladder: { rail: "#5a4226", rung: "#967040" },
   },
 };
 

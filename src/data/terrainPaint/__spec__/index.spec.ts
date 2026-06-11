@@ -67,6 +67,18 @@ describe("paintTerrain", () => {
     expect(overridden.zones[0].themeId).toBe("snow");
   });
 
+  test("exposes the zone map for UI hit-testing", () => {
+    const { result, alpha, width, height } = paint();
+    expect(result.zoneMap.length).toBe(width * height);
+    for (let i = 0; i < alpha.length; i++) {
+      if (alpha[i]) {
+        expect(result.zoneMap[i]).toBeGreaterThanOrEqual(0);
+      } else {
+        expect(result.zoneMap[i]).toBe(-1);
+      }
+    }
+  });
+
   test("solid pixels get a non-black color from the theme", () => {
     const { result, alpha, width } = paint();
     // a deep pixel in the floor: row 5, column 10

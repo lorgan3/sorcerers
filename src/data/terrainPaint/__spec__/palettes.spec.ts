@@ -4,8 +4,14 @@ import { THEMES, THEME_IDS } from "../palettes";
 const HEX = /^#[0-9a-f]{6}$/;
 
 describe("THEMES", () => {
-  test("contains the four initial themes", () => {
-    expect([...THEME_IDS].sort()).toEqual(["cave", "grassland", "snow", "urban"]);
+  test("contains the five themes", () => {
+    expect([...THEME_IDS].sort()).toEqual([
+      "cave",
+      "grassland",
+      "planks",
+      "snow",
+      "urban",
+    ]);
   });
 
   test("every theme is structurally valid", () => {
@@ -29,18 +35,35 @@ describe("THEMES", () => {
       }
       expect(theme.ladder.rail).toMatch(HEX);
       expect(theme.ladder.rung).toMatch(HEX);
-      expect(theme.outline).toMatch(HEX);
+      if (theme.outline !== undefined) {
+        expect(theme.outline).toMatch(HEX);
+      }
     }
+  });
+
+  test("only cave uses pillow-shading outlines", () => {
+    const outlined = THEME_IDS.filter((id) => THEMES[id].outline);
+    expect(outlined).toEqual(["cave"]);
   });
 
   test("urban brick pattern returns the mortar (last) index on mortar rows", () => {
     const brick = THEMES.urban.shallow;
     const len = brick.ramp.length;
-    // y % 8 === 7 is always a horizontal mortar line
-    expect(brick.pattern!(3, 7, 0, len)).toBe(len - 1);
-    expect(brick.pattern!(20, 15, 1, len)).toBe(len - 1);
+    // y % 6 === 5 is always a horizontal mortar line
+    expect(brick.pattern!(3, 5, 0, len)).toBe(len - 1);
+    expect(brick.pattern!(20, 11, 1, len)).toBe(len - 1);
     // inside a brick body the index never lands on the mortar color
     expect(brick.pattern!(2, 2, 0, len)).toBeLessThan(len - 1);
+  });
+
+  test("plank pattern returns the seam (last) index on board seams", () => {
+    const planks = THEMES.planks.shallow;
+    const len = planks.ramp.length;
+    // y % 6 === 5 is always a horizontal board seam
+    expect(planks.pattern!(7, 5, 0, len)).toBe(len - 1);
+    expect(planks.pattern!(40, 11, 1, len)).toBe(len - 1);
+    // inside a board the index never lands on the seam color
+    expect(planks.pattern!(2, 2, 0, len)).toBeLessThan(len - 1);
   });
 
   test("patterns are pure functions of position", () => {

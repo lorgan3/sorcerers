@@ -60,6 +60,22 @@ describe("buildDebris", () => {
     expect(debrisCount).toBeLessThan(solidCount);
   });
 
+  test("erosion from the top of a span is capped for deep terrain", () => {
+    const width = 6;
+    const height = 200;
+    const rows = Array.from({ length: height }, () => "#".repeat(width));
+    const { background } = debrisFor(rows);
+    const data = background.data;
+    for (let x = 0; x < width; x++) {
+      let opaque = 0;
+      for (let y = 0; y < height; y++) {
+        if (data[(y * width + x) * 4 + 3] !== 0) opaque++;
+      }
+      // MAX_EROSION_PX = 48: at most 48px may be removed from the top
+      expect(opaque).toBeGreaterThanOrEqual(height - 48);
+    }
+  });
+
   test("all pixels are fully opaque or fully transparent", () => {
     const { background } = debrisFor(HILL);
     const data = background.data;
