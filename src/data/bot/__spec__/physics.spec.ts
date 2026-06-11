@@ -8,6 +8,7 @@ import {
   SAFE_LANDING_SPEED,
   WALK_TERMINAL_VELOCITY,
   brakingLandingOffset,
+  jumpReaches,
   requiredLaunchSpeed,
   runUpDistanceFromRest,
 } from "../physics";
@@ -177,6 +178,27 @@ describe("physics", () => {
       // The 22px target is only reachable with the landing clamber; the
       // returned speed must get within clamber range (3px) of it.
       expect(best).toBeGreaterThanOrEqual(dyUp - 3);
+    });
+  });
+
+  describe("jumpReaches clamber", () => {
+    it("does not grant the landing clamber to near-vertical ascents", () => {
+      // Office-map edge jump (108,148)->(113,124): Δ5,-24 demands the full
+      // apex (~22.8px) plus clamber, but at a near-vertical apex against a
+      // ledge face there is no horizontal motion left to clamber with — the
+      // bot tops out ~1.2px short forever.
+      expect(jumpReaches(5, 24)).toBe(false);
+    });
+
+    it("still grants the clamber to descending arcs sliding onto a lip", () => {
+      // Office-map edge jump (252,268)->(263,246): Δ11,-22 only pencils out
+      // with the clamber and is empirically flyable at the right launch speed.
+      expect(jumpReaches(11, 22)).toBe(true);
+    });
+
+    it("near-vertical jumps within the true apex height still connect", () => {
+      expect(jumpReaches(5, 20)).toBe(true);
+      expect(jumpReaches(0, MAX_JUMP_HEIGHT - 2)).toBe(true);
     });
   });
 

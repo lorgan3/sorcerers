@@ -76,7 +76,7 @@ export const MAX_SAFE_FALL_HEIGHT: number = (() => {
   return Math.floor(safeHeight);
 })();
 
-const JUMP_HEIGHT_AT_DISTANCE: number[] = (() => {
+const { env: JUMP_HEIGHT_AT_DISTANCE, peakIdx: JUMP_APEX_DISTANCE } = (() => {
   const env: number[] = [0];
   const samples = 24;
   for (let i = 0; i <= samples; i++) {
@@ -102,7 +102,7 @@ const JUMP_HEIGHT_AT_DISTANCE: number[] = (() => {
     if (env[x] > env[peakIdx]) peakIdx = x;
   }
   for (let x = 0; x < peakIdx; x++) env[x] = env[peakIdx];
-  return env;
+  return { env, peakIdx };
 })();
 
 // Body's MAX_STEP (body.ts): feet clamber up this far onto a ledge corner, so a
@@ -114,7 +114,12 @@ export function jumpReaches(dx: number, dyUp: number): boolean {
   if (i >= JUMP_HEIGHT_AT_DISTANCE.length) {
     return false;
   }
-  return dyUp <= JUMP_HEIGHT_AT_DISTANCE[i] + LANDING_CLAMBER;
+  // The clamber only helps on the descending side of the arc, where leftover
+  // horizontal motion slides the feet onto the lip top. A near-vertical ascent
+  // (dx before the apex) meets the ledge face with no sideways motion left, so
+  // it must clear the full height.
+  const clamber = i >= JUMP_APEX_DISTANCE ? LANDING_CLAMBER : 0;
+  return dyUp <= JUMP_HEIGHT_AT_DISTANCE[i] + clamber;
 }
 
 // Height (px) the arc passes through at horizontal distance `dx`, launching at
