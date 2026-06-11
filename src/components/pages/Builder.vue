@@ -320,6 +320,11 @@ const handleTerrainPaintConfirm = (result: {
   // stored mask so the built map derives collision from terrain alpha
   advancedSettings.value.customMask = false;
   advancedSettings.value.bbox = BBox.create(result.width, result.height);
+  // painted backgrounds are transparent outside the debris, so a parallax
+  // is expected to fill the sky
+  if (!advancedSettings.value.parallaxName) {
+    advancedSettings.value.parallaxName = "Ocean";
+  }
   showTerrainPaint.value = false;
 };
 

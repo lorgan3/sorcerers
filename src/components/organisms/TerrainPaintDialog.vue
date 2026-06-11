@@ -26,6 +26,7 @@ const props = defineProps<{
 const seed = ref(1);
 const overrides = ref<Record<number, string>>({});
 const zones = ref<ZoneInfo[]>([]);
+const selectedZone = ref<number | null>(null);
 const showBackgroundOnly = ref(false);
 
 const alphaData = ref<{ alpha: Uint8Array; width: number; height: number }>();
@@ -69,6 +70,9 @@ watch(
     });
     result.value = res;
     zones.value = res.zones;
+    if (selectedZone.value !== null && selectedZone.value >= res.zones.length) {
+      selectedZone.value = null;
+    }
   },
   { immediate: true }
 );
@@ -76,7 +80,7 @@ watch(
 // composing the preview is cheap; repainting is not — keep them separate so
 // toggling the background view doesn't re-run the whole paint pipeline
 watch(
-  [result, previewCanvas, showBackgroundOnly],
+  [result, previewCanvas, showBackgroundOnly, selectedZone],
   () => {
     const ad = alphaData.value;
     const res = result.value;
@@ -98,9 +102,45 @@ watch(
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(compose, 0, 0, canvas.width, canvas.height);
+
+    const zone =
+      selectedZone.value !== null ? res.zones[selectedZone.value] : undefined;
+    if (zone) {
+      const { left, top, right, bottom } = zone.bbox;
+      const rect = [
+        left * PREVIEW_SCALE - 1,
+        top * PREVIEW_SCALE - 1,
+        (right - left) * PREVIEW_SCALE + 2,
+        (bottom - top) * PREVIEW_SCALE + 2,
+      ] as const;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(...rect);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(...rect);
+      ctx.setLineDash([]);
+    }
   },
   { immediate: true }
 );
+
+const handlePreviewClick = (event: MouseEvent) => {
+  const res = result.value;
+  const ad = alphaData.value;
+  if (!res || !ad) return;
+  const x = Math.floor(event.offsetX / PREVIEW_SCALE);
+  const y = Math.floor(event.offsetY / PREVIEW_SCALE);
+  if (x < 0 || y < 0 || x >= ad.width || y >= ad.height) return;
+  const zone = res.zoneMap[y * ad.width + x];
+  selectedZone.value = zone >= 0 ? zone : null;
+};
+
+const handleThemeChange = (event: Event) => {
+  if (selectedZone.value === null) return;
+  setOverride(selectedZone.value, (event.target as HTMLSelectElement).value);
+};
 
 const handleReroll = () => {
   seed.value++;
@@ -146,7 +186,7 @@ function handleConfirm() {
   <Dialog open :onClose="onClose" title="Paint terrain">
     <div class="paint-dialog">
       <div class="preview-scroll">
-        <canvas ref="previewCanvas" class="preview" />
+        <canvas ref="previewCanvas" class="preview" @click="handlePreviewClick" />
       </div>
 
       <label class="checkbox-control">
@@ -154,18 +194,16 @@ function handleConfirm() {
         <span>Show background only</span>
       </label>
 
-      <div class="zones" v-if="zones.length">
-        <div class="zone-row" v-for="zone in zones" :key="zone.id">
-          <span class="label">Zone {{ zone.id + 1 }}</span>
-          <select
-            :value="zone.themeId"
-            @change="(e) => setOverride(zone.id, (e.target as HTMLSelectElement).value)"
-          >
-            <option v-for="id in THEME_IDS" :key="id" :value="id">
-              {{ THEMES[id].name }}
-            </option>
-          </select>
-        </div>
+      <p class="hint" v-if="selectedZone === null">
+        Click a zone in the preview to change its theme.
+      </p>
+      <div class="zone-row" v-else>
+        <span class="label">Zone {{ selectedZone + 1 }}</span>
+        <select :value="zones[selectedZone]?.themeId" @change="handleThemeChange">
+          <option v-for="id in THEME_IDS" :key="id" :value="id">
+            {{ THEMES[id].name }}
+          </option>
+        </select>
       </div>
 
       <div class="actions">
@@ -198,16 +236,16 @@ function handleConfirm() {
 }
 
 .preview {
+  display: block;
+  cursor: pointer;
   image-rendering: pixelated;
   background: repeating-conic-gradient(#ccc 0% 25%, #eee 0% 50%) 0 0 / 16px 16px;
 }
 
-.zones {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 160px;
-  overflow-y: auto;
+.hint {
+  font-family: Eternal;
+  font-size: 24px;
+  color: var(--primary);
 }
 
 .zone-row {
@@ -224,6 +262,21 @@ function handleConfirm() {
 
   select {
     flex: 1;
+    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+    border: 1px solid var(--border-accent-faint);
+    border-radius: var(--small-radius);
+    padding: 10px;
+    box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1);
+    outline: none;
+    font-size: inherit;
+    font-family: inherit;
+    color: var(--primary);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:focus {
+      border-color: var(--border-accent);
+      box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1), 0 0 8px var(--glow-warm-soft);
+    }
   }
 }
 
