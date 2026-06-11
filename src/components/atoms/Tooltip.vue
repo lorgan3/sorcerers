@@ -81,6 +81,8 @@ const handleMouseLeave = (event: MouseEvent) => {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
+
 .tooltip-wrapper {
   display: inline-block;
   width: min-content;
@@ -88,12 +90,11 @@ const handleMouseLeave = (event: MouseEvent) => {
 
 .tooltip {
   position: fixed;
-  padding: 6px;
-
-  border-radius: var(--small-radius);
-  background-color: rgba(0, 0, 0, 0.8);
-  border: 1px solid #000;
-  color: white;
+  padding: calc(var(--tear-depth-light) + 4px) calc(var(--tear-depth-light) + 8px);
+  @include o.dither-surface;
+  @include o.tear(o.$tear-light);
+  color: var(--primary);
+  font-size: 15px;
   translate: var(--horizontal, 0%) var(--vertical, 0%);
   margin: -2px;
 
