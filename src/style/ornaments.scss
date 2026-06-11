@@ -35,7 +35,7 @@ $tear-light: polygon(0% 1%, 6% 1%, 6% 0%, 14% 0%, 14% 1%, 24% 1%, 24% 0%, 34% 0%
 // --- Pixel frame (inner double border for heavy panels) -----------------------
 
 @mixin pixel-frame {
-  border: 4px solid;
+  border: 4px solid var(--border-accent);
   border-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" shape-rendering="crispEdges"><path d="M0 0 H6 V6 H0 Z M1 1 V5 H5 V1 Z" fill="%2380331e" fill-rule="evenodd"/></svg>') 2 / 4px / 0 round;
 }
 
