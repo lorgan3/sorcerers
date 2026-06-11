@@ -24,7 +24,8 @@ export interface PaintResult {
 }
 
 const OUTLINE_DEPTH = 2.5;
-const DEEP_BAND_PX = 28;
+// each deep-ramp color covers this many px of depth before the next, darker one
+const DEEP_PX_PER_RAMP_STEP = 28;
 
 export function paintTerrain(input: PaintInput): PaintResult {
   const { alpha, width, height, ladders, seed } = input;
@@ -81,7 +82,7 @@ export function paintTerrain(input: PaintInput): PaintResult {
         const t = Math.min(
           0.999,
           (depth[i] - theme.shallow.depth) /
-            (DEEP_BAND_PX * theme.deep.ramp.length)
+            (DEEP_PX_PER_RAMP_STEP * theme.deep.ramp.length)
         );
         hex = theme.deep.ramp[rampIndex(theme.deep, t, x, y, seed)];
       }

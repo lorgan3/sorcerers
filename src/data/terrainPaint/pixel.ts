@@ -40,7 +40,7 @@ export function rampIndex(
   if (d < 0.12 && idx > 0) idx--;
   else if (d > 0.88 && idx < len - 1) idx++;
   if (band.pattern) idx = band.pattern(x, y, idx, len);
-  return idx;
+  return Math.max(0, Math.min(len - 1, idx));
 }
 
 /**

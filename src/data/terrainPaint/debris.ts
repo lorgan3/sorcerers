@@ -77,6 +77,8 @@ export function buildDebris(input: DebrisInput): ImageData {
       let best = 0;
       let bestDist = Infinity;
       for (const zone of zones) {
+        // slices eaten by boundary wobble have an empty bbox; never match them
+        if (zone.bbox.right === 0 && zone.bbox.bottom === 0) continue;
         const zx = (zone.bbox.left + zone.bbox.right) / 2;
         const zy = (zone.bbox.top + zone.bbox.bottom) / 2;
         const dist = (zx - cx) ** 2 + (zy - cy) ** 2;
