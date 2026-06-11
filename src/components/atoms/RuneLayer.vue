@@ -63,7 +63,7 @@ const glyphs = [
   }
   55%,
   100% {
-    width: 26ch;
+    width: 38ch;
   }
 }
 

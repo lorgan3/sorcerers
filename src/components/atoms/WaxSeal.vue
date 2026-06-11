@@ -39,8 +39,6 @@ const {
   .emblem {
     position: absolute;
     inset: 25%;
-    width: 50%;
-    height: 50%;
     image-rendering: pixelated;
     filter: brightness(1.6) sepia(0.4);
   }
