@@ -7,6 +7,8 @@ import {
   MIN_LAUNCH_SPEED,
   SAFE_LANDING_SPEED,
   WALK_TERMINAL_VELOCITY,
+  brakingLandingOffset,
+  requiredLaunchSpeed,
   runUpDistanceFromRest,
 } from "../physics";
 import {
@@ -131,6 +133,79 @@ describe("physics", () => {
     expect(reached).toBe(true);
     expect(distance).toBeGreaterThan(0);
     expect(distance).toBeLessThan(50);
+  });
+
+  describe("requiredLaunchSpeed", () => {
+    it("a steep jump with meaningful horizontal travel needs more than half walk speed", () => {
+      // Office-map edge jump (252,268)->(263,246): braking to half walk speed
+      // (the follower's reverse-input threshold) tops out ~20px at dx=11,
+      // below the 22px the planner promised.
+      expect(requiredLaunchSpeed(11, 22)).toBeGreaterThan(
+        WALK_TERMINAL_VELOCITY / 2,
+      );
+    });
+
+    it("never exceeds walking terminal velocity", () => {
+      expect(requiredLaunchSpeed(11, 22)).toBeLessThanOrEqual(
+        WALK_TERMINAL_VELOCITY,
+      );
+      expect(requiredLaunchSpeed(25, 1)).toBeLessThanOrEqual(
+        WALK_TERMINAL_VELOCITY,
+      );
+    });
+
+    it("near-vertical and downward jumps need no launch speed", () => {
+      expect(requiredLaunchSpeed(0, 20)).toBe(0);
+      expect(requiredLaunchSpeed(5, -10)).toBe(0);
+    });
+
+    it("verifies against faithful integration: launching at the returned speed reaches the target", () => {
+      const dx = 11;
+      const dyUp = 22;
+      const speed = requiredLaunchSpeed(dx, dyUp);
+      let s = { x: 0, y: 0, xv: speed, yv: -JUMP_STRENGTH };
+      let best = -Infinity;
+      let prev = s;
+      for (let frame = 0; frame < 200 && s.y <= 0.5; frame++) {
+        s = airStep(s, 1);
+        if (prev.x <= dx && s.x >= dx) {
+          const t = (dx - prev.x) / (s.x - prev.x || 1);
+          best = Math.max(best, -(prev.y + t * (s.y - prev.y)));
+        }
+        prev = s;
+      }
+      // The 22px target is only reachable with the landing clamber; the
+      // returned speed must get within clamber range (3px) of it.
+      expect(best).toBeGreaterThanOrEqual(dyUp - 3);
+    });
+  });
+
+  describe("brakingLandingOffset", () => {
+    it("travels less than coasting when braking from a fast overfly", () => {
+      // Office-map edge#7 overfly: apex 35px above the landing at xv ~0.9.
+      const braked = brakingLandingOffset(0.9, 0, 35);
+      let s = { x: 0, y: 0, xv: 0.9, yv: 0 };
+      while (s.y < 35) {
+        s = airStep(s, 1);
+      }
+      expect(braked).toBeLessThan(s.x);
+      expect(braked).toBeGreaterThan(0);
+    });
+
+    it("returns ~0 when already at the landing height", () => {
+      expect(Math.abs(brakingLandingOffset(0.9, 0, 0))).toBeLessThan(2);
+      expect(brakingLandingOffset(0.9, 0, -10)).toBe(0);
+    });
+
+    it("matches faithful integration with the brake held", () => {
+      let s = { x: 0, y: 0, xv: 1.0, yv: -1.5 };
+      let expected = s.x;
+      while (s.y < 20) {
+        s = airStep(s, s.xv > 0 ? -1 : 0);
+        expected = s.x;
+      }
+      expect(brakingLandingOffset(1.0, -1.5, 20)).toBeCloseTo(expected, 5);
+    });
   });
 });
 
