@@ -93,6 +93,7 @@ const handleMouseLeave = (event: MouseEvent) => {
   padding: calc(var(--tear-depth-light) + 4px) calc(var(--tear-depth-light) + 8px);
   @include o.dither-surface;
   @include o.tear(o.$tear-light);
+  filter: drop-shadow(2px 2px 0 var(--shadow-hard));
   color: var(--primary);
   font-size: 15px;
   translate: var(--horizontal, 0%) var(--vertical, 0%);

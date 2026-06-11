@@ -81,7 +81,6 @@ watch(
   .range-icon {
     width: 14px;
     height: 14px;
-    filter: invert(1);
     vertical-align: middle;
   }
 
