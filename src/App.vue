@@ -207,6 +207,7 @@ button {
     width: 14px;
     height: 14px;
     background: o.$diamond center / contain no-repeat;
+    flex-shrink: 0;
   }
 }
 
@@ -495,7 +496,7 @@ a {
 
   /* When the checkbox is checked */
   input:checked ~ .checkmark {
-    background-color: var(--highlight-background);
+    background: var(--highlight-background);
     box-shadow: 0 0 6px var(--glow-warm-soft);
     border-color: var(--border-accent);
   }
