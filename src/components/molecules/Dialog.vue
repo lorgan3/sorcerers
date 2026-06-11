@@ -107,7 +107,6 @@ dialog {
 
   .content {
     position: relative;
-    z-index: 1;
     animation: dialog-scale-in 0.2s ease-out;
 
     &--ingame,
