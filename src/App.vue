@@ -28,6 +28,12 @@ import { RouterView } from "vue-router";
   --parchment-dark: #c4a882;
   --parchment-hover-light: #e0ccac;
   --parchment-hover-dark: #ccb08a;
+  --seal-dark: #5c1d10;
+  --seal-mid: #b05030;
+  --seal-light: #e8d4b4;
+  --tear-depth-heavy: 14px;
+  --tear-depth-light: 8px;
+  --shadow-hard: rgba(40, 20, 5, 0.35);
 }
 
 @property --pulse {
