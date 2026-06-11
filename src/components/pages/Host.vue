@@ -15,7 +15,7 @@ import MapSelect from "../organisms/MapSelect.vue";
 import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
 import human from "pixelarticons/svg/user-plus.svg";
-import bot from "pixelarticons/svg/contact-plus.svg";
+import bot from "pixelarticons/svg/robot.svg";
 import { useHostServer } from "./composables/useHostServer";
 import { useHostPlayers } from "./composables/useHostPlayers";
 import {

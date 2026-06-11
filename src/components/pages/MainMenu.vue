@@ -6,7 +6,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import { ref } from "vue";
 import JoinDialog from "../organisms/JoinDialog.vue";
 import ServerList from "../organisms/ServerList.vue";
-import github from "pixelarticons/svg/github-2.svg";
+import github from "pixelarticons/svg/external-link.svg";
 
 const joinDialogOpen = ref(false);
 </script>

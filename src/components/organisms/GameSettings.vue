@@ -5,7 +5,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import Input from "../atoms/Input.vue";
 import { GameSettings } from "../../util/localStorage/settings";
 import IconButton from "../atoms/IconButton.vue";
-import edit from "pixelarticons/svg/edit.svg";
+import edit from "pixelarticons/svg/pen-square.svg";
 
 const { settings, onEdit } = defineProps<{
   settings: GameSettings;
