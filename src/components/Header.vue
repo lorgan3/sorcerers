@@ -50,6 +50,8 @@ AssetsContainer.instance.onComplete(() => {
 </template>
 
 <style lang="scss" scoped>
+@use "../style/ornaments" as o;
+
 .background {
   min-height: 100vh;
   box-sizing: border-box;
@@ -68,7 +70,7 @@ AssetsContainer.instance.onComplete(() => {
       content: '';
       position: absolute;
       inset: 0;
-      box-shadow: 0 0 10vmin inset var(--primary);
+      @include o.pixel-vignette;
       pointer-events: none;
       z-index: 1;
       animation: vignette-breathe 8s ease-in-out infinite;
