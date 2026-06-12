@@ -27,8 +27,6 @@ import { RouterView } from "vue-router";
   --border-accent-faint: rgba(128, 51, 30, 0.4);
   --parchment-light: #d8c4a4;
   --parchment-dark: #c4a882;
-  --parchment-hover-light: #e0ccac;
-  --parchment-hover-dark: #ccb08a;
   --seal-dark: #5c1d10;
   --seal-mid: #b05030;
   --seal-light: #e8d4b4;

@@ -159,11 +159,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
   align-content: flex-start;
   padding: 6px;
   position: relative;
-  background: linear-gradient(
-    180deg,
-    var(--parchment-light),
-    var(--parchment-dark)
-  );
+  @include o.dither-surface;
   border-left: 2px solid color-mix(in srgb, var(--row-color) 25%, transparent);
   border-top: 2px solid color-mix(in srgb, var(--col-color) 25%, transparent);
   transition: box-shadow 0.2s ease;
