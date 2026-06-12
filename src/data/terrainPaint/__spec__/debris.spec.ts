@@ -60,20 +60,27 @@ describe("buildDebris", () => {
     expect(debrisCount).toBeLessThan(solidCount);
   });
 
-  test("erosion from the top of a span is capped for deep terrain", () => {
-    const width = 6;
+  test("erosion is capped for deep terrain but the edge stays rough", () => {
+    const width = 64;
     const height = 200;
     const rows = Array.from({ length: height }, () => "#".repeat(width));
     const { background } = debrisFor(rows);
     const data = background.data;
+    const tops: number[] = [];
     for (let x = 0; x < width; x++) {
-      let opaque = 0;
+      let top = height;
       for (let y = 0; y < height; y++) {
-        if (data[(y * width + x) * 4 + 3] !== 0) opaque++;
+        if (data[(y * width + x) * 4 + 3] !== 0) {
+          top = y;
+          break;
+        }
       }
       // MAX_EROSION_PX = 10: at most 10px may be removed from the top
-      expect(opaque).toBeGreaterThanOrEqual(height - 10);
+      expect(top).toBeLessThanOrEqual(10);
+      tops.push(top);
     }
+    // the capped edge must still vary, not track the silhouette flatly
+    expect(new Set(tops).size).toBeGreaterThanOrEqual(3);
   });
 
   test("all pixels are fully opaque or fully transparent", () => {

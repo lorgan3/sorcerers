@@ -50,15 +50,17 @@ export function buildDebris(input: DebrisInput): ImageData {
       while (end < height && landmassMap[end * width + x] === lm) end++;
       const spanH = end - y;
       // coarse noise (8-column steps) shapes the mound; fine noise roughens it
-      const keep =
-        KEEP_BASE + noise2d(seed, lm * 131 + (x >> 3), 0) * KEEP_VARIATION;
+      const mound = noise2d(seed, lm * 131 + (x >> 3), 0);
       const roughen = Math.floor(noise2d(seed, x, lm + 1) * ROUGHEN_PX);
-      const kept = Math.max(
-        Math.floor(spanH * keep) - roughen,
-        spanH - MAX_EROSION_PX,
-        0
-      );
-      const newTop = Math.max(y, end - kept);
+      const keep = KEEP_BASE + mound * KEEP_VARIATION;
+      const fractional = spanH - Math.max(0, Math.floor(spanH * keep) - roughen);
+      // when the fraction would erode deeper than the cap, fall back to a
+      // capped erosion that still varies with the same noise so the edge
+      // stays rough instead of tracking the silhouette as a flat line
+      const capped =
+        MAX_EROSION_PX - Math.floor(mound * (MAX_EROSION_PX / 2)) - roughen;
+      const erosion = Math.min(fractional, Math.max(0, capped));
+      const newTop = y + erosion;
       for (let yy = newTop; yy < end; yy++) {
         const zi = pickZone(zoneMap, width, height, x, yy, seed);
         const colors = rubbleColors[zi];
