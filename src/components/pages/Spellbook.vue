@@ -102,8 +102,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
   grid-template-columns: 54px repeat(4, 1fr);
   gap: 2px;
   background: var(--border-accent-faint);
-  border: 2px solid var(--border-accent);
-  border-radius: 4px;
+  @include o.pixel-frame;
   overflow: hidden;
 }
 

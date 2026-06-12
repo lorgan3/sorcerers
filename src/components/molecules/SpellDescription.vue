@@ -89,9 +89,8 @@ watch(
     font-size: 36px;
     line-height: 1;
     animation: pulse 3s infinite;
-    color: rgb(42, 60, 255);
+    color: #1f2db8;
     filter: brightness(var(--pulse, 1));
-    text-shadow: 1px 1px 1px black;
 
     &.positive {
       color: rgb(62, 102, 62);
@@ -112,7 +111,7 @@ watch(
     .name {
       font-family: Eternal;
       font-size: 22px;
-      color: rgb(73, 87, 245);
+      color: var(--highlight);
     }
 
     .description {

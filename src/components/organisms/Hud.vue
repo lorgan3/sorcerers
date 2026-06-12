@@ -328,10 +328,12 @@ onBeforeUnmount(() => window.clearInterval(id));
   .clock,
   .mana,
   .elements {
-    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-    background-size: 100% 1px;
-    background-repeat: no-repeat;
-    background-position: top;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--border-accent-faint) 0 4px,
+        transparent 4px 8px
+      )
+      top / 100% 2px no-repeat;
     padding-top: 10px;
   }
 
