@@ -4,12 +4,13 @@ import { THEMES, THEME_IDS } from "../palettes";
 const HEX = /^#[0-9a-f]{6}$/;
 
 describe("THEMES", () => {
-  test("contains the five themes", () => {
+  test("contains the six themes", () => {
     expect([...THEME_IDS].sort()).toEqual([
       "cave",
       "grassland",
       "planks",
       "snow",
+      "toon",
       "urban",
     ]);
   });
@@ -41,19 +42,38 @@ describe("THEMES", () => {
     }
   });
 
-  test("only cave uses pillow-shading outlines", () => {
+  test("only toon uses pillow-shading outlines", () => {
     const outlined = THEME_IDS.filter((id) => THEMES[id].outline);
-    expect(outlined).toEqual(["cave"]);
+    expect(outlined).toEqual(["toon"]);
   });
 
   test("urban brick pattern returns the mortar (last) index on mortar rows", () => {
     const brick = THEMES.urban.shallow;
     const len = brick.ramp.length;
-    // y % 6 === 5 is always a horizontal mortar line
-    expect(brick.pattern!(3, 5, 0, len)).toBe(len - 1);
-    expect(brick.pattern!(20, 11, 1, len)).toBe(len - 1);
+    // y % 4 === 3 is always a horizontal mortar line
+    expect(brick.pattern!(3, 3, 0, len)).toBe(len - 1);
+    expect(brick.pattern!(20, 7, 1, len)).toBe(len - 1);
     // inside a brick body the index never lands on the mortar color
-    expect(brick.pattern!(2, 2, 0, len)).toBeLessThan(len - 1);
+    expect(brick.pattern!(2, 1, 0, len)).toBeLessThan(len - 1);
+  });
+
+  test("cave rock pattern produces fracture seams and bounded facets", () => {
+    const rock = THEMES.cave.shallow;
+    const len = rock.ramp.length;
+    let seams = 0;
+    let bodies = 0;
+    for (let y = 0; y < 60; y++) {
+      for (let x = 0; x < 60; x++) {
+        const idx = rock.pattern!(x, y, 0, len);
+        expect(idx).toBeGreaterThanOrEqual(0);
+        expect(idx).toBeLessThan(len);
+        if (idx === len - 1) seams++;
+        else bodies++;
+      }
+    }
+    // fracture seams exist but the body dominates
+    expect(seams).toBeGreaterThan(0);
+    expect(bodies).toBeGreaterThan(seams * 5);
   });
 
   test("plank pattern returns the seam (last) index on board seams", () => {

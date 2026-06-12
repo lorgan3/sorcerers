@@ -1,37 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { mulberry32, noise2d } from "../rng";
-
-describe("mulberry32", () => {
-  test("same seed produces the same sequence", () => {
-    const a = mulberry32(42);
-    const b = mulberry32(42);
-    for (let i = 0; i < 100; i++) {
-      expect(a()).toBe(b());
-    }
-  });
-
-  test("different seeds produce different sequences", () => {
-    const a = mulberry32(1);
-    const b = mulberry32(2);
-    const valuesA = Array.from({ length: 10 }, () => a());
-    const valuesB = Array.from({ length: 10 }, () => b());
-    expect(valuesA).not.toEqual(valuesB);
-  });
-
-  test("values are in [0, 1)", () => {
-    const rng = mulberry32(7);
-    for (let i = 0; i < 1000; i++) {
-      const v = rng();
-      expect(v).toBeGreaterThanOrEqual(0);
-      expect(v).toBeLessThan(1);
-    }
-  });
-
-  test("golden value: seed 1 first draw", () => {
-    const rng = mulberry32(1);
-    expect(rng()).toBeCloseTo(0.6270739405881613, 6);
-  });
-});
+import { noise2d } from "../rng";
 
 describe("noise2d", () => {
   test("is position-stable regardless of evaluation order", () => {

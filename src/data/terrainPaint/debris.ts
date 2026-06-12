@@ -18,7 +18,7 @@ const KEEP_BASE = 0.4;
 const KEEP_VARIATION = 0.2;
 const ROUGHEN_PX = 3;
 // deep terrain shouldn't crater: never erode more than this from a span's top
-const MAX_EROSION_PX = 48;
+const MAX_EROSION_PX = 10;
 const RUBBLE_BAND_PX = 22;
 const RAIL_WIDTH = 2;
 const RUNG_SPACING = 8;

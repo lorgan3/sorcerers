@@ -22,12 +22,12 @@ export interface Theme {
   outline?: string;
 }
 
-/** Brick coursing: 12×6 bricks offset every other row; last ramp color = mortar. */
+/** Brick coursing: 8×4 bricks offset every other row; last ramp color = mortar. */
 const brickPattern: PatternFn = (x, y, rampIndex, rampLength) => {
-  const row = Math.floor(y / 6);
-  const xo = row % 2 === 1 ? x + 6 : x;
-  if (y % 6 === 5 || xo % 12 === 11) return rampLength - 1;
-  const brickId = Math.floor(xo / 12) + row * 31;
+  const row = Math.floor(y / 4);
+  const xo = row % 2 === 1 ? x + 4 : x;
+  if (y % 4 === 3 || xo % 8 === 7) return rampLength - 1;
+  const brickId = Math.floor(xo / 8) + row * 31;
   return Math.min(rampLength - 2, rampIndex + (brickId % 2));
 };
 
@@ -44,6 +44,16 @@ const rebarPattern: PatternFn = (x, y, rampIndex, rampLength) => {
   const jitter = (cellX * 7 + cellY * 13) % 11;
   if (y % 16 === jitter && x % 40 < 12 + jitter) return rampLength - 1;
   return Math.min(rampLength - 2, rampIndex);
+};
+
+/** Jagged rock facets: diagonal fracture seams flipping direction per cell. */
+const rockPattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const cx = Math.floor(x / 20);
+  const cy = Math.floor(y / 14);
+  const diag = (cx * 31 + cy * 17) % 2 === 0 ? x + y : x - y;
+  if (((diag % 20) + 20) % 20 === 19) return rampLength - 1;
+  const facet = (cx * 13 + cy * 7 + Math.floor(((diag % 60) + 60) / 20)) % 2;
+  return Math.min(rampLength - 2, rampIndex + facet);
 };
 
 /** Horizontal planks: 32×6 boards with staggered end seams; last ramp color = seam. */
@@ -69,11 +79,19 @@ export const THEMES: Record<string, Theme> = {
     id: "cave",
     name: "Cave",
     surface: { ramp: ["#7d7b74", "#666460"], thickness: 8 },
-    shallow: { ramp: ["#5c5a55", "#4c4a46", "#3e3c39"], depth: 48 },
-    deep: { ramp: ["#37352f", "#2c2a26", "#211f1c"] },
+    shallow: {
+      // last color is the fracture seam
+      ramp: ["#5c5a55", "#4c4a46", "#3e3c39", "#23211e"],
+      depth: 48,
+      pattern: rockPattern,
+    },
+    deep: {
+      // last color is the fracture seam
+      ramp: ["#37352f", "#2c2a26", "#211f1c", "#100f0d"],
+      pattern: rockPattern,
+    },
     rubble: { ramp: ["#a8a69f", "#97958e", "#86847d"] },
     ladder: { rail: "#5a4634", rung: "#6f5640" },
-    outline: "#15140f",
   },
   snow: {
     id: "snow",
@@ -119,6 +137,16 @@ export const THEMES: Record<string, Theme> = {
     deep: { ramp: ["#6e5233", "#5d4429", "#4c3720"] },
     rubble: { ramp: ["#dcc39c", "#cdb189", "#bd9f76"] },
     ladder: { rail: "#5a4226", rung: "#967040" },
+  },
+  toon: {
+    id: "toon",
+    name: "Toon",
+    surface: { ramp: ["#7d7b74", "#666460"], thickness: 8 },
+    shallow: { ramp: ["#5c5a55", "#4c4a46", "#3e3c39"], depth: 48 },
+    deep: { ramp: ["#37352f", "#2c2a26", "#211f1c"] },
+    rubble: { ramp: ["#a8a69f", "#97958e", "#86847d"] },
+    ladder: { rail: "#5a4634", rung: "#6f5640" },
+    outline: "#15140f",
   },
 };
 

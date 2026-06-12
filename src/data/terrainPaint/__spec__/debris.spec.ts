@@ -71,8 +71,8 @@ describe("buildDebris", () => {
       for (let y = 0; y < height; y++) {
         if (data[(y * width + x) * 4 + 3] !== 0) opaque++;
       }
-      // MAX_EROSION_PX = 48: at most 48px may be removed from the top
-      expect(opaque).toBeGreaterThanOrEqual(height - 48);
+      // MAX_EROSION_PX = 10: at most 10px may be removed from the top
+      expect(opaque).toBeGreaterThanOrEqual(height - 10);
     }
   });
 

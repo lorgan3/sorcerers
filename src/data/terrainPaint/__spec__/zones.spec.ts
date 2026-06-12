@@ -43,14 +43,14 @@ describe("computeZones", () => {
     expect(a.zones).toEqual(b.zones);
   });
 
-  test("horizontally consecutive zones get different themes", () => {
+  test("zones default to grassland", () => {
     const width = MAX_ZONE_WIDTH * 3;
     const height = 4;
     const alpha = new Uint8Array(width * height).fill(1);
     const { zones } = computeZones(alpha, width, height, 9);
-    const ordered = [...zones].sort((a, b) => a.bbox.left - b.bbox.left);
-    for (let i = 1; i < ordered.length; i++) {
-      expect(ordered[i].themeId).not.toBe(ordered[i - 1].themeId);
+    expect(zones.length).toBeGreaterThan(1);
+    for (const zone of zones) {
+      expect(zone.themeId).toBe("grassland");
     }
   });
 
@@ -62,24 +62,14 @@ describe("computeZones", () => {
     }
   });
 
-  test("overrides win; unknown override ids fall back to the auto pick", () => {
+  test("overrides win; unknown override ids fall back to the default", () => {
     const { alpha, width, height } = bitmap(["##..##", "##..##"]);
     const { zones } = computeZones(alpha, width, height, 1, {
       0: "urban",
       1: "not-a-theme",
     });
     expect(zones[0].themeId).toBe("urban");
-    expect(THEME_IDS).toContain(zones[1].themeId);
-  });
-
-  test("adjacent zones may share a theme when both are overridden", () => {
-    const { alpha, width, height } = bitmap(["##..##", "##..##"]);
-    const { zones } = computeZones(alpha, width, height, 1, {
-      0: "snow",
-      1: "snow",
-    });
-    expect(zones[0].themeId).toBe("snow");
-    expect(zones[1].themeId).toBe("snow");
+    expect(zones[1].themeId).toBe("grassland");
   });
 
   test("the slice boundary moves with the seed (wobble is live)", () => {

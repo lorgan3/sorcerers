@@ -1,6 +1,6 @@
 import type { PlainBBox } from "../map/bbox";
-import { THEMES, THEME_IDS } from "./palettes";
-import { mulberry32, noise2d } from "./rng";
+import { THEMES } from "./palettes";
+import { noise2d } from "./rng";
 
 export interface ZoneInfo {
   id: number;
@@ -19,11 +19,9 @@ export interface ZoneResult {
 export const MAX_ZONE_WIDTH = 960; // ~12 WFC tiles
 const BOUNDARY_WOBBLE = 48;
 
-/**
- * Auto-assigned themes never repeat the previous zone's theme (including an
- * overridden one). Overrides are explicit user choices and are exempt: two
- * adjacent overrides may share a theme.
- */
+const DEFAULT_THEME = "grassland";
+
+/** Every zone defaults to grassland; overrides are explicit user choices. */
 export function computeZones(
   alpha: Uint8Array,
   width: number,
@@ -123,18 +121,9 @@ export function computeZones(
     }
   }
 
-  // assign themes left to right, never repeating the previous zone's theme
-  const rng = mulberry32(seed);
-  const order = zones
-    .map((_, idx) => idx)
-    .sort((a, b) => zones[a].bbox.left - zones[b].bbox.left);
-  let prev = "";
-  for (const idx of order) {
-    const candidates = THEME_IDS.filter((t) => t !== prev);
-    const pick = candidates[Math.floor(rng() * candidates.length)];
-    const override = themeOverrides[idx];
-    zones[idx].themeId = override && THEMES[override] ? override : pick;
-    prev = zones[idx].themeId;
+  for (const zone of zones) {
+    const override = themeOverrides[zone.id];
+    zone.themeId = override && THEMES[override] ? override : DEFAULT_THEME;
   }
 
   return { zoneMap, landmassMap, zones };
