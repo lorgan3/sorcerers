@@ -28,6 +28,7 @@ const handleDelete = (event: Event) => {
     @click="() => onEdit?.(player)"
   >
     <TornPanel tear="a">
+      <div class="sprite" aria-hidden="true" />
       <div class="header">
         <h2 class="player-name">{{ player.name }}</h2>
         <div class="buttons">
@@ -55,7 +56,6 @@ const handleDelete = (event: Event) => {
   position: relative;
   flex: 1;
   flex-grow: 0;
-  overflow: hidden;
   white-space: nowrap;
   transition: transform 0.3s ease;
 
@@ -67,19 +67,20 @@ const handleDelete = (event: Event) => {
     }
   }
 
-  &:before {
+  // Anchored to TornPanel's .content (position: relative); the panel's
+  // tear clip-path keeps the oversized art within the parchment silhouette.
+  .sprite {
     background: url("../../assets/characters.png");
     background-repeat: no-repeat;
     background-size: 500%;
     background-position-x: calc(var(--team-offset) * 25%);
-    content: "";
-    display: block;
     position: absolute;
     top: 0;
     left: 50%;
     width: 100px;
     height: 200px;
     translate: -50% 0%;
+    pointer-events: none;
   }
 
   .header {
