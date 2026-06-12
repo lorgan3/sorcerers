@@ -700,13 +700,11 @@ const handleBBoxChange = (newBBox: BBox) => {
   image-rendering: pixelated;
   background-size: 256px;
   z-index: 1;
-  border: 2px solid var(--border-accent);
-  box-shadow: 2px 2px 0 var(--shadow-hard);
 
   .controls {
     width: 200px;
-    border-right: 4px solid var(--primary);
-    box-shadow: 5px 0 10px #00000069;
+    border-right: 2px solid var(--border-accent);
+    box-shadow: 2px 0 0 var(--shadow-hard);
     padding: 10px;
     overflow-y: auto;
 

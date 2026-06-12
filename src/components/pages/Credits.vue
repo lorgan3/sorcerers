@@ -15,8 +15,8 @@ const router = useRouter();
   </p>
   <PixelDivider />
   <div class="credits">
-    <div class="section" v-for="({ section, authors }, i) in credits">
-      <PixelDivider v-if="i > 0" />
+    <div class="section" v-for="({ section, authors }, sectionIndex) in credits">
+      <PixelDivider v-if="sectionIndex > 0" />
       <h2 class="section-heading">{{ section }}</h2>
       <ul>
         <li class="item" v-for="{ author, items } in authors">
