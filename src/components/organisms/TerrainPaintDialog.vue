@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, shallowRef, watch } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import Dialog from "../molecules/Dialog.vue";
 import {
   paintTerrain,
@@ -23,7 +23,9 @@ const props = defineProps<{
   onClose: () => void;
 }>();
 
-const seed = ref(1);
+const SEED = 1;
+const MIXED = "mixed";
+
 const overrides = ref<Record<number, string>>({});
 const zones = ref<ZoneInfo[]>([]);
 const selectedZone = ref<number | null>(null);
@@ -55,7 +57,7 @@ watch(
 const previewCanvas = ref<HTMLCanvasElement>();
 
 watch(
-  [alphaData, seed, overrides, () => props.ladders],
+  [alphaData, overrides, () => props.ladders],
   () => {
     const ad = alphaData.value;
     if (!ad) return;
@@ -65,7 +67,7 @@ watch(
       width: ad.width,
       height: ad.height,
       ladders: props.ladders,
-      seed: seed.value,
+      seed: SEED,
       themeOverrides: overrides.value,
     });
     result.value = res;
@@ -138,18 +140,29 @@ const handlePreviewClick = (event: MouseEvent) => {
 };
 
 const handleThemeChange = (event: Event) => {
-  if (selectedZone.value === null) return;
-  setOverride(selectedZone.value, (event.target as HTMLSelectElement).value);
-};
-
-const handleReroll = () => {
-  seed.value++;
-  overrides.value = {};
+  const themeId = (event.target as HTMLSelectElement).value;
+  if (selectedZone.value !== null) {
+    setOverride(selectedZone.value, themeId);
+  } else {
+    const all: Record<number, string> = {};
+    for (const zone of zones.value) {
+      all[zone.id] = themeId;
+    }
+    overrides.value = all;
+  }
 };
 
 const setOverride = (zoneId: number, themeId: string) => {
   overrides.value = { ...overrides.value, [zoneId]: themeId };
 };
+
+const selectValue = computed(() => {
+  if (selectedZone.value !== null) {
+    return zones.value[selectedZone.value]?.themeId ?? MIXED;
+  }
+  const ids = new Set(zones.value.map((zone) => zone.themeId));
+  return ids.size === 1 ? zones.value[0].themeId : MIXED;
+});
 
 const blobToDataUrl = (blob: Blob): Promise<string> =>
   new Promise((resolve) => {
@@ -194,23 +207,28 @@ function handleConfirm() {
         <span>Show background only</span>
       </label>
 
-      <p class="hint" v-if="selectedZone === null">
-        Click a zone in the preview to change its theme.
-      </p>
-      <div class="zone-row" v-else>
-        <span class="label">Zone {{ selectedZone + 1 }}</span>
-        <select :value="zones[selectedZone]?.themeId" @change="handleThemeChange">
+      <div class="zone-row" v-if="zones.length">
+        <span class="label">
+          {{ selectedZone === null ? "All zones" : "Selected zone" }}
+        </span>
+        <select :value="selectValue" @change="handleThemeChange">
+          <option v-if="selectValue === MIXED" disabled :value="MIXED">
+            Mixed
+          </option>
           <option v-for="id in THEME_IDS" :key="id" :value="id">
             {{ THEMES[id].name }}
           </option>
         </select>
       </div>
+      <p class="hint">
+        Click a zone in the preview to change it individually, click empty
+        space to change all zones at once.
+      </p>
 
       <div class="actions">
         <button class="primary" :disabled="zones.length === 0" @click="handleConfirm">
           Confirm
         </button>
-        <button class="secondary" @click="handleReroll">Re-roll</button>
         <button class="secondary" @click="onClose">Cancel</button>
       </div>
     </div>
@@ -244,8 +262,9 @@ function handleConfirm() {
 
 .hint {
   font-family: Eternal;
-  font-size: 24px;
+  font-size: 20px;
   color: var(--primary);
+  opacity: 0.8;
 }
 
 .zone-row {
@@ -257,7 +276,7 @@ function handleConfirm() {
     font-family: Eternal;
     font-size: 24px;
     color: var(--primary);
-    min-width: 80px;
+    min-width: 130px;
   }
 
   select {
