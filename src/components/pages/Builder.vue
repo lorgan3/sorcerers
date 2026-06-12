@@ -681,7 +681,7 @@ const handleBBoxChange = (newBBox: BBox) => {
       :onClose="() => (showAiAlign = false)"
     />
     <TerrainPaintDialog
-      v-if="showTerrainPaint"
+      v-if="showTerrainPaint && (mask.data || terrain.data)"
       :alphaSrc="mask.data || terrain.data"
       :ladders="ladders.map((l) => l.toJS())"
       :onConfirm="handleTerrainPaintConfirm"

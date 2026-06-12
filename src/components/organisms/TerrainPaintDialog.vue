@@ -30,6 +30,7 @@ const overrides = ref<Record<number, string>>({});
 const zones = ref<ZoneInfo[]>([]);
 const selectedZone = ref<number | null>(null);
 const showBackgroundOnly = ref(false);
+const error = ref("");
 
 const alphaData = ref<{ alpha: Uint8Array; width: number; height: number }>();
 const result = shallowRef<PaintResult>();
@@ -37,7 +38,11 @@ const result = shallowRef<PaintResult>();
 watch(
   () => props.alphaSrc,
   (src) => {
+    error.value = "";
     const img = new Image();
+    img.onerror = () => {
+      error.value = "Failed to load the terrain image.";
+    };
     img.onload = () => {
       const canvas = new OffscreenCanvas(img.width, img.height);
       const ctx = canvas.getContext("2d")!;
@@ -225,6 +230,8 @@ function handleConfirm() {
         space to change all zones at once.
       </p>
 
+      <p v-if="error" class="error">{{ error }}</p>
+
       <div class="actions">
         <button class="primary" :disabled="zones.length === 0" @click="handleConfirm">
           Confirm
@@ -265,6 +272,11 @@ function handleConfirm() {
   font-size: 20px;
   color: var(--primary);
   opacity: 0.8;
+}
+
+.error {
+  color: var(--highlight);
+  font-size: 13px;
 }
 
 .zone-row {
