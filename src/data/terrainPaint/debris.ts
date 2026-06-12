@@ -2,7 +2,7 @@ import type { PlainBBox } from "../map/bbox";
 import { THEMES } from "./palettes";
 import { createImageData, hexToRgb, pickZone, rampIndex } from "./pixel";
 import { noise2d } from "./rng";
-import type { ZoneInfo } from "./zones";
+import { isEmptyZone, type ZoneInfo } from "./zones";
 
 export interface DebrisInput {
   width: number;
@@ -86,7 +86,7 @@ export function buildDebris(input: DebrisInput): ImageData {
       let bestDist = Infinity;
       for (const zone of zones) {
         // slices eaten by boundary wobble have an empty bbox; never match them
-        if (zone.bbox.right === 0 && zone.bbox.bottom === 0) continue;
+        if (isEmptyZone(zone)) continue;
         const zx = (zone.bbox.left + zone.bbox.right) / 2;
         const zy = (zone.bbox.top + zone.bbox.bottom) / 2;
         const dist = (zx - cx) ** 2 + (zy - cy) ** 2;

@@ -17,6 +17,11 @@ export interface ZoneResult {
 }
 
 export const MAX_ZONE_WIDTH = 960; // ~12 WFC tiles
+
+/** True for slices whose pixels were all eaten by boundary wobble. */
+export function isEmptyZone(zone: ZoneInfo): boolean {
+  return zone.bbox.right <= zone.bbox.left;
+}
 const BOUNDARY_WOBBLE = 48;
 
 const DEFAULT_THEME = "grassland";
@@ -116,7 +121,7 @@ export function computeZones(
   }
   // a slice can end up with zero pixels when the wobble eats it entirely
   for (const zone of zones) {
-    if (zone.bbox.left > zone.bbox.right) {
+    if (isEmptyZone(zone)) {
       zone.bbox = { left: 0, top: 0, right: 0, bottom: 0 };
     }
   }
