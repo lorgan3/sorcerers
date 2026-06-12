@@ -139,31 +139,5 @@ AssetsContainer.instance.onComplete(() => {
     }
   }
 
-  .mainMenu {
-    .list {
-      background: var(--background);
-      box-shadow: 0 0 10px inset var(--primary);
-      padding: 30px;
-      border-radius: 10px;
-
-      button {
-        min-width: 400px;
-        max-width: 100%;
-        font-size: 32px;
-        padding: 10px;
-        letter-spacing: 1.5px;
-      }
-    }
-  }
-}
-
-.book-link {
-  display: inline-block;
-  padding: 20px 0 15px;
-  width: 70px;
-
-  img {
-    scale: 2;
-  }
 }
 </style>

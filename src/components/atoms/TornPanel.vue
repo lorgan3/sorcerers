@@ -13,7 +13,7 @@ const {
 <template>
   <div :class="['torn-wrap', `torn-wrap--${density}`]">
     <div :class="['torn', `torn--${density === 'light' ? 'light' : tear}`]">
-      <div v-if="title" class="title-plate">{{ title }}</div>
+      <div v-if="title" class="title-plate" role="heading" aria-level="2">{{ title }}</div>
       <div class="content">
         <template v-if="density === 'heavy'">
           <svg

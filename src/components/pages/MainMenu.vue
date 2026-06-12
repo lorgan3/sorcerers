@@ -21,7 +21,7 @@ const joinDialogOpen = ref(false);
       <ul class="list flex-list">
         <li>
           <RouterLink to="/host" class="primary menu-button"
-            >Host<WaxSeal class="seal" letter="S" :size="34"
+            >Host<WaxSeal class="seal" letter="S" :size="34" aria-hidden="true"
           /></RouterLink>
         </li>
         <li>

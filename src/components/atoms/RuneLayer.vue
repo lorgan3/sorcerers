@@ -34,8 +34,8 @@ const glyphs = [
 
   .tagline {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: calc(4vmin + 21vw);
+    left: 10vmin;
     font-style: italic;
     color: var(--primary);
     overflow: hidden;
