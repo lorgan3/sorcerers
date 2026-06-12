@@ -345,16 +345,16 @@ const getElementFilter = (element: Element) =>
 .wrapper {
   transition: transform 0.5s;
   transform: translateX(calc(100% + 2vw));
+  filter: drop-shadow(2px 2px 0 var(--shadow-hard));
 
   &.isOpen {
     transform: translateX(0);
   }
 
   .inventory {
-    border: 2px solid var(--border-accent);
-    border-radius: 4px;
     @include o.dither-surface;
-    box-shadow: -4px 0 15px rgba(30, 15, 5, 0.3);
+    @include o.tear(o.$tear-light);
+    padding: 2px;
     pointer-events: all;
     cursor: url("../../assets/pointer.png"), auto;
 
