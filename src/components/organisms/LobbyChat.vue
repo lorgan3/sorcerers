@@ -183,6 +183,7 @@ const containerClass = computed(() => ({
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .lobby-chat {
   position: fixed;
   right: 24px;
@@ -192,7 +193,7 @@ const containerClass = computed(() => ({
   box-sizing: border-box;
   z-index: 50;
 
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 2px solid var(--border-accent);
   border-radius: 4px 4px 0 0;
   box-shadow:

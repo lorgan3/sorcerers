@@ -47,6 +47,7 @@ const handleDelete = (event: Event) => {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .team-display {
   min-width: 250px;
   border: 2px solid var(--border-accent);
@@ -55,7 +56,7 @@ const handleDelete = (event: Event) => {
   border-radius: 4px;
   flex: 1;
   flex-grow: 0;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   overflow: hidden;
   white-space: nowrap;
   transition: box-shadow 0.3s ease, transform 0.3s ease;

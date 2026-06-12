@@ -95,6 +95,7 @@ const handleClose = () => {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -115,7 +116,7 @@ label {
 }
 
 select {
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 1px solid var(--border-accent-faint);
   border-radius: var(--small-radius);
   padding: 10px;

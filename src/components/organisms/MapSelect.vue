@@ -177,6 +177,7 @@ onMounted(() => reset());
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .custom-select {
   width: 100%;
   position: relative;
@@ -187,7 +188,7 @@ select {
   -webkit-appearance: none; /*  safari  */
   width: 100%;
   padding: 10px 6px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   color: var(--primary);
   cursor: pointer;
   border: none;
@@ -252,7 +253,7 @@ select {
   border: 2px solid var(--border-accent);
   border-radius: 4px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
 
   .center-wrapper {

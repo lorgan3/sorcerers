@@ -96,6 +96,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .grid {
   display: grid;
   grid-template-columns: 54px repeat(4, 1fr);
@@ -219,7 +220,7 @@ const spellsByElement = SPELLS.reduce((all, spell) => {
   font-family: Eternal;
   font-size: 16px;
   color: var(--border-accent);
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 1px solid var(--border-accent-faint);
   border-radius: 3px;
   padding: 1px 6px;

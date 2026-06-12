@@ -183,6 +183,7 @@ onBeforeUnmount(() => window.clearInterval(id));
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .popup {
   position: absolute;
   top: 20vh;
@@ -192,7 +193,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   flex-direction: column;
   align-items: center;
   font-size: 48px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 2px solid var(--border-accent);
   padding: 10px;
   width: 50%;
@@ -245,7 +246,7 @@ onBeforeUnmount(() => window.clearInterval(id));
   padding: 10px;
   gap: 10px;
   margin: 20px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   width: 200px;
   border: 2px solid var(--border-accent);
   border-radius: 4px;
