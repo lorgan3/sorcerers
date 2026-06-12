@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { Assets } from "pixi.js";
 import { Config, Map } from "../../data/map";
 import { DefaultMap, defaultMaps } from "../../util/assets/constants";
+import TornPanel from "../atoms/TornPanel.vue";
 
 const { onEdit, defaultMap } = defineProps<{
   onEdit: (map: Config, name: string) => void;
@@ -122,57 +123,59 @@ onMounted(() => reset());
 
 <template>
   <section class="map-select">
-    <div class="map-preview">
-      <div class="custom-select">
-        <select @change="handleChange">
-          <option
-            v-if="!defaultMap"
-            :value="EMPTY"
-            :selected="selectedMap.map === EMPTY"
-          >
-            Select map...
-          </option>
-          <option
-            v-for="({ path }, map) in defaultMaps"
-            :value="map"
-            :selected="selectedMap.path === path"
-          >
-            {{ map.replace("_", " ") }}
-          </option>
-          <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
-            Upload custom map
-          </option>
-        </select>
+    <TornPanel tear="b">
+      <div class="map-preview">
+        <div class="custom-select">
+          <select @change="handleChange">
+            <option
+              v-if="!defaultMap"
+              :value="EMPTY"
+              :selected="selectedMap.map === EMPTY"
+            >
+              Select map...
+            </option>
+            <option
+              v-for="({ path }, map) in defaultMaps"
+              :value="map"
+              :selected="selectedMap.path === path"
+            >
+              {{ map.replace("_", " ") }}
+            </option>
+            <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
+              Upload custom map
+            </option>
+          </select>
+        </div>
+        <img v-if="mapPath" :src="mapPath" />
+        <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
+          <span class="icon spinner">߷</span>
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          hidden
+          @change="handleUploadMap"
+          @cancel="reset"
+          ref="customUpload"
+        />
       </div>
-      <img v-if="mapPath" :src="mapPath" />
-      <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
-        <span class="icon spinner">߷</span>
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        hidden
-        @change="handleUploadMap"
-        @cancel="reset"
-        ref="customUpload"
-      />
-    </div>
-    <ul v-if="selectedMap.map in defaultMaps" class="info">
-      <li>
-        <h3>Author</h3>
-        {{ selectedMap.author }}
-      </li>
+      <ul v-if="selectedMap.map in defaultMaps" class="info">
+        <li>
+          <h3>Author</h3>
+          {{ selectedMap.author }}
+        </li>
 
-      <li>
-        <h3>Recommended character count</h3>
-        {{ selectedMap.recommendedCharacterCount }}
-      </li>
+        <li>
+          <h3>Recommended character count</h3>
+          {{ selectedMap.recommendedCharacterCount }}
+        </li>
 
-      <li v-if="selectedMap.theme">
-        <h3>Theme</h3>
-        {{ selectedMap.theme }}
-      </li>
-    </ul>
+        <li v-if="selectedMap.theme">
+          <h3>Theme</h3>
+          {{ selectedMap.theme }}
+        </li>
+      </ul>
+    </TornPanel>
   </section>
 </template>
 
@@ -250,11 +253,7 @@ select {
   width: 250px;
   height: 200px;
   align-items: center;
-  border: 2px solid var(--border-accent);
-  border-radius: 4px;
   overflow: hidden;
-  @include o.dither-surface;
-  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
 
   .center-wrapper {
     flex: 1;

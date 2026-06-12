@@ -7,6 +7,7 @@ import { Manager } from "../../data/network/manager";
 import type { ChatEntry } from "../../data/network/types";
 import ChatParticles from "../molecules/ChatParticles.vue";
 import IconButton from "../atoms/IconButton.vue";
+import TornPanel from "../atoms/TornPanel.vue";
 
 const props = defineProps<{
   manager: Manager;
@@ -136,54 +137,55 @@ const containerClass = computed(() => ({
 
 <template>
   <div :class="containerClass">
-    <ChatParticles ref="particles" class="particles-layer" />
+    <TornPanel tear="b">
+      <ChatParticles ref="particles" class="particles-layer" />
 
-    <button
-      v-if="!isOpen"
-      class="open-trigger"
-      type="button"
-      @click="open"
-      title="Open chat"
-    />
-
-    <IconButton
-      v-else
-      class="close-btn"
-      :icon="closeIcon"
-      title="Close chat"
-      :onClick="close"
-    />
-
-    <div
-      ref="messageList"
-      class="messages"
-      @scroll="handleScroll"
-    >
-      <div
-        v-for="msg in messages"
-        :key="msg.id"
-        class="message"
-      >
-        <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
-        {{ msg.text }}
-      </div>
-    </div>
-
-    <div v-if="isOpen" class="input-row">
-      <input
-        ref="inputEl"
-        v-model="draft"
-        class="input"
-        type="text"
-        maxlength="200"
-        @keydown="handleKey"
+      <button
+        v-if="!isOpen"
+        class="open-trigger"
+        type="button"
+        @click="open"
+        title="Open chat"
       />
-    </div>
+
+      <IconButton
+        v-else
+        class="close-btn"
+        :icon="closeIcon"
+        title="Close chat"
+        :onClick="close"
+      />
+
+      <div
+        ref="messageList"
+        class="messages"
+        @scroll="handleScroll"
+      >
+        <div
+          v-for="msg in messages"
+          :key="msg.id"
+          class="message"
+        >
+          <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
+          {{ msg.text }}
+        </div>
+      </div>
+
+      <div v-if="isOpen" class="input-row">
+        <input
+          ref="inputEl"
+          v-model="draft"
+          class="input"
+          type="text"
+          maxlength="200"
+          @keydown="handleKey"
+        />
+      </div>
+    </TornPanel>
   </div>
 </template>
 
 <style lang="scss" scoped>
-@use "../../style/ornaments" as o;
 .lobby-chat {
   position: fixed;
   right: 24px;
@@ -192,13 +194,6 @@ const containerClass = computed(() => ({
   height: 36px;
   box-sizing: border-box;
   z-index: 50;
-
-  @include o.dither-surface;
-  border: 2px solid var(--border-accent);
-  border-radius: 4px 4px 0 0;
-  box-shadow:
-    0 2px 5px rgba(30, 15, 5, 0.3),
-    0 -4px 20px rgba(0, 0, 0, 0.3);
 
   transition: height 0.3s ease-out;
 
@@ -219,16 +214,8 @@ const containerClass = computed(() => ({
 }
 
 @keyframes chat-flash {
-  0%, 100% {
-    box-shadow:
-      0 2px 5px rgba(30, 15, 5, 0.3),
-      0 -4px 20px rgba(0, 0, 0, 0.3);
-  }
-  50% {
-    box-shadow:
-      0 2px 5px rgba(30, 15, 5, 0.3),
-      0 -4px 30px rgba(255, 220, 140, 0.6);
-  }
+  0%, 100% { filter: none; }
+  50% { filter: drop-shadow(0 -4px 12px rgba(255, 220, 140, 0.6)); }
 }
 
 .particles-layer {

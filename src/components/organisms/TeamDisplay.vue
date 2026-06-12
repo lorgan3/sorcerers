@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
+import TornPanel from "../atoms/TornPanel.vue";
 import { IPlayer } from "../types";
 import close from "pixelarticons/svg/close.svg";
 
@@ -26,46 +27,42 @@ const handleDelete = (event: Event) => {
     :is="onEdit ? 'button' : 'div'"
     @click="() => onEdit?.(player)"
   >
-    <div class="header">
-      <h2 class="player-name">{{ player.name }}</h2>
-      <div class="buttons">
-        <IconButton
-          v-if="onDelete"
-          title="Remove player"
-          :onClick="handleDelete"
-          :icon="close"
-        />
+    <TornPanel tear="a">
+      <div class="header">
+        <h2 class="player-name">{{ player.name }}</h2>
+        <div class="buttons">
+          <IconButton
+            v-if="onDelete"
+            title="Remove player"
+            :onClick="handleDelete"
+            :icon="close"
+          />
+        </div>
       </div>
-    </div>
-    <span v-if="subTitle" class="sub-title">{{ subTitle }}</span>
-    <ul class="characters">
-      <li v-for="character in player.team.getLimitedCharacters()">
-        {{ character }}
-      </li>
-    </ul>
+      <span v-if="subTitle" class="sub-title">{{ subTitle }}</span>
+      <ul class="characters">
+        <li v-for="character in player.team.getLimitedCharacters()">
+          {{ character }}
+        </li>
+      </ul>
+    </TornPanel>
   </div>
 </template>
 
 <style lang="scss" scoped>
-@use "../../style/ornaments" as o;
 .team-display {
   min-width: 250px;
-  border: 2px solid var(--border-accent);
   position: relative;
-  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
-  border-radius: 4px;
   flex: 1;
   flex-grow: 0;
-  @include o.dither-surface;
   overflow: hidden;
   white-space: nowrap;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition: transform 0.3s ease;
 
   &.interactive {
     cursor: pointer;
 
     &:hover {
-      box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3), 0 0 12px var(--glow-warm-soft);
       transform: translateY(-2px);
     }
   }
