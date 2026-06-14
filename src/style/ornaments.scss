@@ -1,0 +1,117 @@
+@use "sass:list";
+
+// Pixel-art ornament library for the spellbook UI theme.
+// Single source of truth: components never inline these data-URIs/polygons.
+// Everything is code-drawn SVG — no PNG or atlas changes.
+
+// --- Dithered parchment surfaces --------------------------------------------
+// A hard-stepped vertical gradient using ABSOLUTE pixel stops (60px bands), so
+// the steps never stretch — a taller panel simply reveals more of the gradient
+// and clips the rest. The dithering is the bands themselves bleeding into each
+// other: across every 60px seam, pixels of the darker band poke up into the
+// lighter one and vice-versa, drawn in the actual band colors (no tint, no
+// border line). The dot colors are generated from the same lists as the
+// gradient so the two can never drift apart.
+
+$dither-bands: "dbc7a6", "d7c19f", "d2bc99", "ceb692", "cab18c", "c6ab85",
+  "c1a57e", "bda078";
+$dither-bands-hover: "e3cfae", "dfc9a7", "dac4a1", "d6be9a", "d2b994", "ceb38d",
+  "c9ad86", "c5a880";
+
+// Transparent overlay carrying only the dither dots at each band seam. 8px-deep
+// checkerboard (4px each side of the seam) in the two adjacent band colors.
+@function dither-seam($colors) {
+  $dots: "";
+  @for $i from 1 through list.length($colors) - 1 {
+    $up: list.nth($colors, $i);
+    $lo: list.nth($colors, $i + 1);
+    $b: $i * 60;
+    // darker (next) band poking up into the lighter band, above the seam
+    $dots: $dots + '<rect y="#{$b - 4}" width="8" height="2" fill="%23#{$lo}"/>';
+    $dots: $dots +
+      '<rect x="8" y="#{$b - 2}" width="8" height="2" fill="%23#{$lo}"/>';
+    // lighter band poking down into the darker band, below the seam
+    $dots: $dots + '<rect x="8" y="#{$b}" width="8" height="2" fill="%23#{$up}"/>';
+    $dots: $dots +
+      '<rect y="#{$b + 2}" width="8" height="2" fill="%23#{$up}"/>';
+  }
+  @return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="480" shape-rendering="crispEdges">#{$dots}</svg>';
+}
+
+@mixin dither-surface {
+  background-image: url('#{dither-seam($dither-bands)}'),
+    linear-gradient(
+      180deg,
+      #dbc7a6 0 60px,
+      #d7c19f 60px 120px,
+      #d2bc99 120px 180px,
+      #ceb692 180px 240px,
+      #cab18c 240px 300px,
+      #c6ab85 300px 360px,
+      #c1a57e 360px 420px,
+      #bda078 420px 480px
+    );
+  background-size: 16px 480px, 100% 100%;
+  background-repeat: repeat-x, no-repeat;
+  image-rendering: pixelated;
+}
+
+@mixin dither-surface-hover {
+  background-image: url('#{dither-seam($dither-bands-hover)}'),
+    linear-gradient(
+      180deg,
+      #e3cfae 0 60px,
+      #dfc9a7 60px 120px,
+      #dac4a1 120px 180px,
+      #d6be9a 180px 240px,
+      #d2b994 240px 300px,
+      #ceb38d 300px 360px,
+      #c9ad86 360px 420px,
+      #c5a880 420px 480px
+    );
+  background-size: 16px 480px, 100% 100%;
+  background-repeat: repeat-x, no-repeat;
+  image-rendering: pixelated;
+}
+
+// --- Torn paper edges --------------------------------------------------------
+// Percentage polygons stretch with the element, so several variants exist.
+// a/b: deep tears for menus & dialogs. light: shallow tears for in-game HUD.
+
+$tear-heavy-a: polygon(0% 3%, 5% 3%, 5% 1%, 12% 1%, 12% 3%, 18% 3%, 18% 0%, 26% 0%, 26% 2%, 34% 2%, 34% 1%, 42% 1%, 42% 3%, 50% 3%, 50% 0%, 58% 0%, 58% 2%, 66% 2%, 66% 1%, 74% 1%, 74% 3%, 82% 3%, 82% 0%, 90% 0%, 90% 2%, 97% 2%, 97% 4%, 100% 4%, 100% 12%, 98% 12%, 98% 22%, 100% 22%, 100% 32%, 99% 32%, 99% 44%, 97% 44%, 97% 56%, 100% 56%, 100% 68%, 98% 68%, 98% 80%, 100% 80%, 100% 90%, 98% 90%, 98% 97%, 92% 97%, 92% 100%, 84% 100%, 84% 98%, 76% 98%, 76% 100%, 68% 100%, 68% 97%, 60% 97%, 60% 99%, 52% 99%, 52% 100%, 44% 100%, 44% 98%, 36% 98%, 36% 100%, 28% 100%, 28% 97%, 20% 97%, 20% 99%, 12% 99%, 12% 100%, 5% 100%, 5% 98%, 2% 98%, 2% 96%, 0% 96%, 0% 86%, 2% 86%, 2% 76%, 0% 76%, 0% 64%, 1% 64%, 1% 52%, 3% 52%, 3% 40%, 0% 40%, 0% 28%, 2% 28%, 2% 16%, 0% 16%);
+
+$tear-heavy-b: polygon(0% 2%, 8% 2%, 8% 0%, 20% 0%, 20% 2%, 31% 2%, 31% 1%, 45% 1%, 45% 3%, 60% 3%, 60% 0%, 73% 0%, 73% 2%, 86% 2%, 86% 1%, 100% 1%, 100% 14%, 98% 14%, 98% 30%, 100% 30%, 100% 48%, 99% 48%, 99% 66%, 100% 66%, 100% 84%, 98% 84%, 98% 98%, 88% 98%, 88% 100%, 72% 100%, 72% 98%, 55% 98%, 55% 100%, 38% 100%, 38% 99%, 22% 99%, 22% 100%, 8% 100%, 8% 98%, 0% 98%, 0% 80%, 2% 80%, 2% 62%, 0% 62%, 0% 44%, 1% 44%, 1% 26%, 0% 26%);
+
+$tear-light: polygon(0% 1%, 6% 1%, 6% 0%, 14% 0%, 14% 1%, 24% 1%, 24% 0%, 34% 0%, 34% 1%, 45% 1%, 45% 0%, 56% 0%, 56% 1%, 66% 1%, 66% 0%, 76% 0%, 76% 1%, 86% 1%, 86% 0%, 95% 0%, 95% 1%, 100% 1%, 100% 10%, 99% 10%, 99% 22%, 100% 22%, 100% 38%, 99% 38%, 99% 55%, 100% 55%, 100% 70%, 99% 70%, 99% 85%, 100% 85%, 100% 99%, 94% 99%, 94% 100%, 84% 100%, 84% 99%, 72% 99%, 72% 100%, 60% 100%, 60% 99%, 48% 99%, 48% 100%, 36% 100%, 36% 99%, 24% 99%, 24% 100%, 12% 100%, 12% 99%, 0% 99%, 0% 88%, 1% 88%, 1% 74%, 0% 74%, 0% 58%, 1% 58%, 1% 42%, 0% 42%, 0% 26%, 1% 26%, 1% 12%, 0% 12%);
+
+@mixin tear($shape: $tear-heavy-a) {
+  clip-path: $shape;
+}
+
+// --- Pixel frame (inner double border for heavy panels) -----------------------
+
+@mixin pixel-frame {
+  border: 4px solid var(--border-accent);
+  border-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6" shape-rendering="crispEdges"><path d="M0 0 H6 V6 H0 Z M1 1 V5 H5 V1 Z" fill="%2380331e" fill-rule="evenodd"/></svg>') 2 / 4px / 0 round;
+}
+
+// --- Stitched ledger line ------------------------------------------------------
+
+@mixin stitched-line {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--border-accent) 0 4px, transparent 4px 8px);
+}
+
+// Pixel diamond, used by PixelDivider and section headings.
+$diamond: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7" shape-rendering="crispEdges"><path d="M3 0 H4 V1 H5 V2 H6 V3 H7 V4 H6 V5 H5 V6 H4 V7 H3 V6 H2 V5 H1 V4 H0 V3 H1 V2 H2 V1 H3 Z" fill="%2380331e"/></svg>');
+
+// --- Stepped page vignette -----------------------------------------------------
+// Hard-edged inset rings replace the smooth blurred box-shadow vignette.
+
+@mixin pixel-vignette {
+  box-shadow:
+    inset 0 0 0 0.6vmin rgba(64, 32, 32, 0.25),
+    inset 0 0 0 1.6vmin rgba(64, 32, 32, 0.16),
+    inset 0 0 0 3vmin rgba(64, 32, 32, 0.09),
+    inset 0 0 0 5vmin rgba(64, 32, 32, 0.04);
+}
