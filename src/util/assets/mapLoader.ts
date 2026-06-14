@@ -17,7 +17,7 @@ const mapLoader = {
     BrowserAdapter.fetch(url).then((result) => result.blob()),
 
   testParse: (_, resolvedAsset?: ResolvedAsset) =>
-    Promise.resolve(resolvedAsset?.loadParser === MAP_LOADER),
+    Promise.resolve(resolvedAsset?.parser === MAP_LOADER),
 
   parse: async (asset: Blob, resolvedAsset?: ResolvedAsset) => {
     try {
