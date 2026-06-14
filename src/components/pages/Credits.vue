@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import credits from "../../../credits.json";
 import { useRouter } from "vue-router";
+import PixelDivider from "../atoms/PixelDivider.vue";
 
 const router = useRouter();
 </script>
@@ -12,20 +13,27 @@ const router = useRouter();
     <a href="https://github.com/lorgan3/sorcerers">GitHub</a> if the there is an
     issue with the credits.
   </p>
+  <PixelDivider />
   <div class="credits">
-    <div class="section" v-for="{ section, authors } in credits">
-      <h2 class="section-heading">{{ section }}</h2>
-      <ul>
-        <li class="item" v-for="{ author, items } in authors">
-          <template v-for="(item, i) in items">
-            <a :href="item.link" target="_blank" rel="noopener noreferrer">{{
-              item.name
-            }}</a>
-            <template v-if="i < items.length - 1">, </template></template
-          >: {{ author }}
-        </li>
-      </ul>
-    </div>
+    <template
+      v-for="({ section, authors }, sectionIndex) in credits"
+      :key="section"
+    >
+      <PixelDivider v-if="sectionIndex > 0" class="col-divider" />
+      <div class="section">
+        <h2 class="section-heading">{{ section }}</h2>
+        <ul>
+          <li class="item" v-for="{ author, items } in authors">
+            <template v-for="(item, i) in items">
+              <a :href="item.link" target="_blank" rel="noopener noreferrer">{{
+                item.name
+              }}</a>
+              <template v-if="i < items.length - 1">, </template></template
+            >: {{ author }}
+          </li>
+        </ul>
+      </div>
+    </template>
   </div>
 
   <div class="buttons">
@@ -42,14 +50,6 @@ const router = useRouter();
   .section {
     flex: 1;
 
-    & + .section {
-      padding-top: 12px;
-      background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-      background-size: 100% 1px;
-      background-repeat: no-repeat;
-      background-position: top;
-    }
-
     .item {
       -webkit-line-clamp: 2;
       display: -webkit-box;
@@ -61,9 +61,20 @@ const router = useRouter();
   }
 }
 
+// On wide screens the sections sit side by side; a divider between every
+// column reads as clutter, so the inter-section dividers only show once the
+// sections stack vertically.
+.credits :deep(.col-divider) {
+  display: none;
+}
+
 @media screen and (max-width: 992px) {
   .credits {
     flex-direction: column;
+  }
+
+  .credits :deep(.col-divider) {
+    display: flex;
   }
 }
 </style>
