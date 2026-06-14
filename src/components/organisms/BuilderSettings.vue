@@ -115,20 +115,23 @@ label {
 }
 
 select {
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-  border: 1px solid var(--border-accent-faint);
-  border-radius: var(--small-radius);
+  background: var(--field-bg);
+  border: 2px solid var(--border-accent-faint);
+  border-radius: 0;
   padding: 10px;
-  box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1);
   outline: none;
   font-size: inherit;
   font-family: inherit;
   color: var(--primary);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 
+  &:hover {
+    border-color: var(--border-accent);
+  }
+
   &:focus {
     border-color: var(--border-accent);
-    box-shadow: inset 0 1px 3px rgba(30, 15, 5, 0.1), 0 0 8px var(--glow-warm-soft);
+    box-shadow: 2px 2px 0 var(--shadow-hard), 0 0 8px var(--glow-warm-soft);
   }
 }
 </style>

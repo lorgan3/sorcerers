@@ -6,7 +6,8 @@ import { RouterView } from "vue-router";
   <RouterView />
 </template>
 
-<style>
+<style lang="scss">
+@use "./style/ornaments" as o;
 :root {
   --primary: #402020;
   --background: #bca88c;
@@ -26,8 +27,13 @@ import { RouterView } from "vue-router";
   --border-accent-faint: rgba(128, 51, 30, 0.4);
   --parchment-light: #d8c4a4;
   --parchment-dark: #c4a882;
-  --parchment-hover-light: #e0ccac;
-  --parchment-hover-dark: #ccb08a;
+  --field-bg: #e8dcc2;
+  --seal-dark: #5c1d10;
+  --seal-mid: #b05030;
+  --seal-light: #e8d4b4;
+  --tear-depth-heavy: 14px;
+  --tear-depth-light: 8px;
+  --shadow-hard: rgba(40, 20, 5, 0.35);
 }
 
 @property --pulse {
@@ -85,17 +91,15 @@ button {
 }
 
 .primary {
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   color: var(--primary);
-  border: 2px solid var(--border-accent);
-  border-radius: 2px;
-  box-shadow: 0 2px 5px rgba(30, 15, 5, 0.3);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 3px solid var(--border-accent);
+  box-shadow: 2px 2px 0 var(--shadow-hard);
   letter-spacing: 1.2px;
   cursor: pointer;
   padding: 8px 20px;
   position: relative;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 .primary::before,
@@ -122,10 +126,10 @@ button {
 }
 
 .primary:not([disabled]):hover {
-  background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
+  @include o.dither-surface-hover;
   color: var(--highlight);
   border-color: var(--border-accent-hover);
-  box-shadow: 0 2px 5px rgba(30, 15, 5, 0.3), inset 0 0 20px var(--glow-warm-soft);
+  box-shadow: 2px 2px 0 var(--shadow-hard), inset 0 0 20px var(--glow-warm-soft);
 }
 
 .primary:not([disabled]):hover::before,
@@ -180,10 +184,12 @@ button {
 }
 
 .divider-top {
-  background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-  background-size: 100% 1px;
-  background-repeat: no-repeat;
-  background-position: top;
+  background: repeating-linear-gradient(
+      90deg,
+      var(--border-accent-faint) 0 4px,
+      transparent 4px 8px
+    )
+    top / 100% 2px no-repeat;
   padding-top: 10px;
 }
 
@@ -196,9 +202,11 @@ button {
   color: var(--border-accent);
 
   &::before {
-    content: '◆';
-    font-size: 18px;
-    color: var(--border-accent);
+    content: '';
+    width: 14px;
+    height: 14px;
+    background: o.$diamond center / contain no-repeat;
+    flex-shrink: 0;
   }
 }
 
@@ -473,21 +481,21 @@ a {
     left: 0;
     height: 25px;
     width: 25px;
-    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-    border: 1px solid var(--border-accent-faint);
-    border-radius: 2px;
+    @include o.dither-surface;
+    border: 2px solid var(--border-accent-faint);
+    border-radius: 0;
     transition: background 0.2s ease, box-shadow 0.2s ease;
   }
 
   /* On mouse-over, add glow */
   &:hover input ~ .checkmark {
-    background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
+    @include o.dither-surface-hover;
     box-shadow: 0 0 6px var(--glow-warm-soft);
   }
 
   /* When the checkbox is checked */
   input:checked ~ .checkmark {
-    background: linear-gradient(180deg, var(--highlight-background), var(--background-dark));
+    background: var(--highlight-background);
     box-shadow: 0 0 6px var(--glow-warm-soft);
     border-color: var(--border-accent);
   }

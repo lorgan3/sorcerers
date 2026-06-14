@@ -87,6 +87,7 @@ const handleChangeMusic = () => {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .slider {
   -webkit-appearance: none;
   appearance: none;
@@ -105,7 +106,7 @@ const handleChangeMusic = () => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 2px solid var(--border-accent);
   box-shadow: 0 1px 3px rgba(30, 15, 5, 0.3);
   cursor: pointer;
@@ -120,7 +121,7 @@ const handleChangeMusic = () => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 2px solid var(--border-accent);
   box-shadow: 0 1px 3px rgba(30, 15, 5, 0.3);
   cursor: pointer;

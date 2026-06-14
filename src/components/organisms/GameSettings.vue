@@ -3,6 +3,7 @@ import { ref } from "vue";
 import Dialog from "../molecules/Dialog.vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import Input from "../atoms/Input.vue";
+import TornPanel from "../atoms/TornPanel.vue";
 import { GameSettings } from "../../util/localStorage/settings";
 import IconButton from "../atoms/IconButton.vue";
 import edit from "pixelarticons/svg/pen-square.svg";
@@ -27,42 +28,45 @@ const numberFormatter = new Intl.NumberFormat("en");
 
 <template>
   <section class="game-settings">
-    <h2 class="section-heading">
-      Settings
-      <IconButton
-        v-if="onEdit"
-        title="Edit settings"
-        :onClick="() => (isEditing = true)"
-        :icon="edit"
-      />
-    </h2>
+    <TornPanel tear="a">
+      <h2 class="section-heading">
+        Settings
+        <IconButton
+          v-if="onEdit"
+          title="Edit settings"
+          :onClick="() => (isEditing = true)"
+          :icon="edit"
+        />
+      </h2>
 
-    <ul class="grid">
-      <li v-if="map">
-        <h3>Map</h3>
-        {{ map.replace("_", " ") }}
-      </li>
-      <li>
-        <h3>Game duration</h3>
-        {{ `${numberFormatter.format(settings.gameLength)} minutes` }}
-      </li>
-      <li>
-        <h3>Turn duration</h3>
-        {{ `${numberFormatter.format(settings.turnLength)} seconds` }}
-      </li>
-      <li>
-        <h3>Mana multiplier</h3>
-        {{ `${numberFormatter.format(settings.manaMultiplier)}%` }}
-      </li>
-      <li>
-        <h3>Item spawn chance</h3>
-        {{ `${numberFormatter.format(settings.itemSpawnChance)}%` }}
-      </li>
-      <li>
-        <h3>Visibility</h3>
-        {{ settings.isPrivate ? "Private" : "Public" }}
-      </li>
-    </ul>
+      <ul class="grid">
+        <li v-if="map">
+          <h3>Map</h3>
+          {{ map.replace("_", " ") }}
+        </li>
+        <li>
+          <h3>Game duration</h3>
+          {{ `${numberFormatter.format(settings.gameLength)} minutes` }}
+        </li>
+        <li>
+          <h3>Turn duration</h3>
+          {{ `${numberFormatter.format(settings.turnLength)} seconds` }}
+        </li>
+        <li>
+          <h3>Mana multiplier</h3>
+          {{ `${numberFormatter.format(settings.manaMultiplier)}%` }}
+        </li>
+        <li>
+          <h3>Item spawn chance</h3>
+          {{ `${numberFormatter.format(settings.itemSpawnChance)}%` }}
+        </li>
+        <li>
+          <h3>Visibility</h3>
+          {{ settings.isPrivate ? "Private" : "Public" }}
+        </li>
+      </ul>
+    </TornPanel>
+
     <Dialog :open="isEditing" :onClose="handleClose" title="Edit settings">
       <div class="inputs">
         <Input

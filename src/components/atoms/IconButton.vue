@@ -20,6 +20,7 @@ const { onClick, icon, hoverIcon, title, className } = defineProps<{
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .icon-button {
   background: transparent;
   border: 1px solid transparent;
@@ -50,7 +51,7 @@ const { onClick, icon, hoverIcon, title, className } = defineProps<{
   &:hover {
     border-color: var(--border-accent);
     box-shadow: 0 0 8px var(--glow-warm-soft);
-    background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
+    @include o.dither-surface-hover;
 
     .icon {
       &:not(:only-child) {

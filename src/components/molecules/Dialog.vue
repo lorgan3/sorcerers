@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import IconButton from "../atoms/IconButton.vue";
+import TornPanel from "../atoms/TornPanel.vue";
 import close from "pixelarticons/svg/close.svg";
 
 const props = defineProps<{
@@ -58,13 +59,15 @@ watch(
       ref="content"
       :class="{ content: true, 'content--ingame': props.ingame }"
     >
-      <div class="title">
-        <h2>{{ props.title }}</h2>
-        <IconButton title="Close" :onClick="$props.onClose" :icon="close" />
-      </div>
-      <div class="scroller">
-        <slot name="default"></slot>
-      </div>
+      <TornPanel>
+        <div class="title">
+          <h2>{{ props.title }}</h2>
+          <IconButton title="Close" :onClick="$props.onClose" :icon="close" />
+        </div>
+        <div class="scroller">
+          <slot name="default"></slot>
+        </div>
+      </TornPanel>
     </div>
   </dialog>
 </template>
@@ -91,36 +94,6 @@ dialog {
     }
   }
 
-  &:before {
-    content: "";
-    width: 100%;
-    height: 100%;
-    background: url("../../assets/parchment.png");
-    position: absolute;
-    display: block;
-    image-rendering: pixelated;
-    background-size: 256px;
-    border: 3px solid var(--border-accent);
-    border-radius: 4px;
-    box-shadow:
-      0 0 20px inset rgba(64, 32, 32, 0.3),
-      0 4px 20px rgba(0, 0, 0, 0.4),
-      0 0 0 1px var(--border-accent-faint),
-      0 0 0 5px rgba(188, 168, 140, 0.4),
-      0 0 0 6px var(--border-accent-faint);
-    animation: dialog-scale-in 0.2s ease-out;
-  }
-
-  &:after {
-    content: "";
-    position: absolute;
-    inset: 8px;
-    border: 1px solid var(--border-accent-faint);
-    border-radius: 2px;
-    pointer-events: none;
-    animation: dialog-scale-in 0.2s ease-out;
-  }
-
   @keyframes dialog-scale-in {
     from {
       transform: scale(0.95);
@@ -133,9 +106,7 @@ dialog {
   }
 
   .content {
-    padding: 16px 20px;
     position: relative;
-    z-index: 1;
     animation: dialog-scale-in 0.2s ease-out;
 
     &--ingame,

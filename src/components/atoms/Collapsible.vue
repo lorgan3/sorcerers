@@ -30,8 +30,9 @@ const isOpen = ref(defaultOpen);
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .card {
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border: 1px solid var(--border-accent-faint);
   border-left: 3px solid var(--border-accent);
   border-radius: 4px;

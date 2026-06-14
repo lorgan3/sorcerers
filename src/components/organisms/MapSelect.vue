@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { Assets } from "pixi.js";
 import { Config, Map } from "../../data/map";
 import { DefaultMap, defaultMaps } from "../../util/assets/constants";
+import TornPanel from "../atoms/TornPanel.vue";
 
 const { onEdit, defaultMap } = defineProps<{
   onEdit: (map: Config, name: string) => void;
@@ -122,57 +123,61 @@ onMounted(() => reset());
 
 <template>
   <section class="map-select">
-    <div class="map-preview">
-      <div class="custom-select">
-        <select @change="handleChange">
-          <option
-            v-if="!defaultMap"
-            :value="EMPTY"
-            :selected="selectedMap.map === EMPTY"
-          >
-            Select map...
-          </option>
-          <option
-            v-for="({ path }, map) in defaultMaps"
-            :value="map"
-            :selected="selectedMap.path === path"
-          >
-            {{ map.replace("_", " ") }}
-          </option>
-          <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
-            Upload custom map
-          </option>
-        </select>
-      </div>
-      <img v-if="mapPath" :src="mapPath" />
-      <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
-        <span class="icon spinner">߷</span>
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        hidden
-        @change="handleUploadMap"
-        @cancel="reset"
-        ref="customUpload"
-      />
-    </div>
-    <ul v-if="selectedMap.map in defaultMaps" class="info">
-      <li>
-        <h3>Author</h3>
-        {{ selectedMap.author }}
-      </li>
+    <TornPanel tear="b">
+      <div class="layout">
+        <div class="map-preview">
+          <div class="custom-select">
+            <select @change="handleChange">
+              <option
+                v-if="!defaultMap"
+                :value="EMPTY"
+                :selected="selectedMap.map === EMPTY"
+              >
+                Select map...
+              </option>
+              <option
+                v-for="({ path }, map) in defaultMaps"
+                :value="map"
+                :selected="selectedMap.path === path"
+              >
+                {{ map.replace("_", " ") }}
+              </option>
+              <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
+                Upload custom map
+              </option>
+            </select>
+          </div>
+          <img v-if="mapPath" :src="mapPath" />
+          <div v-else-if="selectedMap.map !== EMPTY" class="center-wrapper">
+            <span class="icon spinner">߷</span>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            @change="handleUploadMap"
+            @cancel="reset"
+            ref="customUpload"
+          />
+        </div>
+        <ul v-if="selectedMap.map in defaultMaps" class="info">
+          <li>
+            <h3>Author</h3>
+            {{ selectedMap.author }}
+          </li>
 
-      <li>
-        <h3>Recommended character count</h3>
-        {{ selectedMap.recommendedCharacterCount }}
-      </li>
+          <li>
+            <h3>Recommended character count</h3>
+            {{ selectedMap.recommendedCharacterCount }}
+          </li>
 
-      <li v-if="selectedMap.theme">
-        <h3>Theme</h3>
-        {{ selectedMap.theme }}
-      </li>
-    </ul>
+          <li v-if="selectedMap.theme">
+            <h3>Theme</h3>
+            {{ selectedMap.theme }}
+          </li>
+        </ul>
+      </div>
+    </TornPanel>
   </section>
 </template>
 
@@ -186,24 +191,24 @@ select {
   appearance: none;
   -webkit-appearance: none; /*  safari  */
   width: 100%;
-  padding: 10px 6px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  padding: 10px 28px 10px 10px;
+  background: var(--field-bg);
   color: var(--primary);
   cursor: pointer;
-  border: none;
-  border-bottom: 2px solid var(--border-accent);
+  border: 2px solid var(--border-accent-faint);
+  border-radius: 0;
   font-size: 18px;
   font-family: Eternal;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
-    border-bottom-color: var(--border-accent-hover);
+    border-color: var(--border-accent);
   }
 
   &:focus {
     outline: none;
-    border-bottom-color: var(--border-accent-hover);
-    box-shadow: 0 2px 6px var(--glow-warm-soft);
+    border-color: var(--border-accent);
+    box-shadow: 2px 2px 0 var(--shadow-hard), 0 0 8px var(--glow-warm-soft);
   }
 }
 
@@ -212,29 +217,32 @@ select {
   --size: 0.3rem;
   content: "";
   position: absolute;
-  right: 6px;
+  right: 10px;
   pointer-events: none;
 }
 
 .custom-select::before {
   border-left: var(--size) solid transparent;
   border-right: var(--size) solid transparent;
-  border-bottom: var(--size) solid black;
-  top: 40%;
+  border-bottom: var(--size) solid var(--border-accent);
+  top: 38%;
 }
 
 .custom-select::after {
   border-left: var(--size) solid transparent;
   border-right: var(--size) solid transparent;
-  border-top: var(--size) solid black;
-  top: 55%;
+  border-top: var(--size) solid var(--border-accent);
+  top: 57%;
 }
 
 .map-select {
   margin-top: 10px;
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
+
+  .layout {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+  }
 
   .info {
     display: flex;
@@ -246,27 +254,30 @@ select {
 .map-preview {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   width: 250px;
   height: 200px;
   align-items: center;
-  border: 2px solid var(--border-accent);
-  border-radius: 4px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
 
   .center-wrapper {
     flex: 1;
+    align-self: stretch;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 2px solid var(--border-accent-faint);
+    box-sizing: border-box;
   }
 
   img {
-    height: 160px;
+    flex: 1;
+    min-height: 0;
     width: 100%;
     object-fit: cover;
     image-rendering: pixelated;
+    border: 2px solid var(--border-accent-faint);
+    box-sizing: border-box;
   }
 }
 
