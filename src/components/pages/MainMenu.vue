@@ -7,27 +7,38 @@ import { ref } from "vue";
 import JoinDialog from "../organisms/JoinDialog.vue";
 import ServerList from "../organisms/ServerList.vue";
 import externalLink from "pixelarticons/svg/external-link.svg";
+import TornPanel from "../atoms/TornPanel.vue";
+import WaxSeal from "../atoms/WaxSeal.vue";
+import RuneLayer from "../atoms/RuneLayer.vue";
 
 const joinDialogOpen = ref(false);
 </script>
 
 <template>
+  <RuneLayer />
   <div class="main-menu-row">
-    <div class="mainMenu">
+    <TornPanel class="menu-panel">
       <ul class="list flex-list">
         <li>
-          <RouterLink to="/host" class="primary menu-button">Host</RouterLink>
+          <RouterLink to="/host" class="primary menu-button">
+            <WaxSeal class="seal" letter="S" :size="34" aria-hidden="true" />Host
+          </RouterLink>
         </li>
         <li>
           <button class="primary menu-button" @click="joinDialogOpen = true">
-            Join game
+            <WaxSeal class="seal" letter="S" :size="34" aria-hidden="true" />Join
+            game
           </button>
         </li>
         <li>
-          <RouterLink to="/builder" class="primary menu-button">Builder</RouterLink>
+          <RouterLink to="/builder" class="primary menu-button">
+            <WaxSeal class="seal" letter="S" :size="34" aria-hidden="true" />Builder
+          </RouterLink>
         </li>
         <li>
-          <RouterLink to="/credits" class="primary menu-button">Credits</RouterLink>
+          <RouterLink to="/credits" class="primary menu-button">
+            <WaxSeal class="seal" letter="S" :size="34" aria-hidden="true" />Credits
+          </RouterLink>
         </li>
         <li>
           <a
@@ -36,12 +47,12 @@ const joinDialogOpen = ref(false);
             rel="noopener noreferrer"
             class="primary menu-button"
           >
-            Issues/Feedback
+            <WaxSeal class="seal" letter="S" :size="34" aria-hidden="true" />Issues/Feedback
             <img class="github-icon" :src="externalLink" />
           </a>
         </li>
       </ul>
-    </div>
+    </TornPanel>
     <ServerList />
   </div>
   <div class="spellbooks">
@@ -70,13 +81,11 @@ const joinDialogOpen = ref(false);
   flex-wrap: wrap;
 }
 
-.mainMenu {
+.menu-panel {
+  width: fit-content;
+
   .list {
-    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-    border: 2px solid var(--border-accent);
-    box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3), inset 0 0 15px rgba(180, 120, 40, 0.08);
-    padding: 30px;
-    border-radius: 4px;
+    padding: 6px;
 
     .menu-button {
       display: block;
@@ -91,6 +100,20 @@ const joinDialogOpen = ref(false);
       text-align: center;
       text-decoration: none;
     }
+
+    .seal {
+      position: absolute;
+      left: -10px;
+      top: 50%;
+      translate: 0 -50%;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .menu-button:hover .seal {
+      opacity: 1;
+    }
   }
 }
 
@@ -99,13 +122,18 @@ const joinDialogOpen = ref(false);
 
   .book-link {
     display: inline-block;
-    padding: 20px 0 15px;
+    padding: 10px 0 8px;
     width: 70px;
     cursor: pointer;
     text-decoration: none;
 
     img {
       scale: 2;
+      transition: filter 0.3s ease;
+    }
+
+    &:hover img {
+      filter: drop-shadow(0 0 6px var(--glow-warm));
     }
   }
 }
