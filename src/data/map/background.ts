@@ -54,7 +54,11 @@ export class Background extends Container {
     const height = this.viewport.worldHeight / this.viewport.worldScale;
     const width = this.viewport.worldWidth / this.viewport.worldScale;
 
-    const gradient = new FillGradient(0, 0, 1, height);
+    const gradient = new FillGradient({
+      type: "linear",
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: height },
+    });
     this.config.gradient.forEach(([color, step]) =>
       gradient.addColorStop(step, color)
     );

@@ -13,7 +13,7 @@ import BuilderSettings, {
 import ImageInput from "../molecules/ImageInput.vue";
 import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
-import dice from "pixelarticons/svg/dice.svg";
+import shuffle from "pixelarticons/svg/shuffle.svg";
 import download from "pixelarticons/svg/download.svg";
 import upload from "pixelarticons/svg/upload.svg";
 import Collapsible from "../atoms/Collapsible.vue";
@@ -356,7 +356,7 @@ const handleBBoxChange = (newBBox: BBox) => {
             v-else
             title="Generate wallmask"
             :onClick="() => { wfcInitialError = ''; showWfcDialog = true; }"
-            :icon="dice"
+            :icon="shuffle"
           />
           <IconButton
             v-if="mask.data"

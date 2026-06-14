@@ -6,7 +6,7 @@ import Tooltip from "../atoms/Tooltip.vue";
 import { ref } from "vue";
 import JoinDialog from "../organisms/JoinDialog.vue";
 import ServerList from "../organisms/ServerList.vue";
-import github from "pixelarticons/svg/github-2.svg";
+import externalLink from "pixelarticons/svg/external-link.svg";
 
 const joinDialogOpen = ref(false);
 </script>
@@ -37,7 +37,7 @@ const joinDialogOpen = ref(false);
             class="primary menu-button"
           >
             Issues/Feedback
-            <img class="github-icon" :src="github" />
+            <img class="github-icon" :src="externalLink" />
           </a>
         </li>
       </ul>

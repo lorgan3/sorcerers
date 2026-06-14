@@ -6,7 +6,7 @@ import { Assets } from "pixi.js";
 
 export const loadAsMap = (src: string) => ({
   src,
-  loadParser: MAP_LOADER,
+  parser: MAP_LOADER,
 });
 
 Assets.addBundle("assets", {

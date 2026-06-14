@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import eye from "pixelarticons/svg/eye.svg";
-import eyeClosed from "pixelarticons/svg/eye-closed.svg";
+import eyeClosed from "pixelarticons/svg/eye-off.svg";
 import close from "pixelarticons/svg/close.svg";
 import IconButton from "../atoms/IconButton.vue";
 
