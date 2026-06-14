@@ -7,6 +7,8 @@ import {
   type LobbyEntry,
 } from "../../data/network/lobbyAnnouncement";
 import { joinByKey } from "../../data/network/joinByKey";
+import TornPanel from "../atoms/TornPanel.vue";
+import PixelDivider from "../atoms/PixelDivider.vue";
 
 const router = useRouter();
 const lobbies = ref<LobbyEntry[]>([]);
@@ -39,39 +41,43 @@ const numberFormatter = new Intl.NumberFormat("en");
 </script>
 
 <template>
-  <section v-if="lobbies.length > 0" class="server-list">
-    <h2>Public games</h2>
+  <TornPanel v-if="lobbies.length > 0" tear="b" class="server-list">
+    <h2 class="section-heading">Public games</h2>
     <ul>
-      <li v-for="entry in lobbies" :key="entry.joinKey">
-        <button
-          class="primary entry"
-          :disabled="entry.playerCount >= entry.maxPlayers"
-          @click="handleJoin(entry)"
-        >
-          <span class="host">{{ entry.hostName }}</span>
-          <span class="map">{{ entry.mapName.replace("_", " ") || "—" }}</span>
-          <span class="meta">
-            {{ entry.playerCount }}/{{ entry.maxPlayers }} ·
-            team {{ entry.gameSettings.teamSize }} ·
-            {{ numberFormatter.format(entry.gameSettings.turnLength) }}s turn
-          </span>
-        </button>
-      </li>
+      <template v-for="(entry, index) in lobbies" :key="entry.joinKey">
+        <li v-if="index > 0" class="separator"><PixelDivider /></li>
+        <li>
+          <button
+            class="entry"
+            :disabled="entry.playerCount >= entry.maxPlayers"
+            @click="handleJoin(entry)"
+          >
+            <span class="host">{{ entry.hostName }}</span>
+            <span class="map">{{ entry.mapName.replace("_", " ") || "—" }}</span>
+            <span class="meta">
+              {{ entry.playerCount }}/{{ entry.maxPlayers }} ·
+              team {{ entry.gameSettings.teamSize }} ·
+              {{ numberFormatter.format(entry.gameSettings.turnLength) }}s turn
+            </span>
+          </button>
+        </li>
+      </template>
     </ul>
-  </section>
+  </TornPanel>
 </template>
 
 <style lang="scss" scoped>
 .server-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   min-width: 320px;
 
   ul {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .separator {
+    padding: 6px 0;
   }
 
   .entry {
@@ -81,8 +87,21 @@ const numberFormatter = new Intl.NumberFormat("en");
     gap: 4px;
     width: 100%;
     text-align: left;
-    padding: 8px 16px;
+    padding: 8px 6px;
     font-family: Eternal;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover:not([disabled]) {
+      background-color: rgba(128, 51, 30, 0.08);
+    }
+
+    &[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     .host {
       font-size: 24px;
