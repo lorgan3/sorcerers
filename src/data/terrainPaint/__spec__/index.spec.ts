@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { paintTerrain } from "../index";
-import { THEME_IDS } from "../palettes";
+import { THEMES, THEME_IDS } from "../palettes";
+import { hexToRgb } from "../pixel";
 import { bitmap } from "./helpers";
 
 const MAP = [
@@ -106,5 +107,89 @@ describe("paintTerrain", () => {
     for (let i = 3; i < result.terrain.data.length; i += 4) {
       expect(result.terrain.data[i]).toBe(0);
     }
+  });
+
+  test("paints a themed back-wall into roofed pockets", () => {
+    // a wide roof over open empty space, no floor: pockets must fill
+    const roof = [
+      "....................",
+      "####################",
+      "....................",
+      "....................",
+      "....................",
+      "....................",
+    ];
+    const { alpha, width, height } = bitmap(roof);
+    const result = paintTerrain({
+      alpha,
+      width,
+      height,
+      ladders: [],
+      seed: 1,
+    });
+    const data = result.background.data;
+    let filled = 0;
+    for (let x = 0; x < width; x++) {
+      // row 3 sits under the solid roof at row 1
+      if (data[(3 * width + x) * 4 + 3] === 255) filled++;
+    }
+    expect(filled).toBe(width);
+  });
+
+  test("a zone theme override drives its roofed pocket's back-wall", () => {
+    // one landmass -> zone 0; overriding it must reach the back-wall colors
+    const roof = [
+      "....................",
+      "####################",
+      "....................",
+      "....................",
+      "....................",
+      "....................",
+    ];
+    const { alpha, width, height } = bitmap(roof);
+    const result = paintTerrain({
+      alpha,
+      width,
+      height,
+      ladders: [],
+      seed: 1,
+      themeOverrides: { 0: "urban" },
+    });
+    expect(result.zones[0].themeId).toBe("urban");
+    // shading scales every channel of a ramp color by one factor; the painted
+    // pixel must be a uniform scaling of some urban back-wall color.
+    const data = result.background.data;
+    const o = (3 * width + 5) * 4;
+    const px = [data[o], data[o + 1], data[o + 2]];
+    const matches = THEMES.urban.backwall!.ramp.some((hex) => {
+      const c = hexToRgb(hex);
+      const factors: number[] = [];
+      for (let k = 0; k < 3; k++) {
+        if (c[k] === 0) return px[k] <= 2;
+        const f = px[k] / c[k];
+        if (f < 0.3 || f > 1.05) return false;
+        factors.push(f);
+      }
+      return Math.max(...factors) - Math.min(...factors) < 0.06;
+    });
+    expect(matches).toBe(true);
+  });
+
+  test("a ladder casts a contact shadow onto the terrain at its base", () => {
+    const width = 40;
+    const height = 40;
+    const rows = Array.from({ length: height }, () => "#".repeat(width));
+    const { alpha } = bitmap(rows);
+    const ladder = { left: 16, top: 4, right: 28, bottom: 30 };
+    const shade = (ladders: typeof ladder[]) =>
+      paintTerrain({ alpha, width, height, ladders, seed: 1 }).terrain.data;
+    const withLadder = shade([ladder]);
+    const without = shade([]);
+    // a solid-terrain pixel near the ladder's base center (22, 30)
+    const i = 30 * width + 30;
+    const sum = (d: Uint8ClampedArray) => d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2];
+    // still opaque terrain, just darkened by the contact shadow
+    expect(withLadder[i * 4 + 3]).toBe(255);
+    expect(sum(withLadder)).toBeLessThan(sum(without));
   });
 });

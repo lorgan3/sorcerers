@@ -98,4 +98,45 @@ describe("THEMES", () => {
       }
     }
   });
+
+  test("every theme except toon defines a valid back-wall band", () => {
+    for (const id of THEME_IDS) {
+      const band = THEMES[id].backwall;
+      if (id === "toon") {
+        expect(band).toBeUndefined();
+        continue;
+      }
+      expect(band).toBeDefined();
+      expect(band!.ramp.length).toBeGreaterThanOrEqual(band!.pattern ? 2 : 1);
+      for (const color of band!.ramp) {
+        expect(color).toMatch(HEX);
+      }
+    }
+  });
+
+  test("back-wall patterns are pure functions of position", () => {
+    for (const id of THEME_IDS) {
+      const band = THEMES[id].backwall;
+      if (!band?.pattern) continue;
+      const len = band.ramp.length;
+      const first = band.pattern(13, 9, 0, len);
+      band.pattern(99, 99, 0, len);
+      expect(band.pattern(13, 9, 0, len)).toBe(first);
+    }
+  });
+
+  test("back-wall patterns stay within ramp bounds", () => {
+    for (const id of THEME_IDS) {
+      const band = THEMES[id].backwall;
+      if (!band?.pattern) continue;
+      const len = band.ramp.length;
+      for (let y = 0; y < 60; y++) {
+        for (let x = 0; x < 60; x++) {
+          const idx = band.pattern(x, y, 0, len);
+          expect(idx).toBeGreaterThanOrEqual(0);
+          expect(idx).toBeLessThan(len);
+        }
+      }
+    }
+  });
 });
