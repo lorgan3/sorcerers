@@ -8,15 +8,31 @@
 // A hard-stepped vertical gradient using ABSOLUTE pixel stops (60px bands), so
 // the steps never stretch — a taller panel simply reveals more of the gradient
 // and clips the rest. The dithering is the bands themselves bleeding into each
-// other: across every 60px seam, pixels of the darker band poke up into the
-// lighter one and vice-versa, drawn in the actual band colors (no tint, no
-// border line). The dot colors are generated from the same lists as the
-// gradient so the two can never drift apart.
+// other: across every seam, pixels of the darker band poke up into the lighter
+// one and vice-versa, drawn in the actual band colors (no tint, no border
+// line). Both the gradient stops AND the dither dots are generated from the
+// same `$dither-bands` list, so the two can never drift apart.
 
+$dither-band: 60; // height of one band, in px
 $dither-bands: "dbc7a6", "d7c19f", "d2bc99", "ceb692", "cab18c", "c6ab85",
   "c1a57e", "bda078";
 $dither-bands-hover: "e3cfae", "dfc9a7", "dac4a1", "d6be9a", "d2b994", "ceb38d",
   "c9ad86", "c5a880";
+
+// Hard-stepped vertical gradient: one solid band per color, $dither-band tall.
+@function dither-gradient($colors) {
+  $stops: "";
+  @for $i from 1 through list.length($colors) {
+    $c: list.nth($colors, $i);
+    $start: ($i - 1) * $dither-band;
+    $end: $i * $dither-band;
+    $stops: $stops + '##{$c} #{$start}px #{$end}px';
+    @if $i < list.length($colors) {
+      $stops: $stops + ", ";
+    }
+  }
+  @return $stops;
+}
 
 // Transparent overlay carrying only the dither dots at each band seam. 8px-deep
 // checkerboard (4px each side of the seam) in the two adjacent band colors.
@@ -25,7 +41,7 @@ $dither-bands-hover: "e3cfae", "dfc9a7", "dac4a1", "d6be9a", "d2b994", "ceb38d",
   @for $i from 1 through list.length($colors) - 1 {
     $up: list.nth($colors, $i);
     $lo: list.nth($colors, $i + 1);
-    $b: $i * 60;
+    $b: $i * $dither-band;
     // darker (next) band poking up into the lighter band, above the seam
     $dots: $dots + '<rect y="#{$b - 4}" width="8" height="2" fill="%23#{$lo}"/>';
     $dots: $dots +
@@ -35,43 +51,25 @@ $dither-bands-hover: "e3cfae", "dfc9a7", "dac4a1", "d6be9a", "d2b994", "ceb38d",
     $dots: $dots +
       '<rect y="#{$b + 2}" width="8" height="2" fill="%23#{$up}"/>';
   }
-  @return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="480" shape-rendering="crispEdges">#{$dots}</svg>';
+  $h: list.length($colors) * $dither-band;
+  @return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="#{$h}" shape-rendering="crispEdges">#{$dots}</svg>';
+}
+
+@mixin dither-bands($colors) {
+  $h: list.length($colors) * $dither-band;
+  background-image: url('#{dither-seam($colors)}'),
+    linear-gradient(180deg, #{dither-gradient($colors)});
+  background-size: 16px #{$h}px, 100% 100%;
+  background-repeat: repeat-x, no-repeat;
+  image-rendering: pixelated;
 }
 
 @mixin dither-surface {
-  background-image: url('#{dither-seam($dither-bands)}'),
-    linear-gradient(
-      180deg,
-      #dbc7a6 0 60px,
-      #d7c19f 60px 120px,
-      #d2bc99 120px 180px,
-      #ceb692 180px 240px,
-      #cab18c 240px 300px,
-      #c6ab85 300px 360px,
-      #c1a57e 360px 420px,
-      #bda078 420px 480px
-    );
-  background-size: 16px 480px, 100% 100%;
-  background-repeat: repeat-x, no-repeat;
-  image-rendering: pixelated;
+  @include dither-bands($dither-bands);
 }
 
 @mixin dither-surface-hover {
-  background-image: url('#{dither-seam($dither-bands-hover)}'),
-    linear-gradient(
-      180deg,
-      #e3cfae 0 60px,
-      #dfc9a7 60px 120px,
-      #dac4a1 120px 180px,
-      #d6be9a 180px 240px,
-      #d2b994 240px 300px,
-      #ceb38d 300px 360px,
-      #c9ad86 360px 420px,
-      #c5a880 420px 480px
-    );
-  background-size: 16px 480px, 100% 100%;
-  background-repeat: repeat-x, no-repeat;
-  image-rendering: pixelated;
+  @include dither-bands($dither-bands-hover);
 }
 
 // --- Torn paper edges --------------------------------------------------------
