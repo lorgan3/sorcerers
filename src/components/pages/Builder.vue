@@ -19,6 +19,8 @@ import upload from "pixelarticons/svg/upload.svg";
 import Collapsible from "../atoms/Collapsible.vue";
 import WfcDialog, { type WfcSettings } from "../organisms/WfcDialog.vue";
 import AiAlignDialog from "../organisms/AiAlignDialog.vue";
+import TerrainPaintDialog from "../organisms/TerrainPaintDialog.vue";
+import paintBucket from "pixelarticons/svg/paint-bucket.svg";
 import type { LadderInfo } from "../../data/wfc/postProcess";
 import WfcWorker from "../../data/wfc/wfc.worker?worker";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
@@ -144,7 +146,7 @@ const generateWfc = () => {
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-  if (showWfcDialog.value || showAiAlign.value) return;
+  if (showWfcDialog.value || showAiAlign.value || showTerrainPaint.value) return;
   if (e.key === "g" || e.key === "G") {
     generateWfc();
   }
@@ -304,6 +306,28 @@ const handleAiAlignConfirm = (result: {
   showAiAlign.value = false;
 };
 
+const showTerrainPaint = ref(false);
+
+const handleTerrainPaintConfirm = (result: {
+  terrain: string;
+  background: string;
+  width: number;
+  height: number;
+}) => {
+  terrain.value = { data: result.terrain, visible: true };
+  background.value = { data: result.background, visible: true };
+  // terrain alpha now IS the wallmask; the customMask watcher clears the
+  // stored mask so the built map derives collision from terrain alpha
+  advancedSettings.value.customMask = false;
+  advancedSettings.value.bbox = BBox.create(result.width, result.height);
+  // painted backgrounds are transparent outside the debris, so a parallax
+  // is expected to fill the sky
+  if (!advancedSettings.value.parallaxName) {
+    advancedSettings.value.parallaxName = "Ocean";
+  }
+  showTerrainPaint.value = false;
+};
+
 watch(
   () => advancedSettings.value.scale,
   (scale) => {
@@ -369,6 +393,12 @@ const handleBBoxChange = (newBBox: BBox) => {
             title="Import AI-generated terrain"
             :onClick="handleImportAITerrain"
             :icon="upload"
+          />
+          <IconButton
+            v-if="mask.data || terrain.data"
+            title="Paint terrain procedurally"
+            :onClick="() => (showTerrainPaint = true)"
+            :icon="paintBucket"
           />
           <input
             ref="aiTerrainInput"
@@ -649,6 +679,13 @@ const handleBBoxChange = (newBBox: BBox) => {
       :aiSrc="aiAlignSrc"
       :onConfirm="handleAiAlignConfirm"
       :onClose="() => (showAiAlign = false)"
+    />
+    <TerrainPaintDialog
+      v-if="showTerrainPaint && (mask.data || terrain.data)"
+      :alphaSrc="mask.data || terrain.data"
+      :ladders="ladders.map((l) => l.toJS())"
+      :onConfirm="handleTerrainPaintConfirm"
+      :onClose="() => (showTerrainPaint = false)"
     />
   </div>
 </template>
