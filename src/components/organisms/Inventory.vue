@@ -246,6 +246,7 @@ const getElementFilter = (element: Element) =>
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .clip {
   --size: 48px;
 
@@ -269,13 +270,12 @@ const getElementFilter = (element: Element) =>
   display: flex;
   flex-direction: column;
   gap: 3px;
-  border: 2px solid var(--border-accent);
-  border-radius: 4px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-  box-shadow: 0 2px 8px rgba(30, 15, 5, 0.3);
+  @include o.dither-surface;
+  @include o.tear(o.$tear-light);
+  filter: drop-shadow(2px 2px 0 var(--shadow-hard));
   pointer-events: all;
   cursor: url("../../assets/pointer.png"), auto;
-  padding: 6px;
+  padding: calc(var(--tear-depth-light) + 2px);
 
   .control {
     width: var(--size);
@@ -344,16 +344,16 @@ const getElementFilter = (element: Element) =>
 .wrapper {
   transition: transform 0.5s;
   transform: translateX(calc(100% + 2vw));
+  filter: drop-shadow(2px 2px 0 var(--shadow-hard));
 
   &.isOpen {
     transform: translateX(0);
   }
 
   .inventory {
-    border: 2px solid var(--border-accent);
-    border-radius: 4px;
-    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-    box-shadow: -4px 0 15px rgba(30, 15, 5, 0.3);
+    @include o.dither-surface;
+    @include o.tear(o.$tear-light);
+    padding: 2px;
     pointer-events: all;
     cursor: url("../../assets/pointer.png"), auto;
 
@@ -384,7 +384,7 @@ const getElementFilter = (element: Element) =>
         }
 
         &:hover {
-          background: linear-gradient(180deg, var(--parchment-hover-light), var(--parchment-hover-dark));
+          @include o.dither-surface-hover;
           box-shadow: inset 0 0 8px var(--glow-warm-soft);
         }
 
