@@ -14,6 +14,7 @@ import GameSettingsComponent from "../organisms/GameSettings.vue";
 import MapSelect from "../organisms/MapSelect.vue";
 import { COLORS } from "../../data/network/constants";
 import IconButton from "../atoms/IconButton.vue";
+import PixelDivider from "../atoms/PixelDivider.vue";
 import human from "pixelarticons/svg/user-plus.svg";
 import bot from "pixelarticons/svg/robot.svg";
 import { useHostServer } from "./composables/useHostServer";
@@ -265,6 +266,8 @@ const handleSelectMap = async (config: Config, name: string) => {
         </div>
       </div>
 
+      <PixelDivider vertical class="column-divider" />
+
       <div class="column">
         <div class="section">
           <h2 class="section-heading">
@@ -272,10 +275,14 @@ const handleSelectMap = async (config: Config, name: string) => {
           </h2>
         </div>
 
+        <PixelDivider />
+
         <div class="section">
           <h2 class="section-heading">Map</h2>
           <MapSelect :onEdit="handleSelectMap" defaultMap="Playground" />
         </div>
+
+        <PixelDivider />
 
         <div class="section">
           <GameSettingsComponent
@@ -309,37 +316,14 @@ const handleSelectMap = async (config: Config, name: string) => {
 .columns {
   display: flex;
   gap: 30px;
-  align-items: flex-start;
+  align-items: stretch;
 
   @media (max-width: 800px) {
     flex-direction: column;
 
-    &::before {
+    .column-divider {
       display: none;
     }
-  }
-
-  // Vertical divider between columns
-  &::before {
-    content: '';
-    order: 1;
-    width: 1px;
-    align-self: stretch;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      var(--border-accent-faint) 15%,
-      var(--border-accent-faint) 85%,
-      transparent
-    );
-  }
-
-  .column:first-child {
-    order: 0;
-  }
-
-  .column:last-child {
-    order: 2;
   }
 }
 
@@ -355,16 +339,6 @@ const handleSelectMap = async (config: Config, name: string) => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-
-
-  // Divider after section content, not after title
-  + .section::before {
-    content: '';
-    display: block;
-    height: 1px;
-    margin-bottom: 4px;
-    background: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-  }
 }
 
 .teams {
