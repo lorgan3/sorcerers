@@ -46,6 +46,10 @@ export function rampIndex(
 /**
  * Sample the zone at a jittered position. Near zone seams this dithers
  * pixels between the two zones, producing ragged organic transitions.
+ *
+ * When a landmassMap is given the jittered sample is only adopted if it lands
+ * on the same landmass, so the dither never leaks one island's theme onto a
+ * different island that happens to sit within SEAM_JITTER of it.
  */
 export function pickZone(
   zoneMap: Int32Array,
@@ -53,8 +57,10 @@ export function pickZone(
   height: number,
   x: number,
   y: number,
-  seed: number
+  seed: number,
+  landmassMap?: Int32Array
 ): number {
+  const i = y * width + x;
   const jx = Math.min(
     width - 1,
     Math.max(
@@ -69,6 +75,9 @@ export function pickZone(
       y + Math.round((noise2d(seed ^ 0x85ebca6b, x, y) - 0.5) * 2 * SEAM_JITTER)
     )
   );
-  const zone = zoneMap[jy * width + jx];
-  return zone >= 0 ? zone : zoneMap[y * width + x];
+  const j = jy * width + jx;
+  const zone = zoneMap[j];
+  if (zone < 0) return zoneMap[i];
+  if (landmassMap && landmassMap[j] !== landmassMap[i]) return zoneMap[i];
+  return zone;
 }

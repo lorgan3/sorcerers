@@ -63,7 +63,7 @@ export function paintTerrain(input: PaintInput): PaintResult {
     for (let x = 0; x < width; x++) {
       const i = y * width + x;
       if (!alpha[i]) continue;
-      const zi = pickZone(zoneMap, width, height, x, y, seed);
+      const zi = pickZone(zoneMap, width, height, x, y, seed, landmassMap);
       const theme = THEMES[zones[zi].themeId];
 
       // wobble the depth/sky fields so band boundaries and the color steps

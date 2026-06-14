@@ -1,4 +1,5 @@
 import type { PlainBBox } from "../map/bbox";
+import { AO_MIN } from "./backwall";
 import { THEMES } from "./palettes";
 import { hexToRgb, pickZone, rampIndex } from "./pixel";
 import { noise2d } from "./rng";
@@ -19,8 +20,8 @@ const KEEP_BASE = 0.4;
 const KEEP_VARIATION = 0.2;
 const ROUGHEN_PX = 3;
 // eroded terrain reads as deep shadow: darken the wall to the back-wall's
-// darkest ambient-occlusion level (AO_MIN) so debris matches those shadows
-const DEBRIS_SHADE = 0.5;
+// darkest ambient-occlusion level so debris matches those shadows
+const DEBRIS_SHADE = AO_MIN;
 // deep terrain shouldn't crater: never erode more than this from a span's top
 const MAX_EROSION_PX = 10;
 const RUBBLE_BAND_PX = 22;
@@ -83,7 +84,7 @@ export function buildDebris(input: DebrisInput): void {
       const erosion = Math.min(fractional, Math.max(0, capped));
       const newTop = y + erosion;
       for (let yy = newTop; yy < end; yy++) {
-        const zi = pickZone(zoneMap, width, height, x, yy, seed);
+        const zi = pickZone(zoneMap, width, height, x, yy, seed, landmassMap);
         const colors = debrisColors[zi];
         const t = Math.min(0.999, (yy - newTop) / (RUBBLE_BAND_PX * colors.length));
         const idx = rampIndex(debrisBands[zi], t, x, yy, seed);

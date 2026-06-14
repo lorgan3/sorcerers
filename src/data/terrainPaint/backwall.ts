@@ -16,7 +16,9 @@ export interface BackwallInput {
 // empty pixels within this distance below their ceiling are progressively
 // darkened — a downward contact shadow cast by the surface above them
 const AO_RADIUS = 18;
-const AO_MIN = 0.5;
+// darkest ambient-occlusion multiplier; debris reuses it so eroded terrain
+// reads as the same deep-shadow tone as a fully occluded pocket
+export const AO_MIN = 0.5;
 // how far the back-wall's edge against open sky is allowed to wander
 const EDGE_WOBBLE = 4;
 
