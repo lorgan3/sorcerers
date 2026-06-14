@@ -703,8 +703,8 @@ const handleBBoxChange = (newBBox: BBox) => {
 
   .controls {
     width: 200px;
-    border-right: 4px solid var(--primary);
-    box-shadow: 5px 0 10px #00000069;
+    border-right: 2px solid var(--border-accent);
+    box-shadow: 2px 0 0 var(--shadow-hard);
     padding: 10px;
     overflow-y: auto;
 
@@ -726,10 +726,12 @@ const handleBBoxChange = (newBBox: BBox) => {
 
     > .section + .section {
       padding-top: 10px;
-      background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-      background-size: 100% 1px;
-      background-repeat: no-repeat;
-      background-position: top;
+      background: repeating-linear-gradient(
+          90deg,
+          var(--border-accent-faint) 0 4px,
+          transparent 4px 8px
+        )
+        top / 100% 2px no-repeat;
     }
 
     .layer-title {
