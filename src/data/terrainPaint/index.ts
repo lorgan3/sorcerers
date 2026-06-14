@@ -1,8 +1,10 @@
 import type { PlainBBox } from "../map/bbox";
-import { buildDebris } from "./debris";
+import { buildDebris, shadeLadderBases } from "./debris";
+import { buildBackwall } from "./backwall";
 import { computeField } from "./field";
 import { THEMES } from "./palettes";
 import { createImageData, hexToRgb, pickZone, rampIndex } from "./pixel";
+import { noise2d } from "./rng";
 import { computeZones, type ZoneInfo } from "./zones";
 
 export interface PaintInput {
@@ -18,7 +20,7 @@ export interface PaintInput {
 export interface PaintResult {
   /** Opaque exactly where the input alpha is solid. */
   terrain: ImageData;
-  /** Debris + ladders, transparent elsewhere. */
+  /** Themed back-wall + debris + ladders, transparent in open sky. */
   background: ImageData;
   zones: ZoneInfo[];
   /** Zone index per pixel, -1 for empty — lets the UI map clicks to zones. */
@@ -28,6 +30,11 @@ export interface PaintResult {
 const OUTLINE_DEPTH = 2.5;
 // each deep-ramp color covers this many px of depth before the next, darker one
 const DEEP_PX_PER_RAMP_STEP = 28;
+// px of low-frequency wobble added to the sky/depth fields so every depth-based
+// transition — band boundaries AND the color steps within a band — undulates
+// instead of tracing straight contours
+const SKY_JITTER = 4;
+const DEPTH_JITTER = 7;
 
 export function paintTerrain(input: PaintInput): PaintResult {
   const { alpha, width, height, ladders, seed } = input;
@@ -56,25 +63,35 @@ export function paintTerrain(input: PaintInput): PaintResult {
     for (let x = 0; x < width; x++) {
       const i = y * width + x;
       if (!alpha[i]) continue;
-      const zi = pickZone(zoneMap, width, height, x, y, seed);
+      const zi = pickZone(zoneMap, width, height, x, y, seed, landmassMap);
       const theme = THEMES[zones[zi].themeId];
+
+      // wobble the depth/sky fields so band boundaries and the color steps
+      // within each band undulate; coarse noise keeps the wobble smooth, and
+      // the raw depth still drives the crisp silhouette outline
+      const skyV =
+        sky[i] +
+        (noise2d(seed ^ 0x2f1d35b, x >> 2, y >> 2) - 0.5) * 2 * SKY_JITTER;
+      const depthV =
+        depth[i] +
+        (noise2d(seed ^ 0x77a3c19, x >> 2, y >> 2) - 0.5) * 2 * DEPTH_JITTER;
 
       let hex: string;
       if (theme.outline && depth[i] <= OUTLINE_DEPTH) {
         hex = theme.outline;
-      } else if (sky[i] < theme.surface.thickness) {
+      } else if (skyV < theme.surface.thickness) {
         const idx = rampIndex(
           theme.surface,
-          sky[i] / theme.surface.thickness,
+          skyV / theme.surface.thickness,
           x,
           y,
           seed
         );
         hex = theme.surface.ramp[idx];
-      } else if (depth[i] < theme.shallow.depth) {
+      } else if (depthV < theme.shallow.depth) {
         const idx = rampIndex(
           theme.shallow,
-          depth[i] / theme.shallow.depth,
+          depthV / theme.shallow.depth,
           x,
           y,
           seed
@@ -83,7 +100,7 @@ export function paintTerrain(input: PaintInput): PaintResult {
       } else {
         const t = Math.min(
           0.999,
-          (depth[i] - theme.shallow.depth) /
+          (depthV - theme.shallow.depth) /
             (DEEP_PX_PER_RAMP_STEP * theme.deep.ramp.length)
         );
         hex = theme.deep.ramp[rampIndex(theme.deep, t, x, y, seed)];
@@ -98,7 +115,10 @@ export function paintTerrain(input: PaintInput): PaintResult {
     }
   }
 
-  const background = buildDebris({
+  const background = createImageData(width, height);
+  buildBackwall({ background, width, height, zoneMap, zones, seed });
+  buildDebris({
+    background,
     width,
     height,
     zoneMap,
@@ -107,6 +127,7 @@ export function paintTerrain(input: PaintInput): PaintResult {
     ladders,
     seed,
   });
+  shadeLadderBases(terrain, ladders, width, height);
 
   return { terrain, background, zones, zoneMap };
 }

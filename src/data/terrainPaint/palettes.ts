@@ -1,3 +1,5 @@
+import { noise2d } from "./rng";
+
 export type PatternFn = (
   x: number,
   y: number,
@@ -20,6 +22,8 @@ export interface Theme {
   ladder: { rail: string; rung: string };
   /** Pillow-shading silhouette outline; omit to disable for the theme. */
   outline?: string;
+  /** Lightened background painted into roofed empty pockets; omit to opt out. */
+  backwall?: MaterialBand;
 }
 
 /** Brick coursing: 8×4 bricks offset every other row; last ramp color = mortar. */
@@ -65,6 +69,89 @@ const plankPattern: PatternFn = (x, y, rampIndex, rampLength) => {
   return Math.min(rampLength - 2, rampIndex + (plankId % 2));
 };
 
+// Fixed seed for the position-stable texture noise the back-wall patterns use.
+const PNOISE = 0x51ed2c1f;
+// small ±n integer offset, stable per (x, y), for roughening pattern edges
+const edgeJitter = (x: number, y: number, salt: number, n: number): number =>
+  Math.round((noise2d(PNOISE ^ salt, x, y) - 0.5) * 2 * n);
+
+/** Mineshaft: light rock with crisp vertical timber posts + cross-beams. */
+const minePattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const px = ((x % 40) + 40) % 40;
+  const py = ((y % 56) + 56) % 56;
+  if (px < 7 || py < 6) {
+    if (px === 0 || py === 0) return Math.max(0, rampLength - 3); // lit edge
+    return rampLength - 1; // timber
+  }
+  const mottle = noise2d(PNOISE ^ 9, x >> 1, y >> 1) < 0.4 ? 1 : 0;
+  return Math.min(rampLength - 2, rampIndex + mottle);
+};
+
+/** Dirt: mottled soil with scattered, varied embedded stones. */
+const dirtPattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const cx = Math.floor(x / 17);
+  const cy = Math.floor(y / 15);
+  if (noise2d(PNOISE ^ 21, cx, cy) > 0.74) {
+    const ox = 4 + Math.floor(noise2d(PNOISE ^ 22, cx, cy) * 9);
+    const oy = 4 + Math.floor(noise2d(PNOISE ^ 23, cx, cy) * 7);
+    const rr = 3 + Math.floor(noise2d(PNOISE ^ 24, cx, cy) * 8);
+    const dx = (((x % 17) + 17) % 17) - ox;
+    const dy = (((y % 15) + 15) % 15) - oy;
+    if (dx * dx + dy * dy < rr) {
+      return dy < 0 ? rampLength - 2 : rampLength - 1; // lit top edge / stone
+    }
+  }
+  const clump = noise2d(PNOISE ^ 25, x >> 2, y >> 2);
+  return Math.min(rampLength - 2, clump > 0.6 ? 1 : 0);
+};
+
+/** Girders: light steel with a beveled, riveted I-beam lattice; fuzzy edges. */
+const girderPattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const gx = (((x + edgeJitter(x, y, 1, 2)) % 44) + 44) % 44;
+  const gy = (((y + edgeJitter(x, y, 2, 2)) % 48) + 48) % 48;
+  const onV = gx >= 16 && gx < 28;
+  const onH = gy >= 20 && gy < 29;
+  if ((onV && gy % 12 === 6) || (onH && gx % 12 === 6)) return rampLength - 1; // rivet
+  if (onV || onH) {
+    if ((onV && gx === 16) || (onH && gy === 20)) return 0; // lit edge
+    if ((onV && gx === 27) || (onH && gy === 28)) return rampLength - 2; // shadow edge
+    return rampLength - 3; // beam body
+  }
+  const mottle = noise2d(PNOISE ^ 33, x >> 2, y >> 2) > 0.6 ? 1 : 0;
+  return Math.min(rampLength - 3, rampIndex + mottle);
+};
+
+/** Packed ice: lit strata bands with fuzzy crack seams and embedded stones. */
+const icePattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const yj = y + edgeJitter(x, y, 3, 2);
+  const into = ((yj % 11) + 11) % 11;
+  if (into === 0) return rampLength - 1; // crack seam
+  const cx = Math.floor(x / 24);
+  const cy = Math.floor(y / 19);
+  if (noise2d(PNOISE ^ 31, cx, cy) > 0.8) {
+    const dx = (((x % 24) + 24) % 24) - 6;
+    const dy = (((y % 19) + 19) % 19) - 6;
+    if (dx * dx + dy * dy < 7) return rampLength - 1; // stone
+  }
+  if (into <= 1) return 0; // sheen just below the seam
+  const band = ((Math.floor(yj / 11) % 2) + 2) % 2;
+  return Math.min(rampLength - 2, rampIndex + band);
+};
+
+/** Timber frame: light backing with crisp vertical studs and a diagonal brace. */
+const framePattern: PatternFn = (x, y, rampIndex, rampLength) => {
+  const bx = ((x % 34) + 34) % 34;
+  const by = ((y % 34) + 34) % 34;
+  const onStud = bx < 5;
+  const onBrace = Math.abs(bx - by) < 3;
+  if (onStud || onBrace) {
+    if (bx === 0 || bx - by === -2) return Math.max(0, rampLength - 3); // lit edge
+    return rampLength - 1; // timber
+  }
+  const grain = noise2d(PNOISE ^ 41, x >> 2, y) < 0.5 ? 0 : 1;
+  return Math.min(rampLength - 2, rampIndex + grain);
+};
+
 export const THEMES: Record<string, Theme> = {
   grassland: {
     id: "grassland",
@@ -74,6 +161,12 @@ export const THEMES: Record<string, Theme> = {
     deep: { ramp: ["#8a8478", "#6e695f", "#544f47"] },
     rubble: { ramp: ["#cbb59b", "#bca68b", "#ad967b"] },
     ladder: { rail: "#6f4730", rung: "#a9714b" },
+    backwall: {
+      // lightened tints of the foreground dirt (shallow ramp) so the wall reads
+      // as the same earth seen behind the play surface
+      ramp: ["#c89070", "#b27a58", "#996343", "#6f4730"],
+      pattern: dirtPattern,
+    },
   },
   cave: {
     id: "cave",
@@ -92,6 +185,10 @@ export const THEMES: Record<string, Theme> = {
     },
     rubble: { ramp: ["#a8a69f", "#97958e", "#86847d"] },
     ladder: { rail: "#5a4634", rung: "#6f5640" },
+    backwall: {
+      ramp: ["#9a8f82", "#857a6d", "#6b6053", "#43361f"],
+      pattern: minePattern,
+    },
   },
   snow: {
     id: "snow",
@@ -101,6 +198,10 @@ export const THEMES: Record<string, Theme> = {
     deep: { ramp: ["#5d6a78", "#4a5563", "#3a4350"] },
     rubble: { ramp: ["#e2e8ee", "#d2dae2", "#c1cbd5"] },
     ladder: { rail: "#5a4634", rung: "#8a5a3b" },
+    backwall: {
+      ramp: ["#e7eff5", "#d2dde6", "#b9c6d1", "#92a2b0"],
+      pattern: icePattern,
+    },
   },
   urban: {
     id: "urban",
@@ -123,6 +224,10 @@ export const THEMES: Record<string, Theme> = {
       pattern: rebarPattern,
     },
     ladder: { rail: "#4a4d52", rung: "#6e6e68" },
+    backwall: {
+      ramp: ["#bcc1c7", "#a9aeb4", "#969ca3", "#7c848c", "#55606a"],
+      pattern: girderPattern,
+    },
   },
   planks: {
     id: "planks",
@@ -137,6 +242,10 @@ export const THEMES: Record<string, Theme> = {
     deep: { ramp: ["#6e5233", "#5d4429", "#4c3720"] },
     rubble: { ramp: ["#dcc39c", "#cdb189", "#bd9f76"] },
     ladder: { rail: "#5a4226", rung: "#967040" },
+    backwall: {
+      ramp: ["#cba877", "#b1905f", "#8a6c44", "#4f3c24"],
+      pattern: framePattern,
+    },
   },
   toon: {
     id: "toon",

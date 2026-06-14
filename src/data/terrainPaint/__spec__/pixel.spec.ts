@@ -106,4 +106,34 @@ describe("pickZone", () => {
       );
     }
   });
+
+  test("clamps jitter to the pixel's own landmass when a map is given", () => {
+    // two adjacent landmasses meeting at x=16, each one solid zone. Within
+    // SEAM_JITTER (8px) a left-side pixel's jitter can reach the right zone.
+    const width = 32;
+    const height = 32;
+    const zoneMap = new Int32Array(width * height);
+    const landmassMap = new Int32Array(width * height);
+    for (let i = 0; i < zoneMap.length; i++) {
+      const right = i % width >= 16;
+      zoneMap[i] = right ? 1 : 0;
+      landmassMap[i] = right ? 1 : 0;
+    }
+
+    // baseline: without the landmass map, jitter bleeds the right zone across
+    let bledWithoutMap = false;
+    for (let x = 10; x < 16; x++) {
+      for (let y = 0; y < height; y++) {
+        if (pickZone(zoneMap, width, height, x, y, 7) === 1) bledWithoutMap = true;
+      }
+    }
+    expect(bledWithoutMap).toBe(true);
+
+    // with the map, a left-landmass pixel never adopts the right zone
+    for (let x = 10; x < 16; x++) {
+      for (let y = 0; y < height; y++) {
+        expect(pickZone(zoneMap, width, height, x, y, 7, landmassMap)).toBe(0);
+      }
+    }
+  });
 });

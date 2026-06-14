@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { buildDebris } from "../debris";
+import { createImageData } from "../pixel";
 import { computeZones } from "../zones";
 import { bitmap } from "./helpers";
 
@@ -15,7 +16,9 @@ function debrisFor(
     height,
     seed
   );
-  const background = buildDebris({
+  const background = createImageData(width, height);
+  buildDebris({
+    background,
     width,
     height,
     zoneMap,
@@ -144,5 +147,21 @@ describe("buildDebris", () => {
     const data = background.data;
     // top-left corner: empty in the input, far from any ladder
     expect(data[(0 * width + 0) * 4 + 3]).toBe(0);
+  });
+
+  test("a ladder shadows the wall behind it along its full length", () => {
+    const width = 40;
+    const height = 40;
+    const rows = Array.from({ length: height }, () => "#".repeat(width));
+    const ladder = { left: 16, top: 4, right: 28, bottom: 30 };
+    const withLadder = debrisFor(rows, [ladder]);
+    const without = debrisFor(rows, []);
+    // a debris pixel beside the ladder, mid-length (not on a rail or rung)
+    const i = 20 * width + 30;
+    const sum = (d: Uint8ClampedArray) => d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2];
+    expect(withLadder.background.data[i * 4 + 3]).toBe(255);
+    expect(sum(withLadder.background.data)).toBeLessThan(
+      sum(without.background.data)
+    );
   });
 });
