@@ -74,13 +74,17 @@ const handleMouseLeave = (event: MouseEvent) => {
         :style="{ left: `${x}px`, top: `${y}px`, width: props.width }"
         :class="className"
       >
-        <slot name="tooltip"> {{ text }}</slot>
+        <div class="tooltip-inner">
+          <slot name="tooltip"> {{ text }}</slot>
+        </div>
       </div>
     </Teleport>
   </div>
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
+
 .tooltip-wrapper {
   display: inline-block;
   width: min-content;
@@ -88,14 +92,20 @@ const handleMouseLeave = (event: MouseEvent) => {
 
 .tooltip {
   position: fixed;
-  padding: 6px;
-
-  border-radius: var(--small-radius);
-  background-color: rgba(0, 0, 0, 0.8);
-  border: 1px solid #000;
-  color: white;
+  // Shadow lives on the outer element; the tear clip-path is on the inner one,
+  // otherwise the clip would cut the drop-shadow off.
+  filter: drop-shadow(2px 2px 0 var(--shadow-hard))
+    drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
   translate: var(--horizontal, 0%) var(--vertical, 0%);
   margin: -2px;
+
+  .tooltip-inner {
+    @include o.dither-surface;
+    @include o.tear(o.$tear-light);
+    padding: calc(var(--tear-depth-light) + 4px) calc(var(--tear-depth-light) + 8px);
+    color: var(--primary);
+    font-size: 15px;
+  }
 
   &.horizontal {
     &-left {
