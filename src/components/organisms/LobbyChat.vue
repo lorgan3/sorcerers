@@ -7,6 +7,7 @@ import { Manager } from "../../data/network/manager";
 import type { ChatEntry } from "../../data/network/types";
 import ChatParticles from "../molecules/ChatParticles.vue";
 import IconButton from "../atoms/IconButton.vue";
+import TornPanel from "../atoms/TornPanel.vue";
 
 const props = defineProps<{
   manager: Manager;
@@ -69,23 +70,30 @@ const handleChatMessage = (_entry: ChatEntry, byMe: boolean) => {
   });
 };
 
+const observeMessages = () => {
+  resizeObserver?.disconnect();
+  if (messageList.value) {
+    resizeObserver?.observe(messageList.value);
+  }
+};
+
 onMounted(() => {
   props.manager.onChatMessage = handleChatMessage;
+  if (typeof ResizeObserver !== "undefined") {
+    // Re-pin to bottom on every clientHeight change (open/close
+    // transitions, hover, etc). Without this, growing the container
+    // (e.g. on hover) lets the browser clamp scrollTop down to fit
+    // the bigger window — and that smaller scrollTop sticks when the
+    // container shrinks back, leaving the last line off-center.
+    resizeObserver = new ResizeObserver(() => {
+      if (!isOpen.value || wasAtBottom.value) {
+        scrollToBottom();
+      }
+    });
+  }
   nextTick(() => {
     scrollToBottom();
-    if (messageList.value && typeof ResizeObserver !== "undefined") {
-      // Re-pin to bottom on every clientHeight change (open/close
-      // transitions, hover, etc). Without this, growing the container
-      // (e.g. on hover) lets the browser clamp scrollTop down to fit
-      // the bigger window — and that smaller scrollTop sticks when the
-      // container shrinks back, leaving the last line off-center.
-      resizeObserver = new ResizeObserver(() => {
-        if (!isOpen.value || wasAtBottom.value) {
-          scrollToBottom();
-        }
-      });
-      resizeObserver.observe(messageList.value);
-    }
+    observeMessages();
   });
 });
 
@@ -98,12 +106,13 @@ onUnmounted(() => {
 });
 
 watch(isOpen, (open) => {
-  if (open) {
-    nextTick(() => {
-      scrollToBottom();
-      inputEl.value?.focus();
-    });
-  }
+  // The messages element is recreated when switching between the open
+  // panel and the collapsed bar, so re-attach the observer to the new node.
+  nextTick(() => {
+    observeMessages();
+    scrollToBottom();
+    if (open) inputEl.value?.focus();
+  });
 });
 
 const open = () => {
@@ -138,51 +147,70 @@ const containerClass = computed(() => ({
   <div :class="containerClass">
     <ChatParticles ref="particles" class="particles-layer" />
 
-    <button
-      v-if="!isOpen"
-      class="open-trigger"
-      type="button"
-      @click="open"
-      title="Open chat"
-    />
-
-    <IconButton
-      v-else
-      class="close-btn"
-      :icon="closeIcon"
-      title="Close chat"
-      :onClick="close"
-    />
-
-    <div
-      ref="messageList"
-      class="messages"
-      @scroll="handleScroll"
-    >
-      <div
-        v-for="msg in messages"
-        :key="msg.id"
-        class="message"
-      >
-        <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
-        {{ msg.text }}
-      </div>
-    </div>
-
-    <div v-if="isOpen" class="input-row">
-      <input
-        ref="inputEl"
-        v-model="draft"
-        class="input"
-        type="text"
-        maxlength="200"
-        @keydown="handleKey"
+    <TornPanel v-if="isOpen" tear="b" class="panel">
+      <IconButton
+        class="close-btn"
+        :icon="closeIcon"
+        title="Close chat"
+        :onClick="close"
       />
+
+      <div
+        ref="messageList"
+        class="messages"
+        @scroll="handleScroll"
+      >
+        <div
+          v-for="msg in messages"
+          :key="msg.id"
+          class="message"
+        >
+          <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
+          {{ msg.text }}
+        </div>
+      </div>
+
+      <div class="input-row">
+        <input
+          ref="inputEl"
+          v-model="draft"
+          class="input"
+          type="text"
+          maxlength="200"
+          @keydown="handleKey"
+        />
+      </div>
+    </TornPanel>
+
+    <div v-else class="collapsed-bar">
+      <button
+        class="open-trigger"
+        type="button"
+        @click="open"
+        title="Open chat"
+      />
+
+      <div
+        ref="messageList"
+        class="messages"
+        @scroll="handleScroll"
+      >
+        <div
+          v-for="msg in messages"
+          :key="msg.id"
+          class="message"
+        >
+          <span class="author" :style="{ color: msg.color }">{{ msg.author }}</span>:
+          {{ msg.text }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
+
 .lobby-chat {
   position: fixed;
   right: 24px;
@@ -191,13 +219,6 @@ const containerClass = computed(() => ({
   height: 36px;
   box-sizing: border-box;
   z-index: 50;
-
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-  border: 2px solid var(--border-accent);
-  border-radius: 4px 4px 0 0;
-  box-shadow:
-    0 2px 5px rgba(30, 15, 5, 0.3),
-    0 -4px 20px rgba(0, 0, 0, 0.3);
 
   transition: height 0.3s ease-out;
 
@@ -218,16 +239,28 @@ const containerClass = computed(() => ({
 }
 
 @keyframes chat-flash {
-  0%, 100% {
-    box-shadow:
-      0 2px 5px rgba(30, 15, 5, 0.3),
-      0 -4px 20px rgba(0, 0, 0, 0.3);
-  }
-  50% {
-    box-shadow:
-      0 2px 5px rgba(30, 15, 5, 0.3),
-      0 -4px 30px rgba(255, 220, 140, 0.6);
-  }
+  0%, 100% { filter: none; }
+  50% { filter: drop-shadow(0 -4px 12px rgba(255, 220, 140, 0.6)); }
+}
+
+.panel,
+.panel :deep(.torn),
+.panel :deep(.content) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.collapsed-bar {
+  @include o.dither-surface;
+  border: 2px solid var(--border-accent);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .particles-layer {

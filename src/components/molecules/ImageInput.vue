@@ -130,6 +130,7 @@ function handleDragLeave() {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .image-select-title {
   display: flex;
   justify-content: space-between;
@@ -144,7 +145,7 @@ function handleDragLeave() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+    @include o.dither-surface;
     cursor: pointer;
     border: 1px solid var(--border-accent-faint);
     border-radius: var(--small-radius);

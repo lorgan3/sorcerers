@@ -122,6 +122,7 @@ const grade = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .player-stats {
   position: relative;
   width: 180px;
@@ -130,7 +131,7 @@ const grade = computed(() => {
   gap: 6px;
   padding: 3px;
   border-left: 4px solid var(--color);
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
   border-radius: 4px;
   box-shadow: 0 2px 5px rgba(30, 15, 5, 0.3);
   padding: 8px;

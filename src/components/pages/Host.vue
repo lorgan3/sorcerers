@@ -361,9 +361,13 @@ const handleSelectMap = async (config: Config, name: string) => {
   + .section::before {
     content: '';
     display: block;
-    height: 1px;
+    height: 2px;
     margin-bottom: 4px;
-    background: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
+    background: repeating-linear-gradient(
+      90deg,
+      var(--border-accent-faint) 0 4px,
+      transparent 4px 8px
+    );
   }
 }
 

@@ -110,79 +110,82 @@ onBeforeUnmount(() => window.clearInterval(id));
   </div>
   <EndGameDialog v-if="stats" :stats="(stats as AccumulatedStat<unknown>[])" />
 
-  <div :class="{ hud: true, 'hud-open': forceOpen }">
-    <div class="players">
-      <ul>
-        <li class="player" v-for="(player, i) in players">
-          <span :class="{ name: true, active: activePlayer === player }"
-            >{{ player.name }}
-            <IconButton
-              v-if="getServer() && i > 0 && !!player.connection"
-              title="Remove player"
-              :onClick="() => handleKick(i)"
-              :icon="close"
-          /></span>
-          <ul
-            class="characters"
-            :style="{
-              '--max-hp': maxHp,
-              '--team-size': getManager().teamSize,
-            }"
-          >
-            <li
-              v-for="character in player.characters"
-              class="hp"
+  <div class="hud-wrap">
+    <div :class="{ hud: true, 'hud-open': forceOpen }">
+      <div class="players">
+        <ul>
+          <li class="player" v-for="(player, i) in players">
+            <span :class="{ name: true, active: activePlayer === player }"
+              >{{ player.name }}
+              <IconButton
+                v-if="getServer() && i > 0 && !!player.connection"
+                title="Remove player"
+                :onClick="() => handleKick(i)"
+                :icon="close"
+            /></span>
+            <ul
+              class="characters"
               :style="{
-                '--hp': character.hp,
-                background: player.color,
+                '--max-hp': maxHp,
+                '--team-size': getManager().teamSize,
               }"
-            ></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-    <div class="timer socket">
-      <span
-        :class="{ text: true, timeout: turnTime < 10000 && turnTime > 0 }"
-        >{{ Math.ceil(turnTime / 1000) }}</span
-      >
-    </div>
-    <div class="clock socket">
-      <span
-        :class="{ text: true, timeout: gameTime < 120000 && gameTime > 0 }"
-        >{{ numberFormatter.format(gameTime) }}</span
-      >
-    </div>
-    <div class="mana socket">
-      <span class="mana-bar" :style="{ '--value': (mana / MAX_MANA) * 100 }" />
-      <span class="text">{{ Math.ceil(mana) }}</span>
-    </div>
-    <div class="elements socket">
-      <span
-        class="element"
-        v-for="(value, element) in elements"
-        :style="{
-          '--value': value,
-        }"
-      >
-        <img
-          :src="ELEMENT_MAP[element]"
-          :alt="element"
-          :title="element"
-          class="background"
-        />
-        <img
-          :src="ELEMENT_MAP[element]"
-          :alt="element"
-          :title="element"
-          class="foreground"
-        />
-      </span>
+            >
+              <li
+                v-for="character in player.characters"
+                class="hp"
+                :style="{
+                  '--hp': character.hp,
+                  background: player.color,
+                }"
+              ></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="timer socket">
+        <span
+          :class="{ text: true, timeout: turnTime < 10000 && turnTime > 0 }"
+          >{{ Math.ceil(turnTime / 1000) }}</span
+        >
+      </div>
+      <div class="clock socket">
+        <span
+          :class="{ text: true, timeout: gameTime < 120000 && gameTime > 0 }"
+          >{{ numberFormatter.format(gameTime) }}</span
+        >
+      </div>
+      <div class="mana socket">
+        <span class="mana-bar" :style="{ '--value': (mana / MAX_MANA) * 100 }" />
+        <span class="text">{{ Math.ceil(mana) }}</span>
+      </div>
+      <div class="elements socket">
+        <span
+          class="element"
+          v-for="(value, element) in elements"
+          :style="{
+            '--value': value,
+          }"
+        >
+          <img
+            :src="ELEMENT_MAP[element]"
+            :alt="element"
+            :title="element"
+            class="background"
+          />
+          <img
+            :src="ELEMENT_MAP[element]"
+            :alt="element"
+            :title="element"
+            class="foreground"
+          />
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+@use "../../style/ornaments" as o;
 .popup {
   position: absolute;
   top: 20vh;
@@ -192,15 +195,13 @@ onBeforeUnmount(() => window.clearInterval(id));
   flex-direction: column;
   align-items: center;
   font-size: 48px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
-  border: 2px solid var(--border-accent);
-  padding: 10px;
+  @include o.dither-surface;
+  @include o.tear(o.$tear-light);
+  padding: calc(var(--tear-depth-light) + 10px);
   width: 50%;
-  border-radius: 4px;
   pointer-events: none;
   animation: slide-in 0.5s 1;
   font-family: Eternal;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-accent-faint), 0 0 0 5px rgba(188, 168, 140, 0.4), 0 0 0 6px var(--border-accent-faint);
 
   &--out {
     animation: slide-out 0.5s 1 forwards;
@@ -229,10 +230,15 @@ onBeforeUnmount(() => window.clearInterval(id));
   }
 }
 
-.hud {
+.hud-wrap {
   position: absolute;
   bottom: 0;
   left: 0;
+  margin: 20px;
+  filter: drop-shadow(2px 2px 0 var(--shadow-hard));
+}
+
+.hud {
   cursor: url("../../assets/pointer.png"), auto;
 
   display: grid;
@@ -242,16 +248,13 @@ onBeforeUnmount(() => window.clearInterval(id));
     "mana mana mana"
     "elements elements elements";
 
-  padding: 10px;
+  padding: calc(var(--tear-depth-light) + 2px);
   gap: 10px;
-  margin: 20px;
-  background: linear-gradient(180deg, var(--parchment-light), var(--parchment-dark));
+  @include o.dither-surface;
+  @include o.tear(o.$tear-light);
   width: 200px;
-  border: 2px solid var(--border-accent);
-  border-radius: 4px;
   overflow: hidden;
   transition: all 0.5s;
-  box-shadow: 0 2px 10px rgba(30, 15, 5, 0.4), inset 0 0 15px rgba(180, 120, 40, 0.08);
   .text {
     display: block;
     margin-bottom: -4px;
@@ -325,10 +328,12 @@ onBeforeUnmount(() => window.clearInterval(id));
   .clock,
   .mana,
   .elements {
-    background-image: linear-gradient(90deg, transparent, var(--border-accent-faint) 20%, var(--border-accent-faint) 80%, transparent);
-    background-size: 100% 1px;
-    background-repeat: no-repeat;
-    background-position: top;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--border-accent-faint) 0 4px,
+        transparent 4px 8px
+      )
+      top / 100% 2px no-repeat;
     padding-top: 10px;
   }
 
