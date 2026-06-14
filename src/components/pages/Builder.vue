@@ -20,7 +20,7 @@ import Collapsible from "../atoms/Collapsible.vue";
 import WfcDialog, { type WfcSettings } from "../organisms/WfcDialog.vue";
 import AiAlignDialog from "../organisms/AiAlignDialog.vue";
 import TerrainPaintDialog from "../organisms/TerrainPaintDialog.vue";
-import paintBucket from "pixelarticons/svg/paint-bucket.svg";
+import brush from "pixelarticons/svg/brush.svg";
 import type { LadderInfo } from "../../data/wfc/postProcess";
 import WfcWorker from "../../data/wfc/wfc.worker?worker";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
@@ -398,7 +398,7 @@ const handleBBoxChange = (newBBox: BBox) => {
             v-if="mask.data || terrain.data"
             title="Paint terrain procedurally"
             :onClick="() => (showTerrainPaint = true)"
-            :icon="paintBucket"
+            :icon="brush"
           />
           <input
             ref="aiTerrainInput"
