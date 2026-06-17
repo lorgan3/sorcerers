@@ -1,0 +1,91 @@
+import { useMapDraft } from "../draft";
+import { BBox } from "../../map/bbox";
+import type { Config } from "../../map";
+
+const draft = useMapDraft();
+
+beforeEach(() => draft.reset());
+
+describe("useMapDraft", () => {
+  it("starts empty", () => {
+    expect(draft.terrain.value.data).toBe("");
+    expect(draft.mask.value.data).toBe("");
+    expect(draft.background.value.data).toBe("");
+    expect(draft.ladders.value).toEqual([]);
+    expect(draft.layers.value).toEqual([]);
+  });
+
+  it("loadConfig then toConfig round-trips the core fields", () => {
+    const config: Config = {
+      terrain: { data: "T", mask: "M" },
+      background: { data: "B" },
+      layers: [{ data: "L", x: 1, y: 2 }],
+      bbox: { left: 0, top: 0, right: 100, bottom: 50 },
+      parallax: { name: "Ocean", offset: 5 },
+      scale: 3,
+      ladders: [{ left: 1, top: 1, right: 2, bottom: 9 }],
+    };
+    draft.loadConfig(config, "My map");
+
+    expect(draft.name.value).toBe("My map");
+    expect(draft.terrain.value.data).toBe("T");
+    expect(draft.mask.value.data).toBe("M");
+    expect(draft.advancedSettings.value.customMask).toBe(true);
+    expect(draft.advancedSettings.value.scale).toBe(3);
+    expect(draft.advancedSettings.value.parallaxName).toBe("Ocean");
+
+    const out = draft.toConfig();
+    expect(out.terrain.data).toBe("T");
+    expect(out.terrain.mask).toBe("M");
+    expect(out.background?.data).toBe("B");
+    expect(out.scale).toBe(3);
+    expect(out.parallax).toEqual({ name: "Ocean", offset: 5 });
+    expect(out.layers).toHaveLength(1);
+    expect(out.ladders).toHaveLength(1);
+  });
+
+  it("applyPaint sets terrain + background, clears the mask, disables custom mask, defaults parallax", () => {
+    draft.applyWfc("MASKDATA", []); // a wallmask was generated first
+    draft.applyPaint({ terrain: "TT", background: "BB", width: 80, height: 40 });
+    expect(draft.terrain.value.data).toBe("TT");
+    expect(draft.background.value.data).toBe("BB");
+    expect(draft.mask.value.data).toBe("");
+    expect(draft.advancedSettings.value.customMask).toBe(false);
+    expect(draft.advancedSettings.value.parallaxName).toBe("Ocean");
+  });
+
+  it("applyWfc sets the mask, enables custom mask, and populates ladders", () => {
+    draft.applyWfc("MASKDATA", [
+      { x: 10, y: 20, width: 6, height: 30 },
+      { x: 40, y: 20, width: 6, height: 30 },
+    ]);
+    expect(draft.mask.value.data).toBe("MASKDATA");
+    expect(draft.advancedSettings.value.customMask).toBe(true);
+    expect(draft.ladders.value).toHaveLength(2);
+    expect(draft.layers.value).toEqual([]);
+  });
+
+  it("applyAiAlign sets terrain, background, and a hidden mask", () => {
+    draft.applyAiAlign({
+      terrain: "AT", background: "AB", mask: "AM", width: 80, height: 40,
+    });
+    expect(draft.terrain.value.data).toBe("AT");
+    expect(draft.background.value.data).toBe("AB");
+    expect(draft.mask.value.data).toBe("AM");
+    expect(draft.mask.value.visible).toBe(false);
+  });
+
+  it("reset clears everything", () => {
+    draft.loadConfig(
+      {
+        terrain: { data: "T" }, layers: [], bbox: BBox.create(10, 10).toJS(),
+        parallax: { name: "", offset: 0 }, scale: 6,
+      },
+      "x"
+    );
+    draft.reset();
+    expect(draft.terrain.value.data).toBe("");
+    expect(draft.name.value).toBe("");
+    expect(draft.ladders.value).toEqual([]);
+  });
+});

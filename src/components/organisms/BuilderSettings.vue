@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import Dialog from "../molecules/Dialog.vue";
 import Input from "../atoms/Input.vue";
-import { BBox } from "../../data/map/bbox";
 import { ref, watch } from "vue";
 import Tooltip from "../atoms/Tooltip.vue";
 import { CONFIGS } from "../../data/map/background";
-
-export interface AdvancedSettings {
-  bbox: BBox;
-  scale: number;
-  customMask: boolean;
-  parallaxName: string;
-  parallaxOffset: number;
-}
+import type { AdvancedSettings } from "../../data/builder/draft";
+export type { AdvancedSettings };
 
 const { settings, onClose } = defineProps<{
   settings: AdvancedSettings;
