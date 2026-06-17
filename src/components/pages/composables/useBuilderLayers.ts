@@ -1,54 +1,43 @@
-import { Ref, ref } from "vue";
-import { Layer } from "../../../data/map";
+import { Ref } from "vue";
 import { BBox } from "../../../data/map/bbox";
-import type { AdvancedSettings } from "../../organisms/BuilderSettings.vue";
+import { useMapDraft } from "../../../data/builder/draft";
+import type { AdvancedSettings } from "../../../data/builder/draft";
 
 export function useBuilderLayers(
   advancedSettings: Ref<AdvancedSettings>,
   preview: Ref<HTMLDivElement | undefined>
 ) {
-  const terrain = ref({ data: "", visible: false });
-  const mask = ref({ data: "", visible: false });
-  const background = ref({ data: "", visible: false });
-  const layers = ref<Array<Layer & { visible: boolean }>>([]);
+  const {
+    terrain, mask, background, layers,
+    setTerrainImage, setBackgroundImage,
+  } = useMapDraft();
 
-  const addImageFactory =
-    (target: Ref<{ data: string; visible: boolean }>, visible = true) =>
-    (_: File, data: string) => {
-      target.value = { data, visible };
-
-      if (advancedSettings.value.bbox.isEmpty()) {
-        const image = new Image();
-        image.src = data;
-
-        image.onload = () => {
-          advancedSettings.value.bbox = BBox.create(
-            image.width,
-            image.height
-          );
-        };
-      }
-    };
-
-  const handleAddTerrain = addImageFactory(terrain);
+  const handleAddTerrain = (_: File, data: string) => setTerrainImage(data);
   const handleSetTerrainVisibility = (visible: boolean) =>
     (terrain.value.visible = visible);
-  const handleAddMask = addImageFactory(mask, false);
+
+  const handleAddMask = (_: File, data: string) => {
+    mask.value = { data, visible: false };
+    if (advancedSettings.value.bbox.isEmpty() && data) {
+      const image = new Image();
+      image.src = data;
+      image.onload = () => {
+        advancedSettings.value.bbox = BBox.create(image.width, image.height);
+      };
+    }
+  };
   const handleSetMaskVisibility = (visible: boolean) =>
     (mask.value.visible = visible);
-  const handleAddBackground = addImageFactory(background);
+
+  const handleAddBackground = (_: File, data: string) => setBackgroundImage(data);
   const handleSetBackgroundVisibility = (visible: boolean) =>
     (background.value.visible = visible);
 
   const handleAddLayer = () =>
     layers.value.push({
       data: "",
-      x: Math.round(
-        preview.value!.scrollLeft / advancedSettings.value.scale
-      ),
-      y: Math.round(
-        preview.value!.scrollTop / advancedSettings.value.scale
-      ),
+      x: Math.round(preview.value!.scrollLeft / advancedSettings.value.scale),
+      y: Math.round(preview.value!.scrollTop / advancedSettings.value.scale),
       visible: true,
     });
 
@@ -61,18 +50,10 @@ export function useBuilderLayers(
   };
 
   return {
-    terrain,
-    mask,
-    background,
-    layers,
-    handleAddTerrain,
-    handleSetTerrainVisibility,
-    handleAddMask,
-    handleSetMaskVisibility,
-    handleAddBackground,
-    handleSetBackgroundVisibility,
-    handleAddLayer,
-    handleRemoveLayer,
-    handleSetLayerVisibility,
+    terrain, mask, background, layers,
+    handleAddTerrain, handleSetTerrainVisibility,
+    handleAddMask, handleSetMaskVisibility,
+    handleAddBackground, handleSetBackgroundVisibility,
+    handleAddLayer, handleRemoveLayer, handleSetLayerVisibility,
   };
 }
