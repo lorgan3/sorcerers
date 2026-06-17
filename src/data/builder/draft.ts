@@ -46,6 +46,7 @@ const setImage = (
 
 const setTerrainImage = (data: string) => setImage(terrain, data, true);
 const setBackgroundImage = (data: string) => setImage(background, data, true);
+const setMaskImage = (data: string) => setImage(mask, data, false);
 
 const applyWfc = (maskData: string, wfcLadders: LadderInfo[]) => {
   mask.value = { data: maskData, visible: true };
@@ -159,7 +160,7 @@ const reset = () => {
 export function useMapDraft() {
   return {
     terrain, mask, background, layers, ladders, advancedSettings, name, oldScale,
-    setTerrainImage, setBackgroundImage,
+    setTerrainImage, setBackgroundImage, setMaskImage,
     applyWfc, applyPaint, applyAiAlign,
     loadConfig, toConfig, build, reset,
   };

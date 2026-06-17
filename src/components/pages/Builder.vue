@@ -40,10 +40,9 @@ const {
   handleAddMask, handleSetMaskVisibility,
   handleAddBackground, handleSetBackgroundVisibility,
   handleAddLayer, handleRemoveLayer, handleSetLayerVisibility,
-} = useBuilderLayers(advancedSettings, preview);
+} = useBuilderLayers(preview);
 
-const { creatingLadder, handleCreateLadder } =
-  useBuilderLadders(advancedSettings, preview);
+const { creatingLadder, handleCreateLadder } = useBuilderLadders(preview);
 
 const { handleBuild, handleTest, loadMap } = useBuilderMap();
 

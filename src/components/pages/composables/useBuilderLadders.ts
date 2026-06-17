@@ -1,13 +1,9 @@
 import { Ref, ref } from "vue";
 import { BBox } from "../../../data/map/bbox";
 import { useMapDraft } from "../../../data/builder/draft";
-import type { AdvancedSettings } from "../../../data/builder/draft";
 
-export function useBuilderLadders(
-  advancedSettings: Ref<AdvancedSettings>,
-  preview: Ref<HTMLDivElement | undefined>
-) {
-  const { ladders } = useMapDraft();
+export function useBuilderLadders(preview: Ref<HTMLDivElement | undefined>) {
+  const { ladders, advancedSettings } = useMapDraft();
   const creatingLadder = ref(false);
 
   const handleCreateLadder = (event: MouseEvent) => {

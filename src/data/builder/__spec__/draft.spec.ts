@@ -54,6 +54,12 @@ describe("useMapDraft", () => {
     expect(draft.advancedSettings.value.parallaxName).toBe("Ocean");
   });
 
+  it("setMaskImage stores the data as a hidden mask", () => {
+    draft.setMaskImage("MASKDATA");
+    expect(draft.mask.value.data).toBe("MASKDATA");
+    expect(draft.mask.value.visible).toBe(false);
+  });
+
   it("applyWfc sets the mask, enables custom mask, and populates ladders", () => {
     draft.applyWfc("MASKDATA", [
       { x: 10, y: 20, width: 6, height: 30 },

@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useBuilderWizard } from "../pages/composables/useBuilderWizard";
 import { useMapDraft } from "../../data/builder/draft";
-import WfcDialog, { type WfcSettings } from "./WfcDialog.vue";
+import WfcDialog from "./WfcDialog.vue";
 import TerrainPaintDialog from "./TerrainPaintDialog.vue";
 import AiAlignDialog from "./AiAlignDialog.vue";
 import MapSelect from "./MapSelect.vue";
@@ -18,7 +18,7 @@ import autoTerrainIcon from "pixelarticons/svg/magic-edit.svg";
 import manualIcon from "pixelarticons/svg/image-new.svg";
 import type { LadderInfo } from "../../data/wfc/postProcess";
 import type { Config } from "../../data/map";
-import WfcWorker from "../../data/wfc/wfc.worker?worker";
+import { runWfc, type WfcSettings } from "../../data/wfc/runWfc";
 
 const router = useRouter();
 const { screen, visible, selectPath, next, back, close: closeWizard } =
@@ -66,35 +66,27 @@ const handleWfcGenerated = (maskData: string, ladders: LadderInfo[]) => {
 };
 
 const wfcGenerating = ref(false);
+const wfcError = ref("");
 let activeWorker: Worker | null = null;
 
-const runWfc = () => {
+// Regenerate the wallmask in place (the `g` shortcut). Errors surface in the
+// status banner instead of being swallowed.
+const regenerateWfc = () => {
   if (wfcGenerating.value) return;
   wfcGenerating.value = true;
-  const s = wfcSettings.value;
-  const worker = new WfcWorker();
+  wfcError.value = "";
+  const { promise, worker } = runWfc(wfcSettings.value);
   activeWorker = worker;
-  worker.postMessage({
-    width: s.width, height: s.height, density: s.density / 100,
-    edges: { top: s.edgeTop / 100, bottom: s.edgeBottom / 100, left: s.edgeLeft / 100, right: s.edgeRight / 100 },
-    continuityBonus: s.continuityBonus, preventBlockages: s.preventBlockages,
-    ...(s.densityMode === "image" && s.densityMask ? { densityMask: s.densityMask } : {}),
-  });
-  worker.onmessage = (e: MessageEvent) => {
-    if (e.data.type === "progress") return;
-    wfcGenerating.value = false;
-    activeWorker = null;
-    worker.terminate();
-    if (e.data.success && e.data.mask) {
-      wfcLadders.value = e.data.ladders ?? [];
-      draft.applyWfc(e.data.mask, e.data.ladders ?? []);
-    }
-  };
-  worker.onerror = () => {
-    wfcGenerating.value = false;
-    activeWorker = null;
-    worker.terminate();
-  };
+  promise
+    .then(({ mask, ladders }) => {
+      wfcLadders.value = ladders;
+      draft.applyWfc(mask, ladders);
+    })
+    .catch((err: Error) => (wfcError.value = err.message))
+    .finally(() => {
+      wfcGenerating.value = false;
+      activeWorker = null;
+    });
 };
 
 const aiFileInput = ref<HTMLInputElement>();
@@ -196,7 +188,7 @@ const handleKeydown = (e: KeyboardEvent) => {
     (screen.value === "autoMap-paint" || screen.value === "autoTerrain-preview") &&
     (e.key === "g" || e.key === "G")
   ) {
-    runWfc();
+    regenerateWfc();
   }
 };
 onMounted(() => window.addEventListener("keydown", handleKeydown));
@@ -211,6 +203,22 @@ onUnmounted(() => {
     <!-- persistent dim so transitioning between panel screens and the modal
          dialogs never leaves an undimmed frame (no background flash) -->
     <div class="wizard-dim" />
+
+    <!-- pinned to the top so it stays visible above the centred paint/preview
+         screens while regenerating with `g` -->
+    <div
+      v-if="
+        (screen === 'autoMap-paint' || screen === 'autoTerrain-preview') &&
+        (wfcGenerating || wfcError)
+      "
+      :class="{ 'wfc-status': true, 'wfc-status--error': !!wfcError }"
+    >
+      <span v-if="wfcGenerating" class="spinner-row">
+        <span class="spinner">&#x07F7;</span> Regenerating wallmask...
+      </span>
+      <span v-else>{{ wfcError }}</span>
+    </div>
+
     <WfcDialog
       v-if="screen === 'autoMap-wfc' || screen === 'autoTerrain-wfc'"
       :settings="wfcSettings"
@@ -330,6 +338,30 @@ onUnmounted(() => {
   inset: 0;
   z-index: 99;
   background: rgba(0, 0, 0, 0.5);
+}
+
+.wfc-status {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 101;
+  padding: 6px 14px;
+  border-radius: var(--small-radius);
+  background: var(--field-bg);
+  border: 2px solid var(--border-accent-faint);
+  font-size: 14px;
+
+  &--error {
+    color: var(--highlight);
+    border-color: var(--highlight);
+  }
+
+  .spinner-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
 }
 
 .wizard-overlay {
