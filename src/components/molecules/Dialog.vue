@@ -9,6 +9,9 @@ const props = defineProps<{
   title: string;
   onClose: () => void;
   ingame?: boolean;
+  // seamless: no own backdrop dim / scale-in, for when a parent already provides
+  // a constant backdrop (e.g. the builder wizard) so screens don't double-dim or pop
+  seamless?: boolean;
 }>();
 
 const slots = defineSlots<{
@@ -54,7 +57,7 @@ watch(
 </script>
 
 <template>
-  <dialog ref="dialog" id="dialog">
+  <dialog ref="dialog" id="dialog" :class="{ seamless: props.seamless }">
     <div
       ref="content"
       :class="{ content: true, 'content--ingame': props.ingame }"
@@ -83,6 +86,15 @@ dialog {
 
   &::backdrop {
     animation: fade-in 0.3s forwards;
+  }
+
+  &.seamless::backdrop {
+    animation: none;
+    background-color: transparent;
+  }
+
+  &.seamless .content {
+    animation: none;
   }
 
   @keyframes fade-in {

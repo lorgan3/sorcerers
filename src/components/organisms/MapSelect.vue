@@ -6,9 +6,10 @@ import { Config, Map } from "../../data/map";
 import { DefaultMap, defaultMaps } from "../../util/assets/constants";
 import TornPanel from "../atoms/TornPanel.vue";
 
-const { onEdit, defaultMap } = defineProps<{
+const { onEdit, defaultMap, compact } = defineProps<{
   onEdit: (map: Config, name: string) => void;
   defaultMap?: keyof typeof defaultMaps;
+  compact?: boolean;
 }>();
 
 const CUSTOM = "custom";
@@ -122,7 +123,36 @@ onMounted(() => reset());
 </script>
 
 <template>
-  <section class="map-select">
+  <!-- compact: a single full-width select, no panel framing -->
+  <section v-if="compact" class="map-select map-select--compact">
+    <div class="custom-select">
+      <select @change="handleChange">
+        <option v-if="!defaultMap" :value="EMPTY" :selected="selectedMap.map === EMPTY">
+          Select map...
+        </option>
+        <option
+          v-for="({ path }, map) in defaultMaps"
+          :value="map"
+          :selected="selectedMap.path === path"
+        >
+          {{ map.replace("_", " ") }}
+        </option>
+        <option :value="CUSTOM" :selected="selectedMap.map === CUSTOM">
+          Upload custom map
+        </option>
+      </select>
+    </div>
+    <input
+      type="file"
+      accept="image/*"
+      hidden
+      @change="handleUploadMap"
+      @cancel="reset"
+      ref="customUpload"
+    />
+  </section>
+
+  <section v-else class="map-select">
     <TornPanel tear="b">
       <div class="layout">
         <div class="map-preview">

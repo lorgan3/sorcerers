@@ -6,22 +6,9 @@ import Input from "../atoms/Input.vue";
 import ImageInput from "../molecules/ImageInput.vue";
 import { TILE_SIZE_PX } from "../../data/wfc/tiles";
 import type { LadderInfo } from "../../data/wfc/postProcess";
-import WfcWorker from "../../data/wfc/wfc.worker?worker";
+import { runWfc, type WfcSettings } from "../../data/wfc/runWfc";
 
-export interface WfcSettings {
-  width: number;
-  height: number;
-  density: number;
-  edgeTop: number;
-  edgeBottom: number;
-  edgeLeft: number;
-  edgeRight: number;
-  continuityBonus: number;
-  preventBlockages: boolean;
-  densityMode: "edges" | "image";
-  densityMask: Uint8Array | null;
-  densityImageData: string;
-}
+export type { WfcSettings };
 
 const { onGenerate, onClose, settings, initialError } = defineProps<{
   onGenerate: (maskData: string, ladders: LadderInfo[]) => void;
@@ -76,47 +63,15 @@ const handleGenerate = () => {
   generating.value = true;
   error.value = "";
 
-  const worker = new WfcWorker();
-
-  const finish = (errMessage?: string) => {
-    generating.value = false;
-    worker.terminate();
-    if (errMessage) error.value = errMessage;
-  };
-
-  worker.postMessage({
-    width: settings.width,
-    height: settings.height,
-    density: settings.density / 100,
-    edges: {
-      top: settings.edgeTop / 100,
-      bottom: settings.edgeBottom / 100,
-      left: settings.edgeLeft / 100,
-      right: settings.edgeRight / 100,
-    },
-    continuityBonus: settings.continuityBonus,
-    preventBlockages: settings.preventBlockages,
-    ...(settings.densityMode === "image" && settings.densityMask
-      ? { densityMask: settings.densityMask }
-      : {}),
-  });
-
-  worker.onmessage = (e: MessageEvent) => {
-    if (e.data.type === "progress") return;
-    if (e.data.success && e.data.mask) {
-      finish();
-      onGenerate(e.data.mask, e.data.ladders ?? []);
-    } else {
-      finish(e.data.error ?? "Generation failed.");
-    }
-  };
-
-  worker.onerror = () => finish("An unexpected error occurred.");
+  runWfc(settings).promise
+    .then(({ mask, ladders }) => onGenerate(mask, ladders))
+    .catch((err: Error) => (error.value = err.message))
+    .finally(() => (generating.value = false));
 };
 </script>
 
 <template>
-  <Dialog open :onClose="onClose" title="Generate wallmask">
+  <Dialog open seamless :onClose="onClose" title="Generate wallmask">
     <div class="wfc-params">
       <div class="size-row">
         <Input label="Width (tiles)" v-model="settings.width" :max="60" />
@@ -236,14 +191,14 @@ const handleGenerate = () => {
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
+        <button class="secondary" @click="onClose">Back</button>
         <button class="primary" @click="handleGenerate" :disabled="generating || (settings.densityMode === 'image' && !settings.densityImageData)">
           <span v-if="generating" class="spinner-row">
             <span class="spinner">&#x07F7;</span>
             Generating...
           </span>
-          <span v-else>Generate</span>
+          <span v-else>Next</span>
         </button>
-        <button class="secondary" @click="onClose">Cancel</button>
       </div>
     </div>
   </Dialog>
@@ -332,8 +287,14 @@ const handleGenerate = () => {
 
 .actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-top: 4px;
+
+  // back button pinned left, primary action to the right
+  > :first-child {
+    margin-right: auto;
+  }
 }
 
 .spinner-row {

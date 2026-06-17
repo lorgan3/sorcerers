@@ -214,7 +214,7 @@ function handleConfirm() {
 </script>
 
 <template>
-  <Dialog open :onClose="onClose" title="Align AI terrain">
+  <Dialog open seamless :onClose="onClose" title="Align AI terrain">
     <div class="align-dialog">
       <div class="preview-scroll">
         <canvas ref="previewCanvas" class="preview" />
@@ -260,8 +260,8 @@ function handleConfirm() {
       </label>
 
       <div class="actions">
-        <button class="primary" @click="handleConfirm">Confirm</button>
-        <button class="secondary" @click="onClose">Cancel</button>
+        <button class="secondary" @click="onClose">Back</button>
+        <button class="primary" @click="handleConfirm">Next</button>
       </div>
     </div>
   </Dialog>
@@ -339,7 +339,13 @@ function handleConfirm() {
 
 .actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-top: 4px;
+
+  // back button pinned left, primary action to the right
+  > :first-child {
+    margin-right: auto;
+  }
 }
 </style>

@@ -10,8 +10,11 @@ import externalLink from "pixelarticons/svg/external-link.svg";
 import TornPanel from "../atoms/TornPanel.vue";
 import WaxSeal from "../atoms/WaxSeal.vue";
 import RuneLayer from "../atoms/RuneLayer.vue";
+import { useBuilderWizard } from "./composables/useBuilderWizard";
+import BuilderWizard from "../organisms/BuilderWizard.vue";
 
 const joinDialogOpen = ref(false);
+const wizard = useBuilderWizard();
 </script>
 
 <template>
@@ -31,9 +34,9 @@ const joinDialogOpen = ref(false);
           </button>
         </li>
         <li>
-          <RouterLink to="/builder" class="primary menu-button">
+          <button class="primary menu-button" @click="wizard.open()">
             <WaxSeal class="seal" letter="S" :size="34" aria-hidden="true" />Builder
-          </RouterLink>
+          </button>
         </li>
         <li>
           <RouterLink to="/credits" class="primary menu-button">
@@ -71,6 +74,7 @@ const joinDialogOpen = ref(false);
     :open="joinDialogOpen"
     :onClose="() => (joinDialogOpen = false)"
   />
+  <BuilderWizard />
 </template>
 
 <style lang="scss" scoped>

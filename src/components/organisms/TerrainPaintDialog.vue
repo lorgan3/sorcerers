@@ -201,7 +201,7 @@ function handleConfirm() {
 </script>
 
 <template>
-  <Dialog open :onClose="onClose" title="Paint terrain">
+  <Dialog open seamless :onClose="onClose" title="Paint terrain">
     <div class="paint-dialog">
       <div class="preview-scroll">
         <canvas ref="previewCanvas" class="preview" @click="handlePreviewClick" />
@@ -233,10 +233,10 @@ function handleConfirm() {
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
+        <button class="secondary" @click="onClose">Back</button>
         <button class="primary" :disabled="zones.length === 0" @click="handleConfirm">
-          Confirm
+          Next
         </button>
-        <button class="secondary" @click="onClose">Cancel</button>
       </div>
     </div>
   </Dialog>
@@ -330,7 +330,13 @@ function handleConfirm() {
 
 .actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-top: 4px;
+
+  // back button pinned left, primary action to the right
+  > :first-child {
+    margin-right: auto;
+  }
 }
 </style>
