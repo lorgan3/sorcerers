@@ -116,7 +116,7 @@ const handleGenerate = () => {
 </script>
 
 <template>
-  <Dialog open :onClose="onClose" title="Generate wallmask">
+  <Dialog open seamless :onClose="onClose" title="Generate wallmask">
     <div class="wfc-params">
       <div class="size-row">
         <Input label="Width (tiles)" v-model="settings.width" :max="60" />
@@ -236,14 +236,14 @@ const handleGenerate = () => {
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
+        <button class="secondary" @click="onClose">Back</button>
         <button class="primary" @click="handleGenerate" :disabled="generating || (settings.densityMode === 'image' && !settings.densityImageData)">
           <span v-if="generating" class="spinner-row">
             <span class="spinner">&#x07F7;</span>
             Generating...
           </span>
-          <span v-else>Generate</span>
+          <span v-else>Next</span>
         </button>
-        <button class="secondary" @click="onClose">Cancel</button>
       </div>
     </div>
   </Dialog>
@@ -332,8 +332,14 @@ const handleGenerate = () => {
 
 .actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-top: 4px;
+
+  // back button pinned left, primary action to the right
+  > :first-child {
+    margin-right: auto;
+  }
 }
 
 .spinner-row {
