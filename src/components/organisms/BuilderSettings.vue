@@ -29,7 +29,7 @@ const handleClose = () => {
 </script>
 
 <template>
-  <Dialog open :onClose="handleClose" title="Advanced settings">
+  <Dialog open :onClose="handleClose" title="Advanced settings" fitContent>
     <div class="inputs">
       <Input label="Scale" autofocus v-model="settings.scale" :min="1" />
       <span></span>
@@ -92,6 +92,13 @@ const handleClose = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+
+  :deep(input),
+  select {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 
 label {
