@@ -442,3 +442,25 @@ describe("solver with densityMask", () => {
     }
   });
 });
+
+describe("online density correction", () => {
+  const meanDensity = (grid: WfcTile[][]) => {
+    const all = grid.flat();
+    return all.reduce((s, t) => s + t.density, 0) / all.length;
+  };
+
+  test("realized density tracks a high target better with correction on", () => {
+    const base = {
+      width: 6, height: 6, tiles: testTiles,
+      densityMask: new Uint8Array(36).fill(204), // 204/255 ≈ 0.8
+      continuityBonus: 1.5, preventBlockages: false, seed: 7,
+    };
+    const on = solve({ ...base, densityCorrection: true });
+    const off = solve({ ...base, densityCorrection: false });
+    expect(on.success).toBe(true);
+    expect(off.success).toBe(true);
+    const errOn = Math.abs(meanDensity(on.grid!) - 0.8);
+    const errOff = Math.abs(meanDensity(off.grid!) - 0.8);
+    expect(errOn).toBeLessThanOrEqual(errOff);
+  });
+});

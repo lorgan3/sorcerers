@@ -10,6 +10,8 @@ export interface WfcParams {
   densityMask: Uint8Array;
   /** Per-attempt wall-clock budget. Returns null if exceeded. */
   maxTimeMs?: number;
+  /** Bias picks by running realized-vs-target density error. Default true. */
+  densityCorrection?: boolean;
 }
 
 export interface WfcResult {
@@ -147,6 +149,7 @@ function neighborMultiplier(
 }
 
 const DENSITY_SHARPNESS = 11;
+const CORRECTION_GAIN = 1.5;
 
 export function tileSelectionWeight(
   tile: WfcTile,
@@ -375,8 +378,30 @@ function enforceAllMandatory(
   return true;
 }
 
+function realizedDeficit(
+  grid: Set<WfcTile>[][],
+  width: number,
+  height: number,
+  getDensity: (x: number, y: number) => number,
+): number {
+  let placedSum = 0;
+  let targetSum = 0;
+  let count = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const cell = grid[y][x];
+      if (cell.size !== 1) continue;
+      placedSum += [...cell][0].density;
+      targetSum += getDensity(x, y);
+      count++;
+    }
+  }
+  return count > 0 ? (targetSum - placedSum) / count : 0;
+}
+
 export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult {
   const { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
+  const correction = params.densityCorrection ?? true;
   const startTime = maxTimeMs !== undefined ? performance.now() : 0;
   const isOutOfTime = () =>
     maxTimeMs !== undefined && performance.now() - startTime > maxTimeMs;
@@ -437,7 +462,11 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
 
     const [cx, cy] = candidates[Math.floor(rng() * candidates.length)];
     const options = [...grid[cy][cx]];
-    const localDensity = getDensity(cx, cy);
+    const baseTarget = getDensity(cx, cy);
+    const deficit = correction
+      ? realizedDeficit(grid, width, height, getDensity)
+      : 0;
+    const localDensity = Math.min(1, Math.max(0, baseTarget + CORRECTION_GAIN * deficit));
 
     const snapshot: Snapshot = {
       grid: cloneGrid(grid),
@@ -501,7 +530,13 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
 
       if (remaining.length > 0) {
         grid[by][bx] = new Set(remaining);
-        const retryDensity = getDensity(bx, by);
+        const retryDeficit = correction
+          ? realizedDeficit(grid, width, height, getDensity)
+          : 0;
+        const retryDensity = Math.min(
+          1,
+          Math.max(0, getDensity(bx, by) + CORRECTION_GAIN * retryDeficit),
+        );
         const retryChosen = pickWeighted(
           remaining,
           retryDensity,
