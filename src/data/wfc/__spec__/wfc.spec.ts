@@ -461,6 +461,12 @@ describe("online density correction", () => {
     expect(off.success).toBe(true);
     const errOn = Math.abs(meanDensity(on.grid!) - 0.8);
     const errOff = Math.abs(meanDensity(off.grid!) - 0.8);
-    expect(errOn).toBeLessThanOrEqual(errOff);
+    // Observed values (seed=7, fixed): errOn≈0.0056, errOff≈0.0333.
+    // Strict inequality catches the case where correction silently does nothing.
+    expect(errOn).toBeLessThan(errOff);
+    // Absolute bounds with margin: correction-on must bring error below 0.02,
+    // and correction-off error must stay above 0.02.
+    expect(errOn).toBeLessThan(0.02);
+    expect(errOff).toBeGreaterThan(0.02);
   });
 });
