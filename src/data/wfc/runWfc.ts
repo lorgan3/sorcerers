@@ -5,15 +5,9 @@ export interface WfcSettings {
   width: number;
   height: number;
   density: number;
-  edgeTop: number;
-  edgeBottom: number;
-  edgeLeft: number;
-  edgeRight: number;
   continuityBonus: number;
   preventBlockages: boolean;
-  densityMode: "edges" | "image";
   densityMask: Uint8Array | null;
-  densityImageData: string;
 }
 
 export interface WfcResult {
@@ -32,21 +26,17 @@ export function runWfc(settings: WfcSettings): {
   const worker = new WfcWorker();
 
   const promise = new Promise<WfcResult>((resolve, reject) => {
+    if (!settings.densityMask) {
+      reject(new Error("No density mask to generate from."));
+      return;
+    }
+
     worker.postMessage({
       width: settings.width,
       height: settings.height,
-      density: settings.density / 100,
-      edges: {
-        top: settings.edgeTop / 100,
-        bottom: settings.edgeBottom / 100,
-        left: settings.edgeLeft / 100,
-        right: settings.edgeRight / 100,
-      },
       continuityBonus: settings.continuityBonus,
       preventBlockages: settings.preventBlockages,
-      ...(settings.densityMode === "image" && settings.densityMask
-        ? { densityMask: settings.densityMask }
-        : {}),
+      densityMask: settings.densityMask,
     });
 
     worker.onmessage = (e: MessageEvent) => {

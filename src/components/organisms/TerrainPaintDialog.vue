@@ -21,6 +21,7 @@ const props = defineProps<{
     height: number;
   }) => void;
   onClose: () => void;
+  onBack: () => void;
 }>();
 
 const SEED = 1;
@@ -137,8 +138,10 @@ const handlePreviewClick = (event: MouseEvent) => {
   const res = result.value;
   const ad = alphaData.value;
   if (!res || !ad) return;
-  const x = Math.floor(event.offsetX / PREVIEW_SCALE);
-  const y = Math.floor(event.offsetY / PREVIEW_SCALE);
+  // The canvas is scaled to fit, so map from displayed size to map coordinates.
+  const canvas = event.currentTarget as HTMLCanvasElement;
+  const x = Math.floor((event.offsetX / canvas.clientWidth) * ad.width);
+  const y = Math.floor((event.offsetY / canvas.clientHeight) * ad.height);
   if (x < 0 || y < 0 || x >= ad.width || y >= ad.height) return;
   const zone = res.zoneMap[y * ad.width + x];
   selectedZone.value = zone >= 0 ? zone : null;
@@ -233,7 +236,7 @@ function handleConfirm() {
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
-        <button class="secondary" @click="onClose">Back</button>
+        <button class="secondary" @click="onBack">Back</button>
         <button class="primary" :disabled="zones.length === 0" @click="handleConfirm">
           Next
         </button>
@@ -247,21 +250,30 @@ function handleConfirm() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 400px;
+  width: var(--wizard-body-width);
+  height: var(--wizard-body-height);
 }
 
+// invisible centering area; the border lives on the canvas so it hugs the map
 .preview-scroll {
-  overflow: auto;
-  max-width: 600px;
-  max-height: 300px;
-  border: 1px solid var(--border-accent-faint);
-  border-radius: 4px;
-  scrollbar-color: var(--background-dark) transparent;
-  scrollbar-width: thin;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview {
   display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--border-accent-faint);
+  border-radius: 4px;
   cursor: pointer;
   image-rendering: pixelated;
   background: repeating-conic-gradient(#ccc 0% 25%, #eee 0% 50%) 0 0 / 16px 16px;
@@ -332,7 +344,7 @@ function handleConfirm() {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: auto;
 
   // back button pinned left, primary action to the right
   > :first-child {

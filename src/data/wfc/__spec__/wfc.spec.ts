@@ -33,8 +33,7 @@ describe("wfc solver", () => {
       width: 3,
       height: 3,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      densityMask: new Uint8Array(9).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -50,8 +49,7 @@ describe("wfc solver", () => {
       width: 5,
       height: 5,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 1, left: 0.5, right: 0.5 },
+      densityMask: new Uint8Array(25).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 123,
@@ -62,40 +60,23 @@ describe("wfc solver", () => {
     expect(result.grid![0].length).toBe(5);
   });
 
-  test("respects solid bottom edge constraint", () => {
+  test("mask-zero cells become empty tiles", () => {
+    const width = 5;
+    const height = 3;
+    const mask = new Uint8Array(width * height).fill(255);
+    for (let x = 0; x < width; x++) mask[x] = 0; // top row empty
     const params: WfcParams = {
-      width: 5,
-      height: 3,
+      width,
+      height,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      densityMask: mask,
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
     };
     const result = solve(params);
     expect(result.success).toBe(true);
-    const bottomRow = result.grid![2];
-    for (const tile of bottomRow) {
-      expect(tile.sockets.bottom).toBe(Socket.SOLID);
-    }
-  });
-
-  test("respects open top edge constraint", () => {
-    const params: WfcParams = {
-      width: 5,
-      height: 3,
-      tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 0, left: 0, right: 0 },
-      continuityBonus: 1.5,
-      preventBlockages: false,
-      seed: 42,
-    };
-    const result = solve(params);
-    expect(result.success).toBe(true);
-    const topRow = result.grid![0];
-    for (const tile of topRow) {
+    for (const tile of result.grid![0]) {
       expect(tile.sockets.top).toBe(Socket.EMPTY);
     }
   });
@@ -105,8 +86,7 @@ describe("wfc solver", () => {
       width: 4,
       height: 4,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      densityMask: new Uint8Array(16).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 99,
@@ -123,8 +103,7 @@ describe("wfc solver", () => {
       width: 5,
       height: 5,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 1, left: 0.5, right: 0.5 },
+      densityMask: new Uint8Array(25).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -150,8 +129,7 @@ describe("wfc solver", () => {
       width: 10,
       height: 10,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      densityMask: new Uint8Array(100).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
     };
@@ -186,8 +164,7 @@ describe("wfc solver", () => {
       width: 3,
       height: 3,
       tiles: tilesWithEdge,
-      density: 0.5,
-      edges: { top: 0, bottom: 0, left: 0, right: 0 },
+      densityMask: new Uint8Array(9).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -220,8 +197,7 @@ describe("wfc solver", () => {
       width: 3,
       height: 3,
       tiles: tilesWithLadder,
-      density: 0.5,
-      edges: { top: 1, bottom: 1, left: 1, right: 1 },
+      densityMask: new Uint8Array(9).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -274,8 +250,7 @@ describe("wfc solver", () => {
         width: 6,
         height: 4,
         tiles: tilesWithMandatory,
-        density: 0.5,
-        edges: { top: 0, bottom: 1, left: 0, right: 0 },
+        densityMask: new Uint8Array(24).fill(128),
         continuityBonus: 1.5,
         preventBlockages: false,
         seed,
@@ -328,8 +303,7 @@ describe("wfc solver", () => {
       width: 8,
       height: 4,
       tiles: constrainedTiles,
-      density: 0.3,
-      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      densityMask: new Uint8Array(32).fill(128),
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -350,8 +324,6 @@ describe("solver with densityMask", () => {
       width: 4,
       height: 4,
       tiles: testTiles,
-      density: 0.8,
-      edges: { top: 0, bottom: 0, left: 0, right: 0 },
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -369,8 +341,6 @@ describe("solver with densityMask", () => {
       width: 4,
       height: 4,
       tiles: testTiles,
-      density: 0.8,
-      edges: { top: 0, bottom: 0, left: 0, right: 0 },
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
@@ -382,38 +352,33 @@ describe("solver with densityMask", () => {
     expect(emptyCount).toBeGreaterThan(8);
   });
 
-  test("mask hard-constraint overrides edge constraints", () => {
-    // Edges would force the bottom row solid; the mask overrides to empty.
+  test("mask-zero forces every cell empty", () => {
     const width = 4;
     const height = 4;
-    const mask = new Uint8Array(width * height); // all zeros => all empty
+    const mask = new Uint8Array(width * height); // all zeros
     const params: WfcParams = {
       width,
       height,
       tiles: testTiles,
-      density: 0.8,
-      edges: { top: 0, bottom: 1, left: 0, right: 0 },
+      densityMask: mask,
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
-      densityMask: mask,
     };
     const result = solve(params);
     expect(result.success).toBe(true);
-    for (const tile of result.grid![height - 1]) {
+    for (const tile of result.grid!.flat()) {
       expect(tile.density).toBe(0);
     }
   });
 
   test("intermediate mask values bias toward higher-density tiles", () => {
-    // Identical seed/edges; only the mask differs. A high-density mask should
+    // Identical seed; only the mask differs. A high-density mask should
     // produce more solid tiles than a low-density mask.
     const baseParams: Omit<WfcParams, "densityMask"> = {
       width: 6,
       height: 6,
       tiles: testTiles,
-      density: 0.5,
-      edges: { top: 0, bottom: 0, left: 0, right: 0 },
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 7,
@@ -442,12 +407,10 @@ describe("solver with densityMask", () => {
       width: 4,
       height: 4,
       tiles: renamedTiles,
-      density: 0.8,
-      edges: { top: 0, bottom: 0, left: 0, right: 0 },
+      densityMask: mask,
       continuityBonus: 1.5,
       preventBlockages: false,
       seed: 42,
-      densityMask: mask,
     };
     const result = solve(params);
     expect(result.success).toBe(true);
@@ -457,4 +420,3 @@ describe("solver with densityMask", () => {
     }
   });
 });
-

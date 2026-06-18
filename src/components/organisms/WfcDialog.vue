@@ -1,63 +1,123 @@
 <!-- src/components/organisms/WfcDialog.vue -->
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted, onUnmounted } from "vue";
 import Dialog from "../molecules/Dialog.vue";
 import Input from "../atoms/Input.vue";
-import ImageInput from "../molecules/ImageInput.vue";
 import { TILE_SIZE_PX } from "../../data/wfc/tiles";
+import { buildDefaultMask } from "../../data/wfc/mask";
 import type { LadderInfo } from "../../data/wfc/postProcess";
 import { runWfc, type WfcSettings } from "../../data/wfc/runWfc";
 
 export type { WfcSettings };
 
-const { onGenerate, onClose, settings, initialError } = defineProps<{
+const { onGenerate, onClose, onBack, settings, initialError } = defineProps<{
   onGenerate: (maskData: string, ladders: LadderInfo[]) => void;
   onClose: () => void;
+  onBack: () => void;
   settings: WfcSettings;
   initialError?: string;
 }>();
 
 const generating = ref(false);
 const error = ref(initialError ?? "");
+const canvas = ref<HTMLCanvasElement | null>(null);
+const maskWrap = ref<HTMLElement | null>(null);
+const painting = ref<null | "draw" | "erase">(null);
+let resizeObserver: ResizeObserver | null = null;
 
-function processImageToMask() {
-  if (!settings.densityImageData || settings.densityMode !== "image") {
-    settings.densityMask = null;
-    return;
-  }
+// Scale the canvas to fit whatever space the editor row has, preserving the
+// map aspect. Driving the display size off the available box (rather than a
+// fixed height) keeps the dialog scrollbar-free at any viewport or map shape.
+function fitCanvas() {
+  const wrap = maskWrap.value;
+  const c = canvas.value;
+  if (!wrap || !c) return;
+  const availW = wrap.clientWidth;
+  const availH = wrap.clientHeight;
+  if (availW <= 0 || availH <= 0) return;
+  const aspect = settings.width / Math.max(1, settings.height);
+  const dispW = Math.min(availW, availH * aspect);
+  c.style.width = `${dispW}px`;
+  c.style.height = `${dispW / aspect}px`;
+}
 
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = settings.width;
-    canvas.height = settings.height;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(img, 0, 0, settings.width, settings.height);
-
-    const imageData = ctx.getImageData(0, 0, settings.width, settings.height);
-    const mask = new Uint8Array(settings.width * settings.height);
-    for (let i = 0; i < mask.length; i++) {
-      const r = imageData.data[i * 4];
-      const g = imageData.data[i * 4 + 1];
-      const b = imageData.data[i * 4 + 2];
-      const a = imageData.data[i * 4 + 3];
-      // Darkness × opacity: white/transparent = 0, black opaque = 255
-      const brightness = (r + g + b) / 3;
-      mask[i] = Math.round((1 - brightness / 255) * (a / 255) * 255);
+function draw() {
+  const c = canvas.value;
+  const mask = settings.densityMask;
+  if (!c || !mask) return;
+  const ctx = c.getContext("2d")!;
+  ctx.clearRect(0, 0, c.width, c.height);
+  for (let y = 0; y < settings.height; y++) {
+    for (let x = 0; x < settings.width; x++) {
+      const v = mask[y * settings.width + x];
+      if (!v) continue;
+      ctx.fillStyle = `rgba(0, 0, 0, ${v / 255})`;
+      ctx.fillRect(x, y, 1, 1);
     }
-    settings.densityMask = mask;
-  };
-  img.src = settings.densityImageData;
+  }
 }
 
-function handleImageAdd() {
-  processImageToMask();
+function sizeBackingStore() {
+  const c = canvas.value;
+  if (c) {
+    c.width = settings.width;
+    c.height = settings.height;
+  }
 }
 
-watch(
-  () => [settings.width, settings.height],
-  () => processImageToMask(),
-);
+function resetMask() {
+  settings.densityMask = buildDefaultMask(settings.width, settings.height);
+  sizeBackingStore();
+  fitCanvas();
+  draw();
+}
+
+function paint(e: PointerEvent) {
+  const c = canvas.value;
+  const mask = settings.densityMask;
+  if (!c || !mask || !painting.value) return;
+  const rect = c.getBoundingClientRect();
+  const px = Math.floor(((e.clientX - rect.left) / rect.width) * settings.width);
+  const py = Math.floor(((e.clientY - rect.top) / rect.height) * settings.height);
+  if (px < 0 || px >= settings.width || py < 0 || py >= settings.height) return;
+  mask[py * settings.width + px] =
+    painting.value === "erase" ? 0 : Math.round((settings.density / 100) * 255);
+  draw();
+}
+
+function onPointerDown(e: PointerEvent) {
+  if (e.button === 0) painting.value = "draw";
+  else if (e.button === 2) painting.value = "erase";
+  else return;
+  canvas.value?.setPointerCapture(e.pointerId);
+  paint(e);
+}
+
+function onPointerUp(e: PointerEvent) {
+  painting.value = null;
+  if (canvas.value?.hasPointerCapture(e.pointerId)) {
+    canvas.value.releasePointerCapture(e.pointerId);
+  }
+}
+
+onMounted(() => {
+  // Preserve a previously drawn mask when returning to this step; only build
+  // the default pattern when none exists for the current dimensions.
+  const mask = settings.densityMask;
+  if (mask && mask.length === settings.width * settings.height) {
+    sizeBackingStore();
+    fitCanvas();
+    draw();
+  } else {
+    resetMask();
+  }
+  if (maskWrap.value) {
+    resizeObserver = new ResizeObserver(() => fitCanvas());
+    resizeObserver.observe(maskWrap.value);
+  }
+});
+onUnmounted(() => resizeObserver?.disconnect());
+watch(() => [settings.width, settings.height], resetMask);
 
 const handleGenerate = () => {
   generating.value = true;
@@ -100,99 +160,39 @@ const handleGenerate = () => {
         <input type="checkbox" v-model="settings.preventBlockages" class="checkbox" />
       </label>
 
-      <div class="density-section">
-        <span class="section-title">Density</span>
-        <div class="density-mode-toggle">
-          <button
-            :class="['mode-btn', { active: settings.densityMode === 'edges' }]"
-            @click="settings.densityMode = 'edges'"
-          >
-            Sliders
-          </button>
-          <button
-            :class="['mode-btn', { active: settings.densityMode === 'image' }]"
-            @click="settings.densityMode = 'image'"
-          >
-            Mask
-          </button>
-        </div>
-
-        <template v-if="settings.densityMode === 'edges'">
-          <label class="slider-label">
-            <span class="edge-label">Global</span>
+      <div class="mask-editor">
+        <span class="section-title">Density mask</span>
+        <p class="editor-hint">Left-click to draw, right-click to erase</p>
+        <div class="editor-row">
+          <div class="density-control">
             <input
               type="range"
               v-model.number="settings.density"
               min="0"
               max="100"
-              class="slider"
+              class="density-slider"
             />
             <span class="slider-value">{{ settings.density }}%</span>
-          </label>
-          <div class="edges-grid">
-            <label class="slider-label">
-              <span class="edge-label">Top</span>
-              <input
-                type="range"
-                v-model.number="settings.edgeTop"
-                min="0"
-                max="100"
-                class="slider"
-              />
-              <span class="slider-value">{{ settings.edgeTop }}%</span>
-            </label>
-            <label class="slider-label">
-              <span class="edge-label">Bottom</span>
-              <input
-                type="range"
-                v-model.number="settings.edgeBottom"
-                min="0"
-                max="100"
-                class="slider"
-              />
-              <span class="slider-value">{{ settings.edgeBottom }}%</span>
-            </label>
-            <label class="slider-label">
-              <span class="edge-label">Left</span>
-              <input
-                type="range"
-                v-model.number="settings.edgeLeft"
-                min="0"
-                max="100"
-                class="slider"
-              />
-              <span class="slider-value">{{ settings.edgeLeft }}%</span>
-            </label>
-            <label class="slider-label">
-              <span class="edge-label">Right</span>
-              <input
-                type="range"
-                v-model.number="settings.edgeRight"
-                min="0"
-                max="100"
-                class="slider"
-              />
-              <span class="slider-value">{{ settings.edgeRight }}%</span>
-            </label>
           </div>
-        </template>
-
-        <ImageInput
-          v-else
-          name="Density mask"
-          v-model="settings.densityImageData"
-          :onAdd="handleImageAdd"
-          clearable
-          hideTitle
-          :onClear="() => (settings.densityMask = null)"
-        />
+          <div ref="maskWrap" class="mask-wrap">
+            <canvas
+              ref="canvas"
+              class="mask-canvas"
+              @pointerdown="onPointerDown"
+              @pointermove="paint"
+              @pointerup="onPointerUp"
+              @pointerleave="onPointerUp"
+              @contextmenu.prevent
+            />
+          </div>
+        </div>
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
 
       <div class="actions">
-        <button class="secondary" @click="onClose">Back</button>
-        <button class="primary" @click="handleGenerate" :disabled="generating || (settings.densityMode === 'image' && !settings.densityImageData)">
+        <button class="secondary" @click="onBack">Back</button>
+        <button class="primary" @click="handleGenerate" :disabled="generating">
           <span v-if="generating" class="spinner-row">
             <span class="spinner">&#x07F7;</span>
             Generating...
@@ -209,7 +209,8 @@ const handleGenerate = () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 320px;
+  width: var(--wizard-body-width);
+  height: var(--wizard-body-height);
 }
 
 .size-row {
@@ -262,22 +263,76 @@ const handleGenerate = () => {
   }
 }
 
-.density-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .section-title {
   font-family: Eternal;
   font-size: 24px;
   color: var(--primary);
 }
 
-.edges-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px 16px;
+// The editor fills the space left after the fixed controls, so the dialog
+// body never overflows; the canvas is sized to fit by fitCanvas().
+.mask-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editor-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.mask-wrap {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mask-canvas {
+  // width/height are set by fitCanvas() to fit the wrap, preserving aspect.
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--primary);
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.density-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  .density-slider {
+    flex: 1;
+    min-height: 0;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  .slider-value {
+    min-width: 40px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--primary);
+  }
+}
+
+.editor-hint {
+  font-size: 12px;
+  color: var(--primary);
+  opacity: 0.6;
 }
 
 .error {
@@ -289,7 +344,7 @@ const handleGenerate = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: auto;
 
   // back button pinned left, primary action to the right
   > :first-child {
@@ -304,30 +359,4 @@ const handleGenerate = () => {
   gap: 6px;
 }
 
-.density-mode-toggle {
-  display: flex;
-  gap: 4px;
-
-  .mode-btn {
-    flex: 1;
-    padding: 6px 12px;
-    font-family: Eternal;
-    font-size: 20px;
-    color: var(--primary);
-    background: transparent;
-    border: 1px solid var(--primary);
-    cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 0.15s;
-
-    &.active {
-      opacity: 1;
-      background: rgba(var(--primary-rgb), 0.15);
-    }
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
-}
 </style>
