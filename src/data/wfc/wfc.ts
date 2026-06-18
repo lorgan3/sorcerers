@@ -4,12 +4,10 @@ export interface WfcParams {
   width: number;
   height: number;
   tiles: WfcTile[];
-  density: number;
-  edges: { top: number; bottom: number; left: number; right: number };
   continuityBonus: number;
   preventBlockages: boolean;
   seed?: number;
-  densityMask?: Uint8Array;
+  densityMask: Uint8Array;
   /** Per-attempt wall-clock budget. Returns null if exceeded. */
   maxTimeMs?: number;
 }
@@ -48,36 +46,6 @@ export function createRng(seed: number): () => number {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-function cellDensity(
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  globalDensity: number,
-  edges: WfcParams["edges"],
-): number {
-  const halfW = width / 2;
-  const halfH = height / 2;
-
-  const topI = Math.max(0, 1 - y / halfH);
-  const bottomI = Math.max(0, 1 - (height - 1 - y) / halfH);
-  const leftI = Math.max(0, 1 - x / halfW);
-  const rightI = Math.max(0, 1 - (width - 1 - x) / halfW);
-
-  const totalEdge = topI + bottomI + leftI + rightI;
-  if (totalEdge === 0) return globalDensity;
-
-  const edgeDensity =
-    (topI * edges.top +
-      bottomI * edges.bottom +
-      leftI * edges.left +
-      rightI * edges.right) /
-    totalEdge;
-
-  const globalI = Math.max(0, 1 - totalEdge);
-  return globalI * globalDensity + (1 - globalI) * edgeDensity;
 }
 
 function isOnEdge(
@@ -208,43 +176,6 @@ function pickWeighted(
     if (r <= 0) return options[i];
   }
   return options[options.length - 1];
-}
-
-function applyEdgeConstraints(
-  grid: Set<WfcTile>[][],
-  edges: WfcParams["edges"],
-  width: number,
-  height: number,
-): void {
-  const constrain = (
-    cell: Set<WfcTile>,
-    dir: Direction,
-    edgeDensity: number,
-  ) => {
-    let filtered: WfcTile[];
-
-    if (edgeDensity >= 1.0) {
-      filtered = [...cell].filter((t) => t.id === "solid");
-    } else if (edgeDensity <= 0) {
-      filtered = [...cell].filter((t) => t.id === "empty");
-    } else {
-      return;
-    }
-
-    if (filtered.length > 0) {
-      cell.clear();
-      for (const t of filtered) cell.add(t);
-    }
-  };
-
-  for (let x = 0; x < width; x++) {
-    constrain(grid[0][x], "top", edges.top);
-    constrain(grid[height - 1][x], "bottom", edges.bottom);
-  }
-  for (let y = 0; y < height; y++) {
-    constrain(grid[y][0], "left", edges.left);
-    constrain(grid[y][width - 1], "right", edges.right);
-  }
 }
 
 function propagate(
@@ -434,17 +365,12 @@ function enforceAllMandatory(
 }
 
 export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult {
-  const { width, height, tiles, density, edges, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
+  const { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
   const startTime = maxTimeMs !== undefined ? performance.now() : 0;
   const isOutOfTime = () =>
     maxTimeMs !== undefined && performance.now() - startTime > maxTimeMs;
 
-  const getDensity = (x: number, y: number): number => {
-    if (densityMask) {
-      return densityMask[y * width + x] / 255;
-    }
-    return cellDensity(x, y, width, height, density, edges);
-  };
+  const getDensity = (x: number, y: number): number => densityMask[y * width + x] / 255;
 
   const grid: Set<WfcTile>[][] = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) =>
@@ -452,22 +378,17 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
     ),
   );
 
-  if (densityMask) {
-    // Mask fully controls density; edge sliders are ignored in this mode.
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (!densityMask[y * width + x]) {
-          const cell = grid[y][x];
-          const emptyOnly = [...cell].filter((t) => t.density === 0);
-          if (emptyOnly.length > 0) {
-            cell.clear();
-            for (const t of emptyOnly) cell.add(t);
-          }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (!densityMask[y * width + x]) {
+        const cell = grid[y][x];
+        const emptyOnly = [...cell].filter((t) => t.density === 0);
+        if (emptyOnly.length > 0) {
+          cell.clear();
+          for (const t of emptyOnly) cell.add(t);
         }
       }
     }
-  } else {
-    applyEdgeConstraints(grid, edges, width, height);
   }
 
   const initQueue: Array<[number, number]> = [];

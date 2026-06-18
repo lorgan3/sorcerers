@@ -5,11 +5,9 @@ import { gridToBlob, type LadderInfo } from "./postProcess";
 export interface WfcWorkerInput {
   width: number;
   height: number;
-  density: number;
-  edges: { top: number; bottom: number; left: number; right: number };
   continuityBonus: number;
   preventBlockages: boolean;
-  densityMask?: Uint8Array;
+  densityMask: Uint8Array;
 }
 
 export type AttemptOutcome = "started" | "failed" | "timed-out";
@@ -53,13 +51,13 @@ async function loadTileImages(tiles: WfcTile[]): Promise<WfcTile[]> {
 
 self.onmessage = async (e: MessageEvent<WfcWorkerInput>) => {
   try {
-    const { width, height, density, edges, continuityBonus, preventBlockages, densityMask } = e.data;
+    const { width, height, continuityBonus, preventBlockages, densityMask } = e.data;
 
     const filteredTiles = preventBlockages ? TILES.filter((t) => t.id !== "wall") : TILES;
     const tiles = await loadTileImages(filteredTiles);
 
     const ATTEMPT_BUDGET_MS = 400;
-    const params = { width, height, tiles, density, edges, continuityBonus, preventBlockages, densityMask, maxTimeMs: ATTEMPT_BUDGET_MS };
+    const params = { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs: ATTEMPT_BUDGET_MS };
 
     let solvedGrid: WfcTile[][] | null = null;
     let timedOut = 0;
@@ -104,7 +102,7 @@ self.onmessage = async (e: MessageEvent<WfcWorkerInput>) => {
             : `All ${MAX_RETRIES} attempts ran out of options — the constraints are unsatisfiable for this setup.`;
       self.postMessage({
         success: false,
-        error: `Generation failed. ${detail} Try a smaller grid, lower density, or relax constraints.`,
+        error: `Generation failed. ${detail} Try a smaller grid, a sparser mask, or relax constraints.`,
       } satisfies WfcWorkerOutput);
       return;
     }
