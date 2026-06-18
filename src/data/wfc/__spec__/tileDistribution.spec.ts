@@ -26,6 +26,8 @@ export function tileFrequencies(configs: SampleConfig[]): {
   const tierTotals: Record<string, number> = {};
 
   for (const cfg of configs) {
+    // Uniform target density per cell — a cleaner substrate for measuring
+    // per-tier distribution than buildDefaultMask's banded profile.
     const mask = new Uint8Array(cfg.width * cfg.height).fill(
       Math.round(cfg.density * 255),
     );
@@ -65,20 +67,21 @@ export function tileFrequencies(configs: SampleConfig[]): {
   return { counts, total, featureShareByTier };
 }
 
-describe("tileFrequencies harness", () => {
-  test("produces a non-empty distribution including solid and empty", () => {
-    const freq = tileFrequencies(DEFAULT_CONFIGS);
-    expect(freq.total).toBeGreaterThan(0);
-    expect(freq.counts["solid"]).toBeGreaterThan(0);
-    expect(freq.counts["empty"]).toBeGreaterThan(0);
-  });
-});
-
+// Sampled once and shared across all assertions — the sweep is deterministic.
+const SAMPLE = tileFrequencies(DEFAULT_CONFIGS);
 const INTENTIONALLY_RARE = new Set(["island", "island_m", "floorNarrow", "emptyRampEntry", "emptyRampEntry_m"]);
 const MAX_TIER_FEATURE_SHARE = 0.40;
 
+describe("tileFrequencies harness", () => {
+  test("produces a non-empty distribution including solid and empty", () => {
+    expect(SAMPLE.total).toBeGreaterThan(0);
+    expect(SAMPLE.counts["solid"]).toBeGreaterThan(0);
+    expect(SAMPLE.counts["empty"]).toBeGreaterThan(0);
+  });
+});
+
 describe("tile distribution invariants", () => {
-  const freq = tileFrequencies(DEFAULT_CONFIGS);
+  const freq = SAMPLE;
 
   test("every non-rare feature tile appears at least once", () => {
     const placed = new Set(Object.keys(freq.counts));
