@@ -163,6 +163,7 @@ function handleDragLeave() {
     height: 100px;
     box-sizing: border-box;
     object-fit: cover;
+    background: repeating-conic-gradient(#ccc 0% 25%, #eee 0% 50%) 0 0 / 16px 16px;
     border: 1px solid var(--border-accent-faint);
     border-radius: var(--small-radius);
     box-shadow: 0 1px 4px rgba(30, 15, 5, 0.2);
