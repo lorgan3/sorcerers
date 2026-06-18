@@ -148,7 +148,12 @@ function neighborMultiplier(
   return multiplier;
 }
 
+// Tuned for tier-distance (0.2 steps), not raw density: a one-tier miss costs
+// ~21x and an exact match ~2048x before normalization, so the picker snaps to
+// the target tier while still dithering to the adjacent one.
 const DENSITY_SHARPNESS = 11;
+// How hard the running realized-vs-target density error pulls each pick's
+// effective target. Higher converges faster but risks overshoot.
 const CORRECTION_GAIN = 1.5;
 
 export function tileSelectionWeight(
