@@ -228,6 +228,9 @@ import highFloorImg from "./tiles/highFloor.png";
 import highFloorHoleImg from "./tiles/highFloorHole.png";
 import highFloorRampImg from "./tiles/highFloorRamp.png";
 import highFloorStepImg from "./tiles/highFloorStep.png";
+import steepCliffRampImg from "./tiles/steepCliffRamp.png";
+import highCeilingRampImg from "./tiles/highCeilingRamp.png";
+import doubleLedgeImg from "./tiles/doubleLedge.png";
 
 const BASE_TILES: WfcTile[] = [
   {
@@ -977,6 +980,52 @@ const BASE_TILES: WfcTile[] = [
         "tubeBend_m",
       ],
     },
+  },
+  {
+    id: "steepCliffRamp",
+    imagePath: steepCliffRampImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SOLID,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_HIGH,
+    },
+    weight: 1.5,
+    density: 0.817,
+    avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SURFACE_LOW] },
+    mandatoryNeighbors: {
+      top: ["rampEntry", "doubleRampEntry", "doubleRampEntryStep", "emptyRampEntry", "empty"],
+    },
+  },
+  {
+    id: "highCeilingRamp",
+    imagePath: highCeilingRampImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.SOLID,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 1,
+    density: 0.328,
+    avoidSockets: {
+      top: [Socket.EMPTY, Socket.SURFACE_LOW, Socket.SURFACE_HIGH, Socket.DOUBLE_SURFACE, Socket.LADDER],
+      right: [Socket.EMPTY, Socket.SURFACE_LOW, Socket.SURFACE_HIGH, Socket.DOUBLE_SURFACE, Socket.LADDER],
+    },
+    mandatoryNeighbors: { left: ["empty"] },
+  },
+  {
+    id: "doubleLedge",
+    imagePath: doubleLedgeImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_LOW,
+      bottom: Socket.SOLID,
+      left: Socket.DOUBLE_SURFACE,
+    },
+    weight: 1,
+    density: 0.25,
+    avoidSockets: { bottom: [Socket.EMPTY] },
   },
 ];
 

@@ -236,3 +236,33 @@ describe("tierOf", () => {
     expect(tierOf(1)).toBe(1);
   });
 });
+
+describe("new variety tiles", () => {
+  const byId = (id: string) => TILES.find((t) => t.id === id);
+
+  test("steepCliffRamp exists and sits in the mid-high band", () => {
+    const t = byId("steepCliffRamp")!;
+    expect(t).toBeTruthy();
+    expect(t.sockets.top).toBe(Socket.EMPTY);
+    expect(t.sockets.bottom).toBe(Socket.SOLID);
+    expect(t.density).toBeGreaterThan(0.6);
+  });
+
+  test("highCeilingRamp is a ceiling (no surface sockets, air below)", () => {
+    const t = byId("highCeilingRamp")!;
+    expect(t).toBeTruthy();
+    expect(t.sockets.top).toBe(Socket.SOLID);
+    expect(t.sockets.bottom).toBe(Socket.EMPTY);
+  });
+
+  test("doubleLedge has a DOUBLE_SURFACE edge", () => {
+    const t = byId("doubleLedge")!;
+    expect(t).toBeTruthy();
+    const edges = [t.sockets.left, t.sockets.right];
+    expect(edges).toContain(Socket.DOUBLE_SURFACE);
+  });
+
+  test("new tiles produce mirrors where asymmetric", () => {
+    expect(byId("steepCliffRamp_m")).toBeTruthy();
+  });
+});
