@@ -9,6 +9,7 @@ import AiAlignDialog from "./AiAlignDialog.vue";
 import MapSelect from "./MapSelect.vue";
 import ImageInput from "../molecules/ImageInput.vue";
 import BuilderDescription from "../molecules/BuilderDescription.vue";
+import BuildDialog from "../molecules/BuildDialog.vue";
 import Collapsible from "../atoms/Collapsible.vue";
 import TornPanel from "../atoms/TornPanel.vue";
 import IconButton from "../atoms/IconButton.vue";
@@ -63,6 +64,8 @@ const handleWfcGenerated = (maskData: string, ladders: LadderInfo[]) => {
   draft.applyWfc(maskData, ladders);
   next();
 };
+
+const buildOpen = ref(false);
 
 const wfcGenerating = ref(false);
 const wfcError = ref("");
@@ -176,8 +179,7 @@ const handleLoad = (config: Config, name: string) => {
 };
 
 const handleBuild = () => {
-  draft.build();
-  closeWizard();
+  buildOpen.value = true;
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -330,6 +332,7 @@ onUnmounted(() => {
       :onConfirm="handleAiAlignConfirm"
       :onClose="() => (showAiAlign = false)"
     />
+    <BuildDialog :open="buildOpen" :onClose="() => (buildOpen = false)" />
   </template>
 </template>
 
