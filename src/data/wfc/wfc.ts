@@ -141,7 +141,7 @@ function neighborMultiplier(
     multiplier *= Math.max(m, 0.01);
 
     if (tile.id === nTile.id && tile.id !== "solid" && tile.id !== "empty") {
-      multiplier *= 0.3;
+      multiplier *= SAME_TILE_PENALTY;
     }
   }
 
@@ -152,6 +152,8 @@ function neighborMultiplier(
 // ~21x and an exact match ~2048x before normalization, so the picker snaps to
 // the target tier while still dithering to the adjacent one.
 const DENSITY_SHARPNESS = 11;
+const SAME_TILE_PENALTY = 0.6;
+const WEIGHT_INFLUENCE = 0.8;
 // How hard the running realized-vs-target density error pulls each pick's
 // effective target. Higher converges faster but risks overshoot.
 const CORRECTION_GAIN = 1.5;
@@ -161,7 +163,9 @@ export function tileSelectionWeight(
   target: number,
   neighborMult: number,
 ): number {
-  const base = Math.sqrt(Math.max(0, tile.weight) * Math.max(0.0001, neighborMult));
+  const base =
+    Math.pow(Math.max(0, tile.weight), WEIGHT_INFLUENCE) *
+    Math.sqrt(Math.max(0.0001, neighborMult));
   const distance = Math.abs(tierOf(tile.density) - target);
   const densityFactor = Math.pow(2, (1 - distance * 2) * DENSITY_SHARPNESS);
   return base * Math.max(0.0001, densityFactor);

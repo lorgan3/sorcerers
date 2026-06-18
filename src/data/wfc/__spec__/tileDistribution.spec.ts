@@ -73,3 +73,34 @@ describe("tileFrequencies harness", () => {
     expect(freq.counts["empty"]).toBeGreaterThan(0);
   });
 });
+
+const INTENTIONALLY_RARE = new Set(["island", "island_m", "floorNarrow", "emptyRampEntry", "emptyRampEntry_m"]);
+const MAX_TIER_FEATURE_SHARE = 0.40;
+
+describe("tile distribution invariants", () => {
+  const freq = tileFrequencies(DEFAULT_CONFIGS);
+
+  test("every non-rare feature tile appears at least once", () => {
+    const placed = new Set(Object.keys(freq.counts));
+    const missing = TILES.filter(
+      (t) =>
+        t.id !== "solid" &&
+        t.id !== "empty" &&
+        !INTENTIONALLY_RARE.has(t.id) &&
+        !placed.has(t.id),
+    ).map((t) => t.id);
+    expect(missing).toEqual([]);
+  });
+
+  test("no feature tile dominates its tier beyond the threshold", () => {
+    for (const tier of Object.keys(freq.featureShareByTier)) {
+      for (const [id, share] of Object.entries(freq.featureShareByTier[tier])) {
+        if (INTENTIONALLY_RARE.has(id)) continue;
+        expect(
+          share,
+          `${id} is ${(share * 100).toFixed(0)}% of tier ${tier}`,
+        ).toBeLessThanOrEqual(MAX_TIER_FEATURE_SHARE);
+      }
+    }
+  });
+});
