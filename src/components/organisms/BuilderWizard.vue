@@ -332,7 +332,7 @@ onUnmounted(() => {
       :onConfirm="handleAiAlignConfirm"
       :onClose="() => (showAiAlign = false)"
     />
-    <BuildDialog :open="buildOpen" :onClose="() => (buildOpen = false)" />
+    <BuildDialog :open="buildOpen" :onClose="() => (buildOpen = false)" :onBuilt="closeWizard" />
   </template>
 </template>
 

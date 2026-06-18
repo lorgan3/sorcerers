@@ -4,9 +4,10 @@ import Dialog from "./Dialog.vue";
 import Input from "../atoms/Input.vue";
 import { useMapDraft } from "../../data/builder/draft";
 
-const { open, onClose } = defineProps<{
+const { open, onClose, onBuilt } = defineProps<{
   open: boolean;
   onClose: () => void;
+  onBuilt?: () => void;
 }>();
 
 const { name, build } = useMapDraft();
@@ -24,6 +25,7 @@ watch(
 const handleSubmit = () => {
   name.value = localName.value;
   build();
+  onBuilt?.();
   onClose();
 };
 </script>
