@@ -173,6 +173,29 @@ describe("mirrorTile", () => {
   });
 });
 
+describe("tile densities (re-derived)", () => {
+  const byId = (id: string) => TILES.find((t) => t.id === id)!;
+
+  test("represent true solid fractions, not the 0.2 floor", () => {
+    expect(byId("floor").density).toBeCloseTo(0.05, 2);
+    expect(byId("steepWall").density).toBeCloseTo(0.188, 2);
+    expect(byId("halfSolid").density).toBeCloseTo(0.55, 2);
+    expect(byId("highRamp").density).toBeCloseTo(0.671, 2);
+    expect(byId("solid").density).toBe(1);
+    expect(byId("empty").density).toBe(0);
+  });
+
+  test("sparse tiles fall below the old 0.2 floor", () => {
+    const sparse = ["floor", "floorHole", "floorLadder", "highFloor", "rampEntry"];
+    for (const id of sparse) expect(byId(id).density).toBeLessThan(0.2);
+  });
+
+  test("density values form a real gradient (>15 distinct values)", () => {
+    const distinct = new Set(TILES.map((t) => t.density));
+    expect(distinct.size).toBeGreaterThan(15);
+  });
+});
+
 describe("TILES (with mirrors)", () => {
   test("symmetric tiles are not duplicated", () => {
     // solid and empty have left === right and no forceMirror, so no mirror needed

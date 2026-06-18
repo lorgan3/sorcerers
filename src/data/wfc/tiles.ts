@@ -259,7 +259,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 2.5,
-    density: 0.2,
+    density: 0.05,
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
@@ -324,7 +324,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 1.3,
-    density: 0.2,
+    density: 0.188,
     avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SOLID] },
     mandatoryNeighbors: {
       top: [
@@ -410,7 +410,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.1,
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
@@ -436,7 +436,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 1.5,
-    density: 0.2,
+    density: 0.05,
     avoidEdge: ["top"],
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
@@ -450,7 +450,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.037,
   },
   {
     id: "floorLadderHole",
@@ -462,7 +462,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 3,
-    density: 0.2,
+    density: 0.037,
     avoidEdge: ["top", "bottom"],
   },
   {
@@ -475,7 +475,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 3,
-    density: 0.2,
+    density: 0.037,
     avoidEdge: ["bottom"],
   },
   {
@@ -488,7 +488,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.DOUBLE_SURFACE,
     },
     weight: 3,
-    density: 0.2,
+    density: 0.1,
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
@@ -501,7 +501,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.DOUBLE_SURFACE,
     },
     weight: 2,
-    density: 0.2,
+    density: 0.1,
     forceMirror: true,
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
@@ -541,7 +541,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 2.5,
-    density: 0.2,
+    density: 0.084,
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
@@ -554,7 +554,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.DOUBLE_SURFACE,
     },
     weight: 1.4,
-    density: 0.2,
+    density: 0.08,
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
   {
@@ -567,7 +567,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.DOUBLE_SURFACE,
     },
     weight: 2.1,
-    density: 0.2,
+    density: 0.086,
     avoidEdge: ["top"],
     avoidSockets: { bottom: [Socket.EMPTY] },
   },
@@ -603,7 +603,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.03,
     forceMirror: true,
     mandatoryNeighbors: {
       bottom: [
@@ -625,7 +625,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_LOW,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.0,
     forceMirror: true,
     mandatoryNeighbors: {
       bottom: [
@@ -647,7 +647,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.DOUBLE_SURFACE,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.08,
     forceMirror: true,
     mandatoryNeighbors: {
       bottom: [
@@ -669,7 +669,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.DOUBLE_SURFACE,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.083,
     forceMirror: true,
     mandatoryNeighbors: {
       bottom: [
@@ -855,7 +855,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.EMPTY,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.162,
     avoidSockets: {
       top: [
         Socket.EMPTY,
@@ -884,7 +884,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_HIGH,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.05,
   },
   {
     id: "highFloorHole",
@@ -896,7 +896,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_HIGH,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.036,
   },
   {
     id: "highFloorRamp",
@@ -908,7 +908,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_HIGH,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.067,
   },
   {
     id: "highFloorLadderTop",
@@ -920,7 +920,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_HIGH,
     },
     weight: 2,
-    density: 0.2,
+    density: 0.036,
     avoidEdge: ["bottom"],
   },
   {
@@ -933,7 +933,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_HIGH,
     },
     weight: 2,
-    density: 0.2,
+    density: 0.036,
     avoidEdge: ["top", "bottom"],
   },
   {
@@ -946,7 +946,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.EMPTY,
     },
     weight: 1,
-    density: 0.2,
+    density: 0.058,
     mandatoryNeighbors: {
       left: [
         "floor",
