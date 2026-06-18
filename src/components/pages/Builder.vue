@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 import { Map, Config, Layer } from "../../data/map";
-import Input from "../atoms/Input.vue";
 import BoundingBox from "../molecules/BoundingBox.vue";
 import { BBox } from "../../data/map/bbox";
 import { useRouter } from "vue-router";
@@ -12,6 +11,8 @@ import ImageInput from "../molecules/ImageInput.vue";
 import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
 import shuffle from "pixelarticons/svg/shuffle.svg";
+import close from "pixelarticons/svg/close.svg";
+import BuildDialog from "../molecules/BuildDialog.vue";
 import Collapsible from "../atoms/Collapsible.vue";
 import BuilderDescription from "../molecules/BuilderDescription.vue";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
@@ -30,9 +31,10 @@ const preview = ref<HTMLDivElement>();
 const wizard = useBuilderWizard();
 
 const settingsOpen = ref(false);
+const buildOpen = ref(false);
 
 const {
-  terrain, mask, background, layers, ladders, advancedSettings, name, oldScale,
+  terrain, mask, background, layers, ladders, advancedSettings, oldScale,
 } = useMapDraft();
 
 const {
@@ -44,7 +46,7 @@ const {
 
 const { creatingLadder, handleCreateLadder } = useBuilderLadders(preview);
 
-const { handleBuild, handleTest, loadMap } = useBuilderMap();
+const { handleTest, loadMap } = useBuilderMap();
 
 onMounted(async () => {
   if (config) {
@@ -103,92 +105,90 @@ const handleBBoxChange = (newBBox: BBox) => {
 
 <template>
   <div class="builder" :style="{ '--scale': advancedSettings.scale }">
-    <section class="controls flex-list">
-      <Input label="Name" autofocus v-model="name" />
-      <div class="section">
-        <h2>
-          Terrain
+    <section class="controls">
+      <div class="title-row">
+        <h2>Preview</h2>
+        <span class="title-buttons">
           <IconButton title="Open wizard" :onClick="() => wizard.openLast()" :icon="shuffle" />
-        </h2>
-        <ImageInput
-          name="Terrain"
-          :onAdd="handleAddTerrain"
-          v-model="terrain.data"
-          :onToggleVisibility="handleSetTerrainVisibility"
-          clearable
-        />
-        <div v-if="advancedSettings.customMask" class="mask-row">
-          <ImageInput
-            name="Mask"
-            :onAdd="handleAddMask"
-            v-model="mask.data"
-            :onToggleVisibility="handleSetMaskVisibility"
-            clearable
-            :defaultHidden="!mask.visible"
-          />
-        </div>
-        <ImageInput
-          name="Background"
-          :onAdd="handleAddBackground"
-          v-model="background.data"
-          :onToggleVisibility="handleSetBackgroundVisibility"
-          clearable
-        />
+          <IconButton title="Close" :onClick="() => router.replace('/')" :icon="close" />
+        </span>
       </div>
 
-      <div class="section">
-        <h2>
-          Overlays
-          <IconButton
-            title="Add layer"
-            :onClick="handleAddLayer"
-            :icon="plus"
-          />
-        </h2>
-        <div v-for="(layer, i) in layers" class="section">
+      <div class="controls-scroll">
+        <div class="section">
           <ImageInput
-            :name="`Layer ${i}`"
-            :onClear="() => handleRemoveLayer(i)"
-            v-model="(layer.data as string)"
-            :onToggleVisibility="(visible: boolean) => handleSetLayerVisibility(visible, i)"
+            name="Terrain"
+            :onAdd="handleAddTerrain"
+            v-model="terrain.data"
+            :onToggleVisibility="handleSetTerrainVisibility"
+            clearable
+          />
+          <div v-if="advancedSettings.customMask" class="mask-row">
+            <ImageInput
+              name="Mask"
+              :onAdd="handleAddMask"
+              v-model="mask.data"
+              :onToggleVisibility="handleSetMaskVisibility"
+              clearable
+              :defaultHidden="!mask.visible"
+            />
+          </div>
+          <ImageInput
+            name="Background"
+            :onAdd="handleAddBackground"
+            v-model="background.data"
+            :onToggleVisibility="handleSetBackgroundVisibility"
             clearable
           />
         </div>
-      </div>
 
-      <div class="section">
-        <h2>
-          Ladders {{ ladders.length ? `(${ladders.length})` : "" }}
-          <IconButton
-            title="Add ladder"
-            :onClick="() => (creatingLadder = true)"
-            :icon="plus"
+        <div class="section">
+          <h2>
+            Overlays
+            <IconButton title="Add layer" :onClick="handleAddLayer" :icon="plus" />
+          </h2>
+          <div v-for="(layer, i) in layers" class="section">
+            <ImageInput
+              :name="`Layer ${i}`"
+              :onClear="() => handleRemoveLayer(i)"
+              v-model="(layer.data as string)"
+              :onToggleVisibility="(visible: boolean) => handleSetLayerVisibility(visible, i)"
+              clearable
+            />
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>
+            Ladders {{ ladders.length ? `(${ladders.length})` : "" }}
+            <IconButton
+              title="Add ladder"
+              :onClick="() => (creatingLadder = true)"
+              :icon="plus"
+            />
+          </h2>
+        </div>
+
+        <div class="section">
+          <button class="secondary" @click="settingsOpen = true">
+            Adv. settings
+          </button>
+          <BuilderSettings
+            v-if="settingsOpen"
+            :settings="advancedSettings"
+            :onClose="() => (settingsOpen = false)"
           />
-        </h2>
+        </div>
       </div>
 
-      <div class="section">
-        <button class="secondary" @click="settingsOpen = true">
-          Adv. settings
+      <div class="controls-footer">
+        <button class="primary" title="Build and save map to file system" @click="buildOpen = true">
+          Build
         </button>
-        <BuilderSettings
-          v-if="settingsOpen"
-          :settings="advancedSettings"
-          :onClose="() => (settingsOpen = false)"
-        />
+        <button class="primary" title="Build and test" @click="() => handleTest(onPlay)">
+          Test
+        </button>
       </div>
-
-      <button
-        class="primary"
-        title="Build and save map to file system"
-        @click="handleBuild"
-      >
-        Build
-      </button>
-      <button class="primary" title="Build and test" @click="() => handleTest(onPlay)">
-        Test
-      </button>
-      <button class="secondary" @click="() => router.replace('/')">Back</button>
     </section>
     <section
       :class="{ preview: true, 'add-ladder': creatingLadder }"
@@ -231,6 +231,7 @@ const handleBBoxChange = (newBBox: BBox) => {
       />
     </section>
     <BuilderWizard />
+    <BuildDialog :open="buildOpen" :onClose="() => (buildOpen = false)" />
   </div>
 </template>
 
@@ -249,33 +250,67 @@ const handleBBoxChange = (newBBox: BBox) => {
     width: 200px;
     border-right: 2px solid var(--border-accent);
     box-shadow: 2px 0 0 var(--shadow-hard);
-    padding: 10px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 
-    .section {
+    .title-row {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
 
-    .mask-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 4px;
+      h2 {
+        margin: 0;
+      }
 
-      > div {
-        flex: 1;
+      .title-buttons {
+        display: flex;
+        gap: 4px;
       }
     }
 
-    > .section + .section {
-      padding-top: 10px;
-      background: repeating-linear-gradient(
-          90deg,
-          var(--border-accent-faint) 0 4px,
-          transparent 4px 8px
-        )
-        top / 100% 2px no-repeat;
+    .controls-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .section {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .mask-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+
+        > div {
+          flex: 1;
+        }
+      }
+
+      > .section + .section {
+        padding-top: 10px;
+        background: repeating-linear-gradient(
+            90deg,
+            var(--border-accent-faint) 0 4px,
+            transparent 4px 8px
+          )
+          top / 100% 2px no-repeat;
+      }
+    }
+
+    .controls-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+      border-top: 2px solid var(--border-accent-faint);
     }
 
     .layer-title {
