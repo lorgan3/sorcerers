@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Socket, socketMultiplier, mirrorTile, TILES, type WfcTile } from "../tiles";
+import { Socket, socketMultiplier, mirrorTile, TILES, tierOf, type WfcTile } from "../tiles";
 
 describe("socketMultiplier", () => {
   const CB = 2.0; // continuity bonus for testing
@@ -218,5 +218,21 @@ describe("TILES (with mirrors)", () => {
         expect(tile.mirrored).toBeFalsy();
       }
     }
+  });
+});
+
+describe("tierOf", () => {
+  test("empty maps to tier 0", () => {
+    expect(tierOf(0)).toBe(0);
+  });
+  test("rounds up to the nearest 0.2 tier", () => {
+    expect(tierOf(0.05)).toBeCloseTo(0.2, 5);
+    expect(tierOf(0.188)).toBeCloseTo(0.2, 5);
+    expect(tierOf(0.221)).toBeCloseTo(0.4, 5);
+    expect(tierOf(0.5)).toBeCloseTo(0.6, 5);
+    expect(tierOf(0.671)).toBeCloseTo(0.8, 5);
+  });
+  test("solid stays at tier 1", () => {
+    expect(tierOf(1)).toBe(1);
   });
 });

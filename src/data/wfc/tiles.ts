@@ -7,6 +7,11 @@ export enum Socket {
   LADDER,
 }
 
+export function tierOf(density: number): number {
+  if (density <= 0) return 0;
+  return Math.min(1, Math.ceil(density / 0.2) * 0.2);
+}
+
 export type Direction = "top" | "right" | "bottom" | "left";
 
 export interface WfcTile {
