@@ -17,6 +17,9 @@ import { RouterView } from "vue-router";
 
   --small-radius: 3px;
   --big-radius: 6px;
+  // shared body size so every builder-wizard screen is the same height & width
+  --wizard-body-height: min(460px, 60vh);
+  --wizard-body-width: min(552px, 86vw);
   --stroke-length: 43.425px;
   --glow-warm: rgba(180, 120, 40, 0.3);
   --glow-warm-soft: rgba(180, 120, 40, 0.1);

@@ -36,9 +36,8 @@ const title = computed(() => TITLES[screen.value] ?? "");
 
 const wfcSettings = ref<WfcSettings>({
   width: 10, height: 4, density: 60,
-  edgeTop: 25, edgeBottom: 75, edgeLeft: 0, edgeRight: 0,
   continuityBonus: 2, preventBlockages: true,
-  densityMode: "edges", densityMask: null, densityImageData: "",
+  densityMask: null,
 });
 const wfcLadders = ref<LadderInfo[]>([]);
 
@@ -223,14 +222,16 @@ onUnmounted(() => {
       v-if="screen === 'autoMap-wfc' || screen === 'autoTerrain-wfc'"
       :settings="wfcSettings"
       :onGenerate="handleWfcGenerated"
-      :onClose="goBack"
+      :onClose="closeWizard"
+      :onBack="goBack"
     />
     <TerrainPaintDialog
       v-else-if="screen === 'autoMap-paint'"
       :alphaSrc="draft.mask.value.data || draft.terrain.value.data"
       :ladders="draft.ladders.value.map((l) => l.toJS())"
       :onConfirm="handlePaintConfirm"
-      :onClose="goBack"
+      :onClose="closeWizard"
+      :onBack="goBack"
     />
 
     <div v-else class="wizard-overlay">
@@ -375,8 +376,9 @@ onUnmounted(() => {
 }
 
 .wizard-panel {
-  width: 100%;
-  max-width: 640px;
+  // shrink-wrap to the shared body width (+ panel chrome) so it matches the dialogs
+  width: auto;
+  max-width: 100%;
 }
 
 .wizard-head {
@@ -385,12 +387,12 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 10px;
   margin-right: -10px;
-  min-height: 40px;
 }
 
-/* fixed height so every wizard screen is the same size as the paint dialog */
+/* fixed size so every wizard screen matches the wfc/paint dialogs */
 .wizard-body {
-  height: min(460px, 76vh);
+  width: var(--wizard-body-width);
+  height: var(--wizard-body-height);
   overflow: auto;
   display: flex;
   flex-direction: column;
@@ -467,6 +469,7 @@ onUnmounted(() => {
     display: block;
     image-rendering: pixelated;
     width: 100%;
+    background: repeating-conic-gradient(#ccc 0% 25%, #eee 0% 50%) 0 0 / 16px 16px;
   }
 }
 
