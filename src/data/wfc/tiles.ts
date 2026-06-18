@@ -991,7 +991,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.SURFACE_HIGH,
     },
     weight: 1.5,
-    density: 0.817,
+    density: 0.744,
     avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SURFACE_LOW] },
     mandatoryNeighbors: {
       top: ["rampEntry", "doubleRampEntry", "doubleRampEntryStep", "emptyRampEntry", "empty"],
@@ -1007,7 +1007,7 @@ const BASE_TILES: WfcTile[] = [
       left: Socket.EMPTY,
     },
     weight: 1,
-    density: 0.328,
+    density: 0.58,
     avoidSockets: {
       top: [Socket.EMPTY, Socket.SURFACE_LOW, Socket.SURFACE_HIGH, Socket.DOUBLE_SURFACE, Socket.LADDER],
       right: [Socket.EMPTY, Socket.SURFACE_LOW, Socket.SURFACE_HIGH, Socket.DOUBLE_SURFACE, Socket.LADDER],
