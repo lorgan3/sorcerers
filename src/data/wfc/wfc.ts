@@ -1,4 +1,4 @@
-import { Socket, socketMultiplier, type Direction, type WfcTile } from "./tiles";
+import { Socket, socketMultiplier, tierOf, type Direction, type WfcTile } from "./tiles";
 
 export interface WfcParams {
   width: number;
@@ -146,6 +146,19 @@ function neighborMultiplier(
   return multiplier;
 }
 
+const DENSITY_SHARPNESS = 11;
+
+export function tileSelectionWeight(
+  tile: WfcTile,
+  target: number,
+  neighborMult: number,
+): number {
+  const base = Math.sqrt(Math.max(0, tile.weight) * Math.max(0.0001, neighborMult));
+  const distance = Math.abs(tierOf(tile.density) - target);
+  const densityFactor = Math.pow(2, (1 - distance * 2) * DENSITY_SHARPNESS);
+  return base * Math.max(0.0001, densityFactor);
+}
+
 function pickWeighted(
   options: WfcTile[],
   density: number,
@@ -161,12 +174,10 @@ function pickWeighted(
   const weights: number[] = [];
   let total = 0;
   for (const tile of options) {
-    const base =
-      tile.weight *
-      neighborMultiplier(tile, cx, cy, grid, width, height, continuityBonus, preventBlockages);
-    const distance = Math.abs(tile.density - density);
-    const exponent = (1 - distance * 2) * 6.64;
-    const w = base * Math.max(0.01, Math.pow(2, exponent));
+    const neighborMult = neighborMultiplier(
+      tile, cx, cy, grid, width, height, continuityBonus, preventBlockages,
+    );
+    const w = tileSelectionWeight(tile, density, neighborMult);
     weights.push(w);
     total += w;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { solve, type WfcParams } from "../wfc";
+import { solve, tileSelectionWeight, type WfcParams } from "../wfc";
 import { Socket, socketMultiplier, type WfcTile } from "../tiles";
 
 // Minimal test tile set with known compatibility
@@ -309,6 +309,28 @@ describe("wfc solver", () => {
       seed: 42,
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("tileSelectionWeight", () => {
+  const make = (density: number, weight: number): WfcTile => ({
+    id: `t${density}`,
+    imagePath: "",
+    sockets: { top: Socket.EMPTY, right: Socket.EMPTY, bottom: Socket.EMPTY, left: Socket.EMPTY },
+    weight,
+    density,
+  });
+
+  test("a near-tier tile beats a far-tier tile even with lower base weight", () => {
+    const near = tileSelectionWeight(make(0.55, 0.5), 0.6, 1); // tier 0.6, dist 0
+    const far = tileSelectionWeight(make(0.95, 3.75), 0.6, 1); // tier 1.0, dist 0.4
+    expect(near).toBeGreaterThan(far);
+  });
+
+  test("two tiers adjacent to a between-target are weighted comparably", () => {
+    const low = tileSelectionWeight(make(0.3, 1), 0.5, 1); // tier 0.4, dist 0.1
+    const high = tileSelectionWeight(make(0.5, 1), 0.5, 1); // tier 0.6, dist 0.1
+    expect(Math.abs(low - high)).toBeLessThan(low * 0.2);
   });
 });
 
