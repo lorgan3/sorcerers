@@ -5,9 +5,7 @@ import { Team } from "../../../data/team";
 import { defaults, GameSettings } from "../../../util/localStorage/settings";
 
 export function useBuilderMap() {
-  const { toConfig, build, loadConfig } = useMapDraft();
-
-  const handleBuild = () => build();
+  const { toConfig, loadConfig } = useMapDraft();
 
   const handleTest = async (
     onPlay: (key: string, map: Map | Config, settings: GameSettings) => void
@@ -20,5 +18,5 @@ export function useBuilderMap() {
 
   const loadMap = (config: Config, mapName: string) => loadConfig(config, mapName);
 
-  return { handleBuild, handleTest, loadMap };
+  return { handleTest, loadMap };
 }
