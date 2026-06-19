@@ -23,7 +23,7 @@ Run the analysis script:
 npx tsx scripts/analyzeTile.ts src/data/wfc/tiles/<filename>.png
 ```
 
-This outputs JSON with: dimensions, validity, density, and per-edge socket suggestions.
+This outputs JSON with: dimensions, validity, density, and per-edge socket suggestions. The reported `density` is the true opaque-pixel fraction — use it as-is (see the `density` field below). To re-derive or sanity-check densities for the whole tile set at once, run `npx tsx scripts/measureDensities.ts`.
 
 #### b. Validate
 
@@ -48,19 +48,22 @@ Build the proposed `WfcTile` entry with these fields:
 | `sockets.bottom` | Same logic |
 | `sockets.left` | Same logic |
 | `weight` | Default 5. Higher (10-50) for tiles that should appear often, lower (0.1-2) for rare tiles. |
-| `density` | From analysis output, but minimum 0.2 for any non-empty tile. Use `max(0.2, analysisValue)` unless the tile is fully transparent. |
+| `density` | The true opaque-pixel fraction from the analysis output — use it as-is, **no floor** (only a fully transparent tile is `0.0`). The picker derives a `{0.2, 0.4, 0.6, 0.8, 1.0}` tier from it via `tierOf`; do **not** round it yourself. |
 | `avoidEdge` | Default: omit (allowed everywhere). Set if tile shouldn't be on specific map edges. |
 | `avoidSockets` | Default: omit. Set if tile should avoid specific socket types in a direction. |
 | `mandatoryNeighbors` | Default: omit. Set if a specific tile MUST be placed next to this one in a direction. |
 
-**Socket detection guide (for vertical edges — left/right):**
-- `solidCenter > 0.6` (solid pixels concentrated at bottom) → `SURFACE_LOW`
-- `solidCenter < 0.4` (solid pixels concentrated at top) → `SURFACE_HIGH`
-- Multiple separate solid regions → `DOUBLE_SURFACE`
-- Full edge solid → `SOLID`
-- Full edge empty → `EMPTY`
+**Socket detection guide (for vertical edges — left/right).** A surface socket marks where a *walkable floor* — the top of the solid region on that edge — sits:
+- Walkable floor near the **bottom** of the tile (a thin ground strip, like `floor`) → `SURFACE_LOW`
+- Walkable floor at the **middle** of the tile (solid fills roughly the bottom half, like `halfSolid`) → `SURFACE_HIGH`
+- Two separate floor levels on the edge — a mid ledge **and** a low floor (like `doubleFloorSolid`) → `DOUBLE_SURFACE`
+- Full edge solid → `SOLID`; full edge empty → `EMPTY`
 
-**For horizontal edges (top/bottom):** same logic but less common to have surface types. Top/bottom are usually SOLID, EMPTY, or LADDER.
+There is **no socket for a floor near the top**: the highest a flat walkable surface can sit is mid-tile (`SURFACE_HIGH`), so a flat-topped walkable tile caps at ~0.55 density. Denser terrain comes from solid bulk and ramps, not flat tiles.
+
+The analyzer's `solidCenter` suggestion is only a rough hint based on the solid's *center of mass* and can disagree with the true surface height (e.g. a near-vertical ramp whose surface is at mid-height but whose mass sits low). Decide the socket by **where a character would stand**, confirmed visually (step c).
+
+**For horizontal edges (top/bottom):** only `SOLID`, `EMPTY`, or `LADDER` — never a surface socket.
 
 **LADDER sockets** cannot be auto-detected — they are semantic. Only assign LADDER if the tile name or visual clearly indicates a ladder opening. LADDER can only appear on top or bottom sockets, never left or right.
 
@@ -120,7 +123,7 @@ Only include optional fields (`avoidEdge`, `avoidSockets`, `mandatoryNeighbors`)
 |--------|---------|
 | SOLID | Entire edge is filled (black) |
 | EMPTY | Entire edge is clear (transparent) |
-| SURFACE_LOW | Surface transition in lower portion of edge |
-| SURFACE_HIGH | Surface transition in upper portion of edge |
-| DOUBLE_SURFACE | Two surface transitions (combination of LOW and HIGH) |
+| SURFACE_LOW | Walkable floor near the bottom of the tile |
+| SURFACE_HIGH | Walkable floor at the middle of the tile (highest a flat surface can sit) |
+| DOUBLE_SURFACE | Two floor levels on the edge — a mid ledge and a low floor |
 | LADDER | Ladder opening — only on top/bottom sockets, never on edges of the map |
