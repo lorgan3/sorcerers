@@ -23,7 +23,7 @@ Run the analysis script:
 npx tsx scripts/analyzeTile.ts src/data/wfc/tiles/<filename>.png
 ```
 
-This outputs JSON with: dimensions, validity, density, and per-edge socket suggestions. The reported `density` is the true opaque-pixel fraction — use it as-is (see the `density` field below). To re-derive or sanity-check densities for the whole tile set at once, run `npx tsx scripts/measureDensities.ts`.
+This outputs JSON with: dimensions, validity, density, and per-edge socket suggestions. The reported `density` is the true opaque-pixel fraction — use it as-is (see the `density` field below). Run it per tile; to re-derive densities across the whole set, run it on each tile in turn.
 
 #### b. Validate
 
