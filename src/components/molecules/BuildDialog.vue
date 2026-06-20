@@ -2,7 +2,6 @@
 import { ref, watch } from "vue";
 import Dialog from "./Dialog.vue";
 import Input from "../atoms/Input.vue";
-import Collapsible from "../atoms/Collapsible.vue";
 import BuilderDescription from "./BuilderDescription.vue";
 import { useMapDraft } from "../../data/builder/draft";
 
@@ -34,30 +33,36 @@ const handleSubmit = () => {
 
 <template>
   <Dialog :open="open" :onClose="onClose" title="Name your map" fitContent>
-    <div class="build-dialog">
-      <form class="build-form" @submit.prevent="handleSubmit">
-        <Input label="Name" autofocus v-model="localName" />
+    <form class="build-dialog" @submit.prevent="handleSubmit">
+      <div class="description"><BuilderDescription topic="publishing" /></div>
+      <Input label="Name" autofocus v-model="localName" />
+      <div class="actions">
         <button class="primary" type="submit">Build</button>
-      </form>
-      <Collapsible title="Publishing">
-        <BuilderDescription topic="publishing" />
-      </Collapsible>
-    </div>
+      </div>
+    </form>
   </Dialog>
 </template>
 
 <style lang="scss" scoped>
+/* fixed size so the build dialog matches the wizard screens */
 .build-dialog {
+  width: var(--wizard-body-width);
+  height: var(--wizard-body-height);
+  max-width: 100%;
+  overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 360px;
-  max-width: 100%;
+  gap: 10px;
 }
 
-.build-form {
+.description img {
+  image-rendering: pixelated;
+  vertical-align: middle;
+}
+
+.actions {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: flex-end;
+  margin-top: auto;
 }
 </style>
