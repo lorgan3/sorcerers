@@ -29,6 +29,8 @@ const draft = useMapDraft();
 const TITLES: Partial<Record<string, string>> = {
   choose: "Create a map",
   "autoTerrain-preview": "Add terrain",
+  "autoMap-advanced": "Finalize map",
+  "autoTerrain-advanced": "Finalize map",
   "manual-terrain": "Add your terrain",
   "manual-background": "Add a background",
   "manual-advanced": "Finalize map",
@@ -154,7 +156,7 @@ const handleAiAlignConfirm = (result: {
 }) => {
   draft.applyAiAlign(result);
   showAiAlign.value = false;
-  goToBuilder();
+  next();
 };
 
 const handleAddTerrain = (_: File, data: string) => {
@@ -170,7 +172,7 @@ const handlePaintConfirm = (result: {
   terrain: string; background: string; width: number; height: number;
 }) => {
   draft.applyPaint(result);
-  goToBuilder();
+  next();
 };
 
 const handleLoad = (config: Config, name: string) => {
@@ -302,7 +304,13 @@ onUnmounted(() => {
               </div>
             </template>
 
-            <template v-else-if="screen === 'manual-advanced'">
+            <template
+              v-else-if="
+                screen === 'manual-advanced' ||
+                screen === 'autoMap-advanced' ||
+                screen === 'autoTerrain-advanced'
+              "
+            >
               <Collapsible title="Advanced settings">
                 <div class="advanced-scroll">
                   <div class="description">
