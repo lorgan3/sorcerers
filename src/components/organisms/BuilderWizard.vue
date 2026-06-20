@@ -29,7 +29,6 @@ const draft = useMapDraft();
 const TITLES: Partial<Record<string, string>> = {
   choose: "Create a map",
   "autoTerrain-preview": "Add terrain",
-  "autoMap-advanced": "Finalize map",
   "autoTerrain-advanced": "Finalize map",
   "manual-terrain": "Add your terrain",
   "manual-background": "Add a background",
@@ -168,11 +167,16 @@ const handleAddBackground = (_: File, data: string) => {
   next();
 };
 
-const handlePaintConfirm = (result: {
-  terrain: string; background: string; width: number; height: number;
-}) => {
+const handlePaintConfirm = (
+  result: { terrain: string; background: string; width: number; height: number },
+  action: "build" | "continue"
+) => {
   draft.applyPaint(result);
-  next();
+  if (action === "build") {
+    buildOpen.value = true;
+  } else {
+    goToBuilder();
+  }
 };
 
 const handleLoad = (config: Config, name: string) => {
@@ -307,7 +311,6 @@ onUnmounted(() => {
             <template
               v-else-if="
                 screen === 'manual-advanced' ||
-                screen === 'autoMap-advanced' ||
                 screen === 'autoTerrain-advanced'
               "
             >

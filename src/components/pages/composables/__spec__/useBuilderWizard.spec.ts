@@ -21,14 +21,12 @@ describe("useBuilderWizard", () => {
     expect(w.screen.value).toBe("manual-terrain");
   });
 
-  it("autoMap advances wfc -> paint -> advanced and caps there", () => {
+  it("autoMap advances wfc -> paint and caps there", () => {
     w.selectPath("autoMap");
     w.next();
     expect(w.screen.value).toBe("autoMap-paint");
     w.next();
-    expect(w.screen.value).toBe("autoMap-advanced");
-    w.next();
-    expect(w.screen.value).toBe("autoMap-advanced");
+    expect(w.screen.value).toBe("autoMap-paint");
   });
 
   it("autoTerrain advances wfc -> preview -> advanced and caps there", () => {
