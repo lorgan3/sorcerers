@@ -11,13 +11,14 @@ export type WizardScreen =
   | "autoTerrain-advanced"
   | "manual-terrain"
   | "manual-background"
-  | "manual-advanced";
+  | "manual-advanced"
+  | "build";
 
 const SCREENS: Record<WizardPath, WizardScreen[]> = {
   choose: ["choose"],
-  autoMap: ["autoMap-wfc", "autoMap-paint"],
-  autoTerrain: ["autoTerrain-wfc", "autoTerrain-preview", "autoTerrain-advanced"],
-  manual: ["manual-terrain", "manual-background", "manual-advanced"],
+  autoMap: ["autoMap-wfc", "autoMap-paint", "build"],
+  autoTerrain: ["autoTerrain-wfc", "autoTerrain-preview", "autoTerrain-advanced", "build"],
+  manual: ["manual-terrain", "manual-background", "manual-advanced", "build"],
 };
 
 const path = ref<WizardPath>("choose");

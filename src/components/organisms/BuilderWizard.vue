@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useBuilderWizard } from "../pages/composables/useBuilderWizard";
 import { useMapDraft } from "../../data/builder/draft";
@@ -9,7 +9,7 @@ import AiAlignDialog from "./AiAlignDialog.vue";
 import MapSelect from "./MapSelect.vue";
 import ImageInput from "../molecules/ImageInput.vue";
 import BuilderDescription from "../molecules/BuilderDescription.vue";
-import BuildDialog from "../molecules/BuildDialog.vue";
+import Input from "../atoms/Input.vue";
 import Collapsible from "../atoms/Collapsible.vue";
 import TornPanel from "../atoms/TornPanel.vue";
 import IconButton from "../atoms/IconButton.vue";
@@ -33,6 +33,7 @@ const TITLES: Partial<Record<string, string>> = {
   "manual-terrain": "Add your terrain",
   "manual-background": "Add a background",
   "manual-advanced": "Finalize map",
+  build: "Name your map",
 };
 const title = computed(() => TITLES[screen.value] ?? "");
 
@@ -65,8 +66,6 @@ const handleWfcGenerated = (maskData: string, ladders: LadderInfo[]) => {
   draft.applyWfc(maskData, ladders);
   next();
 };
-
-const buildOpen = ref(false);
 
 const wfcGenerating = ref(false);
 const wfcError = ref("");
@@ -173,7 +172,7 @@ const handlePaintConfirm = (
 ) => {
   draft.applyPaint(result);
   if (action === "build") {
-    buildOpen.value = true;
+    next();
   } else {
     goToBuilder();
   }
@@ -184,8 +183,15 @@ const handleLoad = (config: Config, name: string) => {
   goToBuilder();
 };
 
-const handleBuild = () => {
-  buildOpen.value = true;
+const buildName = ref("");
+watch(screen, (s) => {
+  if (s === "build") buildName.value = draft.name.value;
+});
+
+const handleBuildSubmit = () => {
+  draft.name.value = buildName.value;
+  draft.build();
+  closeWizard();
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -327,9 +333,20 @@ onUnmounted(() => {
               </Collapsible>
               <div class="actions">
                 <button class="secondary" @click="goBack">Back</button>
-                <button class="primary" @click="handleBuild">Build</button>
+                <button class="primary" @click="next">Build</button>
                 <button class="primary" @click="goToBuilder">Continue in builder</button>
               </div>
+            </template>
+
+            <template v-else-if="screen === 'build'">
+              <form class="build-screen" @submit.prevent="handleBuildSubmit">
+                <div class="description"><BuilderDescription topic="publishing" /></div>
+                <Input label="Name" autofocus v-model="buildName" />
+                <div class="actions">
+                  <button type="button" class="secondary" @click="goBack">Back</button>
+                  <button type="submit" class="primary">Build</button>
+                </div>
+              </form>
             </template>
           </div>
         </TornPanel>
@@ -343,7 +360,6 @@ onUnmounted(() => {
       :onConfirm="handleAiAlignConfirm"
       :onClose="() => (showAiAlign = false)"
     />
-    <BuildDialog :open="buildOpen" :onClose="() => (buildOpen = false)" :onBuilt="closeWizard" />
   </template>
 </template>
 
@@ -488,6 +504,13 @@ onUnmounted(() => {
 }
 
 .description img { image-rendering: pixelated; vertical-align: middle; }
+
+.build-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
 .advanced-scroll {
   max-height: 240px;
