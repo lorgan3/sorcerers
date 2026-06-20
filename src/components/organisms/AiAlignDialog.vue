@@ -9,13 +9,16 @@ const PREVIEW_SCALE = 6;
 const props = defineProps<{
   maskSrc: string;
   aiSrc: string;
-  onConfirm: (result: {
-    terrain: string;
-    background: string;
-    mask: string;
-    width: number;
-    height: number;
-  }) => void;
+  onConfirm: (
+    result: {
+      terrain: string;
+      background: string;
+      mask: string;
+      width: number;
+      height: number;
+    },
+    action: "build" | "continue"
+  ) => void;
   onClose: () => void;
 }>();
 
@@ -97,7 +100,7 @@ watch(
   { immediate: true }
 );
 
-function handleConfirm() {
+function handleConfirm(action: "build" | "continue") {
   const mi = maskImg.value;
   const ai = aiImg.value;
   if (!mi || !ai) return;
@@ -208,7 +211,7 @@ function handleConfirm() {
     bgCanvas.convertToBlob({ type: "image/webp", quality: WEBP_QUALITY }).then(blobToDataUrl),
     maskCanvas.convertToBlob({ type: "image/png" }).then(blobToDataUrl),
   ]).then(([terrain, background, mask]) => {
-    props.onConfirm({ terrain, background, mask, width: cropW, height: cropH });
+    props.onConfirm({ terrain, background, mask, width: cropW, height: cropH }, action);
   });
 }
 </script>
@@ -261,7 +264,10 @@ function handleConfirm() {
 
       <div class="actions">
         <button class="secondary" @click="onClose">Back</button>
-        <button class="primary" @click="handleConfirm">Next</button>
+        <button class="primary" @click="handleConfirm('build')">Build</button>
+        <button class="primary" @click="handleConfirm('continue')">
+          Continue in builder
+        </button>
       </div>
     </div>
   </Dialog>

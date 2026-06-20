@@ -8,7 +8,6 @@ export type WizardScreen =
   | "autoMap-paint"
   | "autoTerrain-wfc"
   | "autoTerrain-preview"
-  | "autoTerrain-advanced"
   | "manual-terrain"
   | "manual-background"
   | "manual-advanced"
@@ -17,7 +16,7 @@ export type WizardScreen =
 const SCREENS: Record<WizardPath, WizardScreen[]> = {
   choose: ["choose"],
   autoMap: ["autoMap-wfc", "autoMap-paint", "build"],
-  autoTerrain: ["autoTerrain-wfc", "autoTerrain-preview", "autoTerrain-advanced", "build"],
+  autoTerrain: ["autoTerrain-wfc", "autoTerrain-preview", "build"],
   manual: ["manual-terrain", "manual-background", "manual-advanced", "build"],
 };
 

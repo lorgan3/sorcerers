@@ -31,12 +31,10 @@ describe("useBuilderWizard", () => {
     expect(w.screen.value).toBe("build");
   });
 
-  it("autoTerrain advances wfc -> preview -> advanced -> build and caps there", () => {
+  it("autoTerrain advances wfc -> preview -> build and caps there", () => {
     w.selectPath("autoTerrain");
     w.next();
     expect(w.screen.value).toBe("autoTerrain-preview");
-    w.next();
-    expect(w.screen.value).toBe("autoTerrain-advanced");
     w.next();
     expect(w.screen.value).toBe("build");
     w.next();
