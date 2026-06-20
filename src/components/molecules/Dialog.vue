@@ -12,6 +12,8 @@ const props = defineProps<{
   // seamless: no own backdrop dim / scale-in, for when a parent already provides
   // a constant backdrop (e.g. the builder wizard) so screens don't double-dim or pop
   seamless?: boolean;
+  // fitContent: let the dialog size to its content (no inner scroller / scrollbar)
+  fitContent?: boolean;
 }>();
 
 const slots = defineSlots<{
@@ -67,7 +69,7 @@ watch(
           <h2>{{ props.title }}</h2>
           <IconButton title="Close" :onClick="$props.onClose" :icon="close" />
         </div>
-        <div class="scroller">
+        <div :class="{ scroller: true, 'scroller--fit': props.fitContent }">
           <slot name="default"></slot>
         </div>
       </TornPanel>
@@ -146,6 +148,11 @@ dialog {
 
       display: flex;
       flex-direction: column;
+
+      &--fit {
+        max-height: none;
+        overflow: visible;
+      }
     }
   }
 }

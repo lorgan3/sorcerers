@@ -21,12 +21,24 @@ describe("useBuilderWizard", () => {
     expect(w.screen.value).toBe("manual-terrain");
   });
 
-  it("autoTerrain advances wfc -> preview and caps there", () => {
+  it("autoMap advances wfc -> paint -> build and caps there", () => {
+    w.selectPath("autoMap");
+    w.next();
+    expect(w.screen.value).toBe("autoMap-paint");
+    w.next();
+    expect(w.screen.value).toBe("build");
+    w.next();
+    expect(w.screen.value).toBe("build");
+  });
+
+  it("autoTerrain advances wfc -> preview -> build and caps there", () => {
     w.selectPath("autoTerrain");
     w.next();
     expect(w.screen.value).toBe("autoTerrain-preview");
     w.next();
-    expect(w.screen.value).toBe("autoTerrain-preview");
+    expect(w.screen.value).toBe("build");
+    w.next();
+    expect(w.screen.value).toBe("build");
   });
 
   it("advances through the manual path", () => {
@@ -36,7 +48,9 @@ describe("useBuilderWizard", () => {
     w.next();
     expect(w.screen.value).toBe("manual-advanced");
     w.next();
-    expect(w.screen.value).toBe("manual-advanced");
+    expect(w.screen.value).toBe("build");
+    w.next();
+    expect(w.screen.value).toBe("build");
   });
 
   it("back steps within a path then to the chooser, returning false at the chooser", () => {

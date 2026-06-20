@@ -9,6 +9,7 @@ import AiAlignDialog from "./AiAlignDialog.vue";
 import MapSelect from "./MapSelect.vue";
 import ImageInput from "../molecules/ImageInput.vue";
 import BuilderDescription from "../molecules/BuilderDescription.vue";
+import BuildForm from "../molecules/BuildForm.vue";
 import Collapsible from "../atoms/Collapsible.vue";
 import TornPanel from "../atoms/TornPanel.vue";
 import IconButton from "../atoms/IconButton.vue";
@@ -31,6 +32,7 @@ const TITLES: Partial<Record<string, string>> = {
   "manual-terrain": "Add your terrain",
   "manual-background": "Add a background",
   "manual-advanced": "Finalize map",
+  build: "Name your map",
 };
 const title = computed(() => TITLES[screen.value] ?? "");
 
@@ -146,12 +148,19 @@ const handleAiFile = (event: Event) => {
   reader.readAsDataURL(file);
   (event.target as HTMLInputElement).value = "";
 };
-const handleAiAlignConfirm = (result: {
-  terrain: string; background: string; mask: string; width: number; height: number;
-}) => {
+const handleAiAlignConfirm = (
+  result: {
+    terrain: string; background: string; mask: string; width: number; height: number;
+  },
+  action: "build" | "continue"
+) => {
   draft.applyAiAlign(result);
   showAiAlign.value = false;
-  goToBuilder();
+  if (action === "build") {
+    next();
+  } else {
+    goToBuilder();
+  }
 };
 
 const handleAddTerrain = (_: File, data: string) => {
@@ -163,21 +172,21 @@ const handleAddBackground = (_: File, data: string) => {
   next();
 };
 
-const handlePaintConfirm = (result: {
-  terrain: string; background: string; width: number; height: number;
-}) => {
+const handlePaintConfirm = (
+  result: { terrain: string; background: string; width: number; height: number },
+  action: "build" | "continue"
+) => {
   draft.applyPaint(result);
-  goToBuilder();
+  if (action === "build") {
+    next();
+  } else {
+    goToBuilder();
+  }
 };
 
 const handleLoad = (config: Config, name: string) => {
   draft.loadConfig(config, name);
   goToBuilder();
-};
-
-const handleBuild = () => {
-  draft.build();
-  closeWizard();
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -314,10 +323,17 @@ onUnmounted(() => {
               </Collapsible>
               <div class="actions">
                 <button class="secondary" @click="goBack">Back</button>
-                <button class="primary" @click="handleBuild">Build</button>
+                <button class="primary" @click="next">Build</button>
                 <button class="primary" @click="goToBuilder">Continue in builder</button>
               </div>
             </template>
+
+            <BuildForm
+              v-else-if="screen === 'build'"
+              :active="screen === 'build'"
+              :onBack="goBack"
+              :onBuilt="closeWizard"
+            />
           </div>
         </TornPanel>
       </div>

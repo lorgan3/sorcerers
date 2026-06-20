@@ -14,12 +14,15 @@ const PREVIEW_SCALE = 2;
 const props = defineProps<{
   alphaSrc: string;
   ladders: PlainBBox[];
-  onConfirm: (result: {
-    terrain: string;
-    background: string;
-    width: number;
-    height: number;
-  }) => void;
+  onConfirm: (
+    result: {
+      terrain: string;
+      background: string;
+      width: number;
+      height: number;
+    },
+    action: "build" | "continue"
+  ) => void;
   onClose: () => void;
   onBack: () => void;
 }>();
@@ -179,7 +182,7 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-function handleConfirm() {
+function handleConfirm(action: "build" | "continue") {
   const ad = alphaData.value;
   const res = result.value;
   if (!ad || !res || res.zones.length === 0) return;
@@ -192,12 +195,15 @@ function handleConfirm() {
 
   Promise.all([toDataUrl(res.terrain), toDataUrl(res.background)]).then(
     ([terrain, background]) => {
-      props.onConfirm({
-        terrain,
-        background,
-        width: ad.width,
-        height: ad.height,
-      });
+      props.onConfirm(
+        {
+          terrain,
+          background,
+          width: ad.width,
+          height: ad.height,
+        },
+        action
+      );
     }
   );
 }
@@ -237,8 +243,19 @@ function handleConfirm() {
 
       <div class="actions">
         <button class="secondary" @click="onBack">Back</button>
-        <button class="primary" :disabled="zones.length === 0" @click="handleConfirm">
-          Next
+        <button
+          class="primary"
+          :disabled="zones.length === 0"
+          @click="handleConfirm('build')"
+        >
+          Build
+        </button>
+        <button
+          class="primary"
+          :disabled="zones.length === 0"
+          @click="handleConfirm('continue')"
+        >
+          Continue in builder
         </button>
       </div>
     </div>

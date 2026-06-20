@@ -3,6 +3,7 @@ import { ref } from "vue";
 import eye from "pixelarticons/svg/eye.svg";
 import eyeClosed from "pixelarticons/svg/eye-off.svg";
 import close from "pixelarticons/svg/close.svg";
+import download from "pixelarticons/svg/download.svg";
 import IconButton from "../atoms/IconButton.vue";
 
 const {
@@ -69,6 +70,13 @@ const handleClear = () => {
   }
 };
 
+const handleDownload = () => {
+  const link = document.createElement("a");
+  link.href = modelValue;
+  link.download = `${name}.png`;
+  link.click();
+};
+
 function handleDrop(event: DragEvent) {
   event.preventDefault();
 
@@ -107,6 +115,11 @@ function handleDragLeave() {
           :icon="visible ? eye : eyeClosed"
           :hoverIcon="visible ? eyeClosed : eye"
           :title="visible ? 'Hide' : 'Show'"
+        />
+        <IconButton
+          :onClick="handleDownload"
+          :icon="download"
+          title="Download"
         />
         <IconButton
           v-if="clearable"
