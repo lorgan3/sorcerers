@@ -2,6 +2,8 @@
 import { ref, watch } from "vue";
 import Dialog from "./Dialog.vue";
 import Input from "../atoms/Input.vue";
+import Collapsible from "../atoms/Collapsible.vue";
+import BuilderDescription from "./BuilderDescription.vue";
 import { useMapDraft } from "../../data/builder/draft";
 
 const { open, onClose, onBuilt } = defineProps<{
@@ -32,18 +34,30 @@ const handleSubmit = () => {
 
 <template>
   <Dialog :open="open" :onClose="onClose" title="Name your map" fitContent>
-    <form class="build-form" @submit.prevent="handleSubmit">
-      <Input label="Name" autofocus v-model="localName" />
-      <button class="primary" type="submit">Build</button>
-    </form>
+    <div class="build-dialog">
+      <form class="build-form" @submit.prevent="handleSubmit">
+        <Input label="Name" autofocus v-model="localName" />
+        <button class="primary" type="submit">Build</button>
+      </form>
+      <Collapsible title="Publishing">
+        <BuilderDescription topic="publishing" />
+      </Collapsible>
+    </div>
   </Dialog>
 </template>
 
 <style lang="scss" scoped>
+.build-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 360px;
+  max-width: 100%;
+}
+
 .build-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 260px;
 }
 </style>

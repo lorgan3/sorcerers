@@ -13,8 +13,6 @@ import plus from "pixelarticons/svg/plus.svg";
 import shuffle from "pixelarticons/svg/shuffle.svg";
 import close from "pixelarticons/svg/close.svg";
 import BuildDialog from "../molecules/BuildDialog.vue";
-import Collapsible from "../atoms/Collapsible.vue";
-import BuilderDescription from "../molecules/BuilderDescription.vue";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
 import { useBuilderLadders } from "./composables/useBuilderLadders";
 import { useBuilderMap } from "./composables/useBuilderMap";
@@ -195,13 +193,6 @@ const handleBBoxChange = (newBBox: BBox) => {
       ref="preview"
       @mousedown="handleCreateLadder"
     >
-      <div v-if="!terrain.data && !background.data && !mask.data" class="description">
-        <div class="section">
-          <Collapsible title="Publishing" defaultOpen>
-            <BuilderDescription topic="publishing" />
-          </Collapsible>
-        </div>
-      </div>
       <img v-if="background.visible" :src="background.data" class="layer" />
       <img v-if="terrain.visible" :src="terrain.data" class="layer" />
       <img v-if="mask.visible" :src="mask.data" class="layer wallmask" />
@@ -406,21 +397,6 @@ const handleBBoxChange = (newBBox: BBox) => {
         .meta {
           display: block;
         }
-      }
-    }
-
-    .description {
-      position: absolute;
-      padding: 20px;
-      max-width: 800px;
-
-      .section {
-        margin-top: 16px;
-      }
-
-      code {
-        font-family: monospace;
-        font-size: 14px;
       }
     }
   }
