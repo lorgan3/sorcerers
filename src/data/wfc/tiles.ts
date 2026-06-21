@@ -282,6 +282,8 @@ import peakImg from "./tiles/peak.png";
 import hangingRockImg from "./tiles/hangingRock.png";
 import islandSideImg from "./tiles/islandSide.png";
 import stalactiteClusterImg from "./tiles/stalactiteCluster.png";
+import denseLedgeLowImg from "./tiles/denseLedgeLow.png";
+import denseLedgeHighImg from "./tiles/denseLedgeHigh.png";
 
 const BASE_TILES: WfcTile[] = [
   {
@@ -1179,6 +1181,32 @@ const BASE_TILES: WfcTile[] = [
         Socket.DOUBLE_SURFACE,
       ],
     },
+  },
+  {
+    id: "denseLedgeLow",
+    imagePath: denseLedgeLowImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.SOLID,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_HALF_LOW,
+    },
+    weight: 0.05,
+    density: 0.93,
+    avoidSockets: { bottom: [Socket.EMPTY] },
+  },
+  {
+    id: "denseLedgeHigh",
+    imagePath: denseLedgeHighImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SOLID,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_HALF_HIGH,
+    },
+    weight: 0.05,
+    density: 0.844,
+    avoidSockets: { bottom: [Socket.EMPTY] },
   },
 ];
 
