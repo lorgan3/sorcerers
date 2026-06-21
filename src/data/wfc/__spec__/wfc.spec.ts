@@ -20,7 +20,7 @@ describe("global density feedback", () => {
     let solved = 0;
     for (const seed of [1, 2, 3]) {
       const grid = solveOnce(
-        { width: W, height: H, tiles, continuityBonus: 2.5, sameTilePenalty: 0.36, preventBlockages: true, densityMask, densityFeedback: true },
+        { width: W, height: H, tiles, continuityBonus: 2.5, sameTilePenalty: 0.36, preventBlockages: true, densityMask },
         createRng(seed),
       );
       if (!Array.isArray(grid)) continue;
