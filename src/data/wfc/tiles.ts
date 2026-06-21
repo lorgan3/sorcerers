@@ -1054,7 +1054,7 @@ const BASE_TILES: WfcTile[] = [
       bottom: Socket.EMPTY,
       left: Socket.EMPTY,
     },
-    weight: 0.5,
+    weight: 0.25,
     density: 0.2,
     avoidEdge: ["left", "right"],
     avoidSockets: { bottom: [Socket.SOLID] },
