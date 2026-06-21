@@ -11,9 +11,6 @@ export interface WfcParams {
   preventBlockages: boolean;
   seed?: number;
   densityMask: Uint8Array;
-  /** Bias each cell's target by the running density deficit so realized density
-   * tracks the request despite WFC's collapse order. Default true. */
-  densityFeedback?: boolean;
   /** Per-attempt wall-clock budget. Returns null if exceeded. */
   maxTimeMs?: number;
 }
@@ -379,7 +376,6 @@ function enforceAllMandatory(
 export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult {
   const { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
   const sameTilePenalty = params.sameTilePenalty ?? 0.3;
-  const globalFeedback = params.densityFeedback !== false;
 
   // Global density feedback: an integral term that biases each cell's effective
   // target by the average shortfall (requested − placed) accumulated so far, so
@@ -389,11 +385,10 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
   let densityPlaced = 0;
   const biasedTarget = (x: number, y: number): number => {
     const raw = getDensity(x, y);
-    if (!globalFeedback || densityPlaced === 0) return raw;
+    if (densityPlaced === 0) return raw;
     return Math.max(0, Math.min(1, raw + densityDeficit / densityPlaced));
   };
   const recordPlacement = (x: number, y: number, placed: number): void => {
-    if (!globalFeedback) return;
     densityDeficit += densityMask[y * width + x] / 255 - placed;
     densityPlaced++;
   };

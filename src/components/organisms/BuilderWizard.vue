@@ -173,7 +173,15 @@ const handleAddBackground = (_: File, data: string) => {
 };
 
 const handlePaintConfirm = (
-  result: { terrain: string; background: string; width: number; height: number },
+  result: {
+    terrain: string;
+    background: string;
+    width: number;
+    height: number;
+    alpha: Uint8Array;
+    themeOverrides: Record<number, string>;
+    seed: number;
+  },
   action: "build" | "continue"
 ) => {
   draft.applyPaint(result);

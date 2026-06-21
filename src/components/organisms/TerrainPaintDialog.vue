@@ -20,6 +20,9 @@ const props = defineProps<{
       background: string;
       width: number;
       height: number;
+      alpha: Uint8Array;
+      themeOverrides: Record<number, string>;
+      seed: number;
     },
     action: "build" | "continue"
   ) => void;
@@ -201,6 +204,9 @@ function handleConfirm(action: "build" | "continue") {
           background,
           width: ad.width,
           height: ad.height,
+          alpha: ad.alpha,
+          themeOverrides: overrides.value,
+          seed: SEED,
         },
         action
       );

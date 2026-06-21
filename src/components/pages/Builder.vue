@@ -12,9 +12,11 @@ import IconButton from "../atoms/IconButton.vue";
 import plus from "pixelarticons/svg/plus.svg";
 import shuffle from "pixelarticons/svg/shuffle.svg";
 import close from "pixelarticons/svg/close.svg";
+import frame from "pixelarticons/svg/frame.svg";
 import BuildDialog from "../molecules/BuildDialog.vue";
 import { useBuilderLayers } from "./composables/useBuilderLayers";
 import { useBuilderLadders } from "./composables/useBuilderLadders";
+import { useBuilderOverlays } from "./composables/useBuilderOverlays";
 import { useBuilderMap } from "./composables/useBuilderMap";
 import { useBuilderWizard } from "./composables/useBuilderWizard";
 import { useMapDraft } from "../../data/builder/draft";
@@ -43,6 +45,13 @@ const {
 } = useBuilderLayers(preview);
 
 const { creatingLadder, handleCreateLadder } = useBuilderLadders(preview);
+const { creatingOverlayIndex, startDrawOverlay, handleCreateOverlay, confirmOverlay } =
+  useBuilderOverlays(preview);
+
+const handlePreviewMouseDown = (event: MouseEvent) => {
+  handleCreateLadder(event);
+  handleCreateOverlay(event);
+};
 
 const { handleTest, loadMap } = useBuilderMap();
 
@@ -146,13 +155,26 @@ const handleBBoxChange = (newBBox: BBox) => {
             <IconButton title="Add layer" :onClick="handleAddLayer" :icon="plus" />
           </h2>
           <div v-for="(layer, i) in layers" class="section">
-            <ImageInput
-              :name="`Layer ${i}`"
-              :onClear="() => handleRemoveLayer(i)"
-              v-model="(layer.data as string)"
-              :onToggleVisibility="(visible: boolean) => handleSetLayerVisibility(visible, i)"
-              clearable
-            />
+            <div v-if="layer.box && !layer.data" class="pending-overlay">
+              <span>Layer {{ i }} — draw on the map</span>
+              <IconButton title="Remove" :onClick="() => handleRemoveLayer(i)" :icon="close" />
+            </div>
+            <div v-else class="layer-row">
+              <ImageInput
+                :name="`Layer ${i}`"
+                :onClear="() => handleRemoveLayer(i)"
+                v-model="(layer.data as string)"
+                :onToggleVisibility="(visible: boolean) => handleSetLayerVisibility(visible, i)"
+                clearable
+              />
+              <IconButton
+                v-if="!layer.data"
+                className="draw-overlay-button"
+                title="Draw overlay from map"
+                :onClick="() => { creatingLadder = false; startDrawOverlay(i); }"
+                :icon="frame"
+              />
+            </div>
           </div>
         </div>
 
@@ -161,7 +183,7 @@ const handleBBoxChange = (newBBox: BBox) => {
             Ladders {{ ladders.length ? `(${ladders.length})` : "" }}
             <IconButton
               title="Add ladder"
-              :onClick="() => (creatingLadder = true)"
+              :onClick="() => { creatingOverlayIndex = null; creatingLadder = true; }"
               :icon="plus"
             />
           </h2>
@@ -189,16 +211,16 @@ const handleBBoxChange = (newBBox: BBox) => {
       </div>
     </section>
     <section
-      :class="{ preview: true, 'add-ladder': creatingLadder }"
+      :class="{ preview: true, 'add-ladder': creatingLadder || creatingOverlayIndex !== null }"
       ref="preview"
-      @mousedown="handleCreateLadder"
+      @mousedown="handlePreviewMouseDown"
     >
       <img v-if="background.visible" :src="background.data" class="layer" />
       <img v-if="terrain.visible" :src="terrain.data" class="layer" />
       <img v-if="mask.visible" :src="mask.data" class="layer wallmask" />
       <template v-for="(layer, i) in layers">
         <div
-          v-if="layer.visible"
+          v-if="layer.visible && layer.data"
           class="overlay"
           @mousedown="(event: MouseEvent) => handleMouseDown(event, layer)"
           :style="{
@@ -220,6 +242,17 @@ const handleBBoxChange = (newBBox: BBox) => {
         color="#00f"
         draggable
       />
+      <template v-for="(layer, i) in layers">
+        <BoundingBox
+          v-if="layer.box"
+          :bbox="layer.box"
+          :onChange="(bbox) => (layers[i].box = bbox)"
+          :onClear="() => handleRemoveLayer(i)"
+          :onConfirm="() => confirmOverlay(i)"
+          color="#0a0"
+          draggable
+        />
+      </template>
     </section>
     <BuilderWizard />
     <BuildDialog :open="buildOpen" :onClose="() => (buildOpen = false)" />
@@ -283,6 +316,27 @@ const handleBBoxChange = (newBBox: BBox) => {
         > div {
           flex: 1;
         }
+      }
+
+      .layer-row {
+        position: relative;
+      }
+
+      .draw-overlay-button {
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+
+      .pending-overlay {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 8px;
+        border: 2px dashed var(--border-accent-faint);
+        border-radius: var(--small-radius);
+        font-size: 14px;
       }
 
       > .section + .section {
