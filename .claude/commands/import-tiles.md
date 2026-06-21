@@ -43,24 +43,48 @@ Build the proposed `WfcTile` entry with these fields:
 |-------|-----------------|
 | `id` | From filename (without `.png`) |
 | `imagePath` | Vite import variable (added as import statement) |
-| `sockets.top` | From analysis + visual: SOLID if edge fully filled, EMPTY if fully clear, SURFACE_LOW/HIGH/DOUBLE if mixed. LADDER only if explicitly a ladder tile. |
-| `sockets.right` | Same logic |
-| `sockets.bottom` | Same logic |
-| `sockets.left` | Same logic |
+| `sockets.top` | SOLID if edge fully filled, EMPTY if fully clear, LADDER only if explicitly a ladder opening. **Never a surface socket** — top/bottom are SOLID/EMPTY/LADDER only. |
+| `sockets.right` | From analysis + visual: SOLID, EMPTY, or a surface socket (SURFACE_LOW / SURFACE_HALF_LOW / SURFACE_HIGH / SURFACE_HALF_HIGH / DOUBLE_SURFACE) when the edge has a walkable opening. |
+| `sockets.bottom` | Same as top — SOLID, EMPTY, or LADDER. Never a surface socket. |
+| `sockets.left` | Same as right — SOLID, EMPTY, or a surface socket. |
 | `weight` | Default 5. Higher (10-50) for tiles that should appear often, lower (0.1-2) for rare tiles. |
 | `density` | From analysis output, but minimum 0.2 for any non-empty tile. Use `max(0.2, analysisValue)` unless the tile is fully transparent. |
 | `avoidEdge` | Default: omit (allowed everywhere). Set if tile shouldn't be on specific map edges. |
 | `avoidSockets` | Default: omit. Set if tile should avoid specific socket types in a direction. |
 | `mandatoryNeighbors` | Default: omit. Set if a specific tile MUST be placed next to this one in a direction. |
 
-**Socket detection guide (for vertical edges — left/right):**
-- `solidCenter > 0.6` (solid pixels concentrated at bottom) → `SURFACE_LOW`
-- `solidCenter < 0.4` (solid pixels concentrated at top) → `SURFACE_HIGH`
-- Multiple separate solid regions → `DOUBLE_SURFACE`
-- Full edge solid → `SOLID`
-- Full edge empty → `EMPTY`
+**Surface sockets — meaning (left/right edges ONLY):**
 
-**For horizontal edges (top/bottom):** same logic but less common to have surface types. Top/bottom are usually SOLID, EMPTY, or LADDER.
+A surface socket marks where a character can walk along the edge. It encodes two things: the **height of the walkable surface** (the top of a solid region, where solid below meets empty above) and **what fills the half away from that surface** (open air vs solid).
+
+Low surfaces (walkable near the **bottom**):
+- `SURFACE_LOW` — low floor, **open above** (top half empty). A plain ground ledge.
+- `SURFACE_HALF_LOW` — low floor, **solid roof above** (top half solid). A roofed/tunnel floor.
+
+High surfaces (walkable near the **middle**):
+- `SURFACE_HIGH` — mid ledge, **empty below** (a thin floating ledge).
+- `SURFACE_HALF_HIGH` — mid surface, **solid below** (a plateau / solid mass you stand on top of).
+
+Other:
+- `DOUBLE_SURFACE` — **two** walkable surfaces, one near the bottom AND one near the middle (two separate solid regions), open above.
+- `SOLID` — edge fully filled, no walkable opening.
+- `EMPTY` — edge fully clear.
+
+**Connectivity rules (why the socket choice matters):** surfaces connect when their walkable **heights** match. The open vs covered/filled variant determines the strength:
+- Same socket (e.g. `SURFACE_HALF_LOW` ↔ `SURFACE_HALF_LOW`) is the strongest — a roofed tunnel or a plateau continues cleanly.
+- Open ↔ its covered/filled twin connects more weakly (a tunnel mouth opening to sky, or a plateau meeting a thin ledge): `SURFACE_LOW` ↔ `SURFACE_HALF_LOW`, `SURFACE_HIGH` ↔ `SURFACE_HALF_HIGH`.
+- `DOUBLE_SURFACE` connects strongly to the plain `SURFACE_LOW` / `SURFACE_HIGH` (shared open surface) and weakly to the HALF variants.
+- Different heights do **NOT** connect (`LOW`/`HALF_LOW` family vs `HIGH`/`HALF_HIGH` family) — the surfaces wouldn't line up.
+
+So pick the socket that reflects both the surface **height** and whether the other half is **solid or open** — not just "it's mixed".
+
+**Detection hints from the analysis script** (visual inspection is authoritative — verify against the image): the `suggestion` field already distinguishes all of these (`SURFACE_LOW`/`HALF_LOW`/`HIGH`/`HALF_HIGH`/`DOUBLE_SURFACE`). Sanity-check it against the picture:
+- Solid roof on top + a floor line at the bottom → `SURFACE_HALF_LOW`.
+- Mid surface with solid filling all the way down → `SURFACE_HALF_HIGH`; a thin mid ledge with empty below → `SURFACE_HIGH`.
+- Two separate ledges (low + mid), open above → `DOUBLE_SURFACE`.
+- A top/bottom edge that is partially filled comes back as `UNKNOWN` (surfaces are left/right only) — resolve it to SOLID, EMPTY, or LADDER yourself.
+
+**Surface sockets never appear on top or bottom edges.** Top/bottom are only SOLID, EMPTY, or LADDER.
 
 **LADDER sockets** cannot be auto-detected — they are semantic. Only assign LADDER if the tile name or visual clearly indicates a ladder opening. LADDER can only appear on top or bottom sockets, never left or right.
 
@@ -116,11 +140,15 @@ Only include optional fields (`avoidEdge`, `avoidSockets`, `mandatoryNeighbors`)
 
 ## Socket Types Reference
 
-| Socket | Meaning |
-|--------|---------|
-| SOLID | Entire edge is filled (black) |
-| EMPTY | Entire edge is clear (transparent) |
-| SURFACE_LOW | Surface transition in lower portion of edge |
-| SURFACE_HIGH | Surface transition in upper portion of edge |
-| DOUBLE_SURFACE | Two surface transitions (combination of LOW and HIGH) |
-| LADDER | Ladder opening — only on top/bottom sockets, never on edges of the map |
+| Socket | Meaning | Allowed edges |
+|--------|---------|---------------|
+| SOLID | Entire edge is filled (black) | any |
+| EMPTY | Entire edge is clear (transparent) | any |
+| SURFACE_LOW | Walkable surface near the **bottom**, open above | left/right only |
+| SURFACE_HALF_LOW | Low walkable surface with a **solid roof above** (roofed/tunnel floor) | left/right only |
+| SURFACE_HIGH | Thin walkable ledge near the **middle**, empty below | left/right only |
+| SURFACE_HALF_HIGH | Mid walkable surface with **solid below** (plateau) | left/right only |
+| DOUBLE_SURFACE | Walkable surfaces both near the bottom **and** near the middle, open above | left/right only |
+| LADDER | Ladder opening — only on top/bottom sockets | top/bottom only |
+
+**Surface connectivity:** surfaces connect only when their walkable **heights** match. Within a height, the same socket connects most strongly; the open variant connects weakly to its covered/filled twin (`SURFACE_LOW`↔`SURFACE_HALF_LOW`, `SURFACE_HIGH`↔`SURFACE_HALF_HIGH`). `DOUBLE_SURFACE` connects strongly to plain `SURFACE_LOW`/`SURFACE_HIGH` and weakly to the HALF variants. The low family (`SURFACE_LOW`, `SURFACE_HALF_LOW`) and the high family (`SURFACE_HIGH`, `SURFACE_HALF_HIGH`) do **not** connect to each other.

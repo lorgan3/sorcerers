@@ -38,7 +38,7 @@ const title = computed(() => TITLES[screen.value] ?? "");
 
 const wfcSettings = ref<WfcSettings>({
   width: 10, height: 4, density: 60,
-  continuityBonus: 2, preventBlockages: true,
+  smoothness: 0.5, preventBlockages: true,
   densityMask: null,
 });
 const wfcLadders = ref<LadderInfo[]>([]);

@@ -72,6 +72,72 @@ describe("socketMultiplier", () => {
   });
 });
 
+describe("HALF surfaces (covered / filled)", () => {
+  const CB = 2.0;
+
+  test("self-connections get continuity bonus", () => {
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.SURFACE_HALF_LOW, CB)).toBe(CB);
+    expect(socketMultiplier(Socket.SURFACE_HALF_HIGH, Socket.SURFACE_HALF_HIGH, CB)).toBe(CB);
+  });
+
+  test("open surface connects to its same-height covered/filled variant at 0.6", () => {
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SURFACE_HALF_LOW, CB)).toBe(0.6);
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.SURFACE_LOW, CB)).toBe(0.6);
+    expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SURFACE_HALF_HIGH, CB)).toBe(0.6);
+    expect(socketMultiplier(Socket.SURFACE_HALF_HIGH, Socket.SURFACE_HIGH, CB)).toBe(0.6);
+  });
+
+  test("EMPTY: roofed low floor is weak (0.3), filled-below mid surface is a normal cliff edge (0.8)", () => {
+    expect(socketMultiplier(Socket.EMPTY, Socket.SURFACE_HALF_LOW, CB)).toBe(0.3);
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.EMPTY, CB)).toBe(0.3);
+    expect(socketMultiplier(Socket.EMPTY, Socket.SURFACE_HALF_HIGH, CB)).toBe(0.8);
+    expect(socketMultiplier(Socket.SURFACE_HALF_HIGH, Socket.EMPTY, CB)).toBe(0.8);
+  });
+
+  test("HALF surfaces connect to SOLID at 0.1", () => {
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.SOLID, CB)).toBe(0.1);
+    expect(socketMultiplier(Socket.SURFACE_HALF_HIGH, Socket.SOLID, CB)).toBe(0.1);
+  });
+
+  test("DOUBLE_SURFACE connects to HALF surfaces at 0.3", () => {
+    expect(socketMultiplier(Socket.DOUBLE_SURFACE, Socket.SURFACE_HALF_LOW, CB)).toBe(0.3);
+    expect(socketMultiplier(Socket.DOUBLE_SURFACE, Socket.SURFACE_HALF_HIGH, CB)).toBe(0.3);
+  });
+
+  test("cross-height combinations with HALF surfaces are weak (0.3)", () => {
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SURFACE_HALF_HIGH, CB)).toBe(0.3);
+    expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SURFACE_HALF_LOW, CB)).toBe(0.3);
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.SURFACE_HALF_HIGH, CB)).toBe(0.3);
+  });
+
+  test("LADDER does not connect to HALF surfaces", () => {
+    expect(socketMultiplier(Socket.LADDER, Socket.SURFACE_HALF_LOW, CB)).toBe(0);
+    expect(socketMultiplier(Socket.LADDER, Socket.SURFACE_HALF_HIGH, CB)).toBe(0);
+  });
+});
+
+describe("socketMultiplier with preventBlockages", () => {
+  const CB = 2.0;
+
+  test("surface ↔ SOLID is suppressed to 0", () => {
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SOLID, CB, true)).toBe(0);
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.SOLID, CB, true)).toBe(0);
+    expect(socketMultiplier(Socket.SURFACE_HALF_HIGH, Socket.SOLID, CB, true)).toBe(0);
+  });
+
+  test("cross-height surface pairs are suppressed to 0", () => {
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SURFACE_HIGH, CB, true)).toBe(0);
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SURFACE_HALF_HIGH, CB, true)).toBe(0);
+    expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SURFACE_HALF_LOW, CB, true)).toBe(0);
+    expect(socketMultiplier(Socket.SURFACE_HALF_LOW, Socket.SURFACE_HALF_HIGH, CB, true)).toBe(0);
+  });
+
+  test("same-height open/covered pairs are NOT suppressed (traversable)", () => {
+    expect(socketMultiplier(Socket.SURFACE_LOW, Socket.SURFACE_HALF_LOW, CB, true)).toBe(0.6);
+    expect(socketMultiplier(Socket.SURFACE_HIGH, Socket.SURFACE_HALF_HIGH, CB, true)).toBe(0.6);
+  });
+});
+
 describe("mirrorTile", () => {
   test("swaps left and right sockets", () => {
     const tile: WfcTile = {

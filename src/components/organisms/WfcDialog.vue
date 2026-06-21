@@ -143,16 +143,16 @@ const handleGenerate = () => {
       </div>
 
       <label class="slider-label">
-        <span class="label">Continuity</span>
+        <span class="label">Smoothness</span>
         <input
           type="range"
-          v-model.number="settings.continuityBonus"
-          min="1"
-          max="5"
-          step="0.1"
+          v-model.number="settings.smoothness"
+          min="0"
+          max="1"
+          step="0.05"
           class="slider"
         />
-        <span class="slider-value">{{ settings.continuityBonus.toFixed(1) }}</span>
+        <span class="slider-value">{{ settings.smoothness.toFixed(2) }}</span>
       </label>
 
       <label class="slider-label">

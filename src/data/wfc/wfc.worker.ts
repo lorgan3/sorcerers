@@ -5,7 +5,8 @@ import { gridToBlob, type LadderInfo } from "./postProcess";
 export interface WfcWorkerInput {
   width: number;
   height: number;
-  continuityBonus: number;
+  /** 0 = busy/varied terrain, 1 = smooth/sweeping terrain. */
+  smoothness: number;
   preventBlockages: boolean;
   densityMask: Uint8Array;
 }
@@ -51,13 +52,21 @@ async function loadTileImages(tiles: WfcTile[]): Promise<WfcTile[]> {
 
 self.onmessage = async (e: MessageEvent<WfcWorkerInput>) => {
   try {
-    const { width, height, continuityBonus, preventBlockages, densityMask } = e.data;
+    const { width, height, smoothness, preventBlockages, densityMask } = e.data;
+
+    // Map the single Smoothness control onto the two levers that shape local
+    // variety: the continuity bonus (favours matching sockets) and the same-tile
+    // penalty (low = strongly discourage a feature repeating, 1 = allow it freely).
+    // The penalty curve is quadratic so the mid of the range stays varied and
+    // features only start clumping as smoothness approaches 1.
+    const continuityBonus = 1 + smoothness * 3; // 1 .. 4
+    const sameTilePenalty = 0.15 + 0.85 * smoothness * smoothness; // 0.15 .. ~0.36 @0.5 .. 1
 
     const filteredTiles = preventBlockages ? TILES.filter((t) => t.id !== "wall") : TILES;
     const tiles = await loadTileImages(filteredTiles);
 
     const ATTEMPT_BUDGET_MS = 400;
-    const params = { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs: ATTEMPT_BUDGET_MS };
+    const params = { width, height, tiles, continuityBonus, sameTilePenalty, preventBlockages, densityMask, maxTimeMs: ATTEMPT_BUDGET_MS };
 
     let solvedGrid: WfcTile[][] | null = null;
     let timedOut = 0;
