@@ -275,6 +275,13 @@ import highFloorImg from "./tiles/highFloor.png";
 import highFloorHoleImg from "./tiles/highFloorHole.png";
 import highFloorRampImg from "./tiles/highFloorRamp.png";
 import highFloorStepImg from "./tiles/highFloorStep.png";
+import stalactiteImg from "./tiles/stalactite.png";
+import floorRoughImg from "./tiles/floorRough.png";
+import plateauRoundedImg from "./tiles/plateauRounded.png";
+import peakImg from "./tiles/peak.png";
+import hangingRockImg from "./tiles/hangingRock.png";
+import islandSideImg from "./tiles/islandSide.png";
+import stalactiteClusterImg from "./tiles/stalactiteCluster.png";
 
 const BASE_TILES: WfcTile[] = [
   {
@@ -660,6 +667,7 @@ const BASE_TILES: WfcTile[] = [
         "doubleRampFloor",
         "doubleRampStepFloor",
         "steepWall",
+        "peak",
       ],
     },
   },
@@ -682,6 +690,7 @@ const BASE_TILES: WfcTile[] = [
         "doubleRampFloor",
         "doubleRampStepFloor",
         "steepWall",
+        "peak",
       ],
     },
   },
@@ -704,6 +713,7 @@ const BASE_TILES: WfcTile[] = [
         "doubleRampFloor",
         "doubleRampStepFloor",
         "steepWall",
+        "peak",
       ],
     },
   },
@@ -726,6 +736,7 @@ const BASE_TILES: WfcTile[] = [
         "doubleRampFloor",
         "doubleRampStepFloor",
         "steepWall",
+        "peak",
       ],
     },
   },
@@ -1026,6 +1037,143 @@ const BASE_TILES: WfcTile[] = [
         "rampEntry_m",
         "emptyRampEntry_m",
         "tubeBend_m",
+      ],
+    },
+  },
+  {
+    id: "stalactite",
+    imagePath: stalactiteImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.EMPTY,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 0.5,
+    density: 0.2,
+    avoidEdge: ["left", "right"],
+    avoidSockets: { bottom: [Socket.SOLID] },
+  },
+  {
+    id: "floorRough",
+    imagePath: floorRoughImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_LOW,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_LOW,
+    },
+    weight: 1.5,
+    density: 0.207,
+    avoidSockets: { bottom: [Socket.EMPTY] },
+  },
+  {
+    id: "plateauRounded",
+    imagePath: plateauRoundedImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_HALF_HIGH,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_HALF_HIGH,
+    },
+    weight: 1.5,
+    density: 0.619,
+    avoidSockets: { bottom: [Socket.EMPTY] },
+  },
+  {
+    id: "peak",
+    imagePath: peakImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.SURFACE_LOW,
+      bottom: Socket.SOLID,
+      left: Socket.SURFACE_LOW,
+    },
+    weight: 1,
+    density: 0.489,
+    avoidEdge: ["top"],
+    avoidSockets: { bottom: [Socket.EMPTY] },
+    mandatoryNeighbors: {
+      top: [
+        "rampEntry",
+        "rampEntry_m",
+        "doubleRampEntry",
+        "doubleRampEntry_m",
+        "doubleRampEntryStep",
+        "doubleRampEntryStep_m",
+        "emptyRampEntry",
+        "emptyRampEntry_m",
+        "empty",
+      ],
+    },
+  },
+  {
+    id: "hangingRock",
+    imagePath: hangingRockImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.EMPTY,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 0.5,
+    density: 0.426,
+    avoidSockets: {
+      left: [
+        Socket.SOLID,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+      ],
+      right: [
+        Socket.SOLID,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+      ],
+    },
+  },
+  {
+    id: "islandSide",
+    imagePath: islandSideImg,
+    sockets: {
+      top: Socket.EMPTY,
+      right: Socket.EMPTY,
+      bottom: Socket.EMPTY,
+      left: Socket.SOLID,
+    },
+    weight: 0.3,
+    density: 0.428,
+    avoidSockets: { left: [Socket.EMPTY] },
+  },
+  {
+    id: "stalactiteCluster",
+    imagePath: stalactiteClusterImg,
+    sockets: {
+      top: Socket.SOLID,
+      right: Socket.EMPTY,
+      bottom: Socket.EMPTY,
+      left: Socket.EMPTY,
+    },
+    weight: 0.5,
+    density: 0.2,
+    avoidEdge: ["left", "right"],
+    avoidSockets: {
+      left: [
+        Socket.SOLID,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
+      ],
+      right: [
+        Socket.SOLID,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
+        Socket.SURFACE_HIGH,
+        Socket.DOUBLE_SURFACE,
       ],
     },
   },
