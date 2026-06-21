@@ -5,11 +5,12 @@ import { Team } from "../../../data/team";
 import { defaults, GameSettings } from "../../../util/localStorage/settings";
 
 export function useBuilderMap() {
-  const { toConfig, loadConfig } = useMapDraft();
+  const { toConfig, loadConfig, resolvePendingOverlays } = useMapDraft();
 
   const handleTest = async (
     onPlay: (key: string, map: Map | Config, settings: GameSettings) => void
   ) => {
+    await resolvePendingOverlays();
     const config = toConfig();
     const server = new Server();
     server.addPlayer("Test player", Team.random());
