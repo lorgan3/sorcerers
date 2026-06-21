@@ -1,6 +1,38 @@
 import { describe, expect, test } from "vitest";
-import { solve, type WfcParams } from "../wfc";
-import { Socket, socketMultiplier, type WfcTile } from "../tiles";
+import { solve, solveOnce, createRng, type WfcParams } from "../wfc";
+import { Socket, socketMultiplier, TILES, type WfcTile } from "../tiles";
+
+describe("global density feedback", () => {
+  const tiles = TILES.filter((t) => t.id !== "wall");
+
+  // Average realized density (mean of placed tile densities) over a few fixed seeds.
+  const realized = (target: number, densityFeedback: boolean): number => {
+    const W = 24;
+    const H = 12;
+    const densityMask = new Uint8Array(W * H).fill(Math.round(target * 255));
+    let sum = 0;
+    let n = 0;
+    for (const seed of [1, 2, 3]) {
+      const grid = solveOnce(
+        { width: W, height: H, tiles, continuityBonus: 2.5, sameTilePenalty: 0.36, preventBlockages: true, densityMask, densityFeedback },
+        createRng(seed),
+      );
+      if (!Array.isArray(grid)) continue;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        sum += grid[y][x].density;
+        n++;
+      }
+    }
+    return sum / n;
+  };
+
+  test("brings realized density closer to a high requested density", () => {
+    const target = 0.8;
+    const errWith = Math.abs(realized(target, true) - target);
+    const errWithout = Math.abs(realized(target, false) - target);
+    expect(errWith).toBeLessThan(errWithout);
+  });
+});
 
 // Minimal test tile set with known compatibility
 const testTiles: WfcTile[] = [

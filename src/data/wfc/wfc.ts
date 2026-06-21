@@ -11,6 +11,9 @@ export interface WfcParams {
   preventBlockages: boolean;
   seed?: number;
   densityMask: Uint8Array;
+  /** Bias each cell's target by the running density deficit so realized density
+   * tracks the request despite WFC's collapse order. Default true. */
+  densityFeedback?: boolean;
   /** Per-attempt wall-clock budget. Returns null if exceeded. */
   maxTimeMs?: number;
 }
@@ -109,6 +112,10 @@ interface Snapshot {
   grid: Set<WfcTile>[][];
   cellIndex: [number, number];
   excludedTiles: Set<string>;
+  /** Running density deficit (Σ requested − placed) and placed count, captured so
+   * the global density feedback is undone correctly on backtrack. */
+  densityDeficit: number;
+  densityPlaced: number;
 }
 
 function neighborMultiplier(
@@ -372,6 +379,24 @@ function enforceAllMandatory(
 export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult {
   const { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
   const sameTilePenalty = params.sameTilePenalty ?? 0.3;
+  const globalFeedback = params.densityFeedback !== false;
+
+  // Global density feedback: an integral term that biases each cell's effective
+  // target by the average shortfall (requested − placed) accumulated so far, so
+  // the realized density tracks the request even though WFC's collapse order makes
+  // the local neighbour diffusion alone largely cancel out.
+  let densityDeficit = 0;
+  let densityPlaced = 0;
+  const biasedTarget = (x: number, y: number): number => {
+    const raw = getDensity(x, y);
+    if (!globalFeedback || densityPlaced === 0) return raw;
+    return Math.max(0, Math.min(1, raw + densityDeficit / densityPlaced));
+  };
+  const recordPlacement = (x: number, y: number, placed: number): void => {
+    if (!globalFeedback) return;
+    densityDeficit += densityMask[y * width + x] / 255 - placed;
+    densityPlaced++;
+  };
   const startTime = maxTimeMs !== undefined ? performance.now() : 0;
   const isOutOfTime = () =>
     maxTimeMs !== undefined && performance.now() - startTime > maxTimeMs;
@@ -432,12 +457,14 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
 
     const [cx, cy] = candidates[Math.floor(rng() * candidates.length)];
     const options = [...grid[cy][cx]];
-    const localDensity = getDensity(cx, cy);
+    const localDensity = biasedTarget(cx, cy);
 
     const snapshot: Snapshot = {
       grid: cloneGrid(grid),
       cellIndex: [cx, cy],
       excludedTiles: new Set<string>(),
+      densityDeficit,
+      densityPlaced,
     };
 
     const chosen = pickWeighted(
@@ -455,6 +482,7 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
     );
 
     grid[cy][cx] = new Set([chosen]);
+    recordPlacement(cx, cy, chosen.density);
 
     const mandatoryChanged = enforceMandatoryNeighbors(grid, cx, cy, width, height);
 
@@ -489,6 +517,8 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
     while (!resolved) {
       if (isOutOfTime()) return SOLVE_TIMEOUT;
       restoreGrid(grid, current.grid, height, width);
+      densityDeficit = current.densityDeficit;
+      densityPlaced = current.densityPlaced;
 
       const [bx, by] = current.cellIndex;
       const remaining = [...grid[by][bx]].filter(
@@ -497,7 +527,7 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
 
       if (remaining.length > 0) {
         grid[by][bx] = new Set(remaining);
-        const retryDensity = getDensity(bx, by);
+        const retryDensity = biasedTarget(bx, by);
         const retryChosen = pickWeighted(
           remaining,
           retryDensity,
@@ -512,6 +542,7 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
           rng,
         );
         grid[by][bx] = new Set([retryChosen]);
+        recordPlacement(bx, by, retryChosen.density);
 
         const retryMandatory = enforceMandatoryNeighbors(grid, bx, by, width, height);
         const changedCells = [[bx, by] as [number, number], ...(retryMandatory ?? [])];
