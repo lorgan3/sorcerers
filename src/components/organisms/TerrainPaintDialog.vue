@@ -20,8 +20,8 @@ const props = defineProps<{
       background: string;
       width: number;
       height: number;
-      zoneMap: Int32Array;
-      zones: ZoneInfo[];
+      alpha: Uint8Array;
+      themeOverrides: Record<number, string>;
       seed: number;
     },
     action: "build" | "continue"
@@ -204,8 +204,8 @@ function handleConfirm(action: "build" | "continue") {
           background,
           width: ad.width,
           height: ad.height,
-          zoneMap: res.zoneMap,
-          zones: res.zones,
+          alpha: ad.alpha,
+          themeOverrides: overrides.value,
           seed: SEED,
         },
         action

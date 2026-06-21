@@ -1,12 +1,11 @@
 import {
   useMapDraft,
   selectOverlaySources,
-  selectOverlayTheme,
-  paintSolidBlock,
+  paintSolidRegion,
 } from "../draft";
+import { paintTerrain } from "../../terrainPaint";
 import { BBox } from "../../map/bbox";
 import type { Config } from "../../map";
-import type { ZoneInfo } from "../../terrainPaint/zones";
 
 const draft = useMapDraft();
 
@@ -154,61 +153,91 @@ describe("useMapDraft", () => {
   });
 
   describe("solid terrain overlays", () => {
-    const zone = (id: number, themeId: string): ZoneInfo => ({
-      id,
-      themeId,
-      bbox: { left: 0, top: 0, right: 0, bottom: 0 },
-    });
+    // a 6x6 map solid only in the bottom two rows
+    const mapWidth = 6;
+    const mapHeight = 6;
+    const sampleAlpha = () => {
+      const alpha = new Uint8Array(mapWidth * mapHeight);
+      for (let y = 4; y < mapHeight; y++) {
+        for (let x = 0; x < mapWidth; x++) alpha[y * mapWidth + x] = 1;
+      }
+      return alpha;
+    };
 
-    it("applyPaint stores a paint context only when zone data is provided", () => {
+    it("applyPaint stores a paint context only when the wallmask is provided", () => {
       draft.applyPaint({ terrain: "TT", background: "BB", width: 80, height: 40 });
       expect(draft.paintContext.value).toBeNull();
 
+      const alpha = sampleAlpha();
       draft.applyPaint({
         terrain: "TT",
         background: "BB",
-        width: 2,
-        height: 1,
-        zoneMap: new Int32Array([0, 0]),
-        zones: [zone(0, "rock")],
+        width: mapWidth,
+        height: mapHeight,
+        alpha,
+        themeOverrides: { 0: "cave" },
         seed: 7,
       });
       expect(draft.paintContext.value?.seed).toBe(7);
-      expect(draft.paintContext.value?.zones[0].themeId).toBe("rock");
+      expect(draft.paintContext.value?.alpha).toBe(alpha);
+      expect(draft.paintContext.value?.themeOverrides).toEqual({ 0: "cave" });
 
       draft.reset();
       expect(draft.paintContext.value).toBeNull();
     });
 
-    it("selectOverlayTheme picks the most common solid zone theme in the box", () => {
-      // 4x1 strip: cols 0-1 grassland, col 2 desert, col 3 open sky (-1)
+    it("paintSolidRegion fills the whole box opaque, even over open sky", () => {
       const ctx = {
-        width: 4,
-        height: 1,
-        zoneMap: new Int32Array([0, 0, 1, -1]),
-        zones: [zone(0, "grassland"), zone(1, "desert")],
+        alpha: sampleAlpha(),
+        width: mapWidth,
+        height: mapHeight,
+        seed: 1,
+        themeOverrides: {},
       };
-      expect(selectOverlayTheme(ctx, 0, 0, 4, 1)).toBe("grassland");
-      expect(selectOverlayTheme(ctx, 2, 0, 2, 1)).toBe("desert");
-    });
-
-    it("selectOverlayTheme falls back to grassland over open sky", () => {
-      const ctx = {
-        width: 2,
-        height: 1,
-        zoneMap: new Int32Array([-1, -1]),
-        zones: [] as ZoneInfo[],
-      };
-      expect(selectOverlayTheme(ctx, 0, 0, 2, 1)).toBe("grassland");
-    });
-
-    it("paintSolidBlock produces a fully opaque block of the requested size", () => {
-      const image = paintSolidBlock(6, 4, "grassland", 1);
-      expect(image.width).toBe(6);
-      expect(image.height).toBe(4);
+      // box over the top rows, which are open sky in the source map
+      const image = paintSolidRegion(ctx, { x: 1, y: 0, width: 3, height: 3 });
+      expect(image.width).toBe(3);
+      expect(image.height).toBe(3);
       for (let i = 3; i < image.data.length; i += 4) {
         expect(image.data[i]).toBe(255);
       }
+    });
+
+    it("paintSolidRegion matches the full re-paint at the box's map coordinates", () => {
+      const ctx = {
+        alpha: sampleAlpha(),
+        width: mapWidth,
+        height: mapHeight,
+        seed: 1,
+        themeOverrides: {},
+      };
+      const box = { x: 2, y: 1, width: 2, height: 2 };
+
+      // reference: re-paint the whole map with the box forced solid
+      const solid = Uint8Array.from(ctx.alpha);
+      for (let yy = box.y; yy < box.y + box.height; yy++) {
+        for (let xx = box.x; xx < box.x + box.width; xx++) {
+          solid[yy * mapWidth + xx] = 1;
+        }
+      }
+      const reference = paintTerrain({
+        alpha: solid,
+        width: mapWidth,
+        height: mapHeight,
+        ladders: [],
+        seed: 1,
+        themeOverrides: {},
+      }).terrain;
+
+      const image = paintSolidRegion(ctx, box);
+      // top-left of the crop equals the map pixel at (box.x, box.y)
+      const ri = (box.y * mapWidth + box.x) * 4;
+      expect([image.data[0], image.data[1], image.data[2], image.data[3]]).toEqual([
+        reference.data[ri],
+        reference.data[ri + 1],
+        reference.data[ri + 2],
+        reference.data[ri + 3],
+      ]);
     });
   });
 

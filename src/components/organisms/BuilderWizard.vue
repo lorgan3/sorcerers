@@ -18,7 +18,6 @@ import autoMapIcon from "pixelarticons/svg/shuffle.svg";
 import autoTerrainIcon from "pixelarticons/svg/magic-edit.svg";
 import manualIcon from "pixelarticons/svg/image-new.svg";
 import type { LadderInfo } from "../../data/wfc/postProcess";
-import type { ZoneInfo } from "../../data/terrainPaint/zones";
 import type { Config } from "../../data/map";
 import { runWfc, type WfcSettings } from "../../data/wfc/runWfc";
 
@@ -179,8 +178,8 @@ const handlePaintConfirm = (
     background: string;
     width: number;
     height: number;
-    zoneMap: Int32Array;
-    zones: ZoneInfo[];
+    alpha: Uint8Array;
+    themeOverrides: Record<number, string>;
     seed: number;
   },
   action: "build" | "continue"
