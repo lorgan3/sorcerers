@@ -20,6 +20,9 @@ const props = defineProps<{
       background: string;
       width: number;
       height: number;
+      zoneMap: Int32Array;
+      zones: ZoneInfo[];
+      seed: number;
     },
     action: "build" | "continue"
   ) => void;
@@ -201,6 +204,9 @@ function handleConfirm(action: "build" | "continue") {
           background,
           width: ad.width,
           height: ad.height,
+          zoneMap: res.zoneMap,
+          zones: res.zones,
+          seed: SEED,
         },
         action
       );

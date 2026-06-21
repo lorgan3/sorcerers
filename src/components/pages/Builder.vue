@@ -169,6 +169,7 @@ const handleBBoxChange = (newBBox: BBox) => {
               />
               <IconButton
                 v-if="!layer.data"
+                className="draw-overlay-button"
                 title="Draw overlay from map"
                 :onClick="() => { creatingLadder = false; startDrawOverlay(i); }"
                 :icon="frame"
@@ -318,13 +319,13 @@ const handleBBoxChange = (newBBox: BBox) => {
       }
 
       .layer-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 4px;
+        position: relative;
+      }
 
-        > :first-child {
-          flex: 1;
-        }
+      .draw-overlay-button {
+        position: absolute;
+        top: 0;
+        right: 0;
       }
 
       .pending-overlay {

@@ -18,6 +18,7 @@ import autoMapIcon from "pixelarticons/svg/shuffle.svg";
 import autoTerrainIcon from "pixelarticons/svg/magic-edit.svg";
 import manualIcon from "pixelarticons/svg/image-new.svg";
 import type { LadderInfo } from "../../data/wfc/postProcess";
+import type { ZoneInfo } from "../../data/terrainPaint/zones";
 import type { Config } from "../../data/map";
 import { runWfc, type WfcSettings } from "../../data/wfc/runWfc";
 
@@ -173,7 +174,15 @@ const handleAddBackground = (_: File, data: string) => {
 };
 
 const handlePaintConfirm = (
-  result: { terrain: string; background: string; width: number; height: number },
+  result: {
+    terrain: string;
+    background: string;
+    width: number;
+    height: number;
+    zoneMap: Int32Array;
+    zones: ZoneInfo[];
+    seed: number;
+  },
   action: "build" | "continue"
 ) => {
   draft.applyPaint(result);
