@@ -170,7 +170,7 @@ const handleBBoxChange = (newBBox: BBox) => {
               <IconButton
                 v-if="!layer.data"
                 title="Draw overlay from map"
-                :onClick="() => startDrawOverlay(i)"
+                :onClick="() => { creatingLadder = false; startDrawOverlay(i); }"
                 :icon="frame"
               />
             </div>
@@ -182,7 +182,7 @@ const handleBBoxChange = (newBBox: BBox) => {
             Ladders {{ ladders.length ? `(${ladders.length})` : "" }}
             <IconButton
               title="Add ladder"
-              :onClick="() => (creatingLadder = true)"
+              :onClick="() => { creatingOverlayIndex = null; creatingLadder = true; }"
               :icon="plus"
             />
           </h2>

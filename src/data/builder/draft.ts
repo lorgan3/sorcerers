@@ -185,6 +185,7 @@ const generateOverlay = async (
 const confirmOverlay = async (index: number) => {
   const layer = layers.value[index];
   if (!layer?.box) return;
+  if (!background.value.data && !terrain.value.data) return;
 
   const { data, x, y } = await generateOverlay(layer.box);
   layer.data = data;

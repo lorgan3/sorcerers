@@ -177,5 +177,12 @@ describe("useMapDraft", () => {
       expect(draft.layers.value[0].data).toBe("L");
       expect(draft.layers.value[0].box).toBeUndefined();
     });
+
+    it("confirmOverlay leaves the box when there is no terrain or background to sample", async () => {
+      draft.layers.value.push({ data: "", x: 0, y: 0, visible: true, box: new BBox(1, 1, 5, 5) });
+      await draft.confirmOverlay(0);
+      expect(draft.layers.value[0].data).toBe("");
+      expect(draft.layers.value[0].box).toBeDefined();
+    });
   });
 });
