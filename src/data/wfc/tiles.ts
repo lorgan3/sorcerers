@@ -795,15 +795,18 @@ const BASE_TILES: WfcTile[] = [
     },
     weight: 0.35,
     density: 0.251,
+    // A narrow corridor inside rock: require solid (or ladder) above and below so
+    // it stays embedded instead of floating as a thin bar over empty space.
+    avoidSockets: { top: [Socket.EMPTY], bottom: [Socket.EMPTY] },
   },
   {
     id: "highDip",
     imagePath: highDipImg,
     sockets: {
       top: Socket.EMPTY,
-      right: Socket.SURFACE_HIGH,
+      right: Socket.SURFACE_HALF_HIGH,
       bottom: Socket.SOLID,
-      left: Socket.SURFACE_HIGH,
+      left: Socket.SURFACE_HALF_HIGH,
     },
     weight: 1,
     density: 0.468,
