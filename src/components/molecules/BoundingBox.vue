@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { BBox } from "../../data/map/bbox";
+import check from "pixelarticons/svg/check.svg";
 import close from "pixelarticons/svg/close.svg";
 import IconButton from "../atoms/IconButton.vue";
 
@@ -9,6 +10,7 @@ const props = defineProps<{
   onChange: (bbox: BBox) => void;
   color?: string;
   onClear?: () => void;
+  onConfirm?: () => void;
   draggable?: boolean;
 }>();
 
@@ -116,6 +118,13 @@ const handleMove = (event: MouseEvent) => {
     ></div>
     <div v-if="props.draggable" class="fill" @mousedown="handleMove"></div>
     <IconButton
+      className="button button--confirm"
+      v-if="onConfirm"
+      title="Confirm overlay"
+      :onClick="onConfirm"
+      :icon="check"
+    />
+    <IconButton
       className="button"
       v-if="onClear"
       title="Clear"
@@ -139,6 +148,10 @@ const handleMove = (event: MouseEvent) => {
     position: absolute;
     top: calc(var(--top) + 10px);
     left: calc(var(--right) - 28px);
+  }
+
+  .button--confirm {
+    left: calc(var(--right) - 56px);
   }
 
   .fill {
