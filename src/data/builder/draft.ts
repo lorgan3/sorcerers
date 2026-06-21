@@ -23,7 +23,7 @@ const emptyAdvanced = (): AdvancedSettings => ({
 const terrain = ref({ data: "", visible: false });
 const mask = ref({ data: "", visible: false });
 const background = ref({ data: "", visible: false });
-const layers = ref<Array<Layer & { visible: boolean }>>([]);
+const layers = ref<Array<Layer & { visible: boolean; box?: BBox }>>([]);
 const ladders = ref<BBox[]>([]);
 const advancedSettings = ref<AdvancedSettings>(emptyAdvanced());
 const name = ref("");
@@ -133,7 +133,9 @@ const toConfig = (): Config => ({
     mask: mask.value.data,
   },
   background: background.value.data ? { data: background.value.data } : undefined,
-  layers: layers.value.filter((layer) => !!layer.data).map((layer) => ({ ...layer })),
+  layers: layers.value
+    .filter((layer) => !!layer.data)
+    .map((layer) => ({ data: layer.data, x: layer.x, y: layer.y })),
   bbox: advancedSettings.value.bbox,
   parallax: {
     name: advancedSettings.value.parallaxName,
