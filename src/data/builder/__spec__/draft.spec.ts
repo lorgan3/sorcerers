@@ -163,4 +163,19 @@ describe("useMapDraft", () => {
       expect(out.layers[0]).toEqual({ data: "L", x: 1, y: 2 });
     });
   });
+
+  describe("resolvePendingOverlays", () => {
+    it("is a no-op when no layer has a pending box", async () => {
+      draft.layers.value.push({ data: "L", x: 1, y: 2, visible: true });
+      await draft.resolvePendingOverlays();
+      expect(draft.layers.value[0]).toEqual({ data: "L", x: 1, y: 2, visible: true });
+    });
+
+    it("confirmOverlay does nothing when the layer has no box", async () => {
+      draft.layers.value.push({ data: "L", x: 1, y: 2, visible: true });
+      await draft.confirmOverlay(0);
+      expect(draft.layers.value[0].data).toBe("L");
+      expect(draft.layers.value[0].box).toBeUndefined();
+    });
+  });
 });
