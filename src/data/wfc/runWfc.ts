@@ -5,7 +5,8 @@ export interface WfcSettings {
   width: number;
   height: number;
   density: number;
-  continuityBonus: number;
+  /** 0 = busy/varied terrain, 1 = smooth/sweeping terrain. */
+  smoothness: number;
   preventBlockages: boolean;
   densityMask: Uint8Array | null;
 }
@@ -34,7 +35,7 @@ export function runWfc(settings: WfcSettings): {
     worker.postMessage({
       width: settings.width,
       height: settings.height,
-      continuityBonus: settings.continuityBonus,
+      smoothness: settings.smoothness,
       preventBlockages: settings.preventBlockages,
       densityMask: settings.densityMask,
     });

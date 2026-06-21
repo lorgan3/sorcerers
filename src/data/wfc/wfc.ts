@@ -5,6 +5,9 @@ export interface WfcParams {
   height: number;
   tiles: WfcTile[];
   continuityBonus: number;
+  /** Weight applied when a candidate repeats an already-placed neighbour tile.
+   * Lower (≈0.3) = more variety; 1 = no discouragement. Defaults to 0.3. */
+  sameTilePenalty?: number;
   preventBlockages: boolean;
   seed?: number;
   densityMask: Uint8Array;
@@ -117,6 +120,7 @@ function neighborMultiplier(
   height: number,
   continuityBonus: number,
   preventBlockages: boolean,
+  sameTilePenalty: number,
 ): number {
   let multiplier = 1;
 
@@ -139,7 +143,7 @@ function neighborMultiplier(
     multiplier *= Math.max(m, 0.01);
 
     if (tile.id === nTile.id && tile.id !== "solid" && tile.id !== "empty") {
-      multiplier *= 0.3;
+      multiplier *= sameTilePenalty;
     }
   }
 
@@ -156,6 +160,7 @@ function pickWeighted(
   height: number,
   continuityBonus: number,
   preventBlockages: boolean,
+  sameTilePenalty: number,
   rng: () => number,
 ): WfcTile {
   const weights: number[] = [];
@@ -163,7 +168,7 @@ function pickWeighted(
   for (const tile of options) {
     const base =
       tile.weight *
-      neighborMultiplier(tile, cx, cy, grid, width, height, continuityBonus, preventBlockages);
+      neighborMultiplier(tile, cx, cy, grid, width, height, continuityBonus, preventBlockages, sameTilePenalty);
     const distance = Math.abs(tile.density - density);
     const exponent = (1 - distance * 2) * 6.64;
     const w = base * Math.max(0.01, Math.pow(2, exponent));
@@ -366,6 +371,7 @@ function enforceAllMandatory(
 
 export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult {
   const { width, height, tiles, continuityBonus, preventBlockages, densityMask, maxTimeMs } = params;
+  const sameTilePenalty = params.sameTilePenalty ?? 0.3;
   const startTime = maxTimeMs !== undefined ? performance.now() : 0;
   const isOutOfTime = () =>
     maxTimeMs !== undefined && performance.now() - startTime > maxTimeMs;
@@ -444,6 +450,7 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
       height,
       continuityBonus,
       preventBlockages,
+      sameTilePenalty,
       rng,
     );
 
@@ -501,6 +508,7 @@ export function solveOnce(params: WfcParams, rng: () => number): SolveOnceResult
           height,
           continuityBonus,
           preventBlockages,
+          sameTilePenalty,
           rng,
         );
         grid[by][bx] = new Set([retryChosen]);
