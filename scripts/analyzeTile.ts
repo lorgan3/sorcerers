@@ -19,6 +19,8 @@ type SocketSuggestion =
   | "EMPTY"
   | "SURFACE_LOW"
   | "SURFACE_HIGH"
+  | "SURFACE_HALF_LOW"
+  | "SURFACE_HALF_HIGH"
   | "DOUBLE_SURFACE"
   | "UNKNOWN";
 
@@ -55,6 +57,7 @@ function isValidPixel(r: number, g: number, b: number, a: number): boolean {
 
 function analyzeEdge(
   pixels: { r: number; g: number; b: number; a: number }[],
+  isVertical: boolean,
 ): EdgeAnalysis {
   const n = pixels.length;
   const solid = pixels.map((p) => p.a > 128);
@@ -64,34 +67,64 @@ function analyzeEdge(
   if (solidRatio >= 0.95) {
     return { solidRatio, suggestion: "SOLID", solidCenter: 0.5, hasMultipleRegions: false };
   }
-  if (solidRatio <= 0.05) {
+  // Tiles are anti-aliasing-free (black-opaque or fully transparent), so any solid
+  // pixel is intentional terrain — a thin floor line is only ~4px (a 0.05 ratio).
+  // Treat an edge as EMPTY only when it has no solid at all.
+  if (solidCount === 0) {
     return { solidRatio, suggestion: "EMPTY", solidCenter: 0.5, hasMultipleRegions: false };
   }
 
-  // Find center of mass of solid pixels (0=start, 1=end)
+  // Find center of mass of solid pixels (0=top, 1=bottom for vertical edges)
   let weightedSum = 0;
   for (let i = 0; i < n; i++) {
     if (solid[i]) weightedSum += i;
   }
   const solidCenter = weightedSum / solidCount / (n - 1);
 
-  // Count separate solid regions (transitions from empty to solid)
-  let regions = 0;
+  // Find contiguous solid runs (top→bottom for vertical edges).
+  const runs: [number, number][] = [];
   for (let i = 0; i < n; i++) {
-    if (solid[i] && (i === 0 || !solid[i - 1])) regions++;
+    if (solid[i] && (i === 0 || !solid[i - 1])) {
+      let j = i;
+      while (j < n && solid[j]) j++;
+      runs.push([i, j - 1]);
+    }
   }
-  const hasMultipleRegions = regions >= 2;
+  const hasMultipleRegions = runs.length >= 2;
 
+  // Surface sockets (the SURFACE_* / DOUBLE_SURFACE family) only exist on the
+  // left/right edges. A mixed top/bottom edge is an interior feature touching the
+  // border — it still has to resolve to SOLID / EMPTY / LADDER, so defer to the human.
+  if (!isVertical) {
+    return { solidRatio, suggestion: "UNKNOWN", solidCenter, hasMultipleRegions };
+  }
+
+  // A surface socket records the walkable surface (top of a solid run) plus what
+  // fills the half away from it:
+  //   SURFACE_LOW       low floor, open above
+  //   SURFACE_HALF_LOW  low floor, solid roof above (run anchored top + floor at bottom)
+  //   SURFACE_HIGH      mid ledge, empty below (single run not reaching the bottom)
+  //   SURFACE_HALF_HIGH mid surface, solid below (single run reaching the bottom)
+  //   DOUBLE_SURFACE    two free ledges (low + mid), open above
+  const touchesTop = solid[0];
+  const touchesBottom = solid[n - 1];
   let suggestion: SocketSuggestion;
+
   if (hasMultipleRegions) {
-    suggestion = "DOUBLE_SURFACE";
-  } else if (solidCenter > 0.6) {
-    // Solid pixels concentrated toward the end (bottom for vertical, right for horizontal)
-    suggestion = "SURFACE_LOW";
-  } else if (solidCenter < 0.4) {
-    suggestion = "SURFACE_HIGH";
+    if (touchesTop && touchesBottom) {
+      // Solid roof on top + a floor at the bottom: a covered surface.
+      const surfaceFrac = runs[runs.length - 1][0] / (n - 1);
+      suggestion = surfaceFrac > 0.6 ? "SURFACE_HALF_LOW" : "SURFACE_HALF_HIGH";
+    } else {
+      suggestion = "DOUBLE_SURFACE";
+    }
   } else {
-    suggestion = "UNKNOWN";
+    const surfaceFrac = runs[0][0] / (n - 1);
+    if (surfaceFrac > 0.6) {
+      suggestion = "SURFACE_LOW";
+    } else {
+      suggestion = touchesBottom ? "SURFACE_HALF_HIGH" : "SURFACE_HIGH";
+    }
   }
 
   return { solidRatio, suggestion, solidCenter, hasMultipleRegions };
@@ -163,10 +196,10 @@ async function analyze(filePath: string): Promise<TileAnalysis> {
     height,
     density: Math.round(density * 1000) / 1000,
     edges: {
-      top: analyzeEdge(topPixels),
-      right: analyzeEdge(rightPixels),
-      bottom: analyzeEdge(bottomPixels),
-      left: analyzeEdge(leftPixels),
+      top: analyzeEdge(topPixels, false),
+      right: analyzeEdge(rightPixels, true),
+      bottom: analyzeEdge(bottomPixels, false),
+      left: analyzeEdge(leftPixels, true),
     },
   };
 }
