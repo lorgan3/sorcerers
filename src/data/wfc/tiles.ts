@@ -4,6 +4,8 @@ export enum Socket {
   SURFACE_LOW,
   SURFACE_HIGH,
   DOUBLE_SURFACE,
+  SURFACE_HALF_LOW,
+  SURFACE_HALF_HIGH,
   LADDER,
 }
 
@@ -34,7 +36,7 @@ export const TILE_SIZE_PX = 80;
 // Self-connections (diagonal) are 1.0 here; continuity bonus is applied on top.
 const BASE_MATRIX: number[][] = (() => {
   const S = Socket;
-  const size = 6;
+  const size = 8;
   const m: number[][] = Array.from({ length: size }, () => Array(size).fill(0));
 
   // Self-connections (will be multiplied by CB at call site)
@@ -70,6 +72,46 @@ const BASE_MATRIX: number[][] = (() => {
   m[S.SURFACE_LOW][S.DOUBLE_SURFACE] = 1.0;
   m[S.SURFACE_HIGH][S.DOUBLE_SURFACE] = 1.0;
 
+  // HALF surfaces carry the same walkable height as their open counterpart but
+  // add solid on the other half: HALF_LOW = low floor with a solid roof above,
+  // HALF_HIGH = mid surface with solid filling below.
+
+  // EMPTY ↔ HALF: a roofed low floor meeting open air is an ugly overhang end
+  // (weak); a filled-below mid surface meeting air is just a cliff edge (normal).
+  m[S.EMPTY][S.SURFACE_HALF_LOW] = 0.3;
+  m[S.SURFACE_HALF_LOW][S.EMPTY] = 0.3;
+  m[S.EMPTY][S.SURFACE_HALF_HIGH] = 0.8;
+  m[S.SURFACE_HALF_HIGH][S.EMPTY] = 0.8;
+
+  // HALF ↔ SOLID: walkable passage dead-ends into rock (same as open surfaces).
+  m[S.SURFACE_HALF_LOW][S.SOLID] = 0.1;
+  m[S.SOLID][S.SURFACE_HALF_LOW] = 0.1;
+  m[S.SURFACE_HALF_HIGH][S.SOLID] = 0.1;
+  m[S.SOLID][S.SURFACE_HALF_HIGH] = 0.1;
+
+  // Open ↔ covered/filled at the same height: aligned floor, mismatched off-edge
+  // half (tunnel mouth / ledge meeting a plateau): 0.6
+  m[S.SURFACE_LOW][S.SURFACE_HALF_LOW] = 0.6;
+  m[S.SURFACE_HALF_LOW][S.SURFACE_LOW] = 0.6;
+  m[S.SURFACE_HIGH][S.SURFACE_HALF_HIGH] = 0.6;
+  m[S.SURFACE_HALF_HIGH][S.SURFACE_HIGH] = 0.6;
+
+  // DOUBLE has both heights but is open: its free ledge clashes with the HALF
+  // solid half: 0.3
+  m[S.DOUBLE_SURFACE][S.SURFACE_HALF_LOW] = 0.3;
+  m[S.SURFACE_HALF_LOW][S.DOUBLE_SURFACE] = 0.3;
+  m[S.DOUBLE_SURFACE][S.SURFACE_HALF_HIGH] = 0.3;
+  m[S.SURFACE_HALF_HIGH][S.DOUBLE_SURFACE] = 0.3;
+
+  // Cross-height combinations involving HALF surfaces (walkable lines don't line
+  // up): 0.3, suppressed entirely under preventBlockages.
+  m[S.SURFACE_LOW][S.SURFACE_HALF_HIGH] = 0.3;
+  m[S.SURFACE_HALF_HIGH][S.SURFACE_LOW] = 0.3;
+  m[S.SURFACE_HIGH][S.SURFACE_HALF_LOW] = 0.3;
+  m[S.SURFACE_HALF_LOW][S.SURFACE_HIGH] = 0.3;
+  m[S.SURFACE_HALF_LOW][S.SURFACE_HALF_HIGH] = 0.3;
+  m[S.SURFACE_HALF_HIGH][S.SURFACE_HALF_LOW] = 0.3;
+
   // LADDER: only self (diagonal already set to 1.0, rest stays 0)
 
   return m;
@@ -91,8 +133,18 @@ export function socketMultiplier(
       (a === S.SOLID && b === S.SURFACE_HIGH) ||
       (a === S.DOUBLE_SURFACE && b === S.SOLID) ||
       (a === S.SOLID && b === S.DOUBLE_SURFACE) ||
+      (a === S.SURFACE_HALF_LOW && b === S.SOLID) ||
+      (a === S.SOLID && b === S.SURFACE_HALF_LOW) ||
+      (a === S.SURFACE_HALF_HIGH && b === S.SOLID) ||
+      (a === S.SOLID && b === S.SURFACE_HALF_HIGH) ||
       (a === S.SURFACE_LOW && b === S.SURFACE_HIGH) ||
-      (a === S.SURFACE_HIGH && b === S.SURFACE_LOW)
+      (a === S.SURFACE_HIGH && b === S.SURFACE_LOW) ||
+      (a === S.SURFACE_LOW && b === S.SURFACE_HALF_HIGH) ||
+      (a === S.SURFACE_HALF_HIGH && b === S.SURFACE_LOW) ||
+      (a === S.SURFACE_HIGH && b === S.SURFACE_HALF_LOW) ||
+      (a === S.SURFACE_HALF_LOW && b === S.SURFACE_HIGH) ||
+      (a === S.SURFACE_HALF_LOW && b === S.SURFACE_HALF_HIGH) ||
+      (a === S.SURFACE_HALF_HIGH && b === S.SURFACE_HALF_LOW)
     ) {
       base = 0;
     }
@@ -371,16 +423,14 @@ const BASE_TILES: WfcTile[] = [
     imagePath: halfSolidImg,
     sockets: {
       top: Socket.EMPTY,
-      right: Socket.SURFACE_HIGH,
+      right: Socket.SURFACE_HALF_HIGH,
       bottom: Socket.SOLID,
-      left: Socket.SURFACE_HIGH,
+      left: Socket.SURFACE_HALF_HIGH,
     },
     weight: 2,
     density: 0.55,
     avoidSockets: {
       bottom: [Socket.EMPTY],
-      left: [Socket.SURFACE_LOW],
-      right: [Socket.SURFACE_LOW],
     },
   },
   {
@@ -388,16 +438,14 @@ const BASE_TILES: WfcTile[] = [
     imagePath: halfCeilingImg,
     sockets: {
       top: Socket.SOLID,
-      right: Socket.SURFACE_LOW,
+      right: Socket.SURFACE_HALF_LOW,
       bottom: Socket.SOLID,
-      left: Socket.SURFACE_LOW,
+      left: Socket.SURFACE_HALF_LOW,
     },
     weight: 2,
     density: 0.55,
     avoidSockets: {
       bottom: [Socket.EMPTY],
-      left: [Socket.SURFACE_HIGH],
-      right: [Socket.SURFACE_HIGH],
     },
   },
   {
@@ -510,7 +558,7 @@ const BASE_TILES: WfcTile[] = [
     imagePath: doubleFloorSolidImg,
     sockets: {
       top: Socket.EMPTY,
-      right: Socket.SURFACE_HIGH,
+      right: Socket.SURFACE_HALF_HIGH,
       bottom: Socket.SOLID,
       left: Socket.DOUBLE_SURFACE,
     },
@@ -523,7 +571,7 @@ const BASE_TILES: WfcTile[] = [
     imagePath: halfDoubleFloorSolidImg,
     sockets: {
       top: Socket.EMPTY,
-      right: Socket.SURFACE_HIGH,
+      right: Socket.SURFACE_HALF_HIGH,
       bottom: Socket.SOLID,
       left: Socket.SURFACE_LOW,
     },
@@ -578,11 +626,11 @@ const BASE_TILES: WfcTile[] = [
       top: Socket.EMPTY,
       right: Socket.SOLID,
       bottom: Socket.SOLID,
-      left: Socket.SURFACE_HIGH,
+      left: Socket.SURFACE_HALF_HIGH,
     },
     weight: 2.5,
     density: 0.671,
-    avoidSockets: { bottom: [Socket.EMPTY], left: [Socket.SURFACE_LOW] },
+    avoidSockets: { bottom: [Socket.EMPTY] },
     mandatoryNeighbors: {
       top: [
         "rampEntry",
@@ -686,7 +734,7 @@ const BASE_TILES: WfcTile[] = [
     imagePath: doubleRampFloorImg,
     sockets: {
       top: Socket.EMPTY,
-      right: Socket.SURFACE_LOW,
+      right: Socket.SURFACE_HALF_LOW,
       bottom: Socket.SOLID,
       left: Socket.DOUBLE_SURFACE,
     },
@@ -708,7 +756,7 @@ const BASE_TILES: WfcTile[] = [
     imagePath: doubleRampStepFloorImg,
     sockets: {
       top: Socket.EMPTY,
-      right: Socket.SURFACE_LOW,
+      right: Socket.SURFACE_HALF_LOW,
       bottom: Socket.SOLID,
       left: Socket.DOUBLE_SURFACE,
     },
@@ -784,11 +832,11 @@ const BASE_TILES: WfcTile[] = [
       top: Socket.EMPTY,
       right: Socket.SOLID,
       bottom: Socket.SOLID,
-      left: Socket.SURFACE_LOW,
+      left: Socket.SURFACE_HALF_LOW,
     },
     weight: 1.25,
     density: 0.465,
-    avoidSockets: { top: [Socket.SOLID], left: [Socket.SURFACE_HIGH] },
+    avoidSockets: { top: [Socket.SOLID] },
   },
   {
     id: "tube",
@@ -833,6 +881,8 @@ const BASE_TILES: WfcTile[] = [
         Socket.SURFACE_LOW,
         Socket.SURFACE_HIGH,
         Socket.DOUBLE_SURFACE,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
         Socket.LADDER,
       ],
       right: [
@@ -840,6 +890,8 @@ const BASE_TILES: WfcTile[] = [
         Socket.SURFACE_LOW,
         Socket.SURFACE_HIGH,
         Socket.DOUBLE_SURFACE,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
         Socket.LADDER,
       ],
     },
@@ -862,6 +914,8 @@ const BASE_TILES: WfcTile[] = [
         Socket.SURFACE_LOW,
         Socket.SURFACE_HIGH,
         Socket.DOUBLE_SURFACE,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
         Socket.LADDER,
       ],
       right: [
@@ -869,6 +923,8 @@ const BASE_TILES: WfcTile[] = [
         Socket.SURFACE_LOW,
         Socket.SURFACE_HIGH,
         Socket.DOUBLE_SURFACE,
+        Socket.SURFACE_HALF_LOW,
+        Socket.SURFACE_HALF_HIGH,
         Socket.LADDER,
       ],
     },
