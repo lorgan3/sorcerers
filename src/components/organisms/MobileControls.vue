@@ -14,12 +14,12 @@ const controller = props.controller as KeyboardController;
 const { showTouchControls } = useTouchDevice();
 const panMode = ref<PanMode>(PanMode.Focused);
 
-const press = (key: Key) => (event: TouchEvent) => {
+const press = (event: TouchEvent, key: Key) => {
   event.preventDefault();
   controller.keyDown(key);
 };
 
-const release = (key: Key) => (event: TouchEvent) => {
+const release = (event: TouchEvent, key: Key) => {
   event.preventDefault();
   controller.keyUp(key);
 };
@@ -79,50 +79,52 @@ onBeforeUnmount(() => {
 
 <template>
   <div v-if="showTouchControls" class="mobile-controls">
-    <div class="dpad">
-      <button
-        class="btn dpad__up"
-        @touchstart="press(Key.W)"
-        @touchend="release(Key.W)"
-        @touchcancel="release(Key.W)"
-      >
-        ▲
-      </button>
-      <button
-        class="btn dpad__left"
-        @touchstart="press(Key.A)"
-        @touchend="release(Key.A)"
-        @touchcancel="release(Key.A)"
-      >
-        ◀
-      </button>
-      <button
-        class="btn dpad__right"
-        @touchstart="press(Key.D)"
-        @touchend="release(Key.D)"
-        @touchcancel="release(Key.D)"
-      >
-        ▶
-      </button>
-      <button
-        class="btn dpad__down"
-        @touchstart="press(Key.S)"
-        @touchend="release(Key.S)"
-        @touchcancel="release(Key.S)"
-      >
-        ▼
-      </button>
-    </div>
+    <div class="cluster">
+      <div class="actions">
+        <button class="btn" @touchstart="toggleSpellbook">book</button>
+        <button
+          class="btn"
+          :class="`btn--pan-${panLabel()}`"
+          @touchstart="cyclePan"
+        >
+          {{ panLabel() }}
+        </button>
+      </div>
 
-    <div class="actions">
-      <button class="btn" @touchstart="toggleSpellbook">book</button>
-      <button
-        class="btn"
-        :class="`btn--pan-${panLabel()}`"
-        @touchstart="cyclePan"
-      >
-        {{ panLabel() }}
-      </button>
+      <div class="dpad">
+        <button
+          class="btn dpad__up"
+          @touchstart="press($event, Key.W)"
+          @touchend="release($event, Key.W)"
+          @touchcancel="release($event, Key.W)"
+        >
+          ▲
+        </button>
+        <button
+          class="btn dpad__left"
+          @touchstart="press($event, Key.A)"
+          @touchend="release($event, Key.A)"
+          @touchcancel="release($event, Key.A)"
+        >
+          ◀
+        </button>
+        <button
+          class="btn dpad__right"
+          @touchstart="press($event, Key.D)"
+          @touchend="release($event, Key.D)"
+          @touchcancel="release($event, Key.D)"
+        >
+          ▶
+        </button>
+        <button
+          class="btn dpad__down"
+          @touchstart="press($event, Key.S)"
+          @touchend="release($event, Key.S)"
+          @touchcancel="release($event, Key.S)"
+        >
+          ▼
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -135,23 +137,30 @@ onBeforeUnmount(() => {
   z-index: 10;
 }
 
-.dpad,
-.actions {
+// Anchored bottom-right but offset left to clear the ~225px inventory dock,
+// keeping every control off the bottom-left HUD.
+.cluster {
   position: absolute;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  right: calc(env(safe-area-inset-right, 0px) + 240px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
   pointer-events: none;
 }
 
 .dpad {
-  left: calc(env(safe-area-inset-left, 0px) + 16px);
+  position: relative;
   width: 180px;
   height: 180px;
-}
-
-.actions {
-  right: calc(env(safe-area-inset-right, 0px) + 16px);
-  display: flex;
-  gap: 12px;
+  pointer-events: none;
 }
 
 .btn {
