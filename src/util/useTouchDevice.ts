@@ -1,7 +1,8 @@
 import { onMounted, onUnmounted, ref, Ref } from "vue";
 
 function detectInitialTouch(): boolean {
-  return false;
+  if (typeof window === "undefined") return false;
+  return navigator.maxTouchPoints > 0;
 }
 
 export function createTouchDeviceState(): {

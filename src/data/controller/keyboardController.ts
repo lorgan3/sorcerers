@@ -29,7 +29,7 @@ export class KeyboardController implements Controller {
     this.target.addListener("pointermove", this.handleMouseMove);
     this.target.addListener("pointerdown", this.handleMouseDown);
     this.target.addListener("pointerup", this.handleMouseUp);
-    this.target.addListener("pointerupoutside", this.handleMouseUp);
+    this.target.addListener("pointerupoutside", this.handlePointerUpOutside);
     this.target.addListener("wheel", this.handleScroll);
     window.addEventListener("contextmenu", this.handleContextMenu);
   }
@@ -117,6 +117,21 @@ export class KeyboardController implements Controller {
     );
   };
 
+  private handlePointerUpOutside = (event: FederatedPointerEvent) => {
+    if (event.pointerType !== "touch") return;
+
+    this.activeTouches.delete(event.pointerId);
+    if (this.activeTouches.size < 2) {
+      this.pinchDistance = null;
+    }
+
+    this.mouseUp(
+      event.global.x / this.target.scale.x + this.target.left,
+      event.global.y / this.target.scale.y + this.target.top,
+      event.button === 0 ? Key.M1 : event.button === 2 ? Key.M2 : Key.M3
+    );
+  };
+
   private handleScroll = (event: FederatedWheelEvent) => {
     this.scrollEventHandlers.forEach((fn) => fn(event));
   };
@@ -127,7 +142,7 @@ export class KeyboardController implements Controller {
     this.target.removeListener("pointermove", this.handleMouseMove);
     this.target.removeListener("pointerdown", this.handleMouseDown);
     this.target.removeListener("pointerup", this.handleMouseUp);
-    this.target.removeListener("pointerupoutside", this.handleMouseUp);
+    this.target.removeListener("pointerupoutside", this.handlePointerUpOutside);
     window.removeEventListener("contextmenu", this.handleContextMenu);
   }
 

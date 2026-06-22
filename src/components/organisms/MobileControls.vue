@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import { Controller, Key } from "../../data/controller/controller";
 import { KeyboardController } from "../../data/controller/keyboardController";
 import { getLevel } from "../../data/context";
@@ -56,6 +56,16 @@ const panLabel = () => {
       return "focus";
   }
 };
+
+watch(showTouchControls, (visible) => {
+  if (!visible) {
+    controller.keyUp(Key.W);
+    controller.keyUp(Key.A);
+    controller.keyUp(Key.S);
+    controller.keyUp(Key.D);
+    controller.setSuppressTouchCast(false);
+  }
+});
 
 onBeforeUnmount(() => {
   unsubscribeAttach();
