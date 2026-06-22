@@ -1,4 +1,4 @@
-import { CameraTarget } from "../cameraTarget";
+import { CameraTarget, PanMode } from "../cameraTarget";
 import { Viewport } from "../../data/map/viewport";
 import { setGameContext } from "../../data/context";
 import type { Manager } from "../../data/network/manager";
@@ -8,6 +8,9 @@ const makeViewport = (worldW = 4000, worldH = 2000, screenW = 1280, screenH = 72
   return new Viewport(screenW, screenH, worldW, worldH, 1);
 };
 
+const fakeViewport = () =>
+  ({ worldWidth: 1000, worldHeight: 1000 } as unknown as Viewport);
+
 const stubController = (mouseX = 0, mouseY = 0) => {
   // A bare-bones stand-in: the camera tick only calls isLocalKeyDown,
   // getLocalMouse, mouseMove, and addScrollListener.
@@ -16,6 +19,7 @@ const stubController = (mouseX = 0, mouseY = 0) => {
     getLocalMouse: () => [mouseX, mouseY] as [number, number],
     mouseMove: () => {},
     addScrollListener: () => {},
+    addPinchListener: () => () => {},
   };
   return stub as KeyboardController;
 };
@@ -44,6 +48,38 @@ beforeEach(() => {
 
 afterEach(() => {
   setGameContext(null);
+});
+
+describe("CameraTarget pan mode", () => {
+  it("starts focused and attached", () => {
+    const camera = new CameraTarget(fakeViewport());
+    expect(camera.currentPanMode).toBe(PanMode.Focused);
+    expect(camera.isDetached).toBe(false);
+  });
+
+  it("cycles Focused -> Panning -> Frozen -> Focused", () => {
+    const camera = new CameraTarget(fakeViewport());
+
+    expect(camera.cyclePanMode()).toBe(PanMode.Panning);
+    expect(camera.isDetached).toBe(true);
+
+    expect(camera.cyclePanMode()).toBe(PanMode.Frozen);
+    expect(camera.isDetached).toBe(true);
+
+    expect(camera.cyclePanMode()).toBe(PanMode.Focused);
+    expect(camera.isDetached).toBe(false);
+  });
+
+  it("recenter() resets pan mode to Focused", () => {
+    const camera = new CameraTarget(fakeViewport());
+    camera.cyclePanMode();
+    camera.cyclePanMode();
+    expect(camera.currentPanMode).toBe(PanMode.Frozen);
+
+    camera.recenter();
+    expect(camera.currentPanMode).toBe(PanMode.Focused);
+    expect(camera.isDetached).toBe(false);
+  });
 });
 
 describe("CameraTarget", () => {

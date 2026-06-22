@@ -6,6 +6,7 @@ import Hud from "../organisms/Hud.vue";
 import Tutorial from "../organisms/Tutorial.vue";
 import { Map } from "../../data/map";
 import Inventory from "../organisms/Inventory.vue";
+import MobileControls from "../organisms/MobileControls.vue";
 import { Controller, Key } from "../../data/controller/controller";
 import { useRoute, useRouter } from "vue-router";
 import IngameMenu from "../organisms/IngameMenu.vue";
@@ -85,6 +86,7 @@ const setHudState = (open: boolean) => (forceHudOpen.value = open);
       :setInventoryState="setInventoryState"
     />
     <IngameMenu v-if="menuOpen" :onCancel="handleCancel" />
+    <MobileControls v-if="controller" :controller="controller" />
   </div>
 </template>
 

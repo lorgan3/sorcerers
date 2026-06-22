@@ -8,10 +8,17 @@ import { Viewport } from "../data/map/viewport";
 export type AttachListener = (detached: boolean) => void;
 export type ZoomListener = (scale: number) => void;
 
+export enum PanMode {
+  Focused,
+  Panning,
+  Frozen,
+}
+
 export class CameraTarget {
   private static maxScale = 4;
 
   private static zoomSpeed = 0.01;
+  private static pinchSpeed = 0.01;
   private static maxZoomScale = 10;
   private static highlightDelay = 90;
   private static continueDelay = 120;
@@ -40,6 +47,7 @@ export class CameraTarget {
   private zoomListeners: ZoomListener[] = [];
   private oldCDown = false;
   private oldMouseDown = false;
+  private panMode = PanMode.Focused;
 
   private get attached() {
     return this._attached;
@@ -117,6 +125,7 @@ export class CameraTarget {
       getManager().self?.activeCharacter?.body.velocity !== 0
     ) {
       this.attached = true;
+      this.panMode = PanMode.Focused;
 
       if (this.target !== getManager().self?.activeCharacter) {
         this.target = getManager().self?.activeCharacter;
@@ -129,7 +138,13 @@ export class CameraTarget {
       this.lastTargetPosition = position;
     }
 
-    if (
+    if (this.panMode === PanMode.Panning) {
+      position = this.controller.getLocalMouse();
+      this.attached = false;
+    } else if (this.panMode === PanMode.Frozen) {
+      position = this.position;
+      this.attached = false;
+    } else if (
       this.controller.isLocalKeyDown(Key.Control) ||
       this.controller.isLocalKeyDown(Key.M3)
     ) {
@@ -250,6 +265,29 @@ export class CameraTarget {
   recenter() {
     this.attached = true;
     this.speed = 0;
+    this.panMode = PanMode.Focused;
+  }
+
+  get currentPanMode(): PanMode {
+    return this.panMode;
+  }
+
+  cyclePanMode(): PanMode {
+    switch (this.panMode) {
+      case PanMode.Focused:
+        this.panMode = PanMode.Panning;
+        this.attached = false;
+        break;
+      case PanMode.Panning:
+        this.panMode = PanMode.Frozen;
+        this.speed = 0;
+        break;
+      default:
+        this.recenter();
+        break;
+    }
+
+    return this.panMode;
   }
 
   setTarget(target: Spawnable, callback?: () => void) {
@@ -321,6 +359,10 @@ export class CameraTarget {
           : Math.max(-CameraTarget.maxZoomScale, event.deltaY);
 
       zoom(this.scale - zoomDelta * CameraTarget.zoomSpeed);
+    });
+
+    controller.addPinchListener((delta) => {
+      zoom(this.scale + delta * CameraTarget.pinchSpeed);
     });
 
     zoom(this.scale);
