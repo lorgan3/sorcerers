@@ -19,6 +19,7 @@ const stubController = (mouseX = 0, mouseY = 0) => {
     getLocalMouse: () => [mouseX, mouseY] as [number, number],
     mouseMove: () => {},
     addScrollListener: () => {},
+    addPinchListener: () => () => {},
   };
   return stub as KeyboardController;
 };

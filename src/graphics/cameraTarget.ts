@@ -18,6 +18,7 @@ export class CameraTarget {
   private static maxScale = 4;
 
   private static zoomSpeed = 0.01;
+  private static pinchSpeed = 0.01;
   private static maxZoomScale = 10;
   private static highlightDelay = 90;
   private static continueDelay = 120;
@@ -358,6 +359,10 @@ export class CameraTarget {
           : Math.max(-CameraTarget.maxZoomScale, event.deltaY);
 
       zoom(this.scale - zoomDelta * CameraTarget.zoomSpeed);
+    });
+
+    controller.addPinchListener((delta) => {
+      zoom(this.scale + delta * CameraTarget.pinchSpeed);
     });
 
     zoom(this.scale);

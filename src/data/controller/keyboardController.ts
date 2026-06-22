@@ -8,6 +8,9 @@ export class KeyboardController implements Controller {
   private mouseY = 0;
   public pressedKeys = 0;
   private touches = 0;
+  private activeTouches = new Map<number, { x: number; y: number }>();
+  private pinchDistance: number | null = null;
+  private suppressTouchCast = false;
 
   private serverKeys = 0;
   private serverMouseX = 0;
@@ -18,6 +21,7 @@ export class KeyboardController implements Controller {
 
   private eventHandlers = new Map<Key, Set<() => void>>();
   private scrollEventHandlers = new Set<(event: FederatedWheelEvent) => void>();
+  private pinchEventHandlers = new Set<(delta: number) => void>();
 
   constructor(private target: Viewport) {
     window.addEventListener("keydown", this.handleKeyDown);
@@ -25,6 +29,7 @@ export class KeyboardController implements Controller {
     this.target.addListener("pointermove", this.handleMouseMove);
     this.target.addListener("pointerdown", this.handleMouseDown);
     this.target.addListener("pointerup", this.handleMouseUp);
+    this.target.addListener("pointerupoutside", this.handleMouseUp);
     this.target.addListener("wheel", this.handleScroll);
     window.addEventListener("contextmenu", this.handleContextMenu);
   }
@@ -40,21 +45,71 @@ export class KeyboardController implements Controller {
   };
 
   private handleMouseMove = (event: FederatedPointerEvent) => {
-    this.mouseMove(
-      event.global.x / this.target.scale.x + this.target.left,
-      event.global.y / this.target.scale.y + this.target.top
-    );
+    const x = event.global.x / this.target.scale.x + this.target.left;
+    const y = event.global.y / this.target.scale.y + this.target.top;
+
+    if (
+      event.pointerType === "touch" &&
+      this.activeTouches.has(event.pointerId)
+    ) {
+      this.activeTouches.set(event.pointerId, {
+        x: event.global.x,
+        y: event.global.y,
+      });
+
+      if (this.activeTouches.size >= 2) {
+        const distance = this.touchDistance();
+        if (this.pinchDistance !== null) {
+          const delta = distance - this.pinchDistance;
+          if (delta !== 0) {
+            this.pinchEventHandlers.forEach((fn) => fn(delta));
+          }
+        }
+        this.pinchDistance = distance;
+        return;
+      }
+    }
+
+    this.mouseMove(x, y);
   };
 
   private handleMouseDown = (event: FederatedPointerEvent) => {
+    const x = event.global.x / this.target.scale.x + this.target.left;
+    const y = event.global.y / this.target.scale.y + this.target.top;
+
+    if (event.pointerType === "touch") {
+      this.activeTouches.set(event.pointerId, {
+        x: event.global.x,
+        y: event.global.y,
+      });
+
+      if (this.activeTouches.size >= 2) {
+        this.pressedKeys &= ~keyMap[Key.M1];
+        this.pinchDistance = this.touchDistance();
+        return;
+      }
+
+      if (this.suppressTouchCast) {
+        this.mouseMove(x, y);
+        return;
+      }
+    }
+
     this.mouseDown(
-      event.global.x / this.target.scale.x + this.target.left,
-      event.global.y / this.target.scale.y + this.target.top,
+      x,
+      y,
       event.button === 0 ? Key.M1 : event.button === 2 ? Key.M2 : Key.M3
     );
   };
 
   private handleMouseUp = (event: FederatedPointerEvent) => {
+    if (event.pointerType === "touch") {
+      this.activeTouches.delete(event.pointerId);
+      if (this.activeTouches.size < 2) {
+        this.pinchDistance = null;
+      }
+    }
+
     this.mouseUp(
       event.global.x / this.target.scale.x + this.target.left,
       event.global.y / this.target.scale.y + this.target.top,
@@ -72,6 +127,7 @@ export class KeyboardController implements Controller {
     this.target.removeListener("pointermove", this.handleMouseMove);
     this.target.removeListener("pointerdown", this.handleMouseDown);
     this.target.removeListener("pointerup", this.handleMouseUp);
+    this.target.removeListener("pointerupoutside", this.handleMouseUp);
     window.removeEventListener("contextmenu", this.handleContextMenu);
   }
 
@@ -155,6 +211,27 @@ export class KeyboardController implements Controller {
 
   removeScrollListener(fn: (event: FederatedWheelEvent) => void) {
     this.scrollEventHandlers.delete(fn);
+  }
+
+  addPinchListener(fn: (delta: number) => void) {
+    this.pinchEventHandlers.add(fn);
+    return () => this.removePinchListener(fn);
+  }
+
+  removePinchListener(fn: (delta: number) => void) {
+    this.pinchEventHandlers.delete(fn);
+  }
+
+  setSuppressTouchCast(value: boolean) {
+    this.suppressTouchCast = value;
+  }
+
+  private touchDistance(): number {
+    const points = [...this.activeTouches.values()];
+    if (points.length < 2) return 0;
+    const dx = points[0].x - points[1].x;
+    const dy = points[0].y - points[1].y;
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
   isMouseDown() {
